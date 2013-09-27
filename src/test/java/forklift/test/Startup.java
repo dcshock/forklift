@@ -11,6 +11,12 @@ import org.junit.Test;
 import forklift.ForkLift;
 import forklift.exception.ForkLiftStartupException;
 
+/**
+ * Test the startup and shutdown of ForkLift to ensure that
+ * spring contexts can be found, and that the project spins up
+ * and down without error.
+ *
+ */
 public class Startup {
     @Test
     public void classpathStart() 

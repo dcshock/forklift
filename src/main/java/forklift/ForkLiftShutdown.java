@@ -1,5 +1,8 @@
 package forklift;
 
+/**
+ * Helps ensure a complete shutdown of ForkLift when the JVM quits.
+ */
 public class ForkLiftShutdown extends Thread {
     private ForkLift forklift;
     

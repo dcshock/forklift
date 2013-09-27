@@ -11,6 +11,10 @@ import org.springframework.context.support.FileSystemXmlApplicationContext;
 
 import forklift.exception.ForkLiftStartupException;
 
+/**
+ * Main ForkLift application instance. ForkLift is started here
+ * and stopped here.
+ */
 public class ForkLift {
     private static Logger log = LoggerFactory.getLogger("ForkLift");
     
