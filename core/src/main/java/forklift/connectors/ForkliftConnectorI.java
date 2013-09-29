@@ -1,8 +1,8 @@
-package forklift.jms;
+package forklift.connectors;
 
 import javax.jms.Connection;
 
-public interface ConnectionManagerI {
+public interface ForkliftConnectorI {
     void start();
     void stop();
     Connection getConnection();
