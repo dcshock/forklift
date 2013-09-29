@@ -9,13 +9,13 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 
-import forklift.exception.ForkLiftStartupException;
+import forklift.exception.ForkliftStartupException;
 
 /**
  * Main ForkLift application instance. ForkLift is started here
  * and stopped here.
  */
-public class ForkLift {
+public class Forklift {
     private static Logger log = LoggerFactory.getLogger("ForkLift");
     
     public ApplicationContext context;
@@ -23,24 +23,24 @@ public class ForkLift {
     private boolean classpath;
     private AtomicBoolean running = new AtomicBoolean(false);
 
-    public ForkLift() {
+    public Forklift() {
         log.debug("Creating ForkLift");
 
-        Runtime.getRuntime().addShutdownHook(new ForkLiftShutdown(this));
+        Runtime.getRuntime().addShutdownHook(new ForkliftShutdown(this));
     }
     
     public synchronized void start() 
-      throws ForkLiftStartupException {
+      throws ForkliftStartupException {
         start("services.xml");
     }
     
     public synchronized void start(String resource) 
-      throws ForkLiftStartupException {
+      throws ForkliftStartupException {
         log.debug("Initializing Spring Context from Classpath");
         try {
             context = new ClassPathXmlApplicationContext(resource);
         } catch (Exception e) {
-            throw new ForkLiftStartupException(e.getMessage());
+            throw new ForkliftStartupException(e.getMessage());
         }
         ((ClassPathXmlApplicationContext)context).registerShutdownHook();
         
@@ -50,12 +50,12 @@ public class ForkLift {
     }
     
     public synchronized void start(File configFile) 
-      throws ForkLiftStartupException {
+      throws ForkliftStartupException {
         log.debug("Initializing Spring Context from File {}", configFile.getAbsolutePath());
         try {
             context = new FileSystemXmlApplicationContext("file://" + configFile.getAbsolutePath());
         } catch (Exception e) {
-            throw new ForkLiftStartupException(e.getMessage());
+            throw new ForkliftStartupException(e.getMessage());
         }
         ((FileSystemXmlApplicationContext)context).registerShutdownHook();
         

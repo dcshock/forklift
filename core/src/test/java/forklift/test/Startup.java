@@ -8,8 +8,8 @@ import java.io.IOException;
 import org.junit.Assert;
 import org.junit.Test;
 
-import forklift.ForkLift;
-import forklift.exception.ForkLiftStartupException;
+import forklift.Forklift;
+import forklift.exception.ForkliftStartupException;
 
 /**
  * Test the startup and shutdown of ForkLift to ensure that
@@ -20,25 +20,25 @@ import forklift.exception.ForkLiftStartupException;
 public class Startup {
     @Test
     public void classpathStart() 
-      throws ForkLiftStartupException {
-        ForkLift forklift = new ForkLift();
+      throws ForkliftStartupException {
+        Forklift forklift = new Forklift();
         forklift.start();
         forklift.shutdown();
     }
     
     @Test 
     public void classpathStartFail() {
-        ForkLift forklift = new ForkLift();
+        Forklift forklift = new Forklift();
         try {
             forklift.start("non-existent.xml");
             Assert.fail();
-        } catch (ForkLiftStartupException e) {
+        } catch (ForkliftStartupException e) {
         }
     }
     
     @Test
     public void fileStart() 
-      throws IOException, ForkLiftStartupException {
+      throws IOException, ForkliftStartupException {
         File f = File.createTempFile("forklift.", ".xml");
         f.deleteOnExit();
 
@@ -52,7 +52,7 @@ public class Startup {
             writer.write(b);
         writer.close();
         
-        ForkLift forklift = new ForkLift();
+        Forklift forklift = new Forklift();
         forklift.start(f);
         forklift.shutdown();
 

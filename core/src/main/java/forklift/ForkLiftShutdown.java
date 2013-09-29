@@ -3,10 +3,10 @@ package forklift;
 /**
  * Helps ensure a complete shutdown of ForkLift when the JVM quits.
  */
-public class ForkLiftShutdown extends Thread {
-    private ForkLift forklift;
+public class ForkliftShutdown extends Thread {
+    private Forklift forklift;
     
-    public ForkLiftShutdown(ForkLift forklift) {
+    public ForkliftShutdown(Forklift forklift) {
         this.forklift = forklift;
     }
     

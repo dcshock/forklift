@@ -1,9 +1,9 @@
 package forklift.exception;
 
-public class ForkLiftStartupException extends Exception {
+public class ForkliftStartupException extends Exception {
     private static final long serialVersionUID = 1L;
 
-    public ForkLiftStartupException(String s) {
+    public ForkliftStartupException(String s) {
         super(s);
     }
 }
