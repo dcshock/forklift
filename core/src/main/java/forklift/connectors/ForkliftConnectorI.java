@@ -3,7 +3,7 @@ package forklift.connectors;
 import javax.jms.Connection;
 
 public interface ForkliftConnectorI {
-    void start();
-    void stop();
-    Connection getConnection();
+    void start() throws ConnectorException;
+    void stop() throws ConnectorException;
+    Connection getConnection() throws ConnectorException;
 }
