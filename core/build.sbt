@@ -20,3 +20,5 @@ resolvers ++= Seq(
     "Fuse Snapshots" at "http://repo.fusesource.com/nexus/content/repositories/snapshots",
     "Fuse" at "http://repo.fusesource.com/nexus/content/groups/public"
 )
+
+packageArchetype.java_application
