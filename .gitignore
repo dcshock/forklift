@@ -8,3 +8,4 @@
 .project
 target
 .cache
+activemq-data
