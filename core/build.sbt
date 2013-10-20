@@ -22,3 +22,4 @@ resolvers ++= Seq(
 )
 
 packageArchetype.java_application
+
