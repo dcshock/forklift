@@ -8,7 +8,8 @@ libraryDependencies ++= Seq(
     "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1",
     "org.apache.activemq" % "activemq-all" % "5.8.0",
     "junit" % "junit" % "4.11" % "test",
-    "com.novocode" % "junit-interface" % "0.8" % "test->default"
+    "com.novocode" % "junit-interface" % "0.8" % "test->default",
+    "commons-io" % "commons-io" % "2.4" % "test"
 )
 
 autoScalaLibrary := false
