@@ -15,13 +15,17 @@ public class ActiveMQConnector implements ForkliftConnectorI {
         
     }
     
+    public ActiveMQConnector(String brokerUrl) {
+        this.brokerUrl = brokerUrl;
+    }
+    
     @Override
     public synchronized void start() 
       throws ConnectorException {
         if (brokerUrl == null)
             throw new ConnectorException("brokerUrl wasn't set");
         
-        factory = new ActiveMQConnectionFactory(brokerUrl);
+        factory = new ActiveMQConnectionFactory("", "", brokerUrl);
     }
 
     @Override
@@ -38,9 +42,10 @@ public class ActiveMQConnector implements ForkliftConnectorI {
     @Override
     public synchronized Connection getConnection() 
       throws ConnectorException {
-        if (conn == null)
+        if (conn == null || !conn.isStarted())
             try {
                 conn = (ActiveMQConnection)factory.createConnection();
+                conn.start();
             } catch (JMSException e) {
                 throw new ConnectorException(e.getMessage());
             }
