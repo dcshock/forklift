@@ -1,26 +1,27 @@
 package forklift.consumer;
 
 import java.io.File;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.ArrayList;
+import java.util.List;
 
 import forklift.connectors.ForkliftConnectorI;
 
 public class DeploymentManager {
-    private AtomicLong consumerIndex;
+    private List<Consumer> consumers = new ArrayList<Consumer>();
     private ForkliftConnectorI connector;
 
     public DeploymentManager(ForkliftConnectorI connector) {
         this.connector = connector;
+    }
+    
+    public synchronized Consumer registerDeployedFile(File f) {
+        final Consumer c = new Consumer(f);
         
-        consumerIndex = new AtomicLong(0);
+        
+        return null;
     }
     
-    public Long registerConsumer(File f) {
-        final Long id = consumerIndex.getAndIncrement();
-        return id;
-    }
-    
-    public void destroyConsumer(Object id) {
+    public synchronized void unregisterDeployedFile(File f) {
         
     }
     
