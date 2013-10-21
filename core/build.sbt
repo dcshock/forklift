@@ -9,8 +9,6 @@ libraryDependencies ++= Seq(
     "com.novocode" % "junit-interface" % "0.9" % "test"
 )
 
-autoScalaLibrary := false
-
 crossPaths := false
 
 resolvers ++= Seq(
