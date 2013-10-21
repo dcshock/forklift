@@ -5,12 +5,11 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import forklift.connectors.ForkliftConnectorI;
 
-public class ConsumerManager {
+public class DeploymentManager {
     private AtomicLong consumerIndex;
     private ForkliftConnectorI connector;
 
-    
-    public ConsumerManager(ForkliftConnectorI connector) {
+    public DeploymentManager(ForkliftConnectorI connector) {
         this.connector = connector;
         
         consumerIndex = new AtomicLong(0);

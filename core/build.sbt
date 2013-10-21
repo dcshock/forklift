@@ -6,6 +6,7 @@ libraryDependencies ++= Seq(
     "org.springframework" % "spring-jms" % "3.2.4.RELEASE",
     "ch.qos.logback" % "logback-classic" % "1.0.13",
     "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1",
+    "org.reflections" % "reflections" % "0.9.6",
     "com.novocode" % "junit-interface" % "0.9" % "test"
 )
 
