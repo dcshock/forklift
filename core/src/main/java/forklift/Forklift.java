@@ -9,7 +9,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 
-import forklift.exception.ForkliftStartupException;
+import forklift.exception.StartupException;
 
 /**
  * Main ForkLift application instance. ForkLift is started here
@@ -30,17 +30,17 @@ public class Forklift {
     }
     
     public synchronized void start() 
-      throws ForkliftStartupException {
+      throws StartupException {
         start("services.xml");
     }
     
     public synchronized void start(String resource) 
-      throws ForkliftStartupException {
+      throws StartupException {
         log.debug("Initializing Spring Context from Classpath");
         try {
             context = new ClassPathXmlApplicationContext(resource);
         } catch (Exception e) {
-            throw new ForkliftStartupException(e.getMessage());
+            throw new StartupException(e.getMessage());
         }
         ((ClassPathXmlApplicationContext)context).registerShutdownHook();
         
@@ -50,12 +50,12 @@ public class Forklift {
     }
     
     public synchronized void start(File configFile) 
-      throws ForkliftStartupException {
+      throws StartupException {
         log.debug("Initializing Spring Context from File {}", configFile.getAbsolutePath());
         try {
             context = new FileSystemXmlApplicationContext("file://" + configFile.getAbsolutePath());
         } catch (Exception e) {
-            throw new ForkliftStartupException(e.getMessage());
+            throw new StartupException(e.getMessage());
         }
         ((FileSystemXmlApplicationContext)context).registerShutdownHook();
         
@@ -83,14 +83,14 @@ public class Forklift {
     }
     
     public static void main(String args[]) 
-      throws ForkliftStartupException {
+      throws StartupException {
         final Forklift forklift = mainWithTestHook(args);
         if (!forklift.isRunning())
             throw new RuntimeException("Unable to start Forklift.");
     }
     
     public static Forklift mainWithTestHook(String args[]) 
-      throws ForkliftStartupException {
+      throws StartupException {
         if (args.length != 1) {
             System.err.println("Config file not specified.");
             return null;

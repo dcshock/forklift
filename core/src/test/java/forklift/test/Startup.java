@@ -9,7 +9,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import forklift.Forklift;
-import forklift.exception.ForkliftStartupException;
+import forklift.exception.StartupException;
 
 /**
  * Test the startup and shutdown of ForkLift to ensure that
@@ -20,7 +20,7 @@ import forklift.exception.ForkliftStartupException;
 public class Startup {
     @Test
     public void classpathStart() 
-      throws ForkliftStartupException {
+      throws StartupException {
         Forklift forklift = new Forklift();
         forklift.start();
         forklift.shutdown();
@@ -32,13 +32,13 @@ public class Startup {
         try {
             forklift.start("non-existent.xml");
             Assert.fail();
-        } catch (ForkliftStartupException e) {
+        } catch (StartupException e) {
         }
     }
     
     @Test
     public void fileStart() 
-      throws IOException, ForkliftStartupException {
+      throws IOException, StartupException {
         Forklift forklift = new Forklift();
         forklift.start(createTempConfig());
         forklift.shutdown();
@@ -46,7 +46,7 @@ public class Startup {
     
     @Test
     public void mainStart() 
-      throws IOException, InterruptedException, ForkliftStartupException {
+      throws IOException, InterruptedException, StartupException {
         final Forklift forklift = Forklift.mainWithTestHook(new String[] {
                 createTempConfig().getPath()
         });
@@ -65,9 +65,9 @@ public class Startup {
         Assert.assertFalse(forklift.isRunning());
     }
     
-    @Test(expected = ForkliftStartupException.class) 
+    @Test(expected = StartupException.class) 
     public void mainStartFail() 
-      throws ForkliftStartupException {
+      throws StartupException {
         Forklift.mainWithTestHook(new String[] {
                 "/tmp/test.does.not.exist"
         });

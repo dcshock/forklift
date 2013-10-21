@@ -2,9 +2,12 @@ package forklift.connectors;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
+import javax.jms.MessageConsumer;
+import javax.jms.Session;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.ActiveMQSession;
 
 public class ActiveMQConnector implements ForkliftConnectorI {
     private ActiveMQConnectionFactory factory;
@@ -49,10 +52,42 @@ public class ActiveMQConnector implements ForkliftConnectorI {
             } catch (JMSException e) {
                 throw new ConnectorException(e.getMessage());
             }
-        
+
         if (conn == null)
             throw new ConnectorException("Could not create connection to activemq.");
         
         return conn;
+    }
+    
+    public synchronized Session getSession() 
+      throws ConnectorException {
+        try {
+            return getConnection().createSession(
+                false, ActiveMQSession.INDIVIDUAL_ACKNOWLEDGE);
+        } catch (JMSException e) {
+            throw new ConnectorException(e.getMessage());
+        }
+    }
+    
+    @Override
+    public MessageConsumer getQueue(String name) 
+      throws ConnectorException {
+        final Session s = getSession();
+        try {
+            return s.createConsumer(s.createQueue(name));
+        } catch (JMSException e) {
+            throw new ConnectorException(e.getMessage());
+        }
+    }
+    
+    @Override
+    public MessageConsumer getTopic(String name) 
+      throws ConnectorException {
+        final Session s = getSession();
+        try {
+            return s.createConsumer(s.createTopic(name));
+        } catch (JMSException e) {
+            throw new ConnectorException(e.getMessage());
+        }
     }
 }
