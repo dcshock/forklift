@@ -1,6 +1,7 @@
 package forklift.consumer;
 
 import java.io.File;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,7 +15,8 @@ public class DeploymentManager {
         this.connector = connector;
     }
     
-    public synchronized Consumer registerDeployedFile(File f) {
+    public synchronized Consumer registerDeployedFile(File f) 
+      throws MalformedURLException {
         final Consumer c = new Consumer(f);
         
         
