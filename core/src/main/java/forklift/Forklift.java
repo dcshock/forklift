@@ -82,7 +82,27 @@ public class Forklift {
         return context;
     }
     
-    public static void main(String args[]) {
-        System.out.println("Welcome to Fork Lift!");
+    public static void main(String args[]) 
+      throws ForkliftStartupException {
+        final Forklift forklift = mainWithTestHook(args);
+        if (!forklift.isRunning())
+            throw new RuntimeException("Unable to start Forklift.");
+    }
+    
+    public static Forklift mainWithTestHook(String args[]) 
+      throws ForkliftStartupException {
+        if (args.length != 1) {
+            System.err.println("Config file not specified.");
+            return null;
+        }
+
+        final Forklift forklift = new Forklift();
+        final File f = new File(args[0]);
+        if (f.exists())
+            forklift.start(f);
+        else 
+            forklift.start(args[0]);
+        
+        return forklift;
     }
 }

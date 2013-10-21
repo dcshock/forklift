@@ -39,23 +39,55 @@ public class Startup {
     @Test
     public void fileStart() 
       throws IOException, ForkliftStartupException {
-        File f = File.createTempFile("forklift.", ".xml");
+        Forklift forklift = new Forklift();
+        forklift.start(createTempConfig());
+        forklift.shutdown();
+    }
+    
+    @Test
+    public void mainStart() 
+      throws IOException, InterruptedException, ForkliftStartupException {
+        final Forklift forklift = Forklift.mainWithTestHook(new String[] {
+                createTempConfig().getPath()
+        });
+        
+        // Check startup
+        int count = 20;
+        while (!forklift.isRunning() && count-- > 0)
+            Thread.sleep(250);
+        Assert.assertTrue(forklift.isRunning());
+
+        // Check shutdown
+        forklift.shutdown();
+        count = 20;
+        while (forklift.isRunning() && count-- > 0)
+            Thread.sleep(250);
+        Assert.assertFalse(forklift.isRunning());
+    }
+    
+    @Test(expected = ForkliftStartupException.class) 
+    public void mainStartFail() 
+      throws ForkliftStartupException {
+        Forklift.mainWithTestHook(new String[] {
+                "/tmp/test.does.not.exist"
+        });
+    }
+    
+    private File createTempConfig() 
+      throws IOException {
+        final File f = File.createTempFile("forklift.", ".xml");
         f.deleteOnExit();
 
-        BufferedInputStream is = 
+        final BufferedInputStream is = 
             new BufferedInputStream(getClass().getResourceAsStream("/services.xml"));
         Assert.assertNotNull(is);
         
-        FileWriter writer = new FileWriter(f);
+        final FileWriter writer = new FileWriter(f);
         int b = -1;
         while ((b = is.read()) != -1) 
             writer.write(b);
         writer.close();
         
-        Forklift forklift = new Forklift();
-        forklift.start(f);
-        forklift.shutdown();
-
-        f.delete();
+        return f;
     }
 }
