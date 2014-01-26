@@ -1,9 +1,10 @@
 package forklift;
 
+import java.io.File;
+
 import org.junit.After;
 import org.junit.Before;
 
-import forklift.Forklift;
 import forklift.exception.StartupException;
 
 public class ForkliftTest {
@@ -19,5 +20,9 @@ public class ForkliftTest {
     @After
     public void stop() {
       forklift.shutdown();
+    }
+    
+    public static File testJar() {
+        return new File("src/test/resources/forklift-test-consumer-0.1.jar");
     }
 }

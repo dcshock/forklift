@@ -63,4 +63,11 @@ public class Deployment {
     public Set<Class<?>> getTopics() {
         return topics;
     }
+
+    @Override
+    public String toString() {
+        return "Deployment [queues=" + queues + ", topics=" + topics + ", cl="
+                + cl + ", deployedFile=" + deployedFile + ", reflections="
+                + reflections + "]";
+    }
 }

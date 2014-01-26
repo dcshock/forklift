@@ -22,7 +22,7 @@ public class FileScannerTest {
         assertEquals(0, fileScan.scan().size());
         
         final File file1 = File.createTempFile("test", "test", tmpDir);
-        
+
         List<FileScanResult> results = fileScan.scan();
         
         boolean add = false;

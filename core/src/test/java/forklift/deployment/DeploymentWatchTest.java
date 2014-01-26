@@ -12,6 +12,8 @@ import org.junit.Test;
 
 import com.google.common.io.Files;
 
+import forklift.ForkliftTest;
+
 public class DeploymentWatchTest {
     @Test
     public void watch() 
@@ -20,8 +22,7 @@ public class DeploymentWatchTest {
         
         // Create a new deployment jar.
         final File file = File.createTempFile("test", ".jar", dir);
-        final File jar = new File("src/test/resources/forklift-test-consumer-0.1.jar");
-        Files.copy(jar, file);
+        Files.copy(ForkliftTest.testJar(), file);
         
         final AtomicBoolean deploy = new AtomicBoolean(true);
         DeploymentWatch watch = new DeploymentWatch(dir, new DeploymentEvents() {
