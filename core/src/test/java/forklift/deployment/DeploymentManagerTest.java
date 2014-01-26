@@ -1,5 +1,6 @@
 package forklift.deployment;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -12,15 +13,21 @@ import forklift.ForkliftTest;
 
 public class DeploymentManagerTest extends ForkliftTest {
     @Test
-    public void test() 
+    public void deployJar() 
       throws MalformedURLException {
-        DeploymentManager deployment = 
+        DeploymentManager deploymentManager = 
             forklift.getContext().getBean(DeploymentManager.class);
 
         final File jar = new File("src/test/resources/forklift-test-consumer-0.1.jar");
-        deployment.registerDeployedFile(jar);
-        assertTrue(deployment.isDeployed(jar));
-        deployment.unregisterDeployedFile(jar);
-        assertFalse(deployment.isDeployed(jar));
+        Deployment deployment = deploymentManager.registerDeployedFile(jar);
+        assertTrue(deploymentManager.isDeployed(jar));
+        assertEquals(1, deployment.getQueues().size());
+        
+        for (Class<?> clazz : deployment.getQueues()) 
+            assertEquals("forklift.consumer.TestQueueConsumer", clazz.getName());
+        
+        deploymentManager.unregisterDeployedFile(jar);
+        assertFalse(deploymentManager.isDeployed(jar));
+        
     }
 }

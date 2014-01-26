@@ -55,4 +55,12 @@ public class Deployment {
     public ClassLoader getClassLoader() {
         return cl;
     }
+    
+    public Set<Class<?>> getQueues() {
+        return queues;
+    }
+    
+    public Set<Class<?>> getTopics() {
+        return topics;
+    }
 }
