@@ -1,4 +1,4 @@
-package forklift.test;
+package forklift;
 
 import java.io.BufferedInputStream;
 import java.io.File;

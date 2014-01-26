@@ -9,10 +9,10 @@ import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 
-public class ConsumerClassLoader extends URLClassLoader {
+public class ChildFirstClassLoader extends URLClassLoader {
 	private ClassLoader system;
 
-	public ConsumerClassLoader(URL[] classpath, ClassLoader parent) {
+	public ChildFirstClassLoader(URL[] classpath, ClassLoader parent) {
 		super(classpath, parent);
 		system = getSystemClassLoader();
 	}
