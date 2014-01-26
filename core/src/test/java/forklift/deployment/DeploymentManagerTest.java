@@ -11,14 +11,13 @@ import org.junit.Test;
 
 import forklift.ForkliftTest;
 
-public class DeploymentManagerTest extends ForkliftTest {
+public class DeploymentManagerTest {
     @Test
     public void deployJar() 
       throws MalformedURLException {
-        DeploymentManager deploymentManager = 
-            forklift.getContext().getBean(DeploymentManager.class);
+        DeploymentManager deploymentManager = new DeploymentManager();
 
-        final File jar = new File("src/test/resources/forklift-test-consumer-0.1.jar");
+        final File jar = ForkliftTest.testJar();
         Deployment deployment = deploymentManager.registerDeployedFile(jar);
         assertTrue(deploymentManager.isDeployed(jar));
         assertEquals(1, deployment.getQueues().size());
