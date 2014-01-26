@@ -55,6 +55,10 @@ public class FileScanner {
         return results;
     }
     
+    public File getDir() {
+        return dir;
+    }
+    
     public long getLastScanTime() {
         return lastScan;
     }

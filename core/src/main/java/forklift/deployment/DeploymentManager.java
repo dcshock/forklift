@@ -11,18 +11,21 @@ public class DeploymentManager {
 
     public synchronized Deployment registerDeployedFile(File f) 
       throws MalformedURLException {
-        final Deployment c = new Deployment(f);
-        deployments.add(c);
-        return c;
+        final Deployment d = new Deployment(f);
+        deployments.add(d);
+        return d;
     }
     
-    public synchronized void unregisterDeployedFile(File f) {
+    public synchronized Deployment unregisterDeployedFile(File f) {
         Iterator<Deployment> it = deployments.iterator();
         while (it.hasNext()) {
-            Deployment c = it.next();
-            if (c.getDeployedFile().equals(f)) 
+            Deployment d = it.next();
+            if (d.getDeployedFile().equals(f)) { 
                 it.remove();
+                return d;
+            }
         }
+        return null;
     }
     
     public synchronized boolean isDeployed(File f) {

@@ -28,6 +28,5 @@ public class DeploymentManagerTest extends ForkliftTest {
         
         deploymentManager.unregisterDeployedFile(jar);
         assertFalse(deploymentManager.isDeployed(jar));
-        
     }
 }
