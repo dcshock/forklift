@@ -2,7 +2,7 @@ package forklift.consumer;
 
 import forklift.decorators.Queue;
 
-@Queue
+@Queue()
 public class TestQueueConsumer {
 
 }
