@@ -25,16 +25,16 @@ public class Deployment {
       throws MalformedURLException {
         this.deployedFile = deployedFile;
         
+        final URL[] urls = new URL[] {deployedFile.toURI().toURL()}; 
+        
         // Assign a new classloader to this deployment.
-        cl = new ChildFirstClassLoader(
-            new URL[] {deployedFile.toURI().toURL()}, getClass().getClassLoader());
+        cl = new ChildFirstClassLoader(urls, getClass().getClassLoader());
 
         // Reflect the deployment to determine if there are any consumers
         // annotated.
-        reflections = new Reflections(
-            new ConfigurationBuilder()
-                .addClassLoader(cl)
-                .setUrls(new URL[] {deployedFile.toURI().toURL()}));
+        reflections = new Reflections(new ConfigurationBuilder()
+            .addClassLoader(cl)
+            .setUrls(urls));
         
         queues.addAll(reflections.getTypesAnnotatedWith(Queue.class));
         topics.addAll(reflections.getTypesAnnotatedWith(Topic.class));
