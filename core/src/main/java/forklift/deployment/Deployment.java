@@ -21,6 +21,10 @@ public class Deployment {
     private File deployedFile;
     private Reflections reflections;
 
+    public Deployment() {
+        
+    }
+    
     public Deployment(File deployedFile) 
       throws MalformedURLException {
         this.deployedFile = deployedFile;
@@ -52,6 +56,10 @@ public class Deployment {
         return deployedFile;
     }
     
+    public void setDeployedFile(File deployedFile) {
+        this.deployedFile = deployedFile;
+    }
+    
     public ClassLoader getClassLoader() {
         return cl;
     }
@@ -62,6 +70,13 @@ public class Deployment {
     
     public Set<Class<?>> getTopics() {
         return topics;
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+        if (((Deployment)o).getDeployedFile().equals(deployedFile))
+            return true;
+        return false;
     }
 
     @Override

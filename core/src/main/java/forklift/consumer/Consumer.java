@@ -14,6 +14,7 @@ import forklift.decorators.Topic;
  *
  */
 public class Consumer {
+    private Integer id = null;
     private Map<String, Listener> listeners = new HashMap<String, Listener>();
     
     public Consumer(Set<Class<?>> msgHandlers) {
@@ -30,5 +31,9 @@ public class Consumer {
             
             
         }
+    }
+    
+    void setId(Integer id) {
+        this.id = id;
     }
 }
