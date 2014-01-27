@@ -23,6 +23,12 @@ public class ForkliftTest {
     }
     
     public static File testJar() {
-        return new File("src/test/resources/forklift-test-consumer-0.1.jar");
+        File a = new File("src/test/resources/forklift-test-consumer-0.1.jar");
+        if (a.exists())
+            return a;
+        File b = new File("core/src/test/resources/forklift-test-consumer-0.1.jar");
+        if(b.exists())
+            return b;
+        return null;
     }
 }
