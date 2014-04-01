@@ -9,14 +9,13 @@ import forklift.decorators.Topic;
 
 /**
  * Consumer is responsible for orchestration of moving the message from the broker
- * to the appropriate msgHandler. 
+ * to the appropriate msgHandler.
  * @author mattconroy
  *
  */
 public class Consumer {
-    private Integer id = null;
     private Map<String, Listener> listeners = new HashMap<String, Listener>();
-    
+
     public Consumer(Set<Class<?>> msgHandlers) {
         for (Class<?> c : msgHandlers) {
             Queue q = c.getAnnotation(Queue.class);
@@ -24,16 +23,12 @@ public class Consumer {
 
             final Listener l = new Listener();
             if (q != null) {
-                
+
             } else if (t != null) {
-                
+
             }
-            
-            
+
+
         }
-    }
-    
-    void setId(Integer id) {
-        this.id = id;
     }
 }

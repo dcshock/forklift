@@ -31,4 +31,12 @@ public class ConsumerDeploymentEventsTest {
         watch.run();
         Mockito.verify(events).onUndeploy(Mockito.any(Deployment.class));
     }
+
+    @Test
+    public void consumerDeployment() {
+        final ConsumerDeploymentEvents events = new ConsumerDeploymentEvents();
+        final Deployment deploy = Mockito.mock(Deployment.class);
+        events.onDeploy(deploy);
+        events.onUndeploy(deploy);
+    }
 }
