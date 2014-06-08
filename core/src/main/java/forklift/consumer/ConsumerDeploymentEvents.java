@@ -24,11 +24,11 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
     @Override
     public synchronized void onDeploy(Deployment deployment) {
         log.info("Deploying: " + deployment);
-        Set<Class<?>> s = new HashSet<Class<?>>();
+        final Set<Class<?>> s = new HashSet<Class<?>>();
         s.addAll(deployment.getQueues());
         s.addAll(deployment.getTopics());
 
-        Consumer c = new Consumer(s);
+        final Consumer c = new Consumer(s);
         deployments.put(deployment, manager.register(c));
     }
 
