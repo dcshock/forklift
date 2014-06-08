@@ -9,20 +9,22 @@ import com.google.common.io.Files;
 
 import forklift.ForkliftTest;
 import forklift.deployment.DeploymentWatch;
+import forklift.spring.ContextManager;
 
-public class ConsumerDeploymentEventsTest {
+public class ConsumerDeploymentEventsTest extends ForkliftTest {
     @Test
-    public void deploy() 
+    public void deploy()
       throws IOException {
         final File deployDir = Files.createTempDir();
-        final DeploymentWatch watch = new DeploymentWatch(deployDir, new ConsumerDeploymentEvents());
-      
+        final DeploymentWatch watch = new DeploymentWatch(deployDir,
+            ContextManager.getContext().getBean(ConsumerDeploymentEvents.class));
+
         File deployFile = File.createTempFile("test", ".jar", deployDir);
         deployFile.deleteOnExit();
-        
+
         Files.copy(ForkliftTest.testJar(), deployFile);
         watch.run();
-        
+
         deployFile.delete();
         watch.run();
     }
