@@ -4,10 +4,10 @@ import java.io.File;
 
 import org.junit.After;
 import org.junit.Before;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.util.Assert;
 
 import forklift.exception.StartupException;
+import forklift.spring.ContextManager;
 
 public class ForkliftTest {
     protected Forklift forklift;
@@ -17,6 +17,8 @@ public class ForkliftTest {
       throws StartupException {
         forklift = new Forklift();
         forklift.start();
+
+        Assert.notNull(ContextManager.getContext(), "ContextManager.getContext() was null");
     }
 
     @After

@@ -16,7 +16,7 @@ public class ContextManager {
         new HashMap<String, ApplicationContext>();
 
     /**
-     * Start the default application context with the given configration classes.
+     * Start the default application context with the given configuration classes.
      * @param clazzes
      * @return
      */

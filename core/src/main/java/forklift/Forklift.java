@@ -29,7 +29,15 @@ public class Forklift {
     public synchronized void start(Class<?> config)
       throws StartupException {
         log.debug("Initializing Spring Context");
-        ContextManager.start(config);
+
+        try {
+            ContextManager.start(config);
+            log.debug("Init complete!");
+        } catch (Exception e) {
+            log.debug("An error occurred starting the spring context");
+            throw new StartupException(e.getMessage());
+        }
+
         running.set(true);
     }
 
