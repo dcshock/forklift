@@ -46,7 +46,8 @@ public class Listener implements Runnable {
             e.printStackTrace();
         }
 
-        new Thread(this).run();
+        final Thread t = new Thread(getName());
+        t.run();
     }
 
     public String getName() {
@@ -57,10 +58,17 @@ public class Listener implements Runnable {
     public void run() {
         try {
             running.set(true);
-            Message m = consumer.receive();
-            ForkliftMessage msg = connector.jmsToForklift(m);
-            msg.getMsg();
-            m.acknowledge();
+
+            Message m;
+            while (running.get() && (m = consumer.receive()) != null) {
+                ForkliftMessage msg = connector.jmsToForklift(m);
+                try {
+                    msg.getMsg();
+                    m.acknowledge();
+                } catch (Exception e) {
+                    // Avoid acking a msg that hasn't been processed successfully.
+                }
+            }
         } catch (JMSException e) {
             running.set(false);
             e.printStackTrace();
