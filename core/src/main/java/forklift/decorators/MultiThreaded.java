@@ -8,12 +8,15 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Specify which queue a processor should pull messages off.
+ * Specify how many processor threads should be launched by forklift for the annotated processor.
  */
 @Documented
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
-public @interface Queue {
-    String value();
+public @interface MultiThreaded {
+    /**
+     * The maximum number of threads to run. Defaults to 2.
+     */
+    int value() default 2;
 }
