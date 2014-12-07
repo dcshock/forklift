@@ -8,12 +8,11 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Specify which queue a processor should pull messages off.
+ * Instruct a forklift to automatically send audit messages for a processor to the audit queue.
  */
 @Documented
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
-public @interface Queue {
-    String value();
+public @interface Audit {
 }
