@@ -4,8 +4,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import forklift.connectors.ForkliftConnectorI;
 import forklift.decorators.Queue;
 import forklift.decorators.Topic;
+import forklift.spring.ContextManager;
 
 /**
  * Consumer is responsible for orchestration of moving the message from the broker
@@ -14,6 +16,8 @@ import forklift.decorators.Topic;
  *
  */
 public class Consumer {
+    private Integer id;
+
     private Map<String, Listener> listeners = new HashMap<String, Listener>();
 
     public Consumer(Set<Class<?>> msgHandlers) {
@@ -21,14 +25,14 @@ public class Consumer {
             Queue q = c.getAnnotation(Queue.class);
             Topic t = c.getAnnotation(Topic.class);
 
-            final Listener l = new Listener();
-            if (q != null) {
-
-            } else if (t != null) {
-
-            }
-
-
+            final Listener l = new Listener(
+                q, t, c, ContextManager.getContext().getBean(ForkliftConnectorI.class));
+            listeners.put(l.getName(), l);
+            l.listen();
         }
+    }
+
+    void setId(Integer id) {
+        this.id = id;
     }
 }
