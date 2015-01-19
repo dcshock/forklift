@@ -18,6 +18,6 @@ public class ConsumerManager {
     }
 
     public synchronized void unregister(int id) {
-        consumers.remove(id);
+        consumers.remove(id).stop();
     }
 }

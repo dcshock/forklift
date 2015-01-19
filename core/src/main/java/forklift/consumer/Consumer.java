@@ -39,6 +39,12 @@ public class Consumer {
             it.next().listen();
     }
 
+    public void stop() {
+        final Iterator<Listener> it = listeners.values().iterator();
+        while (it.hasNext())
+            it.next().shutdown();
+    }
+
     public Listener getListener(Class<?> clazz) {
         return listeners.get(clazz);
     }
