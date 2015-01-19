@@ -1,6 +1,7 @@
 package forklift.consumer;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -10,15 +11,13 @@ import forklift.decorators.Topic;
 import forklift.spring.ContextManager;
 
 /**
- * Consumer is responsible for orchestration of moving the message from the broker
- * to the appropriate msgHandler.
+ * Consumer is responsible for creating listeners to connect consuming methods to the
+ * backing queue.
  * @author mattconroy
  *
  */
 public class Consumer {
-    private Integer id;
-
-    private Map<String, Listener> listeners = new HashMap<String, Listener>();
+    private Map<Class<?>, Listener> listeners = new HashMap<Class<?>, Listener>();
 
     public Consumer(Set<Class<?>> msgHandlers) {
         for (Class<?> c : msgHandlers) {
@@ -27,12 +26,20 @@ public class Consumer {
 
             final Listener l = new Listener(
                 q, t, c, ContextManager.getContext().getBean(ForkliftConnectorI.class));
-            listeners.put(l.getName(), l);
-            l.listen();
+            listeners.put(c, l);
         }
     }
 
-    void setId(Integer id) {
-        this.id = id;
+    /**
+     * Startup the listeners that have been created for each msgHandler.
+     */
+    public void start() {
+        final Iterator<Listener> it = listeners.values().iterator();
+        while (it.hasNext())
+            it.next().listen();
+    }
+
+    public Listener getListener(Class<?> clazz) {
+        return listeners.get(clazz);
     }
 }

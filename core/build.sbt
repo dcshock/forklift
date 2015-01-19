@@ -4,6 +4,7 @@ version := "0.1"
 
 libraryDependencies ++= Seq(
     "org.springframework" % "spring-jms" % "3.2.4.RELEASE",
+    "com.google.guava" % "guava" % "18.0",
     "ch.qos.logback" % "logback-classic" % "1.0.13",
     "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1",
     "org.reflections" % "reflections" % "0.9.9-RC1",
