@@ -11,7 +11,6 @@ import javax.jms.MessageConsumer;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import forklift.connectors.ConnectorException;
@@ -19,22 +18,23 @@ import forklift.connectors.ForkliftConnectorI;
 import forklift.connectors.ForkliftMessage;
 
 @Component
-@Scope("prototype")
 public class MockConnector implements ForkliftConnectorI {
-    List<Message> msgs = new ArrayList<Message>();
+    private static ThreadLocal<List<Message>> threadLocal = new ThreadLocal<List<Message>>();
 
     private ForkliftConnectorI mock;
 
     public MockConnector() throws ConnectorException, JMSException {
+        threadLocal.set(new ArrayList<Message>());
+
         final MessageConsumer consumer = Mockito.mock(MessageConsumer.class);
 
         final Answer<Message> answer = new Answer<Message>() {
             @Override
             public Message answer(InvocationOnMock invocation) throws Throwable {
-                if (msgs.size() == 0)
+                if (threadLocal.get().size() == 0)
                     return null;
 
-                return msgs.remove(0);
+                return threadLocal.get().remove(0);
             }
 
         };
@@ -82,6 +82,6 @@ public class MockConnector implements ForkliftConnectorI {
     }
 
     public void addMsg() {
-        msgs.add(Mockito.mock(Message.class));
+        threadLocal.get().add(Mockito.mock(Message.class));
     }
 }
