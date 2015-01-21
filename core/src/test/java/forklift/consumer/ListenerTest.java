@@ -9,6 +9,7 @@ import org.junit.Test;
 import org.springframework.util.Assert;
 
 import forklift.Forklift;
+import forklift.ForkliftTest;
 import forklift.concurrent.Callback;
 import forklift.connectors.ForkliftConnectorI;
 import forklift.connectors.ForkliftMessage;
@@ -19,7 +20,7 @@ import forklift.exception.StartupException;
 import forklift.spring.ContextManager;
 
 @Queue("test")
-public class ListenerTest {
+public class ListenerTest extends ForkliftTest {
     /*
      * Have the forklift message injected into multiple different scopes to
      * test injection accessible settings.
@@ -45,9 +46,6 @@ public class ListenerTest {
 
     @Test
     public void test() throws StartupException {
-        final Forklift forklift = new Forklift();
-        forklift.start();
-
         final MockConnector connector = (MockConnector) ContextManager.getContext().getBean(ForkliftConnectorI.class);
         connector.addMsg();
 
