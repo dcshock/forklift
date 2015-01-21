@@ -8,7 +8,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.Test;
 import org.springframework.util.Assert;
 
-import forklift.Forklift;
 import forklift.ForkliftTest;
 import forklift.concurrent.Callback;
 import forklift.connectors.ForkliftConnectorI;
@@ -55,15 +54,11 @@ public class ListenerTest extends ForkliftTest {
         final Consumer c = new Consumer(clazzes);
 
         // Shutdown the consumer after all the messages have been processed.
-        c.getListener(getClass()).setOutOfMessages(new Callback<Listener>() {
-            @Override
-            public void handle(Listener v) {
-                v.shutdown();
-                forklift.shutdown();
+        c.getListener(getClass()).setOutOfMessages((listener) -> {
+            listener.shutdown();
 
-                Assert.isTrue(allNotNull.get());
-                Assert.isTrue(called.get() == 1, "called was not == 1");
-            }
+            Assert.isTrue(allNotNull.get());
+            Assert.isTrue(called.get() == 1, "called was not == 1");
         });
 
         // Start the consumer.

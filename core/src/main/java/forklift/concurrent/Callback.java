@@ -1,7 +1,6 @@
 package forklift.concurrent;
 
-public class Callback<V> {
-    public void handle(V v) {
-
-    }
+@FunctionalInterface
+public interface Callback<V> {
+    void handle(V v);
 }
