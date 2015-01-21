@@ -11,6 +11,7 @@ import javax.jms.MessageConsumer;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import forklift.connectors.ConnectorException;
@@ -18,6 +19,7 @@ import forklift.connectors.ForkliftConnectorI;
 import forklift.connectors.ForkliftMessage;
 
 @Component
+@Scope("prototype")
 public class MockConnector implements ForkliftConnectorI {
     List<Message> msgs = new ArrayList<Message>();
 
