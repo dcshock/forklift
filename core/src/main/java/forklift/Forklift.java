@@ -1,5 +1,6 @@
 package forklift;
 
+import java.io.File;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
@@ -7,6 +8,8 @@ import org.slf4j.LoggerFactory;
 
 import forklift.connectors.ConnectorException;
 import forklift.connectors.ForkliftConnectorI;
+import forklift.consumer.ConsumerDeploymentEvents;
+import forklift.deployment.DeploymentWatch;
 import forklift.exception.StartupException;
 
 /**
@@ -60,8 +63,10 @@ public class Forklift {
 
     public static void main(String args[])
       throws StartupException {
+    	final Forklift forklift = new Forklift();
+    	final DeploymentWatch deployWatch = new DeploymentWatch(new File("/tmp"), new ConsumerDeploymentEvents(forklift));
     	// TODO - get connector from a config file. 
-        final Forklift forklift = new Forklift();
+    	
         if (!forklift.isRunning())
             throw new RuntimeException("Unable to start Forklift.");
     }
