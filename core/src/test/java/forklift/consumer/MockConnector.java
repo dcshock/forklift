@@ -1,7 +1,9 @@
 package forklift.consumer;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Queue;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
@@ -19,31 +21,12 @@ import forklift.connectors.ForkliftMessage;
 
 @Component
 public class MockConnector implements ForkliftConnectorI {
-    private static ThreadLocal<List<Message>> threadLocal = new ThreadLocal<List<Message>>();
+	private Map<String, MessageConsumer> queues = new HashMap<>();
+	private Map<String, Queue<Message>> msgs = new HashMap<>();
 
-    private ForkliftConnectorI mock;
+	private ForkliftConnectorI mock = Mockito.mock(ForkliftConnectorI.class);
 
     public MockConnector() throws ConnectorException, JMSException {
-        threadLocal.set(new ArrayList<Message>());
-
-        final MessageConsumer consumer = Mockito.mock(MessageConsumer.class);
-
-        final Answer<Message> answer = new Answer<Message>() {
-            @Override
-            public Message answer(InvocationOnMock invocation) throws Throwable {
-                if (threadLocal.get().size() == 0)
-                    return null;
-
-                return threadLocal.get().remove(0);
-            }
-
-        };
-
-        Mockito.when(consumer.receive()).thenAnswer(answer);
-        Mockito.when(consumer.receive(Mockito.anyLong())).thenAnswer(answer);
-
-        mock = Mockito.mock(ForkliftConnectorI.class);
-        Mockito.when(mock.getQueue(Mockito.anyString())).thenReturn(consumer);
     }
 
     @Override
@@ -65,7 +48,46 @@ public class MockConnector implements ForkliftConnectorI {
     @Override
     public MessageConsumer getQueue(String name)
       throws ConnectorException {
-        return mock.getQueue(name);
+    	if (queues.containsKey(name))
+    		return queues.get(name);
+
+    	final Queue<Message> queue = buildQueue(name);
+    	
+    	final Answer<Message> answerNoWait = new Answer<Message>() {
+    		@Override
+    		public Message answer(InvocationOnMock invocation) throws Throwable {
+    			synchronized (queue) {
+    				if (queue.isEmpty()) 
+    					return null;
+    				
+    				return queue.peek();
+    			}
+    		}
+    	};
+    	
+    	final Answer<Message> answerWait = new Answer<Message>() {
+    		@Override
+    		public Message answer(InvocationOnMock invocation) throws Throwable {
+    			synchronized (queue) {
+    				if (queue.isEmpty()) {
+    					queue.wait(1);
+    					
+    					if (queue.isEmpty())
+    						return null;
+    				}
+    				return queue.peek();
+    			}
+    		}
+    	};
+    	
+    	final MessageConsumer consumer = Mockito.mock(MessageConsumer.class);
+        try {
+			Mockito.when(consumer.receive()).thenAnswer(answerNoWait);
+			Mockito.when(consumer.receive(Mockito.anyLong())).thenAnswer(answerWait);
+		} catch (JMSException ignored) {
+		}
+
+        return consumer;
     }
 
     @Override
@@ -81,7 +103,37 @@ public class MockConnector implements ForkliftConnectorI {
         return msg;
     }
 
-    public void addMsg() {
-        threadLocal.get().add(Mockito.mock(Message.class));
+    public void addMsg(String name) {
+    	final Queue<Message> queue = buildQueue(name);
+    	
+    	final Answer<Object> ack = new Answer<Object>() {
+			@Override
+			public Object answer(InvocationOnMock invocation) throws Throwable {
+				synchronized (queue) {
+					return queue.poll();
+				}
+			}
+    	};
+    	
+    	final Message m = Mockito.mock(Message.class);
+    	try {
+			Mockito.doAnswer(ack).when(m).acknowledge();
+		} catch (JMSException ignored) {
+		}
+    	
+    	synchronized (queue) {
+    		queue.add(m);
+    	}
+    }
+    
+    private Queue<Message> buildQueue(String name) {
+    	synchronized (msgs) {
+    		if (msgs.containsKey(name))
+    			return msgs.get(name);
+    		
+    		final Queue<Message> queue = new LinkedList<>();
+    		msgs.put(name, queue);
+    		return queue;
+    	}
     }
 }

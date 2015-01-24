@@ -103,7 +103,7 @@ public class Listener {
             } catch (ConnectorException e) {
                 e.printStackTrace();
             }
-
+            
             messageLoop();
 
             // We're either going to try again, or call it quits.

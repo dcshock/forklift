@@ -9,7 +9,6 @@ import org.junit.Test;
 import org.springframework.util.Assert;
 
 import forklift.ForkliftTest;
-import forklift.concurrent.Callback;
 import forklift.connectors.ForkliftConnectorI;
 import forklift.connectors.ForkliftMessage;
 import forklift.decorators.Message;
@@ -18,7 +17,7 @@ import forklift.decorators.Queue;
 import forklift.exception.StartupException;
 import forklift.spring.ContextManager;
 
-@Queue("test")
+@Queue("q1")
 public class ListenerTest extends ForkliftTest {
     /*
      * Have the forklift message injected into multiple different scopes to
@@ -45,10 +44,13 @@ public class ListenerTest extends ForkliftTest {
 
     @Test
     public void test() throws StartupException {
-        final MockConnector connector = (MockConnector) ContextManager.getContext().getBean(ForkliftConnectorI.class);
-        connector.addMsg();
+    	int msgCount = 100;
+    	
+        final MockConnector connector = (MockConnector)ContextManager.getContext().getBean(ForkliftConnectorI.class);
+        for (int i = 0; i < msgCount; i++)
+        	connector.addMsg("queue://q1");
 
-        final Set<Class<?>> clazzes = new HashSet<Class<?>>();
+        final Set<Class<?>> clazzes = new HashSet<>();
         clazzes.add(getClass());
 
         final Consumer c = new Consumer(clazzes);
@@ -58,7 +60,7 @@ public class ListenerTest extends ForkliftTest {
             listener.shutdown();
 
             Assert.isTrue(allNotNull.get());
-            Assert.isTrue(called.get() == 1, "called was not == 1");
+            Assert.isTrue(called.get() == msgCount, "called was not == " + msgCount);
         });
 
         // Start the consumer.

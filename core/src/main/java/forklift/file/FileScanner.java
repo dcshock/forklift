@@ -9,7 +9,7 @@ import java.util.Map;
 
 public class FileScanner {
     private long lastScan = Long.MIN_VALUE;
-    private Map<String, Object> files = new HashMap<String, Object>();
+    private Map<String, Object> files = new HashMap<>();
     private Object placeHolder = new Object();
 
     private File dir;
@@ -19,7 +19,7 @@ public class FileScanner {
     }
 
     public List<FileScanResult> scan() {
-        final List<FileScanResult> results = new ArrayList<FileScanResult>();
+        final List<FileScanResult> results = new ArrayList<>();
 
         // Scan for added files.
         for (String filename : dir.list()) {
