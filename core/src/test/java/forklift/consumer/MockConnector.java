@@ -9,17 +9,17 @@ import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
 
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-import org.springframework.stereotype.Component;
 
 import forklift.connectors.ConnectorException;
 import forklift.connectors.ForkliftConnectorI;
 import forklift.connectors.ForkliftMessage;
 
-@Component
+//@Component
 public class MockConnector implements ForkliftConnectorI {
 	private Map<String, MessageConsumer> queues = new HashMap<>();
 	private Map<String, Queue<Message>> msgs = new HashMap<>();
@@ -136,4 +136,10 @@ public class MockConnector implements ForkliftConnectorI {
     		return queue;
     	}
     }
+
+	@Override
+	public MessageProducer getProducer(String name) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

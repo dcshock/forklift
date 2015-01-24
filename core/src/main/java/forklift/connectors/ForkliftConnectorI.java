@@ -3,6 +3,7 @@ package forklift.connectors;
 import javax.jms.Connection;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
 
 public interface ForkliftConnectorI {
     void start() throws ConnectorException;
@@ -11,6 +12,7 @@ public interface ForkliftConnectorI {
 //    Session getSession() throws ConnectorException;
     MessageConsumer getQueue(String name) throws ConnectorException;
     MessageConsumer getTopic(String name) throws ConnectorException;
+    MessageProducer getProducer(String name);
 
     /**
      * Convert a jms message to a forklift message.

@@ -48,7 +48,7 @@ public class ListenerTest extends ForkliftTest {
     	
         final MockConnector connector = (MockConnector)ContextManager.getContext().getBean(ForkliftConnectorI.class);
         for (int i = 0; i < msgCount; i++)
-        	connector.addMsg("queue://q1");
+        	connector.addMsg("q1");
 
         final Set<Class<?>> clazzes = new HashSet<>();
         clazzes.add(getClass());

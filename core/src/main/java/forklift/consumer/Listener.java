@@ -50,15 +50,13 @@ public class Listener {
 
     private AtomicBoolean running = new AtomicBoolean(false);
 
-    private MessageConsumer consumer;
-
     public Listener(Queue queue, Topic topic, Class<?> msgHandler, ForkliftConnectorI connector) {
         super();
         this.queue = queue;
         this.topic = topic;
         this.msgHandler = msgHandler;
         this.connector = connector;
-        this.name = "" + id.getAndIncrement();
+        this.name = queue.value() + ":" + id.getAndIncrement();
 
         log = LoggerFactory.getLogger(this.name);
 
@@ -67,7 +65,7 @@ public class Listener {
         if (msgHandler.isAnnotationPresent(MultiThreaded.class)) {
             MultiThreaded multiThreaded = msgHandler.getAnnotation(MultiThreaded.class);
             blockQueue = new ArrayBlockingQueue<Runnable>(multiThreaded.value() * 100 + 100);
-            threadPool = new ThreadPoolExecutor(1, multiThreaded.value(), 5L, TimeUnit.MINUTES, blockQueue);
+            threadPool = new ThreadPoolExecutor(multiThreaded.value(), multiThreaded.value(), 5L, TimeUnit.MINUTES, blockQueue);
         } else {
             blockQueue = null;
             threadPool = null;
@@ -93,18 +91,19 @@ public class Listener {
     public void listen() {
         // Restart the message loop if the connection is severed.
         while (true) {
+        	final MessageConsumer consumer;
             try {
                 if (topic != null)
-                    consumer = connector.getTopic("topic://" + topic.value());
+                    consumer = connector.getTopic(topic.value());
                 else if (queue != null)
-                    consumer = connector.getQueue("queue://" + queue.value());
+                    consumer = connector.getQueue(queue.value());
                 else
                     throw new RuntimeException("No queue/topic specified");
+
+                messageLoop(consumer);
             } catch (ConnectorException e) {
                 e.printStackTrace();
             }
-            
-            messageLoop();
 
             // We're either going to try again, or call it quits.
             if (running.get())
@@ -118,7 +117,7 @@ public class Listener {
         return name;
     }
 
-    public void messageLoop() {
+    public void messageLoop(MessageConsumer consumer) {
         try {
             running.set(true);
 
