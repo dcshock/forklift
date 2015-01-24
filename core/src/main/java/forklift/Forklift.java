@@ -5,8 +5,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import forklift.connectors.ConnectorException;
+import forklift.connectors.ForkliftConnectorI;
 import forklift.exception.StartupException;
-import forklift.spring.ContextManager;
 
 /**
  * Main ForkLift application instance. ForkLift is started here
@@ -14,55 +15,54 @@ import forklift.spring.ContextManager;
  */
 public class Forklift {
     private static Logger log = LoggerFactory.getLogger("ForkLift");
-
+    
+    private ForkliftConnectorI connector;
     private AtomicBoolean running = new AtomicBoolean(false);
 
     public Forklift() {
         log.debug("Creating ForkLift");
     }
 
-    public synchronized void start()
+    public synchronized void start(ForkliftConnectorI connector)
       throws StartupException {
-        start(ForkliftConfig.class);
-    }
-
-    public synchronized void start(Class<?> config)
-      throws StartupException {
-        log.debug("Initializing Spring Context");
-
-        try {
-            ContextManager.start(config);
-            log.debug("Init complete!");
-        } catch (Exception e) {
-            log.debug("An error occurred starting the spring context");
-            throw new StartupException(e.getMessage());
-        }
-
+    	this.connector = connector;
+    	try {
+			this.connector.start();
+		} catch (ConnectorException e) {
+			throw new StartupException(e.getMessage());
+		}
         running.set(true);
+        log.debug("Init complete!");
     }
 
     public void shutdown() {
         if (!running.getAndSet(false))
             return;
-
-        ContextManager.stop();
+        
+        try {
+			this.connector.stop();
+		} catch (ConnectorException e) {
+			e.printStackTrace();
+		}
     }
 
+    public ForkliftConnectorI getConnector() {
+    	return connector;
+    }
+    
+    public void setConnector(ForkliftConnectorI connector) {
+		this.connector = connector;
+	}
+    
     public boolean isRunning() {
         return running.get();
     }
 
     public static void main(String args[])
       throws StartupException {
-        final Forklift forklift = mainWithTestHook(args);
+    	// TODO - get connector from a config file. 
+        final Forklift forklift = new Forklift();
         if (!forklift.isRunning())
             throw new RuntimeException("Unable to start Forklift.");
-    }
-
-    public static Forklift mainWithTestHook(String args[])
-      throws StartupException {
-        final Forklift forklift = new Forklift();
-        forklift.start();
-        return forklift;
     }
 }

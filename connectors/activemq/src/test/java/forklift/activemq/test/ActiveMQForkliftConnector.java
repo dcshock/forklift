@@ -12,44 +12,45 @@ import forklift.connectors.ForkliftConnectorI;
 import forklift.connectors.ForkliftMessage;
 
 /**
- * Wrap the active mq connector with a spring annotation.
+ * Wrap the activemq connector with a spring annotation so that forklift can 
+ * resolve the provider.
  * @author mconroy
  *
  */
 @Component
-public class SpringConnector implements ForkliftConnectorI {
+public class ActiveMQForkliftConnector implements ForkliftConnectorI {
 	@Override
 	public void start() throws ConnectorException {
-		Initializer.getConnector().start();
+		TestServiceManager.getConnector().start();
 	}
 
 	@Override
 	public void stop() throws ConnectorException {
-		Initializer.getConnector().stop();
+		TestServiceManager.getConnector().stop();
 	}
 
 	@Override
 	public Connection getConnection() throws ConnectorException {
-		return Initializer.getConnector().getConnection();
+		return TestServiceManager.getConnector().getConnection();
 	}
 
 	@Override
 	public MessageConsumer getQueue(String name) throws ConnectorException {
-		return Initializer.getConnector().getQueue(name);
+		return TestServiceManager.getConnector().getQueue(name);
 	}
 
 	@Override
 	public MessageConsumer getTopic(String name) throws ConnectorException {
-		return Initializer.getConnector().getTopic(name);
+		return TestServiceManager.getConnector().getTopic(name);
 	}
 
 	@Override
 	public ForkliftMessage jmsToForklift(Message m) {
-		return Initializer.getConnector().jmsToForklift(m);
+		return TestServiceManager.getConnector().jmsToForklift(m);
 	}
 
 	@Override
 	public MessageProducer getProducer(String name) {
-		return Initializer.getConnector().getProducer(name);
+		return TestServiceManager.getConnector().getProducer(name);
 	}
 }

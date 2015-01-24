@@ -20,7 +20,6 @@ import forklift.connectors.ForkliftMessage;
 import forklift.consumer.Consumer;
 import forklift.decorators.OnMessage;
 import forklift.decorators.Queue;
-import forklift.spring.ContextManager;
 
 @Queue("q1")
 public class MessagingTest {
@@ -32,16 +31,16 @@ public class MessagingTest {
 	
 	@Before
 	public void before() {
-		Initializer.start();
+		TestServiceManager.start();
 	}
 
 	@After
 	public void after() {
-		Initializer.stop();
+		TestServiceManager.stop();
 	}
 	
 	@OnMessage
-	public void msg() {
+	public void onMessage() {
 		if (m == null)
 			return;
 		
@@ -61,7 +60,7 @@ public class MessagingTest {
     public void test() throws JMSException, ConnectorException {
     	int msgCount = 100;
     	
-    	final ForkliftConnectorI connector = ContextManager.getContext().getBean(ForkliftConnectorI.class);
+    	final ForkliftConnectorI connector = TestServiceManager.getForklift().getConnector();
     	final MessageProducer producer = connector.getProducer("q1");
         for (int i = 0; i < msgCount; i++) {
         	final Message m = new ActiveMQTextMessage();
@@ -73,7 +72,7 @@ public class MessagingTest {
         final Set<Class<?>> clazzes = new HashSet<>();
         clazzes.add(getClass());
 
-        final Consumer c = new Consumer(clazzes);
+        final Consumer c = new Consumer(TestServiceManager.getConnector(), clazzes);
 
         // Shutdown the consumer after all the messages have been processed.
         c.getListener(getClass()).setOutOfMessages((listener) -> {

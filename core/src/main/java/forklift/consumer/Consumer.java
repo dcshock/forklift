@@ -8,7 +8,6 @@ import java.util.Set;
 import forklift.connectors.ForkliftConnectorI;
 import forklift.decorators.Queue;
 import forklift.decorators.Topic;
-import forklift.spring.ContextManager;
 
 /**
  * Consumer is responsible for creating listeners that connect consuming methods to the
@@ -24,13 +23,12 @@ public class Consumer {
 	
 	private Map<Class<?>, ConsumerThread> threads = new HashMap<Class<?>, ConsumerThread>();
 
-    public Consumer(Set<Class<?>> msgHandlers) {
+    public Consumer(ForkliftConnectorI connector, Set<Class<?>> msgHandlers) {
         for (Class<?> c : msgHandlers) {
             Queue q = c.getAnnotation(Queue.class);
             Topic t = c.getAnnotation(Topic.class);
 
-            final Listener l = new Listener(
-                q, t, c, ContextManager.getContext().getBean(ForkliftConnectorI.class));
+            final Listener l = new Listener(q, t, c, connector);
             
             final ConsumerThread thread = new ConsumerThread();
             threads.put(c, thread);

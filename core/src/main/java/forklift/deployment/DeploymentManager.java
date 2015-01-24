@@ -3,11 +3,8 @@ package forklift.deployment;
 import java.io.File;
 import java.net.MalformedURLException;
 
-import org.springframework.stereotype.Component;
-
 import forklift.Registrar;
 
-@Component
 public class DeploymentManager extends Registrar<Deployment> {
     public synchronized Deployment registerDeployedFile(File f)
       throws MalformedURLException {
