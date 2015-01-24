@@ -1,7 +1,5 @@
 package forklift.activemq.test;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.JMSException;
@@ -68,14 +66,11 @@ public class MessagingTest {
         	producer.send(m);
         }
         producer.close();
+
+        final Consumer c = new Consumer(getClass(), TestServiceManager.getConnector());
         
-        final Set<Class<?>> clazzes = new HashSet<>();
-        clazzes.add(getClass());
-
-        final Consumer c = new Consumer(TestServiceManager.getConnector(), clazzes);
-
         // Shutdown the consumer after all the messages have been processed.
-        c.getListener(getClass()).setOutOfMessages((listener) -> {
+        c.setOutOfMessages((listener) -> {
             listener.shutdown();
 
             Assert.assertTrue(ordered);
@@ -83,13 +78,8 @@ public class MessagingTest {
         });
 
         // Start the consumer.
-        c.start();
+        c.listen();
         
-        // Wait for the consumer thread to stop to verify that we actually had msgs sent. 
-        try {
-        	c.getThread(c.getListener(getClass())).join();
-			Assert.assertTrue(called.get() > 0);
-		} catch (InterruptedException e) {
-		}
+        Assert.assertTrue(called.get() > 0);
     }
 }

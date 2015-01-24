@@ -4,11 +4,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
 
-public class MessageRunner implements Runnable {
+public class MessageRunnable implements Runnable {
     private Object handler;
     private List<Method> onMessage;
 
-    MessageRunner(Object handler, List<Method> onMessage) {
+    MessageRunnable(Object handler, List<Method> onMessage) {
         this.handler = handler;
         this.onMessage = onMessage;
     }
