@@ -32,6 +32,11 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
         	final ConsumerThread thread = new ConsumerThread(
     			new Consumer(clazz, forklift.getConnector()));
         	consumerThreads.add(thread);
+        }   
+        for (Class<?> clazz : deployment.getTopics()) {
+        	final ConsumerThread thread = new ConsumerThread(
+    			new Consumer(clazz, forklift.getConnector()));
+        	consumerThreads.add(thread);
         }
         deployments.put(deployment, consumerThreads);
     }
