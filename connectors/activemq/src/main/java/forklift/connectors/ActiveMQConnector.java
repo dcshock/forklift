@@ -4,11 +4,13 @@ import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
 import javax.jms.Session;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQSession;
+import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
 
 public class ActiveMQConnector implements ForkliftConnectorI {
@@ -96,11 +98,20 @@ public class ActiveMQConnector implements ForkliftConnectorI {
     @Override
     public ForkliftMessage jmsToForklift(Message m) {
         try {
-            final ForkliftMessage msg = new ForkliftMessage();
+            final ForkliftMessage msg = new ForkliftMessage(m);
             msg.setMsg(((ActiveMQTextMessage)m).getText());
             return msg;
         } catch (JMSException e) {
             return null;
         }
     }
+
+	@Override
+	public MessageProducer getProducer(String name) {
+		 try {
+			return getSession().createProducer(new ActiveMQQueue(name));
+		} catch (JMSException | ConnectorException e) {
+			return null;
+		}
+	}
 }

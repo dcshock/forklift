@@ -1,40 +1,61 @@
 package forklift.consumer;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
+import forklift.Forklift;
 import forklift.deployment.Deployment;
 import forklift.deployment.DeploymentEvents;
 
-@Component
 public class ConsumerDeploymentEvents implements DeploymentEvents {
-    private Logger log = LoggerFactory.getLogger(ConsumerDeploymentEvents.class);
-    private Map<Deployment, Integer> deployments = new HashMap<Deployment, Integer>();
-
-    @Autowired
-    private ConsumerManager manager;
+    private static final Logger log = LoggerFactory.getLogger(ConsumerDeploymentEvents.class);
+    
+    private Map<Deployment, List<ConsumerThread>> deployments;
+    private Forklift forklift;
+    
+    public ConsumerDeploymentEvents(Forklift forklift) {
+    	this.deployments = new HashMap<>();
+    	this.forklift = forklift;
+	}
 
     @Override
     public synchronized void onDeploy(Deployment deployment) {
         log.info("Deploying: " + deployment);
-        final Set<Class<?>> s = new HashSet<Class<?>>();
-        s.addAll(deployment.getQueues());
-        s.addAll(deployment.getTopics());
 
-        final Consumer c = new Consumer(s);
-        deployments.put(deployment, manager.register(c));
+        final List<ConsumerThread> consumerThreads = new ArrayList<>();
+        deployment.getQueues().forEach(c -> {
+        	final ConsumerThread thread = new ConsumerThread(
+    			new Consumer(c, forklift.getConnector()));
+        	consumerThreads.add(thread);
+        });
+        
+        deployment.getTopics().forEach(c -> {
+        	final ConsumerThread thread = new ConsumerThread(
+    			new Consumer(c, forklift.getConnector()));
+        	consumerThreads.add(thread);
+        });
+        
+        deployments.put(deployment, consumerThreads);
     }
 
     @Override
     public synchronized void onUndeploy(Deployment deployment) {
         log.info("Undeploying: " + deployment);
-        manager.unregister(deployments.remove(deployment));
+        final List<ConsumerThread> consumerThreads = deployments.remove(deployment);
+        if (consumerThreads == null) 
+        	return;
+        
+        consumerThreads.forEach(c -> {
+        	c.getConsumer().shutdown();
+        	try {
+				c.join(60000);
+			} catch (Exception e) {
+			}
+        });
     }
 }

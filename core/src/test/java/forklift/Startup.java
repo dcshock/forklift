@@ -4,7 +4,9 @@ import java.io.IOException;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.Mockito;
 
+import forklift.connectors.ForkliftConnectorI;
 import forklift.exception.StartupException;
 
 /**
@@ -19,31 +21,12 @@ public class Startup {
       throws IOException, StartupException, InterruptedException {
         final Forklift forklift = new Forklift();
 
-        forklift.start();
+        forklift.start(Mockito.mock(ForkliftConnectorI.class));
         int count = 20;
         while (!forklift.isRunning() && count-- > 0)
             Thread.sleep(250);
         Assert.assertTrue(forklift.isRunning());
 
-        forklift.shutdown();
-        count = 20;
-        while (forklift.isRunning() && count-- > 0)
-            Thread.sleep(250);
-        Assert.assertFalse(forklift.isRunning());
-    }
-
-    @Test
-    public void mainStart()
-      throws IOException, InterruptedException, StartupException {
-        final Forklift forklift = Forklift.mainWithTestHook(null);
-
-        // Check startup
-        int count = 20;
-        while (!forklift.isRunning() && count-- > 0)
-            Thread.sleep(250);
-        Assert.assertTrue(forklift.isRunning());
-
-        // Check shutdown
         forklift.shutdown();
         count = 20;
         while (forklift.isRunning() && count-- > 0)
