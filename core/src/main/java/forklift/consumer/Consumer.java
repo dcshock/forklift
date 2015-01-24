@@ -88,6 +88,11 @@ public class Consumer {
         }
     }
 
+    /**
+     * Creates a JMS consumer and begins listening for messages.
+     * If the JMS consumer dies, this method will attempt to
+     * get a new JMS consumer.
+     */
     public void listen() {
         // Restart the message loop if the connection is severed.
         while (true) {
@@ -107,6 +112,8 @@ public class Consumer {
 
             // We're either going to try again, or call it quits.
             if (running.get())
+            	// TODO - We need to implement some wait logic here to avoid entering a buzz loop
+            	// trying to get a consumer from a dead connector. 
                 log.info("Reconnecting");
             else
                 break;
