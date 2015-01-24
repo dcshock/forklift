@@ -28,16 +28,18 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
         log.info("Deploying: " + deployment);
 
         final List<ConsumerThread> consumerThreads = new ArrayList<>();
-        for (Class<?> clazz : deployment.getQueues()) {
+        deployment.getQueues().forEach(c -> {
         	final ConsumerThread thread = new ConsumerThread(
-    			new Consumer(clazz, forklift.getConnector()));
+    			new Consumer(c, forklift.getConnector()));
         	consumerThreads.add(thread);
-        }   
-        for (Class<?> clazz : deployment.getTopics()) {
+        });
+        
+        deployment.getTopics().forEach(c -> {
         	final ConsumerThread thread = new ConsumerThread(
-    			new Consumer(clazz, forklift.getConnector()));
+    			new Consumer(c, forklift.getConnector()));
         	consumerThreads.add(thread);
-        }
+        });
+        
         deployments.put(deployment, consumerThreads);
     }
 
