@@ -5,6 +5,7 @@ public enum ProcessStep {
 	Validating,
 	Invalid, 
 	Processing,
+	Retrying,
 	Error,
 	Complete
 }
