@@ -12,7 +12,8 @@ public interface ForkliftConnectorI {
 //    Session getSession() throws ConnectorException;
     MessageConsumer getQueue(String name) throws ConnectorException;
     MessageConsumer getTopic(String name) throws ConnectorException;
-    MessageProducer getProducer(String name);
+    MessageProducer getQueueProducer(String name);
+    MessageProducer getTopicProducer(String name);
 
     /**
      * Convert a jms message to a forklift message.

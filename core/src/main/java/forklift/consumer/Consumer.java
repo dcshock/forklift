@@ -22,6 +22,7 @@ import forklift.concurrent.Callback;
 import forklift.connectors.ConnectorException;
 import forklift.connectors.ForkliftConnectorI;
 import forklift.connectors.ForkliftMessage;
+import forklift.decorators.Audit;
 import forklift.decorators.MultiThreaded;
 import forklift.decorators.OnMessage;
 import forklift.decorators.Queue;
@@ -32,6 +33,7 @@ public class Consumer {
 
     private static AtomicInteger id = new AtomicInteger(1);
 
+    private final Boolean audit;
     private final ClassLoader classLoader;
     private final ForkliftConnectorI connector;
     private final List<Field> forkliftMsgFields;
@@ -55,6 +57,7 @@ public class Consumer {
     }
     
     public Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader) {
+    	this.audit = msgHandler.isAnnotationPresent(Audit.class);
     	this.classLoader = classLoader;
     	this.connector = connector;
     	this.msgHandler = msgHandler;

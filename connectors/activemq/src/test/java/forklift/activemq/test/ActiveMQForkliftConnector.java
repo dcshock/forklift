@@ -50,7 +50,12 @@ public class ActiveMQForkliftConnector implements ForkliftConnectorI {
 	}
 
 	@Override
-	public MessageProducer getProducer(String name) {
-		return TestServiceManager.getConnector().getProducer(name);
+	public MessageProducer getQueueProducer(String name) {
+		return TestServiceManager.getConnector().getQueueProducer(name);
+	}
+	
+	@Override
+	public MessageProducer getTopicProducer(String name) {
+		return TestServiceManager.getConnector().getTopicProducer(name);
 	}
 }
