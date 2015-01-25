@@ -38,6 +38,5 @@ public class MessageRunnable implements Runnable {
 	            // TODO what happens if more than one method handles the message?
 	        }		
     	});
-     
     }
 }
