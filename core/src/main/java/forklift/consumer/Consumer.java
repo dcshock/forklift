@@ -32,31 +32,35 @@ public class Consumer {
 
     private static AtomicInteger id = new AtomicInteger(1);
 
+    private final ClassLoader classLoader;
+    private final ForkliftConnectorI connector;
+    private final List<Field> forkliftMsgFields;
+    private final Class<?> msgHandler;
+    private final String name;
+    private final List<Method> onMessage;
+    private final Queue queue;
+    private final Topic topic;
+    
     // If a queue can process multiple messages at a time we
     // use a thread pool to manage how much cpu load the queue can
     // take.
     private final BlockingQueue<Runnable> blockQueue;
     private final ThreadPoolExecutor threadPool;
 
-    private final ForkliftConnectorI connector;
-    private final List<Method> onMessage = new ArrayList<Method>();
-    private final List<Field> forkliftMsgFields = new ArrayList<Field>();
-    private final Class<?> msgHandler;
-    private final String name;
-    private final Queue queue;
-    private final Topic topic;
-
     private Callback<Consumer> outOfMessages;
 
     private AtomicBoolean running = new AtomicBoolean(false);
-
     public Consumer(Class<?> msgHandler, ForkliftConnectorI connector) {
-        super();
-        this.queue = msgHandler.getAnnotation(Queue.class);
+    	this(msgHandler, connector, null);
+    }
+    
+    public Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader) {
+    	this.classLoader = classLoader;
+    	this.connector = connector;
+    	this.msgHandler = msgHandler;
+    	this.queue = msgHandler.getAnnotation(Queue.class);
+    	this.name = queue.value() + ":" + id.getAndIncrement();
         this.topic = msgHandler.getAnnotation(Topic.class);
-        this.msgHandler = msgHandler;
-        this.connector = connector;
-        this.name = queue.value() + ":" + id.getAndIncrement();
 
         log = LoggerFactory.getLogger(this.name);
 
@@ -73,10 +77,12 @@ public class Consumer {
 
         // Look for all methods that need to be called when a
         // message is received.
+        onMessage = new ArrayList<>();
         for (Method m : msgHandler.getDeclaredMethods())
             if (m.isAnnotationPresent(OnMessage.class))
                 onMessage.add(m);
 
+        forkliftMsgFields = new ArrayList<>();
         for (Field f : msgHandler.getDeclaredFields()) {
             if (f.isAnnotationPresent(forklift.decorators.Message.class)) {
                 f.setAccessible(true);
@@ -140,7 +146,7 @@ public class Consumer {
                             f.set(handler, msg);
 
                         // Handle the message.
-                        final MessageRunnable runner = new MessageRunnable(handler, onMessage);
+                        final MessageRunnable runner = new MessageRunnable(classLoader, handler, onMessage);
                         if (threadPool != null) {
                             threadPool.execute(runner);
                         } else {
