@@ -40,7 +40,7 @@ public class Consumer {
     private final List<Method> onMessage;
     private final Queue queue;
     private final Topic topic;
-    
+
     // If a queue can process multiple messages at a time we
     // use a thread pool to manage how much cpu load the queue can
     // take.
@@ -53,7 +53,7 @@ public class Consumer {
     public Consumer(Class<?> msgHandler, ForkliftConnectorI connector) {
     	this(msgHandler, connector, null);
     }
-    
+
     public Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader) {
     	this.classLoader = classLoader;
     	this.connector = connector;
@@ -119,7 +119,7 @@ public class Consumer {
             // We're either going to try again, or call it quits.
             if (running.get())
             	// TODO - We need to implement some wait logic here to avoid entering a buzz loop
-            	// trying to get a consumer from a dead connector. 
+            	// trying to get a consumer from a dead connector.
                 log.info("Reconnecting");
             else
                 break;
@@ -163,9 +163,17 @@ public class Consumer {
                 if (outOfMessages != null)
                     outOfMessages.handle(this);
             }
+
         } catch (JMSException e) {
             running.set(false);
-            e.printStackTrace();
+            log.error("JMS Error in message loop: ", e);
+
+        } finally {
+            try {
+                consumer.close();
+            } catch (Exception e) {
+                log.error("Error in message loop shutdown:", e);
+            }
         }
     }
 
