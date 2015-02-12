@@ -1,6 +1,9 @@
 package forklift.consumer;
 
 import java.util.ArrayList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,48 +17,61 @@ import forklift.deployment.DeploymentEvents;
 
 public class ConsumerDeploymentEvents implements DeploymentEvents {
     private static final Logger log = LoggerFactory.getLogger(ConsumerDeploymentEvents.class);
-    
-    private Map<Deployment, List<ConsumerThread>> deployments;
-    private Forklift forklift;
-    
+
+    private final Map<Deployment, List<ConsumerThread>> deployments;
+    private final Forklift forklift;
+    private final ExecutorService executor;
+
+    public ConsumerDeploymentEvents(Forklift forklift, ExecutorService executor) {
+        this.deployments = new HashMap<>();
+        this.forklift = forklift;
+        this.executor = executor;
+    }
+
     public ConsumerDeploymentEvents(Forklift forklift) {
-    	this.deployments = new HashMap<>();
-    	this.forklift = forklift;
+        // A cached thread pool creates new threads as needed, but will reuse previously
+        // constructed threads when they are available. Automatically closes threads after
+        // 60 seconds.
+        this(forklift, Executors.newCachedThreadPool());
 	}
 
     @Override
     public synchronized void onDeploy(Deployment deployment) {
         log.info("Deploying: " + deployment);
 
-        final List<ConsumerThread> consumerThreads = new ArrayList<>();
+        final List<ConsumerThread> threads = new ArrayList<>();
+
         deployment.getQueues().forEach(c -> {
-        	final ConsumerThread thread = new ConsumerThread(
-    			new Consumer(c, forklift.getConnector()));
-        	consumerThreads.add(thread);
+            final ConsumerThread thread = new ConsumerThread(
+                new Consumer(c, forklift.getConnector()));
+            threads.add(thread);
+            executor.submit(thread);
         });
-        
+
         deployment.getTopics().forEach(c -> {
-        	final ConsumerThread thread = new ConsumerThread(
-    			new Consumer(c, forklift.getConnector()));
-        	consumerThreads.add(thread);
+            final ConsumerThread thread = new ConsumerThread(
+                new Consumer(c, forklift.getConnector()));
+            threads.add(thread);
+            executor.submit(thread);
         });
-        
-        deployments.put(deployment, consumerThreads);
+
+        deployments.put(deployment, threads);
     }
 
     @Override
     public synchronized void onUndeploy(Deployment deployment) {
         log.info("Undeploying: " + deployment);
-        final List<ConsumerThread> consumerThreads = deployments.remove(deployment);
-        if (consumerThreads == null) 
-        	return;
-        
-        consumerThreads.forEach(c -> {
-        	c.getConsumer().shutdown();
-        	try {
-				c.join(60000);
-			} catch (Exception e) {
-			}
-        });
+
+        final List<ConsumerThread> threads = deployments.remove(deployment);
+        if (threads != null && !threads.isEmpty()) {
+            threads.forEach(t -> {
+                t.getConsumer().shutdown();
+                try {
+                    t.join(60000);
+                } catch (Exception e) {
+                }
+            });
+        }
     }
+
 }
