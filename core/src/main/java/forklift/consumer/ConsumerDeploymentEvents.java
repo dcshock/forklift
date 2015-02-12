@@ -18,13 +18,11 @@ import forklift.deployment.DeploymentEvents;
 public class ConsumerDeploymentEvents implements DeploymentEvents {
     private static final Logger log = LoggerFactory.getLogger(ConsumerDeploymentEvents.class);
 
-    private final Map<Deployment, List<Future<?>>> running;
     private final Map<Deployment, List<ConsumerThread>> deployments;
     private final Forklift forklift;
     private final ExecutorService executor;
 
     public ConsumerDeploymentEvents(Forklift forklift, ExecutorService executor) {
-        this.running = new HashMap<>();
         this.deployments = new HashMap<>();
         this.forklift = forklift;
         this.executor = executor;
@@ -42,24 +40,22 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
         log.info("Deploying: " + deployment);
 
         final List<ConsumerThread> threads = new ArrayList<>();
-        final List<Future<?>> futures = new ArrayList<>();
 
         deployment.getQueues().forEach(c -> {
             final ConsumerThread thread = new ConsumerThread(
                 new Consumer(c, forklift.getConnector()));
             threads.add(thread);
-            futures.add(executor.submit(thread));
+            executor.submit(thread);
         });
 
         deployment.getTopics().forEach(c -> {
             final ConsumerThread thread = new ConsumerThread(
                 new Consumer(c, forklift.getConnector()));
             threads.add(thread);
-            futures.add(executor.submit(thread));
+            executor.submit(thread);
         });
 
         deployments.put(deployment, threads);
-        running.put(deployment, futures);
     }
 
     @Override
@@ -74,13 +70,6 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
                     t.join(60000);
                 } catch (Exception e) {
                 }
-            });
-        }
-
-        final List<Future<?>> futures = running.remove(deployment);
-        if (futures != null && !futures.isEmpty()) {
-            futures.forEach(f -> {
-                if (!f.isCancelled()) f.cancel(true);
             });
         }
     }
