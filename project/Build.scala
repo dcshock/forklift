@@ -11,4 +11,10 @@ object ForkliftBuild extends Build {
         id = "activemq",
         base = file("connectors/activemq")
     ).dependsOn(core)
+
+    lazy val server = Project(
+        id = "server",
+        base = file("server")
+    ).dependsOn(core, activemq)
+
 }
