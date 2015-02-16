@@ -4,7 +4,8 @@ version := "0.1"
 
 scalaVersion := "2.11.4"
 
-javacOptions ++= Seq("-source", "1.8", "-target", "1.8", "-Xlint")
+// target and Xlint cause sbt dist to fail
+javacOptions ++= Seq("-source", "1.8")//, "-target", "1.8", "-Xlint")
 
 initialize := {
   val _ = initialize.value
@@ -30,6 +31,4 @@ resolvers ++= Seq(
     "Fuse Snapshots" at "http://repo.fusesource.com/nexus/content/repositories/snapshots",
     "Fuse" at "http://repo.fusesource.com/nexus/content/groups/public"
 )
-
-packageArchetype.java_application
 

@@ -1,7 +1,6 @@
 package forklift.consumer;
 
 import java.util.ArrayList;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.HashMap;
@@ -12,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import forklift.Forklift;
+import forklift.concurrent.Executors;
 import forklift.deployment.Deployment;
 import forklift.deployment.DeploymentEvents;
 
@@ -29,10 +29,7 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
     }
 
     public ConsumerDeploymentEvents(Forklift forklift) {
-        // A cached thread pool creates new threads as needed, but will reuse previously
-        // constructed threads when they are available. Automatically closes threads after
-        // 60 seconds.
-        this(forklift, Executors.newCachedThreadPool());
+        this(forklift, Executors.newCoreThreadPool("consumer-deployment-events"));
 	}
 
     @Override
