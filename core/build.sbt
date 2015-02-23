@@ -20,6 +20,7 @@ libraryDependencies ++= Seq(
     "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1",
     "org.reflections" % "reflections" % "0.9.9-RC1",
     "com.novocode" % "junit-interface" % "0.10" % "test",
+    "com.fasterxml.jackson.core" % "jackson-databind" % "2.5.1",
     "org.mockito" % "mockito-all" % "1.9.5" % "test"
 )
 
