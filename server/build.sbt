@@ -28,6 +28,7 @@ libraryDependencies ++= Seq(
   "ch.qos.logback.contrib" % "logback-json-core" % "0.1.2" % "runtime",
   "ch.qos.logback.contrib" % "logback-json-classic" % "0.1.2" % "runtime",
   "ch.qos.logback.contrib" % "logback-jackson" % "0.1.2" % "runtime",
+  "com.fasterxml.jackson.core" % "jackson-databind" % "2.5.1",
   "org.codehaus.janino" % "janino" % "2.6.1" % "runtime"
 )
 
