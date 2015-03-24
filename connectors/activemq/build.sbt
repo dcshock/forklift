@@ -1,3 +1,5 @@
+organization := "com.github.dcshock"
+
 name := "forklift-activemq"
 
 version := "0.1"
