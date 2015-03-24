@@ -1,3 +1,5 @@
+organization := "com.github.dcshock"
+
 name := "forklift"
 
 version := "0.1"
