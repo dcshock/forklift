@@ -40,3 +40,11 @@ resolvers ++= Seq(
     "Fuse Snapshots" at "http://repo.fusesource.com/nexus/content/repositories/snapshots",
     "Fuse" at "http://repo.fusesource.com/nexus/content/groups/public"
 )
+
+assemblyMergeStrategy in assembly := {
+  case "META-INF/MANIFEST.MF"  => MergeStrategy.discard
+  case PathList(ps @ _*)       => MergeStrategy.first
+  case x =>
+    val oldStrategy = (assemblyMergeStrategy in assembly).value
+    oldStrategy(x)
+}
