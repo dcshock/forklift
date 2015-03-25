@@ -55,17 +55,17 @@ public class Consumer {
 
     private AtomicBoolean running = new AtomicBoolean(false);
     public Consumer(Class<?> msgHandler, ForkliftConnectorI connector) {
-    	this(msgHandler, connector, null);
+        this(msgHandler, connector, null);
     }
 
     public Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader) {
-    	this.audit = msgHandler.isAnnotationPresent(Audit.class);
-    	this.classLoader = classLoader;
-    	this.connector = connector;
-    	this.msgHandler = msgHandler;
-    	this.retry = msgHandler.getAnnotation(Retry.class);
-    	this.queue = msgHandler.getAnnotation(Queue.class);
-    	this.name = queue.value() + ":" + id.getAndIncrement();
+        this.audit = msgHandler.isAnnotationPresent(Audit.class);
+        this.classLoader = classLoader;
+        this.connector = connector;
+        this.msgHandler = msgHandler;
+        this.retry = msgHandler.getAnnotation(Retry.class);
+        this.queue = msgHandler.getAnnotation(Queue.class);
+        this.name = queue.value() + ":" + id.getAndIncrement();
         this.topic = msgHandler.getAnnotation(Topic.class);
 
         log = LoggerFactory.getLogger(this.name);
@@ -76,7 +76,7 @@ public class Consumer {
             MultiThreaded multiThreaded = msgHandler.getAnnotation(MultiThreaded.class);
             blockQueue = new ArrayBlockingQueue<Runnable>(multiThreaded.value() * 100 + 100);
             threadPool = new ThreadPoolExecutor(
-        		Math.min(2, multiThreaded.value()), multiThreaded.value(), 5L, TimeUnit.MINUTES, blockQueue);
+                Math.min(2, multiThreaded.value()), multiThreaded.value(), 5L, TimeUnit.MINUTES, blockQueue);
         } else {
             blockQueue = null;
             threadPool = null;
@@ -96,7 +96,7 @@ public class Consumer {
 
                 if (f.getType() == ForkliftMessage.class)
                     forkliftMsgFields.add(f);
-                
+
                 else
                     log.warn("Unknown @Message field type, ignoring injection of messages");
             }
@@ -111,7 +111,7 @@ public class Consumer {
     public void listen() {
         // Restart the message loop if the connection is severed.
         while (true) {
-        	final MessageConsumer consumer;
+            final MessageConsumer consumer;
             try {
                 if (topic != null)
                     consumer = connector.getTopic(topic.value());
@@ -128,8 +128,8 @@ public class Consumer {
 
             // We're either going to try again, or call it quits.
             if (running.get())
-            	// TODO - We need to implement some wait logic here to avoid entering a buzz loop
-            	// trying to get a consumer from a dead connector.
+                // TODO - We need to implement some wait logic here to avoid entering a buzz loop
+                // trying to get a consumer from a dead connector.
                 log.info("Reconnecting");
             else
                 break;
@@ -141,24 +141,29 @@ public class Consumer {
     }
 
     public void messageLoop(MessageConsumer consumer) {
-        while (running.get()) {
-        	try {
+        try {
+            running.set(true);
+
+            while (running.get()) {
                 Message jmsMsg;
                 while ((jmsMsg = consumer.receive(2500)) != null) {
                     final ForkliftMessage msg = connector.jmsToForklift(jmsMsg);
                     try {
                         final Object handler = msgHandler.newInstance();
-                        
-                        // Populate injectable fields
-                        inject(msg, handler);
 
-                        // Handle the message by keeping it local, or running it with the thread pool.
+                        // Inject the forklift msg
+                        for (Field f : forkliftMsgFields)
+                            f.set(handler, msg);
+
+                        // Handle the message.
                         final MessageRunnable runner = new MessageRunnable(classLoader, handler, onMessage);
-                        if (threadPool != null)
+                        if (threadPool != null) {
                             threadPool.execute(runner);
-                        else 
+                        } else {
                             runner.run();
+                        }
 
+                        msg.getMsg();
                         jmsMsg.acknowledge();
                     } catch (Exception e) {
                         // Avoid acking a msg that hasn't been processed successfully.
@@ -182,6 +187,7 @@ public class Consumer {
         }
     }
 
+
     public void shutdown() {
         running.set(false);
     }
@@ -189,14 +195,14 @@ public class Consumer {
     public void setOutOfMessages(Callback<Consumer> outOfMessages) {
         this.outOfMessages = outOfMessages;
     }
-    
+
     private void inject(ForkliftMessage m, Object o) {
-    	// Inject the forklift msg
-    	for (Field f : forkliftMsgFields) {
-			try {
-				f.set(o, m);
-			} catch (IllegalArgumentException | IllegalAccessException ignored) {
-			}
-    	}
+        // Inject the forklift msg
+        for (Field f : forkliftMsgFields) {
+            try {
+                f.set(o, m);
+            } catch (IllegalArgumentException | IllegalAccessException ignored) {
+            }
+        }
     }
 }
