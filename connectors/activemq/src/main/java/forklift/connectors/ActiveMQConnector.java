@@ -100,7 +100,12 @@ public class ActiveMQConnector implements ForkliftConnectorI {
     public ForkliftMessage jmsToForklift(Message m) {
         try {
             final ForkliftMessage msg = new ForkliftMessage(m);
-            msg.setMsg(((ActiveMQTextMessage)m).getText());
+            if (m instanceof ActiveMQTextMessage) {
+                msg.setMsg(((ActiveMQTextMessage)m).getText());
+            } else {
+                msg.setFlagged(true);
+                msg.setWarning("Unexpected message type: " + m.getClass().getName());
+            }
             return msg;
         } catch (JMSException e) {
             return null;
