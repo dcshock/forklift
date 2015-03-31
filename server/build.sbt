@@ -44,7 +44,9 @@ resolvers ++= Seq(
 )
 
 assemblyMergeStrategy in assembly := {
+  case m if m.toLowerCase.matches("meta- inf.*\\.sf$") => MergeStrategy.discard
   case "META-INF/MANIFEST.MF"  => MergeStrategy.discard
+  case PathList("META-INF", xs @ _*) => MergeStrategy.discard
   case PathList(ps @ _*)       => MergeStrategy.first
   case x =>
     val oldStrategy = (assemblyMergeStrategy in assembly).value
