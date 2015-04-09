@@ -63,7 +63,7 @@ The other requirements of and ESB are met by the use of a broker such as
 ActiveMQ. The following diagram shows how Forklift with a message broker
 combine to form an ESB.
 
-image::forklift-diagram-1.svg[450,450,caption="Diagram 1. ",title="Forklift ESB"]
+image::forklift-diagram-1.png[450,450,caption="Diagram 1. ",title="Forklift ESB"]
 
 
 === Language Support
