@@ -32,3 +32,6 @@ resolvers ++= Seq(
     "Fuse" at "http://repo.fusesource.com/nexus/content/groups/public"
 )
 
+javacOptions in compile ++= Seq("-g:lines,vars,source", "-deprecation")
+
+javacOptions in doc += "-Xdoclint:none"
