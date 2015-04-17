@@ -33,7 +33,6 @@ public class KeyValueParser {
             if (result.containsKey(key))
                 log.warn("key {} overwritten due to dupe value", key);
 
-            log.info("'{}:{}'", key, value);
             result.put(key, value);
         }
 
