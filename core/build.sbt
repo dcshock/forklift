@@ -64,3 +64,7 @@ pomExtra := (
       <url>http://www.mattconroy.com</url>
     </developer>
   </developers>)
+
+javacOptions in compile ++= Seq("-g:lines,vars,source", "-deprecation")
+
+javacOptions in doc += "-Xdoclint:none"
