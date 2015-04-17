@@ -1,19 +1,17 @@
 package forklift.consumer;
 
-import java.util.ArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import forklift.Forklift;
 import forklift.concurrent.Executors;
 import forklift.deployment.Deployment;
 import forklift.deployment.DeploymentEvents;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
 public class ConsumerDeploymentEvents implements DeploymentEvents {
     private static final Logger log = LoggerFactory.getLogger(ConsumerDeploymentEvents.class);
@@ -30,7 +28,7 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
 
     public ConsumerDeploymentEvents(Forklift forklift) {
         this(forklift, Executors.newCoreThreadPool("consumer-deployment-events"));
-	}
+    }
 
     @Override
     public synchronized void onDeploy(Deployment deployment) {
@@ -62,7 +60,7 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
         final List<ConsumerThread> threads = deployments.remove(deployment);
         if (threads != null && !threads.isEmpty()) {
             threads.forEach(t -> {
-                t.getConsumer().shutdown();
+                t.shutdown();
                 try {
                     t.join(60000);
                 } catch (Exception e) {

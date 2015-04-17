@@ -1,13 +1,13 @@
 package forklift.deployment;
 
-import java.io.File;
-import java.net.MalformedURLException;
-
 import forklift.Registrar;
+
+import java.io.File;
+import java.io.IOException;
 
 public class DeploymentManager extends Registrar<Deployment> {
     public synchronized Deployment registerDeployedFile(File f)
-      throws MalformedURLException {
+      throws IOException {
         final Deployment d = new Deployment(f);
         register(d);
         return d;

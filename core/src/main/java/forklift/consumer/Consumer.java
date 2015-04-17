@@ -1,9 +1,26 @@
 package forklift.consumer;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import forklift.concurrent.Callback;
+import forklift.connectors.ConnectorException;
+import forklift.connectors.ForkliftConnectorI;
+import forklift.connectors.ForkliftMessage;
+import forklift.consumer.parser.KeyValueParser;
+import forklift.decorators.Audit;
+import forklift.decorators.MultiThreaded;
+import forklift.decorators.OnMessage;
+import forklift.decorators.Queue;
+import forklift.decorators.Retry;
+import forklift.decorators.Topic;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -15,20 +32,6 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import forklift.concurrent.Callback;
-import forklift.connectors.ConnectorException;
-import forklift.connectors.ForkliftConnectorI;
-import forklift.connectors.ForkliftMessage;
-import forklift.decorators.Audit;
-import forklift.decorators.MultiThreaded;
-import forklift.decorators.OnMessage;
-import forklift.decorators.Queue;
-import forklift.decorators.Retry;
-import forklift.decorators.Topic;
-
 public class Consumer {
     private Logger log;
 
@@ -37,7 +40,7 @@ public class Consumer {
     private final Boolean audit;
     private final ClassLoader classLoader;
     private final ForkliftConnectorI connector;
-    private final List<Field> forkliftMsgFields;
+    private final Map<Class<?>, List<Field>> msgFields;
     private final Class<?> msgHandler;
     private final String name;
     private final List<Method> onMessage;
@@ -89,16 +92,16 @@ public class Consumer {
             if (m.isAnnotationPresent(OnMessage.class))
                 onMessage.add(m);
 
-        forkliftMsgFields = new ArrayList<>();
+        msgFields = new HashMap<>();
         for (Field f : msgHandler.getDeclaredFields()) {
             if (f.isAnnotationPresent(forklift.decorators.Message.class)) {
                 f.setAccessible(true);
 
-                if (f.getType() == ForkliftMessage.class)
-                    forkliftMsgFields.add(f);
+                // Init the list
+                if (msgFields.get(f.getType()) == null)
+                    msgFields.put(f.getType(), new ArrayList<>());
+                msgFields.get(f.getType()).add(f);
 
-                else
-                    log.warn("Unknown @Message field type, ignoring injection of messages");
             }
         }
     }
@@ -109,31 +112,19 @@ public class Consumer {
      * get a new JMS consumer.
      */
     public void listen() {
-        // Restart the message loop if the connection is severed.
-        while (true) {
-            final MessageConsumer consumer;
-            try {
-                if (topic != null)
-                    consumer = connector.getTopic(topic.value());
-                else if (queue != null)
-                    consumer = connector.getQueue(queue.value());
-                else
-                    throw new RuntimeException("No queue/topic specified");
-
-                running.set(true);
-                messageLoop(consumer);
-            } catch (ConnectorException e) {
-                e.printStackTrace();
-            }
-
-            // We're either going to try again, or call it quits.
-            if (running.get())
-                // TODO - We need to implement some wait logic here to avoid entering a buzz loop
-                // trying to get a consumer from a dead connector.
-                log.info("Reconnecting");
+        final MessageConsumer consumer;
+        try {
+            if (topic != null)
+                consumer = connector.getTopic(topic.value());
+            else if (queue != null)
+                consumer = connector.getQueue(queue.value());
             else
-                break;
-        };
+                throw new RuntimeException("No queue/topic specified");
+
+            messageLoop(consumer);
+        } catch (ConnectorException e) {
+            e.printStackTrace();
+        }
     }
 
     public String getName() {
@@ -151,9 +142,7 @@ public class Consumer {
                     try {
                         final Object handler = msgHandler.newInstance();
 
-                        // Inject the forklift msg
-                        for (Field f : forkliftMsgFields)
-                            f.set(handler, msg);
+                        inject(msg, handler);
 
                         // Handle the message.
                         final MessageRunnable runner = new MessageRunnable(classLoader, handler, onMessage);
@@ -173,11 +162,9 @@ public class Consumer {
                 if (outOfMessages != null)
                     outOfMessages.handle(this);
             }
-
         } catch (JMSException e) {
             running.set(false);
             log.error("JMS Error in message loop: ", e);
-
         } finally {
             try {
                 consumer.close();
@@ -196,13 +183,27 @@ public class Consumer {
         this.outOfMessages = outOfMessages;
     }
 
-    private void inject(ForkliftMessage m, Object o) {
+    private void inject(ForkliftMessage msg, final Object instance) {
+        ObjectMapper mapper = new ObjectMapper();
         // Inject the forklift msg
-        for (Field f : forkliftMsgFields) {
-            try {
-                f.set(o, m);
-            } catch (IllegalArgumentException | IllegalAccessException ignored) {
-            }
-        }
+        msgFields.keySet().stream().forEach(clazz -> {
+            msgFields.get(clazz).forEach(f -> {
+                try {
+                    if (clazz ==  ForkliftMessage.class) {
+                        f.set(instance, msg);
+                    } else if (clazz == String.class) {
+                        f.set(instance, msg.getMsg());
+                    } else if (clazz == Map.class) {
+                        // We assume that the map is <String, String>.
+                        f.set(instance, KeyValueParser.parse(msg.getMsg()));
+                    } else {
+                        // Attempt to parse a json
+                        f.set(instance, mapper.readValue(msg.getMsg(), clazz));
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        });
     }
 }
