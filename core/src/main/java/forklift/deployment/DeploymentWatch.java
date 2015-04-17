@@ -36,6 +36,14 @@ public class DeploymentWatch implements Runnable {
         for (FileScanResult result : results) {
             final File file = new File(fileScan.getDir(), result.getFilename());
 
+            // Stub in property file loading.
+            if (file.getName().endsWith(".properties")) 
+                continue;
+
+            // No need to track non jar/zip files.
+            if (!(file.getName().endsWith(".jar") || file.getName().endsWith(".zip")))
+                continue;
+
             if (result.getStatus() == FileStatus.Removed ||
                 result.getStatus() == FileStatus.Modified)
                 events.onUndeploy(deploymentManager.unregisterDeployedFile(file));

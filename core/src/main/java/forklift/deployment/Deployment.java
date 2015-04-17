@@ -36,6 +36,10 @@ public class Deployment {
       throws IOException {
         this.deployedFile = deployedFile;
 
+        if (!deployedFile.getName().endsWith(".jar") && !deployedFile.getName().endsWith(".zip")) {
+            throw new IOException("Unhandled file type");
+        }
+
         // Read jars out of the deployed file.
         final JarFile jar = new JarFile(deployedFile);
         final List<URL> jarUrls = jar.stream().filter(entry -> {
