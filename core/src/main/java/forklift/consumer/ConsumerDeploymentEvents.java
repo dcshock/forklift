@@ -60,7 +60,7 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
         final List<ConsumerThread> threads = deployments.remove(deployment);
         if (threads != null && !threads.isEmpty()) {
             threads.forEach(t -> {
-                t.getConsumer().shutdown();
+                t.shutdown();
                 try {
                     t.join(60000);
                 } catch (Exception e) {
