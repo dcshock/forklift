@@ -64,7 +64,8 @@ public class MessagingTest {
         int msgCount = 100;
 
         final ForkliftConnectorI connector = TestServiceManager.getForklift().getConnector();
-        final MessageProducer producer = connector.getProducer("q1");
+        final MessageProducer producer = connector.getQueueProducer("q1");
+
         for (int i = 0; i < msgCount; i++) {
             final ActiveMQTextMessage m = new ActiveMQTextMessage();
             m.setJMSCorrelationID("" + i);

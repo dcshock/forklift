@@ -1,0 +1,163 @@
+= Forklift
+David Thompson <dthompsn1@gmail.com>
+v1.0, 2015-02-14
+:library: Asciidoctor
+:imagesdir: images
+:toc:
+:toc-placement: preamble
+:homepage: https://github.com/dcshock/forklift
+
+== Forklift as an Enterprise Service Bus
+
+An Enterprise Service Bus is used to coordinate communications between multiple
+services in a service oriented architecture (SOA). ESB's try to simplify large
+complex problems into smaller independent problems that can be devised, built,
+and maintained independently.
+
+A large portion of an ESB is a message broker that can queue messages and
+distribute them to other services that need to receive them. Many brokers
+exist today, ActiveMQ, RabbitMQ, Apache Kafka, etc. They can be setup to support
+the enterprise customer's needs by adding functionality such as persisting
+messages (guarantee delivery) and providing redundancy. Since they
+concentrate on message delivery, their performance can be tuned to provide
+very high message delievery rates.
+
+Several message protocols for sending messages to these brokers exist,
+including Stomp, JMS, and AMQP. There are APIs for different languages to
+produce and consume messages to/from the brokers.
+
+Applications can be written to communicate with the broker in both synchronous
+and asynchronous fashions and perform work based on the messages queued. One
+of the benefits of a message broker is that applications can be highly reactive
+by just listening on message queues. When a message arrives to the broker, the
+broker pushes the message to the application.
+
+=== Microservices
+
+Now along comes microservices. Microservices try to solve the same problem by
+writing small independent applications to perform specific functions really
+well. Then the microservices are brought together to solve a larger problem.
+Typically microservices communicate together either via web-services or through
+message passing through a broker.
+
+=== Making it Easier
+
+One of the benefits of microservices is that it is easier to write a bunch
+of smaller applications and the applications can be isolated from one another.
+However, one of the drawbacks is that it makes it harder to leverage common
+functionality that can be shared between the two. Forklift allows
+the developer to write microservices very quickly and benefit from
+having some common functionality that all services can use.
+
+=== Prime Functions
+
+Forklift performs the the following prime duties of an ESB of:
+
+* An abstraction layer provided for sub-components
+* Control deployment and versioning of services
+* Marshal use of redundant services
+* Data transformation and mapping
+* Security and exception handling
+
+The other requirements of and ESB are met by the use of a broker such as
+ActiveMQ. The following diagram shows how Forklift with a message broker
+combine to form an ESB.
+
+image::forklift-diagram-1.png[650,650,caption="Diagram 1. ",title="Forklift ESB"]
+
+
+=== Language Support
+
+Forklift is written in Java and and its consumers are to be written in Java.
+_(can we say this will work with other JVM languages that can be loaded as a
+jar?)_
+However, it can consume messages that are placed on a message queue written
+in any language and can use any of the standard Java communication protocols
+to communicate to other services.
+
+== What Forklift is Not
+
+Purposely, Forklift is built to quickly create consumers in code to perform
+actions based on messages. There is no xml configuration, there is no
+business process modeling, no developed flow tools. It is built for developers
+who can read/write code to implement redundant, retry capable, provable,
+testable, queued, message processing.
+
+== What Forklift Provides
+
+=== Quick Deployment
+
+Just like a Java based application server, Forklift can be started up all on
+its own to do nothing. It doesn't start processing anything until a consumer
+is deployed to it. Consumers are written and implement a Consumer interface. The
+interface must have a process method at minimum. This method is run
+each time a new message is available. It can implement the validate method
+that validates the message put on the queue before it is processed. Failed
+validation is then handled by the Error Handler, see Standardized
+Exception/Error Handling.
+
+=== Easy Configuration
+
+@Queue
+
+@Topic
+
+Deployable property files for configuration - _I'm assuming we're going to
+support this?_
+
+=== Marshalling of Messages to Objects
+
+@Inject applied to objects automatically marshal message values into object
+properties, or a map of key/value provided.
+
+=== Specialized Message Handling
+
+@MultiThread
+
+@Order
+
+@Retry
+
+
+=== Standardized Exception/Error Handling
+
+_I'm assuming we're going to support some kind of validate and
+configValidate(). Do we extend a base class or implement an interface?_
+
+validate()
+
+configValidate()
+
+thrown Exceptions
+
+==== Processing Steps
+
+When a message is picked up to be processed, forklift will report the
+steps as the message is processed. The steps are:
+
+* Pending - Message has been dequeued from the broker and has entered the
+processing stage.
+* Validating - Message is being run through the message validation method.
+* Invalid - Message failed validation.
+* Processing - Message passed validation and is now being processed.
+* Retrying - Message had failed to process and is being rescheduled to try
+again at a later time. Will only happen with process is annotated with the
+@Retry annotation.
+* Error - Message failed to process.
+* Complete - Message has succeeded at processing and has been acknowledged.
+
+==== Notifications
+
+@Notify
+
+_How do we register Notifiers with the system such as a NotifyEmail
+Annotation?_
+
+=== Other Features
+
+@RequireSystem
+
+@Audit
+
+_How do we register Auditors with the system such as LogfileAuditor or
+DatabaseAuditor?_

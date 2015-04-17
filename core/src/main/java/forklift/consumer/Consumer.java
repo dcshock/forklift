@@ -6,9 +6,11 @@ import forklift.connectors.ConnectorException;
 import forklift.connectors.ForkliftConnectorI;
 import forklift.connectors.ForkliftMessage;
 import forklift.consumer.parser.KeyValueParser;
+import forklift.decorators.Audit;
 import forklift.decorators.MultiThreaded;
 import forklift.decorators.OnMessage;
 import forklift.decorators.Queue;
+import forklift.decorators.Retry;
 import forklift.decorators.Topic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,12 +37,14 @@ public class Consumer {
 
     private static AtomicInteger id = new AtomicInteger(1);
 
+    private final Boolean audit;
     private final ClassLoader classLoader;
     private final ForkliftConnectorI connector;
     private final Map<Class<?>, List<Field>> msgFields;
     private final Class<?> msgHandler;
     private final String name;
     private final List<Method> onMessage;
+    private final Retry retry;
     private final Queue queue;
     private final Topic topic;
 
@@ -58,9 +62,11 @@ public class Consumer {
     }
 
     public Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader) {
+        this.audit = msgHandler.isAnnotationPresent(Audit.class);
         this.classLoader = classLoader;
         this.connector = connector;
         this.msgHandler = msgHandler;
+        this.retry = msgHandler.getAnnotation(Retry.class);
         this.queue = msgHandler.getAnnotation(Queue.class);
         this.name = queue.value() + ":" + id.getAndIncrement();
         this.topic = msgHandler.getAnnotation(Topic.class);
@@ -72,7 +78,8 @@ public class Consumer {
         if (msgHandler.isAnnotationPresent(MultiThreaded.class)) {
             MultiThreaded multiThreaded = msgHandler.getAnnotation(MultiThreaded.class);
             blockQueue = new ArrayBlockingQueue<Runnable>(multiThreaded.value() * 100 + 100);
-            threadPool = new ThreadPoolExecutor(multiThreaded.value(), multiThreaded.value(), 5L, TimeUnit.MINUTES, blockQueue);
+            threadPool = new ThreadPoolExecutor(
+                Math.min(2, multiThreaded.value()), multiThreaded.value(), 5L, TimeUnit.MINUTES, blockQueue);
         } else {
             blockQueue = null;
             threadPool = null;
@@ -94,6 +101,7 @@ public class Consumer {
                 if (msgFields.get(f.getType()) == null)
                     msgFields.put(f.getType(), new ArrayList<>());
                 msgFields.get(f.getType()).add(f);
+
             }
         }
     }
@@ -165,6 +173,7 @@ public class Consumer {
             }
         }
     }
+
 
     public void shutdown() {
         running.set(false);
