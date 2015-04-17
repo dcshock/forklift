@@ -180,7 +180,6 @@ public class Consumer {
         }
     }
 
-
     public void shutdown() {
         running.set(false);
     }
