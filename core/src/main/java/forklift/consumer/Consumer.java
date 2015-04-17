@@ -7,6 +7,7 @@ import forklift.connectors.ForkliftConnectorI;
 import forklift.connectors.ForkliftMessage;
 import forklift.consumer.parser.KeyValueParser;
 import forklift.decorators.Audit;
+import forklift.decorators.Config;
 import forklift.decorators.MultiThreaded;
 import forklift.decorators.OnMessage;
 import forklift.decorators.Queue;
@@ -36,11 +37,12 @@ public class Consumer {
     private Logger log;
 
     private static AtomicInteger id = new AtomicInteger(1);
+    private static ObjectMapper mapper = new ObjectMapper();
 
     private final Boolean audit;
     private final ClassLoader classLoader;
     private final ForkliftConnectorI connector;
-    private final Map<Class<?>, List<Field>> msgFields;
+    private final Map<Class, Map<Class<?>, List<Field>>> injectFields;
     private final Class<?> msgHandler;
     private final String name;
     private final List<Method> onMessage;
@@ -61,6 +63,7 @@ public class Consumer {
         this(msgHandler, connector, null);
     }
 
+    @SuppressWarnings("unchecked")
     public Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader) {
         this.audit = msgHandler.isAnnotationPresent(Audit.class);
         this.classLoader = classLoader;
@@ -92,19 +95,22 @@ public class Consumer {
             if (m.isAnnotationPresent(OnMessage.class))
                 onMessage.add(m);
 
-        msgFields = new HashMap<>();
-        for (Field f : msgHandler.getDeclaredFields()) {
-            if (f.isAnnotationPresent(forklift.decorators.Message.class)) {
-                f.setAccessible(true);
+            injectFields = new HashMap<>();
+            injectFields.put(Config.class, new HashMap<>());
+            injectFields.put(forklift.decorators.Message.class, new HashMap<>());
+            for (Field f : msgHandler.getDeclaredFields()) {
+                injectFields.keySet().forEach(type -> {
+                    if (f.isAnnotationPresent(type)) {
+                        f.setAccessible(true);
 
-                // Init the list
-                if (msgFields.get(f.getType()) == null)
-                    msgFields.put(f.getType(), new ArrayList<>());
-                msgFields.get(f.getType()).add(f);
-
+                    // Init the list
+                        if (injectFields.get(type).get(f.getType()) == null)
+                            injectFields.get(type).put(f.getType(), new ArrayList<>());
+                        injectFields.get(type).get(f.getType()).add(f);
+                    }
+                });
             }
         }
-    }
 
     /**
      * Creates a JMS consumer and begins listening for messages.
@@ -184,10 +190,11 @@ public class Consumer {
     }
 
     private void inject(ForkliftMessage msg, final Object instance) {
-        ObjectMapper mapper = new ObjectMapper();
+        final Map<Class<?>, List<Field>> fields = injectFields.get(forklift.decorators.Message.class);
+
         // Inject the forklift msg
-        msgFields.keySet().stream().forEach(clazz -> {
-            msgFields.get(clazz).forEach(f -> {
+        fields.keySet().stream().forEach(clazz -> {
+            fields.get(clazz).forEach(f -> {
                 try {
                     if (clazz ==  ForkliftMessage.class) {
                         f.set(instance, msg);
