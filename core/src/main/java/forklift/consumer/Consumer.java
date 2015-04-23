@@ -11,6 +11,7 @@ import forklift.decorators.Audit;
 import forklift.decorators.Config;
 import forklift.decorators.MultiThreaded;
 import forklift.decorators.OnMessage;
+import forklift.decorators.OnValidate;
 import forklift.decorators.Queue;
 import forklift.decorators.Retry;
 import forklift.decorators.Topic;
@@ -50,6 +51,7 @@ public class Consumer {
     private final Class<?> msgHandler;
     private final String name;
     private final List<Method> onMessage;
+    private final List<Method> onValidate;
     private final Retry retry;
     private final Queue queue;
     private final Topic topic;
@@ -95,27 +97,31 @@ public class Consumer {
         // Look for all methods that need to be called when a
         // message is received.
         onMessage = new ArrayList<>();
-        for (Method m : msgHandler.getDeclaredMethods())
+        onValidate = new ArrayList<>();
+        for (Method m : msgHandler.getDeclaredMethods()) {
             if (m.isAnnotationPresent(OnMessage.class))
                 onMessage.add(m);
-
-            injectFields = new HashMap<>();
-            injectFields.put(Config.class, new HashMap<>());
-            injectFields.put(forklift.decorators.Message.class, new HashMap<>());
-            for (Field f : msgHandler.getDeclaredFields()) {
-                injectFields.keySet().forEach(type -> {
-                    if (f.isAnnotationPresent(type)) {
-                        f.setAccessible(true);
-
-                        // Init the list
-                        if (injectFields.get(type).get(f.getType()) == null)
-                            injectFields.get(type).put(f.getType(), new ArrayList<>());
-                        injectFields.get(type).get(f.getType()).add(f);
-                    }
-                });
-            }
+            else if (m.isAnnotationPresent(OnValidate.class))
+                onValidate.add(m);
         }
 
+        injectFields = new HashMap<>();
+        injectFields.put(Config.class, new HashMap<>());
+        injectFields.put(forklift.decorators.Message.class, new HashMap<>());
+        for (Field f : msgHandler.getDeclaredFields()) {
+            injectFields.keySet().forEach(type -> {
+                if (f.isAnnotationPresent(type)) {
+                    f.setAccessible(true);
+
+                    // Init the list
+                    if (injectFields.get(type).get(f.getType()) == null)
+                        injectFields.get(type).put(f.getType(), new ArrayList<>());
+                    injectFields.get(type).get(f.getType()).add(f);
+                }
+            });
+        }
+    }
+        
     /**
      * Creates a JMS consumer and begins listening for messages.
      * If the JMS consumer dies, this method will attempt to
@@ -157,18 +163,18 @@ public class Consumer {
                         });
 
                         // Handle the message.
-                        final MessageRunnable runner = new MessageRunnable(classLoader, handler, onMessage);
+                        final MessageRunnable runner = new MessageRunnable(jmsMsg, classLoader, handler, onMessage, onValidate);
                         if (threadPool != null) {
                             threadPool.execute(runner);
                         } else {
                             runner.run();
                         }
-
-                        msg.getMsg();
-                        jmsMsg.acknowledge();
                     } catch (Exception e) {
-                        // TODO - Audit Errors here, and start acking..
-                        // Avoid acking a msg that hasn't been processed successfully.
+                        // If this error occurs we had a massive problem with the conusmer class setup. 
+                        log.error("Consumer couldn't be used.", e);
+
+                        // In this instance just stop the consumer. Someone needs to fix their shit!
+                        running.set(false);
                     }
                 }
 
