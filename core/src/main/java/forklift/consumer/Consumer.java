@@ -1,6 +1,7 @@
 package forklift.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import forklift.classloader.RunAsClassLoader;
 import forklift.concurrent.Callback;
 import forklift.connectors.ConnectorException;
 import forklift.connectors.ForkliftConnectorI;
@@ -13,6 +14,7 @@ import forklift.decorators.OnMessage;
 import forklift.decorators.Queue;
 import forklift.decorators.Retry;
 import forklift.decorators.Topic;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -148,7 +150,9 @@ public class Consumer {
                     try {
                         final Object handler = msgHandler.newInstance();
 
-                        inject(msg, handler);
+                        RunAsClassLoader.run(classLoader, () -> {
+                            inject(msg, handler);
+                        });
 
                         // Handle the message.
                         final MessageRunnable runner = new MessageRunnable(classLoader, handler, onMessage);
@@ -161,6 +165,7 @@ public class Consumer {
                         msg.getMsg();
                         jmsMsg.acknowledge();
                     } catch (Exception e) {
+                        // TODO - Audit Errors here, and start acking..
                         // Avoid acking a msg that hasn't been processed successfully.
                     }
                 }
