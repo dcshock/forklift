@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Optional;
 
 public class PropertyDeploymentEvents implements DeploymentEvents {
     private static final Logger log = LoggerFactory.getLogger(PropertyDeploymentEvents.class);
@@ -70,6 +71,15 @@ public class PropertyDeploymentEvents implements DeploymentEvents {
     }
 
     public synchronized Properties get(String name) {
+        // This may be expensive someday, but let's go ahead, and keep it simple for now. 
+        final Optional<Properties> props = deployments.keySet().stream()
+            .filter(deployment -> deployment.getDeployedFile().getName().equals(name + ".properties"))
+            .map(deployment -> deployments.get(deployment))
+            .findFirst();
+
+        if (props.isPresent())
+            return props.get();
+
         return null;
     }
 }
