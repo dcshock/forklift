@@ -3,6 +3,7 @@ package forklift.deployment;
 import forklift.file.FileScanResult;
 import forklift.file.FileScanner;
 import forklift.file.FileStatus;
+import forklift.properties.PropertiesManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,6 +20,7 @@ public class DeploymentWatch implements Runnable {
     private FileScanner fileScan;
     private DeploymentEvents events;
     private DeploymentManager deploymentManager;
+    private PropertiesManager properties;
 
     public DeploymentWatch(File dir, DeploymentEvents events) {
         this.events = events;
@@ -28,6 +30,7 @@ public class DeploymentWatch implements Runnable {
 
         fileScan = new FileScanner(dir);
         deploymentManager = new DeploymentManager();
+        properties = new PropertiesManager();
     }
 
     @Override
@@ -36,22 +39,25 @@ public class DeploymentWatch implements Runnable {
         for (FileScanResult result : results) {
             final File file = new File(fileScan.getDir(), result.getFilename());
 
-            // Stub in property file loading.
-            if (file.getName().endsWith(".properties")) 
-                continue;
-
-            // No need to track non jar/zip files.
-            if (!(file.getName().endsWith(".jar") || file.getName().endsWith(".zip")))
-                continue;
+            boolean jar = file.getName().endsWith(".jar") || file.getName().endsWith(".zip");
+            boolean props = file.getName().endsWith(".properties");
 
             if (result.getStatus() == FileStatus.Removed ||
-                result.getStatus() == FileStatus.Modified)
-                events.onUndeploy(deploymentManager.unregisterDeployedFile(file));
+                result.getStatus() == FileStatus.Modified) {
+
+                if (jar)
+                    events.onUndeploy(deploymentManager.unregisterDeployedFile(file));
+                else if (props) 
+                    properties.deregister(file);
+            }
 
             if (result.getStatus() == FileStatus.Added ||
                 result.getStatus() == FileStatus.Modified) {
                 try {
-                    events.onDeploy(deploymentManager.registerDeployedFile(file));
+                    if (jar)
+                        events.onDeploy(deploymentManager.registerDeployedFile(file));
+                    else if (props)
+                        properties.register(file);
                 } catch (IOException e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
