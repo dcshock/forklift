@@ -47,7 +47,7 @@ public class MessageRunnable implements Runnable {
                         } else if (m.getReturnType() == Boolean.class) {
                             error = error || !((Boolean)m.invoke(handler)).booleanValue();
                         } else {
-                            // TODO Audit that we don't support that type of valdiation, and error the message.
+                            allErrors.add("Return type of " + m.getReturnType() + " is not supported for OnValidate methods");
                             error = true;
                         }
 
@@ -63,7 +63,8 @@ public class MessageRunnable implements Runnable {
             	        }	
                     }
                 } catch (Throwable e) {
-                    // TODO we need to audit this unhandled exception, and mark this message as errored.
+                    error = true;
+                    allErrors.add(e.getMessage());
                 }
 
                 if (error) {
