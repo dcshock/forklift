@@ -14,6 +14,7 @@ import forklift.decorators.OnMessage;
 import forklift.decorators.Queue;
 import forklift.decorators.Retry;
 import forklift.decorators.Topic;
+import forklift.properties.PropertiesManager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +25,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -105,7 +107,7 @@ public class Consumer {
                     if (f.isAnnotationPresent(type)) {
                         f.setAccessible(true);
 
-                    // Init the list
+                        // Init the list
                         if (injectFields.get(type).get(f.getType()) == null)
                             injectFields.get(type).put(f.getType(), new ArrayList<>());
                         injectFields.get(type).get(f.getType()).add(f);
@@ -194,26 +196,35 @@ public class Consumer {
     }
 
     private void inject(ForkliftMessage msg, final Object instance) {
-        final Map<Class<?>, List<Field>> fields = injectFields.get(forklift.decorators.Message.class);
-
         // Inject the forklift msg
-        fields.keySet().stream().forEach(clazz -> {
-            fields.get(clazz).forEach(f -> {
-                try {
-                    if (clazz ==  ForkliftMessage.class) {
-                        f.set(instance, msg);
-                    } else if (clazz == String.class) {
-                        f.set(instance, msg.getMsg());
-                    } else if (clazz == Map.class) {
-                        // We assume that the map is <String, String>.
-                        f.set(instance, KeyValueParser.parse(msg.getMsg()));
-                    } else {
-                        // Attempt to parse a json
-                        f.set(instance, mapper.readValue(msg.getMsg(), clazz));
+        injectFields.keySet().stream().forEach(decorator -> {
+            final Map<Class<?>, List<Field>> fields = injectFields.get(decorator);            
+
+            fields.keySet().stream().forEach(clazz -> {
+                fields.get(clazz).forEach(f -> {
+                    try {
+                        if (decorator == forklift.decorators.Message.class) {
+                            if (clazz ==  ForkliftMessage.class) {
+                                f.set(instance, msg);
+                            } else if (clazz == String.class) {
+                                f.set(instance, msg.getMsg());
+                            } else if (clazz == Map.class) {
+                                // We assume that the map is <String, String>.
+                                f.set(instance, KeyValueParser.parse(msg.getMsg()));
+                            } else {
+                                // Attempt to parse a json
+                                f.set(instance, mapper.readValue(msg.getMsg(), clazz));
+                            }
+                        } else if (decorator == Config.class) {
+                            if (clazz == Properties.class) {
+                                forklift.decorators.Config config = f.getAnnotation(forklift.decorators.Config.class);
+                                PropertiesManager.get(config.value());
+                            }
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                });
             });
         });
     }

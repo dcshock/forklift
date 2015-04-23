@@ -13,6 +13,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.JMSException;
@@ -25,6 +26,10 @@ public class MessagingTest {
 
     @forklift.decorators.Message
     private ForkliftMessage m;
+
+    // This is null right now and is just being used to ensure the code at least tries to hit the injection code for props. 
+    @forklift.decorators.Config("none")
+    private Properties props;
 
     @forklift.decorators.Message
     private String strMsg;
