@@ -51,21 +51,23 @@ public class MessageRunnable implements Runnable {
                             error = true;
                         }
 
-                        if (error || allErrors.size() > 0) {
-                            // TODO Audit the errors
-                        
-                            // No longer process the message, but let the ack continue. This code should provide
-                            // enough info to rerun any failed message via the audit log. 
-                            return;
-                        }
+                        if (error || allErrors.size() > 0) 
+                            error = true;
                     }
 
-        		    for (Method m : onMessage) {
-        	            // Send the message to each handler.
-      	                m.invoke(handler, new Object[] {});
-        	        }	
+                    // Run the message if there are no errors.
+                    if (!error) {    
+                        for (Method m : onMessage) {
+                            // Send the message to each handler.
+      	                    m.invoke(handler, new Object[] {});
+            	        }	
+                    }
                 } catch (Throwable e) {
                     // TODO we need to audit this unhandled exception, and mark this message as errored.
+                }
+
+                if (error) {
+                    // TODO audit all errors
                 }
             } finally {
                 // We've done all we can do to process this message, ack it from the queue, and move forward. 
