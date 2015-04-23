@@ -18,14 +18,10 @@ import java.util.Optional;
 public class PropertyDeploymentEvents implements DeploymentEvents {
     private static final Logger log = LoggerFactory.getLogger(PropertyDeploymentEvents.class);
 
-    private final Map<Deployment, Properties> deployments;
-
-    public PropertyDeploymentEvents() {
-        this.deployments = new HashMap<>();
-    }
+    private static final Map<Deployment, Properties> deployments = new HashMap<>();
 
     @Override
-    public synchronized void onDeploy(Deployment deployment) {
+    public void onDeploy(Deployment deployment) {
         log.info("Deploying: " + deployment);
 
         if (!deployment.getDeployedFile().getName().endsWith(".properties")) {
@@ -40,7 +36,10 @@ public class PropertyDeploymentEvents implements DeploymentEvents {
 
             final Properties props = new Properties();
             props.load(fr);
-            deployments.put(deployment, props);
+
+            synchronized (deployments) {
+               deployments.put(deployment, props);
+            }
         } catch (IOException e) {
             log.warn("File didn't exist while attempting to read.");
             return;
@@ -53,9 +52,11 @@ public class PropertyDeploymentEvents implements DeploymentEvents {
     }
 
     @Override
-    public synchronized void onUndeploy(Deployment deployment) {
+    public void onUndeploy(Deployment deployment) {
         log.info("Undeploying: " + deployment);
-        final Properties props = deployments.remove(deployment);
+        synchronized (deployments) {
+            deployments.remove(deployment);
+        }
     }
 
     /**
@@ -70,16 +71,18 @@ public class PropertyDeploymentEvents implements DeploymentEvents {
         return deployment.getDeployedFile().getName().endsWith(".properties");
     }
 
-    public synchronized Properties get(String name) {
-        // This may be expensive someday, but let's go ahead, and keep it simple for now. 
-        final Optional<Properties> props = deployments.keySet().stream()
-            .filter(deployment -> deployment.getDeployedFile().getName().equals(name + ".properties"))
-            .map(deployment -> deployments.get(deployment))
-            .findFirst();
+    public static Properties get(String name) {
+        synchronized (deployments) {
+            // This may be expensive someday, but let's go ahead, and keep it simple for now. 
+            final Optional<Properties> props = deployments.keySet().stream()
+                .filter(deployment -> deployment.getDeployedFile().getName().equals(name + ".properties"))
+                .map(deployment -> deployments.get(deployment))
+                .findFirst();
 
-        if (props.isPresent())
-            return props.get();
+            if (props.isPresent())
+                return props.get();
 
-        return null;
+            return null;
+        }
     }
 }
