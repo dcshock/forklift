@@ -3,9 +3,13 @@ package forklift.consumer;
 public enum ProcessStep {
 	Pending,
 	Validating,
-	Invalid, 
 	Processing,
+	Invalid, 
+
+	// TODO Not Yet Implemented
 	Retrying,
+	MaxRetriesExceeded,
+
 	Error,
 	Complete
 }

@@ -4,6 +4,10 @@ import forklift.connectors.ConnectorException;
 import forklift.connectors.ForkliftConnectorI;
 import forklift.connectors.ForkliftMessage;
 import forklift.consumer.Consumer;
+import forklift.consumer.LifeCycleMonitors;
+import forklift.consumer.MessageRunnable;
+import forklift.consumer.ProcessStep;
+import forklift.decorators.LifeCycle;
 import forklift.decorators.OnMessage;
 import forklift.decorators.OnValidate;
 import forklift.decorators.Queue;
@@ -51,6 +55,13 @@ public class MessagingTest {
         TestServiceManager.stop();
     }
 
+    @LifeCycle(ProcessStep.Pending)
+    @LifeCycle(ProcessStep.Complete)
+    public void complete(MessageRunnable mr) {
+        System.out.println("GOT IT WHOA !!!!......................................... " + mr);
+
+    };
+
     /*
         Ensure that validate methods are called.
      */
@@ -83,7 +94,7 @@ public class MessagingTest {
     @Test
     public void test() throws JMSException, ConnectorException {
         int msgCount = 100;
-
+        LifeCycleMonitors.register(this.getClass());
         final ForkliftConnectorI connector = TestServiceManager.getForklift().getConnector();
         final MessageProducer producer = connector.getQueueProducer("q1");
 
