@@ -32,4 +32,8 @@ public class Registrar<T> {
         }
         return false;
     }
+
+    public synchronized List<T> getAll() {
+        return records;
+    }
 }

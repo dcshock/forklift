@@ -1,6 +1,7 @@
 package forklift.consumer;
 
 import forklift.Forklift;
+import forklift.classloader.CoreClassLoaders;
 import forklift.consumers.ConsumerService;
 import forklift.concurrent.Executors;
 import forklift.deployment.Deployment;
@@ -51,6 +52,9 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
         else 
             context = null;
 
+        // TODO initialize core services, and join classloaders.
+        // CoreClassLoaders.getInstance().register(deployment.getClassLoader());
+
         deployment.getQueues().forEach(c -> {
             final ConsumerThread thread = new ConsumerThread(
                 new Consumer(c, forklift.getConnector(), deployment.getClassLoader(), context));
@@ -85,6 +89,8 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
 
         // We manage the context here to avoid shutdown before the threads are stopped.
         ContextManager.stop(deployment.getDeployedFile().getName());
+
+        CoreClassLoaders.getInstance().unregister(deployment.getClassLoader());
     }
 
     /**

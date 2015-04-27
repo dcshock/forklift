@@ -33,10 +33,19 @@ public class ChildFirstClassLoader extends URLClassLoader {
 				try {
 					c = super.loadClass(name, resolve);
 				} catch (ClassNotFoundException e2) {
-					if (system != null) {
-                        // checking system: jvm classes, endorsed, cmd classpath,
-                        // etc.
-                        c = system.loadClass(name);
+					try {
+						// Try core class loaders
+						for (ClassLoader cl : CoreClassLoaders.getInstance().getAll()) {
+							c = cl.loadClass(name);
+							if (c != null)
+								break;
+						}
+					} catch (ClassNotFoundException e3) {
+						if (system != null) {
+	                        // checking system: jvm classes, endorsed, cmd classpath,
+	                        // etc.
+	                        c = system.loadClass(name);
+						}
 					}
 				}
 			}
