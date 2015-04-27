@@ -34,6 +34,9 @@ public class Deployment {
 
     public Deployment(File deployedFile)
       throws IOException {
+        if (deployedFile == null)
+            throw new IOException("Missing file");
+
         this.deployedFile = deployedFile;
 
         if (!deployedFile.getName().endsWith(".jar") && !deployedFile.getName().endsWith(".zip")) {
@@ -52,8 +55,6 @@ public class Deployment {
             }
         }).collect(Collectors.toList());
         jarUrls.add(deployedFile.toURI().toURL());
-
-        // TODO - we should cleanup temp jars when the deploy is thrown away.
 
         final URL[] urls = jarUrls.toArray(new URL[0]);
 
@@ -114,6 +115,9 @@ public class Deployment {
 
     private static URI jarEntryAsUri(JarFile jarFile, JarEntry jarEntry)
       throws IOException {
+        if (jarFile == null || jarEntry == null)
+            throw new IOException("Invalid jar file or entry");
+
         InputStream input = null;
         OutputStream output = null;
         try {
