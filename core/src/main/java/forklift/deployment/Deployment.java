@@ -1,6 +1,8 @@
 package forklift.deployment;
 
 import forklift.classloader.ChildFirstClassLoader;
+import forklift.decorators.CoreService;
+import forklift.decorators.Service;
 import forklift.decorators.Queue;
 import forklift.decorators.Topic;
 import org.reflections.Reflections;
@@ -21,8 +23,10 @@ import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 
 public class Deployment {
-    private Set<Class<?>> queues = new HashSet<Class<?>>();
-    private Set<Class<?>> topics = new HashSet<Class<?>>();
+    private Set<Class<?>> queues = new HashSet<>();
+    private Set<Class<?>> topics = new HashSet<>();
+    private Set<Class<?>> services = new HashSet<>();
+    private Set<Class<?>> coreServices = new HashSet<>();
     private ClassLoader cl;
 
     private File deployedFile;
@@ -66,8 +70,13 @@ public class Deployment {
             .addClassLoader(cl)
             .setUrls(urls));
 
+        coreServices.addAll(reflections.getTypesAnnotatedWith(CoreService.class));
         queues.addAll(reflections.getTypesAnnotatedWith(Queue.class));
+        services.addAll(reflections.getTypesAnnotatedWith(Service.class));
         topics.addAll(reflections.getTypesAnnotatedWith(Topic.class));
+
+        if (coreServices.size() > 0 && (queues.size() > 0 || topics.size() > 0 || services.size() > 0))
+            throw new IOException("Invalid core service due to queues/topics/services being deployed along side.");
     }
 
     public boolean isJar() {
