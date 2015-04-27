@@ -25,7 +25,7 @@ public class ConsumerThread extends Thread {
     private Consumer consumer;
 
     public ConsumerThread(Consumer consumer) {
-        super(consumer.getName() + ":" + id.incrementAndGet());
+        super(consumer.getName());
         this.running = new AtomicBoolean(false);
         this.consumer = consumer;
     }

@@ -19,6 +19,7 @@ import forklift.properties.PropertiesManager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -55,6 +56,7 @@ public class Consumer {
     private final Retry retry;
     private final Queue queue;
     private final Topic topic;
+    private final ApplicationContext context;
 
     // If a queue can process multiple messages at a time we
     // use a thread pool to manage how much cpu load the queue can
@@ -66,11 +68,11 @@ public class Consumer {
 
     private AtomicBoolean running = new AtomicBoolean(false);
     public Consumer(Class<?> msgHandler, ForkliftConnectorI connector) {
-        this(msgHandler, connector, null);
+        this(msgHandler, connector, null, null);
     }
 
     @SuppressWarnings("unchecked")
-    public Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader) {
+    public Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader, ApplicationContext context) {
         this.audit = msgHandler.isAnnotationPresent(Audit.class);
         this.classLoader = classLoader;
         this.connector = connector;
@@ -79,6 +81,7 @@ public class Consumer {
         this.queue = msgHandler.getAnnotation(Queue.class);
         this.name = queue.value() + ":" + id.getAndIncrement();
         this.topic = msgHandler.getAnnotation(Topic.class);
+        this.context = context;
 
         log = LoggerFactory.getLogger(this.name);
 
@@ -107,6 +110,7 @@ public class Consumer {
 
         injectFields = new HashMap<>();
         injectFields.put(Config.class, new HashMap<>());
+        injectFields.put(forklift.decorators.Inject.class, new HashMap<>());
         injectFields.put(forklift.decorators.Message.class, new HashMap<>());
         for (Field f : msgHandler.getDeclaredFields()) {
             injectFields.keySet().forEach(type -> {
@@ -220,6 +224,10 @@ public class Consumer {
                             } else {
                                 // Attempt to parse a json
                                 f.set(instance, mapper.readValue(msg.getMsg(), clazz));
+                            }
+                        } else if (decorator == forklift.decorators.Inject.class) {
+                            if (clazz ==  ApplicationContext.class) {
+                                f.set(instance, context);
                             }
                         } else if (decorator == Config.class) {
                             if (clazz == Properties.class) {

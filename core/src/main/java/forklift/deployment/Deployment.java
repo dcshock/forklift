@@ -99,12 +99,24 @@ public class Deployment {
         return cl;
     }
 
+    public Set<Class<?>> getCoreServices() {
+        return coreServices;
+    }
+
+    public Set<Class<?>> getServices() {
+        return services;
+    }
+
     public Set<Class<?>> getQueues() {
         return queues;
     }
 
     public Set<Class<?>> getTopics() {
         return topics;
+    }
+
+    public Reflections getReflections() {
+        return reflections;
     }
 
     @Override
