@@ -1,20 +1,14 @@
 package forklift.properties;
 
-import forklift.deployment.Deployment;
-import forklift.deployment.DeploymentEvents;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Optional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PropertiesManager {
     private static final Logger log = LoggerFactory.getLogger(PropertiesManager.class);
@@ -36,6 +30,7 @@ public class PropertiesManager {
 
             final Properties props = new Properties();
             props.load(fr);
+            System.out.println(props);
 
             synchronized (deployments) {
                deployments.put(getName(deployment), props);
@@ -43,6 +38,9 @@ public class PropertiesManager {
         } catch (IOException e) {
             log.warn("File didn't exist while attempting to read.");
             return;
+        } catch (IllegalArgumentException e) {
+        	log.warn("Invalid properties file, please check syntax.");
+        	return;
         } finally {
             try {
                 if (fr != null)
@@ -65,6 +63,6 @@ public class PropertiesManager {
     }
 
     private String getName(File f) {
-        return f.getName().split(".")[0];
+        return f.getName().split("\\.")[0];
     }
 }

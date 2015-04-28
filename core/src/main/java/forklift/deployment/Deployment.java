@@ -56,6 +56,8 @@ public class Deployment {
         }).collect(Collectors.toList());
         jarUrls.add(deployedFile.toURI().toURL());
 
+        // TODO - we should cleanup temp jars when the deploy is thrown away.
+
         final URL[] urls = jarUrls.toArray(new URL[0]);
 
         // Assign a new classloader to this deployment.
