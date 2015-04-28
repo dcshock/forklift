@@ -1,6 +1,5 @@
 package forklift.consumer;
 
-
 import forklift.decorators.OnMessage;
 import forklift.decorators.Queue;
 import forklift.decorators.Topic;

@@ -1,5 +1,7 @@
 package forklift.deployment;
 
+import forklift.ForkliftTest;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -12,8 +14,6 @@ import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 
 import org.junit.Test;
-
-import forklift.ForkliftTest;
 
 public class DeploymentTest {
     @Test(expected = IOException.class)

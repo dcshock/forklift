@@ -30,7 +30,6 @@ public class PropertiesManager {
 
             final Properties props = new Properties();
             props.load(fr);
-            System.out.println(props);
 
             synchronized (deployments) {
                deployments.put(getName(deployment), props);
