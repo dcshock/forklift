@@ -17,7 +17,7 @@ public class MessageRunnable implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(MessageRunnable.class);
 
     private Message jmsMsg;
-	private ClassLoader classLoader;
+    private ClassLoader classLoader;
     private Object handler;
     private List<Method> onMessage;
     private List<Method> onValidate;
@@ -29,7 +29,7 @@ public class MessageRunnable implements Runnable {
         this.classLoader = classLoader;
         if (this.classLoader == null)
             this.classLoader = Thread.currentThread().getContextClassLoader();
-        
+
         this.handler = handler;
         this.onMessage = onMessage;
         this.onValidate = onValidate;
@@ -56,12 +56,12 @@ public class MessageRunnable implements Runnable {
                     }
 
                     // Run the message if there are no errors.
-                    if (!error) {    
+                    if (!error) {
                         LifeCycleMonitors.call(ProcessStep.Processing, this);
                         for (Method m : onMessage) {
                             // Send the message to each handler.
-      	                    m.invoke(handler, new Object[] {});
-            	        }	
+                            m.invoke(handler, new Object[] {});
+                        }
                     }
                 } catch (Throwable e) {
                     addError(e.getMessage());
@@ -71,19 +71,19 @@ public class MessageRunnable implements Runnable {
                     LifeCycleMonitors.call(ProcessStep.Invalid, this);
                 }
             } finally {
-                // We've done all we can do to process this message, ack it from the queue, and move forward. 
+                // We've done all we can do to process this message, ack it from the queue, and move forward.
                 try {
                     if (error) {
                         LifeCycleMonitors.call(ProcessStep.Error, this);
                     } else {
-                        LifeCycleMonitors.call(ProcessStep.Complete, this);   
+                        LifeCycleMonitors.call(ProcessStep.Complete, this);
                     }
 
                     jmsMsg.acknowledge();
                 } catch (JMSException e) {
                 }
-            }	
-    	});
+            }
+        });
     }
 
     public void addError(List<String> errors) {
@@ -100,5 +100,9 @@ public class MessageRunnable implements Runnable {
 
     public void setError() {
         this.error = true;
+    }
+
+    public Message getJmsMsg() {
+        return jmsMsg;
     }
 }
