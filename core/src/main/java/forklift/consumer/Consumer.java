@@ -1,6 +1,5 @@
 package forklift.consumer;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import forklift.classloader.RunAsClassLoader;
 import forklift.concurrent.Callback;
 import forklift.connectors.ConnectorException;
@@ -17,6 +16,7 @@ import forklift.decorators.Retry;
 import forklift.decorators.Topic;
 import forklift.properties.PropertiesManager;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

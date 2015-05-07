@@ -3,13 +3,12 @@ package forklift.file;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.google.common.io.Files;
+import org.junit.Test;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-
-import org.junit.Test;
-
-import com.google.common.io.Files;
 
 public class FileScannerTest {
     @Test

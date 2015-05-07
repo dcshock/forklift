@@ -1,15 +1,15 @@
 package forklift.activemq.test;
 
+import forklift.connectors.ConnectorException;
+import forklift.connectors.ForkliftConnectorI;
+import forklift.connectors.ForkliftMessage;
+
+import org.springframework.stereotype.Component;
+
 import javax.jms.Connection;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
-
-import org.springframework.stereotype.Component;
-
-import forklift.connectors.ConnectorException;
-import forklift.connectors.ForkliftConnectorI;
-import forklift.connectors.ForkliftMessage;
 
 /**
  * Wrap the activemq connector with a spring annotation so that forklift can 

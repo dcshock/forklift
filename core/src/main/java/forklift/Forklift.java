@@ -1,16 +1,16 @@
 package forklift;
 
-import java.io.File;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import forklift.connectors.ConnectorException;
 import forklift.connectors.ForkliftConnectorI;
 import forklift.consumer.ConsumerDeploymentEvents;
 import forklift.deployment.DeploymentWatch;
 import forklift.exception.StartupException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Main ForkLift application instance. ForkLift is started here

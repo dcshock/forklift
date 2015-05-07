@@ -1,6 +1,5 @@
 package forklift;
 
-import forklift.Forklift;
 import forklift.connectors.ActiveMQConnector;
 import forklift.consumer.ConsumerDeploymentEvents;
 import forklift.deployment.DeploymentWatch;

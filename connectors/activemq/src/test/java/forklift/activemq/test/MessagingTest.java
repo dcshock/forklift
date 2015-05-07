@@ -11,13 +11,13 @@ import forklift.decorators.LifeCycle;
 import forklift.decorators.OnMessage;
 import forklift.decorators.OnValidate;
 import forklift.decorators.Queue;
+
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;

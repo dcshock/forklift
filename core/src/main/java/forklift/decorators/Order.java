@@ -1,13 +1,13 @@
 package forklift.decorators;
 
+import forklift.message.Header;
+
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-
-import forklift.message.Header;
 
 /**
  * Instructs forklift to process messages in a specified order. Order can be assigned 

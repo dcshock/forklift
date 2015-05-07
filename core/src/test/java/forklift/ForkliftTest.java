@@ -1,13 +1,13 @@
 package forklift;
 
-import java.io.File;
+import forklift.connectors.ForkliftConnectorI;
+import forklift.exception.StartupException;
 
 import org.junit.After;
 import org.junit.Before;
 import org.mockito.Mockito;
 
-import forklift.connectors.ForkliftConnectorI;
-import forklift.exception.StartupException;
+import java.io.File;
 
 public class ForkliftTest {
     protected Forklift forklift;
