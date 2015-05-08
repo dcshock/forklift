@@ -47,7 +47,7 @@ public class DeploymentWatch implements Runnable {
 
                 if (jar)
                     events.onUndeploy(deploymentManager.unregisterDeployedFile(file));
-                else if (props) 
+                else if (props)
                     properties.deregister(file);
             }
 

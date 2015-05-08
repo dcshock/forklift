@@ -72,8 +72,8 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
 
     /**
      * We allow jar/zip files.
-     * @param  deployment 
-     * @return            
+     * @param  deployment
+     * @return
      */
     public boolean filter(Deployment deployment) {
         log.info("Filtering: " + deployment);

@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class Forklift {
     private static Logger log = LoggerFactory.getLogger("ForkLift");
-    
+
     private ForkliftConnectorI connector;
     private AtomicBoolean running = new AtomicBoolean(false);
 
@@ -28,12 +28,12 @@ public class Forklift {
 
     public synchronized void start(ForkliftConnectorI connector)
       throws StartupException {
-    	this.connector = connector;
-    	try {
-			this.connector.start();
-		} catch (ConnectorException e) {
-			throw new StartupException(e.getMessage());
-		}
+        this.connector = connector;
+        try {
+            this.connector.start();
+        } catch (ConnectorException e) {
+            throw new StartupException(e.getMessage());
+        }
         running.set(true);
         log.debug("Init complete!");
     }
@@ -41,32 +41,32 @@ public class Forklift {
     public void shutdown() {
         if (!running.getAndSet(false))
             return;
-        
+
         try {
-			this.connector.stop();
-		} catch (ConnectorException e) {
-			e.printStackTrace();
-		}
+            this.connector.stop();
+        } catch (ConnectorException e) {
+            e.printStackTrace();
+        }
     }
 
     public ForkliftConnectorI getConnector() {
-    	return connector;
+        return connector;
     }
-    
+
     public void setConnector(ForkliftConnectorI connector) {
-		this.connector = connector;
-	}
-    
+        this.connector = connector;
+    }
+
     public boolean isRunning() {
         return running.get();
     }
 
     public static void main(String args[])
       throws StartupException {
-    	final Forklift forklift = new Forklift();
-    	final DeploymentWatch deployWatch = new DeploymentWatch(new File("/tmp"), new ConsumerDeploymentEvents(forklift));
-    	// TODO - get connector from a config file. 
-    	
+        final Forklift forklift = new Forklift();
+        final DeploymentWatch deployWatch = new DeploymentWatch(new File("/tmp"), new ConsumerDeploymentEvents(forklift));
+        // TODO - get connector from a config file.
+
         if (!forklift.isRunning())
             throw new RuntimeException("Unable to start Forklift.");
     }

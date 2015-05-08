@@ -10,7 +10,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Instructs forklift to process messages in a specified order. Order can be assigned 
+ * Instructs forklift to process messages in a specified order. Order can be assigned
  * by a key in the message body, a standard header key, or a property key. The default
  * is by {@link Header.CorrelationId}.
  */
@@ -19,10 +19,10 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
 public @interface Order {
-	/** The key in the message body in which to order */
-	String value() default "";
-	/** The header in which to order */ 
-	Header header() default Header.CorrelationId;
-	/** The property in which to order */
-	String property() default "";
+    /** The key in the message body in which to order */
+    String value() default "";
+    /** The header in which to order */
+    Header header() default Header.CorrelationId;
+    /** The property in which to order */
+    String property() default "";
 }

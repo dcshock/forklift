@@ -33,24 +33,24 @@ public class ForkliftTest {
             return b;
         return null;
     }
-    
+
     public static File testJarJar() {
-    	File a = new File("src/test/resources/forklift-jarjar-consumer-0.1-binks.jar");
-    	if (a.exists())
-    		return a;
+        File a = new File("src/test/resources/forklift-jarjar-consumer-0.1-binks.jar");
+        if (a.exists())
+            return a;
         File b = new File("core/src/test/resources/forklift-jarjar-consumer-0.1-binks.jar");
         if(b.exists())
             return b;
-    	return null;
+        return null;
     }
-    
+
     public static File testMultiTQJar() {
-    	File a = new File("src/test/resources/forklift-multitq-consumer-0.1.jar");
-    	if (a.exists())
-    		return a;
+        File a = new File("src/test/resources/forklift-multitq-consumer-0.1.jar");
+        if (a.exists())
+            return a;
         File b = new File("core/src/test/resources/forklift-multitq-consumer-0.1.jar");
         if(b.exists())
             return b;
-    	return null;
+        return null;
     }
 }

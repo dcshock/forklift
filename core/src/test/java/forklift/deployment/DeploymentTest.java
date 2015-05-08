@@ -61,7 +61,7 @@ public class DeploymentTest {
     // that consume queues and some consuming topics
     @Test
     public void testDeployJar() throws IOException {
-    	File f = ForkliftTest.testMultiTQJar();
+        File f = ForkliftTest.testMultiTQJar();
         Deployment d = new Deployment(f);
         assertNotNull(d);
         assertTrue(d.isJar());
@@ -76,7 +76,7 @@ public class DeploymentTest {
     // that consume queues and some consuming topics
     @Test
     public void testDeployJarJar() throws IOException {
-    	File f = ForkliftTest.testJarJar();
+        File f = ForkliftTest.testJarJar();
         Deployment d = new Deployment(f);
         assertNotNull(d);
         assertTrue(d.isJar());

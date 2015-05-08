@@ -35,7 +35,7 @@ public class MessagingTest {
     @forklift.decorators.Message
     private ForkliftMessage m;
 
-    // This is null right now and is just being used to ensure the code at least tries to hit the injection code for props. 
+    // This is null right now and is just being used to ensure the code at least tries to hit the injection code for props.
     @forklift.decorators.Config("none")
     private Properties props;
 

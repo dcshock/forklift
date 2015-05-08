@@ -24,7 +24,7 @@ public class PropertiesManager {
         }
 
         // Load and store properties.
-        FileReader fr = null; 
+        FileReader fr = null;
         try {
             fr = new FileReader(deployment);
 
@@ -38,8 +38,8 @@ public class PropertiesManager {
             log.warn("File didn't exist while attempting to read.");
             return;
         } catch (IllegalArgumentException e) {
-        	log.warn("Invalid properties file, please check syntax.");
-        	return;
+            log.warn("Invalid properties file, please check syntax.");
+            return;
         } finally {
             try {
                 if (fr != null)

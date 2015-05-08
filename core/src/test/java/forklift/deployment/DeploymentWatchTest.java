@@ -16,144 +16,144 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class DeploymentWatchTest {
     @Test
-    public void watch() 
-    	      throws IOException {
+    public void watch()
+              throws IOException {
         final File dir = Files.createTempDir();
         try {
-	        // Create a new deployment jar.
-	        final File file = File.createTempFile("test", ".jar", dir);
-	        Files.copy(ForkliftTest.testJar(), file);
-	        
-	        final AtomicBoolean deploy = new AtomicBoolean(true);
-	        DeploymentWatch watch = new DeploymentWatch(dir, new DeploymentEvents() {
-	            @Override
-	            public void onDeploy(Deployment deployment) {
-	                assertTrue(deploy.get());
-	                assertEquals(file, deployment.getDeployedFile());
-	            }
-	
-	            @Override
-	            public void onUndeploy(Deployment deployment) {
-	                assertFalse(deploy.get());
-	                assertEquals(file, deployment.getDeployedFile());
-	            }
-	        });
-	        
-	        watch.run();
-	        deploy.set(false);
-	        file.delete();
-	        watch.run();
+            // Create a new deployment jar.
+            final File file = File.createTempFile("test", ".jar", dir);
+            Files.copy(ForkliftTest.testJar(), file);
+
+            final AtomicBoolean deploy = new AtomicBoolean(true);
+            DeploymentWatch watch = new DeploymentWatch(dir, new DeploymentEvents() {
+                @Override
+                public void onDeploy(Deployment deployment) {
+                    assertTrue(deploy.get());
+                    assertEquals(file, deployment.getDeployedFile());
+                }
+
+                @Override
+                public void onUndeploy(Deployment deployment) {
+                    assertFalse(deploy.get());
+                    assertEquals(file, deployment.getDeployedFile());
+                }
+            });
+
+            watch.run();
+            deploy.set(false);
+            file.delete();
+            watch.run();
         } finally {
-        	dir.delete();
+            dir.delete();
         }
     }
 
     @Test
-    public void loadProperties() 
+    public void loadProperties()
       throws IOException {
         final File dir = Files.createTempDir();
         try {
-	        // Create a new properties files.
-	        final File file = File.createTempFile("test", ".properties", dir);
-	        FileOutputStream fos = new FileOutputStream(file);
-	        final String props = "db=prod\ndeploy=prod\nusername=mysql\npassword=mysql\n";
-	        fos.write(props.getBytes());
-	        fos.close();
-	        
-	        final AtomicBoolean deploy = new AtomicBoolean(true);
-	        DeploymentWatch watch = new DeploymentWatch(dir, new DeploymentEvents() {
-	            @Override
-	            public void onDeploy(Deployment deployment) {
-	                assertTrue(deploy.get());
-	                assertEquals(file, deployment.getDeployedFile());
-	            }
-	
-	            @Override
-	            public void onUndeploy(Deployment deployment) {
-	                assertFalse(deploy.get());
-	                assertEquals(file, deployment.getDeployedFile());
-	            }
-	        });
-	        
-	        watch.run();
-	        deploy.set(false);
-	        file.delete();
-	        watch.run();
+            // Create a new properties files.
+            final File file = File.createTempFile("test", ".properties", dir);
+            FileOutputStream fos = new FileOutputStream(file);
+            final String props = "db=prod\ndeploy=prod\nusername=mysql\npassword=mysql\n";
+            fos.write(props.getBytes());
+            fos.close();
+
+            final AtomicBoolean deploy = new AtomicBoolean(true);
+            DeploymentWatch watch = new DeploymentWatch(dir, new DeploymentEvents() {
+                @Override
+                public void onDeploy(Deployment deployment) {
+                    assertTrue(deploy.get());
+                    assertEquals(file, deployment.getDeployedFile());
+                }
+
+                @Override
+                public void onUndeploy(Deployment deployment) {
+                    assertFalse(deploy.get());
+                    assertEquals(file, deployment.getDeployedFile());
+                }
+            });
+
+            watch.run();
+            deploy.set(false);
+            file.delete();
+            watch.run();
         } finally {
-        	dir.delete();
+            dir.delete();
         }
     }
 
     @Test
-    public void propsWithComment() 
+    public void propsWithComment()
       throws IOException {
         final File dir = Files.createTempDir();
         try {
-	        // Create a new properties files.
-	        final File file = File.createTempFile("test", ".properties", dir);
-	        FileOutputStream fos = new FileOutputStream(file);
-	        final String props = "db=prod\n#Db Creds\n\ndb.username=mysql\ndb.password=mysql\n";
-	        fos.write(props.getBytes());
-	        fos.close();
-	        
-	        final AtomicBoolean deploy = new AtomicBoolean(true);
-	        DeploymentWatch watch = new DeploymentWatch(dir, new DeploymentEvents() {
-	            @Override
-	            public void onDeploy(Deployment deployment) {
-	                assertTrue(deploy.get());
-	                assertEquals(file, deployment.getDeployedFile());
-	            }
-	
-	            @Override
-	            public void onUndeploy(Deployment deployment) {
-	                assertFalse(deploy.get());
-	                assertEquals(file, deployment.getDeployedFile());
-	            }
-	        });
-	        
-	        watch.run();
-	        deploy.set(false);
-	        file.delete();
-	        watch.run();
+            // Create a new properties files.
+            final File file = File.createTempFile("test", ".properties", dir);
+            FileOutputStream fos = new FileOutputStream(file);
+            final String props = "db=prod\n#Db Creds\n\ndb.username=mysql\ndb.password=mysql\n";
+            fos.write(props.getBytes());
+            fos.close();
+
+            final AtomicBoolean deploy = new AtomicBoolean(true);
+            DeploymentWatch watch = new DeploymentWatch(dir, new DeploymentEvents() {
+                @Override
+                public void onDeploy(Deployment deployment) {
+                    assertTrue(deploy.get());
+                    assertEquals(file, deployment.getDeployedFile());
+                }
+
+                @Override
+                public void onUndeploy(Deployment deployment) {
+                    assertFalse(deploy.get());
+                    assertEquals(file, deployment.getDeployedFile());
+                }
+            });
+
+            watch.run();
+            deploy.set(false);
+            file.delete();
+            watch.run();
         } finally {
-        	dir.delete();
+            dir.delete();
         }
     }
-    
+
     @Test
-    public void badProps() 
+    public void badProps()
       throws IOException {
         final File dir = Files.createTempDir();
         try {
-	        // Create a new properties files.
-	        final File file = File.createTempFile("test", ".properties", dir);
-	        FileOutputStream fos = new FileOutputStream(file);
-	        // Create a bad props file to make sure we handle them.
-	        final String props = "db:prod\n\\u00sx=blah\nusername mysql\npassword=mysql\n";
-	        fos.write(props.getBytes());
-	        fos.close();
-	        
-	        final AtomicBoolean deploy = new AtomicBoolean(true);
-	        DeploymentWatch watch = new DeploymentWatch(dir, new DeploymentEvents() {
-	            @Override
-	            public void onDeploy(Deployment deployment) {
-	                assertTrue(deploy.get());
-	                assertEquals(file, deployment.getDeployedFile());
-	            }
-	
-	            @Override
-	            public void onUndeploy(Deployment deployment) {
-	                assertFalse(deploy.get());
-	                assertEquals(file, deployment.getDeployedFile());
-	            }
-	        });
-	        
-	        watch.run();
-	        deploy.set(false);
-	        file.delete();
-	        watch.run();
+            // Create a new properties files.
+            final File file = File.createTempFile("test", ".properties", dir);
+            FileOutputStream fos = new FileOutputStream(file);
+            // Create a bad props file to make sure we handle them.
+            final String props = "db:prod\n\\u00sx=blah\nusername mysql\npassword=mysql\n";
+            fos.write(props.getBytes());
+            fos.close();
+
+            final AtomicBoolean deploy = new AtomicBoolean(true);
+            DeploymentWatch watch = new DeploymentWatch(dir, new DeploymentEvents() {
+                @Override
+                public void onDeploy(Deployment deployment) {
+                    assertTrue(deploy.get());
+                    assertEquals(file, deployment.getDeployedFile());
+                }
+
+                @Override
+                public void onUndeploy(Deployment deployment) {
+                    assertFalse(deploy.get());
+                    assertEquals(file, deployment.getDeployedFile());
+                }
+            });
+
+            watch.run();
+            deploy.set(false);
+            file.delete();
+            watch.run();
         } finally {
-        	dir.delete();
+            dir.delete();
         }
     }
 }
