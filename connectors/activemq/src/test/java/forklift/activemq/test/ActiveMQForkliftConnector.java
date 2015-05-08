@@ -11,6 +11,8 @@ import forklift.connectors.ConnectorException;
 import forklift.connectors.ForkliftConnectorI;
 import forklift.connectors.ForkliftMessage;
 
+import forklift.producers.ForkliftProducerI;
+
 /**
  * Wrap the activemq connector with a spring annotation so that forklift can 
  * resolve the provider.
@@ -50,12 +52,12 @@ public class ActiveMQForkliftConnector implements ForkliftConnectorI {
 	}
 
 	@Override
-	public MessageProducer getQueueProducer(String name) {
+	public ForkliftProducerI getQueueProducer(String name) {
 		return TestServiceManager.getConnector().getQueueProducer(name);
 	}
 	
 	@Override
-	public MessageProducer getTopicProducer(String name) {
+	public ForkliftProducerI getTopicProducer(String name) {
 		return TestServiceManager.getConnector().getTopicProducer(name);
 	}
 }

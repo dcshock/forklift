@@ -11,6 +11,7 @@ import forklift.decorators.LifeCycle;
 import forklift.decorators.OnMessage;
 import forklift.decorators.OnValidate;
 import forklift.decorators.Queue;
+import forklift.producers.ForkliftProducerI;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.junit.After;
 import org.junit.Assert;
@@ -96,13 +97,13 @@ public class MessagingTest {
         int msgCount = 100;
         LifeCycleMonitors.register(this.getClass());
         final ForkliftConnectorI connector = TestServiceManager.getForklift().getConnector();
-        final MessageProducer producer = connector.getQueueProducer("q1");
+        final ForkliftProducerI producer = connector.getQueueProducer("q1");
 
         for (int i = 0; i < msgCount; i++) {
             final ActiveMQTextMessage m = new ActiveMQTextMessage();
             m.setJMSCorrelationID("" + i);
             m.setText("x=Hello");
-            producer.send(m);
+            producer.send(new ForkliftMessage(m));
         }
         producer.close();
 
