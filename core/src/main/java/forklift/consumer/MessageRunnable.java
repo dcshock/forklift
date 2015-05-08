@@ -1,17 +1,16 @@
 package forklift.consumer;
 
+import forklift.classloader.RunAsClassLoader;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
-
-import forklift.classloader.RunAsClassLoader;
 
 public class MessageRunnable implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(MessageRunnable.class);

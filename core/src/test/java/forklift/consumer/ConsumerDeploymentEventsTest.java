@@ -1,18 +1,17 @@
 package forklift.consumer;
 
-import java.io.File;
-import java.io.IOException;
+import forklift.ForkliftTest;
+import forklift.deployment.Deployment;
+import forklift.deployment.DeploymentWatch;
 
+import com.google.common.io.Files;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
-import com.google.common.io.Files;
-
-import forklift.ForkliftTest;
-import forklift.deployment.Deployment;
-import forklift.deployment.DeploymentWatch;
+import java.io.File;
+import java.io.IOException;
 
 @RunWith(JUnit4.class)
 public class ConsumerDeploymentEventsTest extends ForkliftTest {
