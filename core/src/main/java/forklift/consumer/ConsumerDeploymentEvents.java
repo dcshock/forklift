@@ -2,7 +2,6 @@ package forklift.consumer;
 
 import forklift.Forklift;
 import forklift.classloader.CoreClassLoaders;
-import forklift.consumers.ConsumerService;
 import forklift.concurrent.Executors;
 import forklift.deployment.Deployment;
 import forklift.deployment.DeploymentEvents;
@@ -44,12 +43,12 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
 
         final List<ConsumerThread> threads = new ArrayList<>();
 
-        // Launch a Spring context if necessary. 
+        // Launch a Spring context if necessary.
         final ApplicationContext context;
         final Set<Class<?>> springConfigs = deployment.getReflections().getTypesAnnotatedWith(Configuration.class);
         if (springConfigs.size() > 0)
             context = ContextManager.start(deployment.getDeployedFile().getName(), (Class[])springConfigs.toArray());
-        else 
+        else
             context = null;
 
         // TODO initialize core services, and join classloaders.
@@ -95,9 +94,10 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
 
     /**
      * We allow jar/zip files.
-     * @param  deployment 
-     * @return            
+     * @param  deployment
+     * @return
      */
+    @Override
     public boolean filter(Deployment deployment) {
         log.info("Filtering: " + deployment);
 
