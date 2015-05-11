@@ -56,19 +56,17 @@ public class MessageRunnable implements Runnable {
                     }
 
                     // Run the message if there are no errors.
-                    if (!error) {    
+                    if (error) {
+                        LifeCycleMonitors.call(ProcessStep.Invalid, this);
+                    } else {
                         LifeCycleMonitors.call(ProcessStep.Processing, this);
                         for (Method m : onMessage) {
                             // Send the message to each handler.
-      	                    m.invoke(handler, new Object[] {});
-            	        }	
+                            m.invoke(handler, new Object[] {});
+                        }   
                     }
                 } catch (Throwable e) {
                     addError(e.getMessage());
-                }
-
-                if (error) {
-                    LifeCycleMonitors.call(ProcessStep.Invalid, this);
                 }
             } finally {
                 // We've done all we can do to process this message, ack it from the queue, and move forward. 
