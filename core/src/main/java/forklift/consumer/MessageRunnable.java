@@ -1,9 +1,10 @@
 package forklift.consumer;
 
+import forklift.classloader.RunAsClassLoader;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,13 +12,11 @@ import java.util.List;
 import javax.jms.JMSException;
 import javax.jms.Message;
 
-import forklift.classloader.RunAsClassLoader;
-
 public class MessageRunnable implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(MessageRunnable.class);
 
     private Message jmsMsg;
-	private ClassLoader classLoader;
+    private ClassLoader classLoader;
     private Object handler;
     private List<Method> onMessage;
     private List<Method> onValidate;
@@ -29,7 +28,7 @@ public class MessageRunnable implements Runnable {
         this.classLoader = classLoader;
         if (this.classLoader == null)
             this.classLoader = Thread.currentThread().getContextClassLoader();
-        
+
         this.handler = handler;
         this.onMessage = onMessage;
         this.onValidate = onValidate;
@@ -69,19 +68,19 @@ public class MessageRunnable implements Runnable {
                     addError(e.getMessage());
                 }
             } finally {
-                // We've done all we can do to process this message, ack it from the queue, and move forward. 
+                // We've done all we can do to process this message, ack it from the queue, and move forward.
                 try {
                     if (error) {
                         LifeCycleMonitors.call(ProcessStep.Error, this);
                     } else {
-                        LifeCycleMonitors.call(ProcessStep.Complete, this);   
+                        LifeCycleMonitors.call(ProcessStep.Complete, this);
                     }
 
                     jmsMsg.acknowledge();
                 } catch (JMSException e) {
                 }
-            }	
-    	});
+            }
+        });
     }
 
     public void addError(List<String> errors) {
@@ -98,5 +97,9 @@ public class MessageRunnable implements Runnable {
 
     public void setError() {
         this.error = true;
+    }
+
+    public Message getJmsMsg() {
+        return jmsMsg;
     }
 }

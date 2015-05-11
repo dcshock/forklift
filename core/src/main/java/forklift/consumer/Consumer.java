@@ -1,6 +1,5 @@
 package forklift.consumer;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import forklift.classloader.RunAsClassLoader;
 import forklift.concurrent.Callback;
 import forklift.connectors.ConnectorException;
@@ -17,6 +16,7 @@ import forklift.decorators.Retry;
 import forklift.decorators.Topic;
 import forklift.properties.PropertiesManager;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -125,7 +125,7 @@ public class Consumer {
             });
         }
     }
-        
+
     /**
      * Creates a JMS consumer and begins listening for messages.
      * If the JMS consumer dies, this method will attempt to
@@ -174,7 +174,7 @@ public class Consumer {
                             runner.run();
                         }
                     } catch (Exception e) {
-                        // If this error occurs we had a massive problem with the conusmer class setup. 
+                        // If this error occurs we had a massive problem with the conusmer class setup.
                         log.error("Consumer couldn't be used.", e);
 
                         // In this instance just stop the consumer. Someone needs to fix their shit!
@@ -208,7 +208,7 @@ public class Consumer {
     private void inject(ForkliftMessage msg, final Object instance) {
         // Inject the forklift msg
         injectFields.keySet().stream().forEach(decorator -> {
-            final Map<Class<?>, List<Field>> fields = injectFields.get(decorator);            
+            final Map<Class<?>, List<Field>> fields = injectFields.get(decorator);
 
             fields.keySet().stream().forEach(clazz -> {
                 fields.get(clazz).forEach(f -> {

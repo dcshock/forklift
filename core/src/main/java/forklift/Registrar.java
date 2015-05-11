@@ -22,12 +22,12 @@ public class Registrar<T> {
         }
         return null;
     }
-    
+
     public synchronized boolean isRegistered(T t) {
         Iterator<T> it = records.iterator();
         while (it.hasNext()) {
             T itT = it.next();
-            if (itT.equals(t)) 
+            if (itT.equals(t))
                 return true;
         }
         return false;
