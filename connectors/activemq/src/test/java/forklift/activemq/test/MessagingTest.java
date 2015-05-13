@@ -66,7 +66,7 @@ public class MessagingTest {
         Ensure that validate methods are called.
      */
     @OnValidate
-    public Boolean onValidate() {
+    public boolean onValidate() {
         return true;
     }
     @OnValidate

@@ -47,8 +47,8 @@ public class MessageRunnable implements Runnable {
                     for (Method m : onValidate) {
                         if (m.getReturnType() == List.class) {
                             addError((List<String>)m.invoke(handler));
-                        } else if (m.getReturnType() == Boolean.class) {
-                            error = error || !((Boolean)m.invoke(handler)).booleanValue();
+                        } else if (m.getReturnType() == boolean.class) {
+                            error = error || !((boolean)m.invoke(handler));
                         } else {
                             addError("Return type of " + m.getReturnType() + " is not supported for OnValidate methods");
                         }
@@ -65,7 +65,11 @@ public class MessageRunnable implements Runnable {
                         }
                     }
                 } catch (Throwable e) {
-                    addError(e.getMessage());
+                    log.debug("Error processing", e);
+                    if (e.getCause() != null)
+                        addError(e.getCause().getMessage());
+                    else
+                        addError(e.getMessage());
                 }
             } finally {
                 // We've done all we can do to process this message, ack it from the queue, and move forward.
@@ -84,6 +88,9 @@ public class MessageRunnable implements Runnable {
     }
 
     public void addError(List<String> errors) {
+        if (errors == null)
+            return;
+
         this.errors.addAll(errors);
 
         if (this.errors.size() > 0)
@@ -97,6 +104,10 @@ public class MessageRunnable implements Runnable {
 
     public void setError() {
         this.error = true;
+    }
+
+    public List<String> getErrors() {
+        return errors;
     }
 
     public Message getJmsMsg() {
