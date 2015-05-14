@@ -77,8 +77,15 @@ public class Consumer {
         this.msgHandler = msgHandler;
         this.retry = msgHandler.getAnnotation(Retry.class);
         this.queue = msgHandler.getAnnotation(Queue.class);
-        this.name = queue.value() + ":" + id.getAndIncrement();
         this.topic = msgHandler.getAnnotation(Topic.class);
+        if (this.queue != null && this.topic != null)
+            throw new IllegalArgumentException("Msg Handler cannot consume a queue and topic");
+        if (this.queue != null)
+            this.name = queue.value() + ":" + id.getAndIncrement();
+        else if (this.topic != null)
+            this.name = topic.value() + ":" + id.getAndIncrement();
+        else
+            throw new IllegalArgumentException("Msg Handler must handle a queue or topic.");
 
         log = LoggerFactory.getLogger(this.name);
 
@@ -201,7 +208,12 @@ public class Consumer {
         this.outOfMessages = outOfMessages;
     }
 
-    private void inject(ForkliftMessage msg, final Object instance) {
+    /**
+     * Inject the data from a forklift message into an instance of the msgHandler class.
+     * @param msg containing data
+     * @param instance an instance of the msgHandler class.
+     */
+    public void inject(ForkliftMessage msg, final Object instance) {
         // Inject the forklift msg
         injectFields.keySet().stream().forEach(decorator -> {
             final Map<Class<?>, List<Field>> fields = injectFields.get(decorator);
@@ -228,7 +240,8 @@ public class Consumer {
                             }
                         }
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        log.error("Error injecting data into Msg Handler", e);
+                        throw new RuntimeException("Error injecting data into Msg Handler");
                     }
                 });
             });
