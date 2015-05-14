@@ -18,19 +18,18 @@ public class KeyValueParser {
         // Process each line separated by a newline.
         for (String line : s.split("\n")) {
             // Parse the line looking for the first equals to get the map key.
-            final String[] parts = line.split("=");
+            final String[] parts = line.split("=", 2);
 
             if (parts.length == 0)
                 continue;
 
             final String key = parts[0].trim();
-            final int keylen = parts[0].length();
             if (key.trim().equals(""))
                 continue;
 
             String value = "";
-            if (keylen+1 < line.length()) {
-                value = line.substring(keylen+1, line.length());
+            if (parts.length > 1 && parts[1] != null) {
+                value = parts[1];
             }
 
             if (result.containsKey(key))
