@@ -3,7 +3,7 @@ package forklift.file;
 public class FileScanResult {
     private FileStatus status;
     private String filename;
-    
+
     FileScanResult(FileStatus status, String filename) {
         this.status = status;
         this.filename = filename;
