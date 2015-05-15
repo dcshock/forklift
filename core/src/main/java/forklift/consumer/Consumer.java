@@ -8,6 +8,7 @@ import forklift.connectors.ForkliftMessage;
 import forklift.consumer.parser.KeyValueParser;
 import forklift.decorators.Audit;
 import forklift.decorators.Config;
+import forklift.decorators.Headers;
 import forklift.decorators.MultiThreaded;
 import forklift.decorators.OnMessage;
 import forklift.decorators.OnValidate;
@@ -115,6 +116,8 @@ public class Consumer {
         injectFields = new HashMap<>();
         injectFields.put(Config.class, new HashMap<>());
         injectFields.put(forklift.decorators.Message.class, new HashMap<>());
+        injectFields.put(forklift.decorators.Headers.class, new HashMap<>());
+        injectFields.put(forklift.decorators.Properties.class, new HashMap<>());
         for (Field f : msgHandler.getDeclaredFields()) {
             injectFields.keySet().forEach(type -> {
                 if (f.isAnnotationPresent(type)) {
@@ -237,6 +240,14 @@ public class Consumer {
                             if (clazz == Properties.class) {
                                 forklift.decorators.Config config = f.getAnnotation(forklift.decorators.Config.class);
                                 PropertiesManager.get(config.value());
+                            }
+                        } else if (decorator == Headers.class) {
+                            if (clazz == Map.class) {
+                                f.set(instance, msg.getHeaders());
+                            }
+                        } else if (decorator == forklift.decorators.Properties.class) {
+                            if (clazz == Map.class) {
+                                f.set(instance, msg.getProperties());
                             }
                         }
                     } catch (Exception e) {

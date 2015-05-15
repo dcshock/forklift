@@ -7,12 +7,16 @@ import static org.junit.Assert.assertTrue;
 
 import forklift.connectors.ForkliftMessage;
 import forklift.consumer.Consumer;
+import forklift.decorators.Headers;
 import forklift.decorators.Message;
+import forklift.decorators.Properties;
 import forklift.decorators.Queue;
 import forklift.decorators.Topic;
+import forklift.message.Header;
 
 import org.junit.Test;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.jms.JMSException;
@@ -99,6 +103,34 @@ public class ConsumerTest {
         assertEquals(2, ec.msg.ideas.length);
         assertEquals("Fred Jones", ec.msg.name);
         assertEquals("http://forklift", ec.msg.url);
+        assertNull(ec.headers);
+        assertNull(ec.properties);
+    }
+
+    @Test
+    public void testHeadersAndProperties() {
+        Consumer test = new Consumer(ExampleJsonConsumer.class, null, this.getClass().getClassLoader());
+        ExampleJsonConsumer ec = new ExampleJsonConsumer();
+        javax.jms.Message jmsMsg = new TestMsg("1");
+        ForkliftMessage msg = new ForkliftMessage(jmsMsg);
+        msg.setMsg("{}");
+
+        Map<Header, String> headers = new HashMap<>();
+        headers.put(Header.DeliveryCount, "3");
+        headers.put(Header.Producer, "testing");
+        headers.put(Header.Priority, "1");
+        msg.setHeaders(headers);
+
+        Map<String, Object> properties = new HashMap<>();
+        properties.put("my-cool-prop", new Integer(3));
+        properties.put("my-str-val", "blah");
+        properties.put("my-long-val", new Long(123123));
+        properties.put("my-float-val", new Float(123123));
+        msg.setProperties(properties);
+
+        test.inject(msg,ec);
+        assertEquals(3, ec.headers.size());
+        assertEquals(4, ec.properties.size());
     }
 
     // Class doesn't have queue or topic should throw IllegalArgException
@@ -135,6 +167,12 @@ public class ConsumerTest {
 
     @Queue("a")
     public class ExampleJsonConsumer {
+        @Headers
+        Map<Headers, String> headers;
+
+        @Properties
+        Map<String, Object> properties;
+
         @Message
         ForkliftMessage fmsg;
 
