@@ -10,16 +10,21 @@ import forklift.consumer.ProcessStep;
 import forklift.decorators.LifeCycle;
 import forklift.decorators.OnMessage;
 import forklift.decorators.OnValidate;
+import forklift.decorators.Producer;
 import forklift.decorators.Queue;
+import forklift.message.Header;
 import forklift.producers.ForkliftProducerI;
+
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.Ignore;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -35,6 +40,9 @@ public class MessagingTest {
 
     @forklift.decorators.Message
     private ForkliftMessage m;
+
+    @forklift.decorators.Producer("queue://q1")
+    private ForkliftProducerI producer;
 
     // This is null right now and is just being used to ensure the code at least tries to hit the injection code for props. 
     @forklift.decorators.Config("none")
@@ -67,7 +75,7 @@ public class MessagingTest {
         Ensure that validate methods are called.
      */
     @OnValidate
-    public Boolean onValidate() {
+    public boolean onValidate() {
         return true;
     }
     @OnValidate
@@ -87,17 +95,20 @@ public class MessagingTest {
                 ordered = false;
                 System.out.println(m.getJmsMsg().getJMSCorrelationID() + ":" + i);
             }
+            System.out.println(m.getJmsMsg().getStringProperty("Eye")+ "-:-" + i);
+            System.out.println(m.getJmsMsg().getStringProperty("Foo")+ "-:- FOO");
+            System.out.println(m.getJmsMsg().getJMSType()+ "-:- Type");
             System.out.println(m.getJmsMsg().getJMSCorrelationID());
         } catch (JMSException e) {
         }
     }
 
-    @Test
+    @Ignore
     public void test() throws JMSException, ConnectorException {
         int msgCount = 100;
         LifeCycleMonitors.register(this.getClass());
         final ForkliftConnectorI connector = TestServiceManager.getForklift().getConnector();
-        final ForkliftProducerI producer = connector.getQueueProducer("q1");
+        //final ForkliftProducerI producer = connector.getQueueProducer("q1");
 
         for (int i = 0; i < msgCount; i++) {
             final ActiveMQTextMessage m = new ActiveMQTextMessage();
@@ -108,6 +119,38 @@ public class MessagingTest {
         producer.close();
 
         final Consumer c = new Consumer(getClass(), TestServiceManager.getConnector());
+
+        // Shutdown the consumer after all the messages have been processed.
+        c.setOutOfMessages((listener) -> {
+            listener.shutdown();
+
+            Assert.assertTrue(ordered);
+            Assert.assertTrue("called was not == " + msgCount, called.get() == msgCount);
+        });
+
+        // Start the consumer.
+        c.listen();
+
+        Assert.assertTrue(called.get() > 0);
+    }
+
+    @Test
+    public void testProducerHeaderOverload() throws JMSException, ConnectorException {
+        int msgCount = 100;
+        LifeCycleMonitors.register(this.getClass());
+        final ForkliftConnectorI connector = TestServiceManager.getForklift().getConnector();
+        final Consumer c = new Consumer(getClass(), TestServiceManager.getConnector());
+        for (int i = 0; i < msgCount; i++) {
+            final ActiveMQTextMessage m = new ActiveMQTextMessage();
+            m.setJMSCorrelationID("" + i);
+            m.setText("x=Hello");
+            Map<Header, String> headers = new HashMap<>();
+            headers.put(Header.Type, "SeriousBusiness");
+            Map<String, String> props = new HashMap<>();
+            props.put("Foo", "bar");
+            props.put("Eye", "" + i);
+            producer.send(headers, props, new ForkliftMessage(m));
+        }
 
         // Shutdown the consumer after all the messages have been processed.
         c.setOutOfMessages((listener) -> {

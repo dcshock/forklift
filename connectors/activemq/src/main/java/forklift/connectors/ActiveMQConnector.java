@@ -1,24 +1,21 @@
 package forklift.connectors;
 
 import forklift.producers.ActiveMQProducer;
-import forklift.producers.ActiveMQProducerInfo;
-import forklift.producers.ForkliftProducerI;import forklift.producers.ProducerInfoI;
+import forklift.producers.ForkliftProducerI;
+
+import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.ActiveMQSession;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTextMessage;
+import org.apache.activemq.command.ActiveMQTopic;
 
 import javax.jms.Connection;
-import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
-
-import org.apache.activemq.ActiveMQConnection;
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.ActiveMQMessageProducer;
-import org.apache.activemq.ActiveMQSession;
-import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.command.ActiveMQTextMessage;
-import org.apache.activemq.command.ActiveMQTopic;
 
 public class ActiveMQConnector implements ForkliftConnectorI {
     private ActiveMQConnectionFactory factory;
@@ -121,8 +118,7 @@ public class ActiveMQConnector implements ForkliftConnectorI {
 	@Override
 	public ForkliftProducerI getQueueProducer(String name) {
 		 try {
-			//return toForkliftProducer(getSession().createProducer(new ActiveMQQueue(name)));
-            return new ActiveMQProducer(getSession().createProducer(new ActiveMQQueue(name)));
+            return new ActiveMQProducer(getSession().createProducer(new ActiveMQQueue(name)), getSession());
 		} catch (JMSException | ConnectorException e) {
 			return null;
 		}
@@ -131,26 +127,9 @@ public class ActiveMQConnector implements ForkliftConnectorI {
 	@Override
 	public ForkliftProducerI getTopicProducer(String name) {
 		 try {
-			//return toForkliftProducer(getSession().createProducer(new ActiveMQTopic(name)));
-            return new ActiveMQProducer(getSession().createProducer(new ActiveMQTopic(name)));
+            return new ActiveMQProducer(getSession().createProducer(new ActiveMQTopic(name)), getSession());
 		} catch (JMSException | ConnectorException e) {
 			return null;
 		}
 	}
-
-    /**
-    * Convert ActiveMQMessageProducer to ForkliftProducer
-    * @param - the ActiveMQMessageProducer to be converted to a ForkliftProducer
-    * @return - new ForkliftProducer with all the things
-    */
-    private ForkliftProducerI toForkliftProducer(MessageProducer producer) {
-        ActiveMQProducerInfo info = new ActiveMQProducerInfo();
-        try {
-            info.setDestination(producer.getDestination());
-        } catch (JMSException e) {
-            //throw new JMSException("Error converting MessengerProducer to ForkliftProducer");
-            return null;
-        }
-        return new ActiveMQProducer(info);
-    }
 }

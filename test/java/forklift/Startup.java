@@ -1,13 +1,13 @@
 package forklift;
 
-import forklift.connectors.ForkliftConnectorI;
-import forklift.exception.StartupException;
+import java.io.IOException;
 
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import java.io.IOException;
+import forklift.connectors.ForkliftConnectorI;
+import forklift.exception.StartupException;
 
 /**
  * Test the startup and shutdown of ForkLift to ensure that

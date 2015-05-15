@@ -1,6 +1,5 @@
 package forklift.consumer;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import forklift.classloader.RunAsClassLoader;
 import forklift.concurrent.Callback;
 import forklift.connectors.ConnectorException;
@@ -9,24 +8,30 @@ import forklift.connectors.ForkliftMessage;
 import forklift.consumer.parser.KeyValueParser;
 import forklift.decorators.Audit;
 import forklift.decorators.Config;
+import forklift.decorators.Headers;
 import forklift.decorators.MultiThreaded;
 import forklift.decorators.OnMessage;
 import forklift.decorators.OnValidate;
+import forklift.decorators.Producer;
 import forklift.decorators.Queue;
 import forklift.decorators.Retry;
 import forklift.decorators.Topic;
+import forklift.producers.ForkliftProducerI;
 import forklift.properties.PropertiesManager;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.stream.Collectors;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -77,8 +82,16 @@ public class Consumer {
         this.msgHandler = msgHandler;
         this.retry = msgHandler.getAnnotation(Retry.class);
         this.queue = msgHandler.getAnnotation(Queue.class);
-        this.name = queue.value() + ":" + id.getAndIncrement();
         this.topic = msgHandler.getAnnotation(Topic.class);
+
+        if (this.queue != null && this.topic != null)
+            throw new IllegalArgumentException("Msg Handler cannot consume a queue and topic");
+        if (this.queue != null)
+            this.name = queue.value() + ":" + id.getAndIncrement();
+        else if (this.topic != null)
+            this.name = topic.value() + ":" + id.getAndIncrement();
+        else
+            throw new IllegalArgumentException("Msg Handler must handle a queue or topic.");
 
         log = LoggerFactory.getLogger(this.name);
 
@@ -108,6 +121,9 @@ public class Consumer {
         injectFields = new HashMap<>();
         injectFields.put(Config.class, new HashMap<>());
         injectFields.put(forklift.decorators.Message.class, new HashMap<>());
+        injectFields.put(forklift.decorators.Headers.class, new HashMap<>());
+        injectFields.put(forklift.decorators.Properties.class, new HashMap<>());
+        injectFields.put(forklift.decorators.Producer.class, new HashMap<>());
         for (Field f : msgHandler.getDeclaredFields()) {
             injectFields.keySet().forEach(type -> {
                 if (f.isAnnotationPresent(type)) {
@@ -120,8 +136,49 @@ public class Consumer {
                 }
             });
         }
+
+        for(Map.Entry<Class, Map<Class<?>, List<Field>>> entry : injectFields.entrySet()) {
+            if(entry.getKey() == forklift.decorators.Producer.class) {
+                for (Map.Entry<Class<?>, List<Field>> childMap : entry.getValue().entrySet()) {
+                    for(Field field : childMap.getValue()){
+                            forklift.decorators.Producer annotation = field.getAnnotation(forklift.decorators.Producer.class);
+                            String[] values = annotation.value().split("[ :/\\/]+");
+                            try {
+                                if (values[0].equals("queue")) {
+                                    field.set(msgHandler, this.connector.getQueueProducer(values[1]));
+                                } else if (values[0].equals("topic")) {
+                                    field.set(msgHandler, this.connector.getTopicProducer(values[1]));
+                                } 
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }   
+                        
+                    }
+                }
+            }
+        }
+
+        // inject producers Map<Class,Map<Class<?>,List<Field>>>
+  /*      injectFields.entrySet().stream()
+                               .filter(entry -> entry.getKey() == forklift.decorators.Producer.class)
+                               .flatMap(entry -> entry.getValue().entrySet().stream().flatMap(e -> e.getValue().stream()))
+                               .collect(Collectors.toList())
+                               .forEach(field -> {
+                                    forklift.decorators.Producer producer = field.getAnnotation(forklift.decorators.Producer.class);
+                                    String[] values = producer.value().split("[ :/\\/]+");
+                                    try {
+                                        if (values[0].equals("queue")) {
+                                            field.set(this., this.connector.getQueueProducer(values[1]));
+                                        } else if (values[0].equals("topic")) {
+                                            field.set(forklift.producers.ForkliftProducerI, this.connector.getTopicProducer(values[1]));
+                                        } 
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }   
+                               });
+                               */
     }
-        
+
     /**
      * Creates a JMS consumer and begins listening for messages.
      * If the JMS consumer dies, this method will attempt to
@@ -170,7 +227,7 @@ public class Consumer {
                             runner.run();
                         }
                     } catch (Exception e) {
-                        // If this error occurs we had a massive problem with the conusmer class setup. 
+                        // If this error occurs we had a massive problem with the conusmer class setup.
                         log.error("Consumer couldn't be used.", e);
 
                         // In this instance just stop the consumer. Someone needs to fix their shit!
@@ -201,10 +258,15 @@ public class Consumer {
         this.outOfMessages = outOfMessages;
     }
 
-    private void inject(ForkliftMessage msg, final Object instance) {
+    /**
+     * Inject the data from a forklift message into an instance of the msgHandler class.
+     * @param msg containing data
+     * @param instance an instance of the msgHandler class.
+     */
+    public void inject(ForkliftMessage msg, final Object instance) {
         // Inject the forklift msg
         injectFields.keySet().stream().forEach(decorator -> {
-            final Map<Class<?>, List<Field>> fields = injectFields.get(decorator);            
+            final Map<Class<?>, List<Field>> fields = injectFields.get(decorator);
 
             fields.keySet().stream().forEach(clazz -> {
                 fields.get(clazz).forEach(f -> {
@@ -226,9 +288,18 @@ public class Consumer {
                                 forklift.decorators.Config config = f.getAnnotation(forklift.decorators.Config.class);
                                 PropertiesManager.get(config.value());
                             }
+                        } else if (decorator == Headers.class) {
+                            if (clazz == Map.class) {
+                                f.set(instance, msg.getHeaders());
+                            }
+                        } else if (decorator == forklift.decorators.Properties.class) {
+                            if (clazz == Map.class) {
+                                f.set(instance, msg.getProperties());
+                            }
                         }
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        log.error("Error injecting data into Msg Handler", e);
+                        throw new RuntimeException("Error injecting data into Msg Handler");
                     }
                 });
             });

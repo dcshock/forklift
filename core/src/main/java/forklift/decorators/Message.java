@@ -7,7 +7,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Marks an object to have its properties populated with data from the JMS message
+ * Marks a property to have its value populated with data from the body of a message
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)

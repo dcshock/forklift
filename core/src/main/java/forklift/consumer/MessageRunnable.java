@@ -1,17 +1,16 @@
 package forklift.consumer;
 
+import forklift.classloader.RunAsClassLoader;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
-
-import forklift.classloader.RunAsClassLoader;
 
 public class MessageRunnable implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(MessageRunnable.class);
@@ -48,15 +47,17 @@ public class MessageRunnable implements Runnable {
                     for (Method m : onValidate) {
                         if (m.getReturnType() == List.class) {
                             addError((List<String>)m.invoke(handler));
-                        } else if (m.getReturnType() == Boolean.class) {
-                            error = error || !((Boolean)m.invoke(handler)).booleanValue();
+                        } else if (m.getReturnType() == boolean.class) {
+                            error = error || !((boolean)m.invoke(handler));
                         } else {
                             addError("Return type of " + m.getReturnType() + " is not supported for OnValidate methods");
                         }
                     }
 
                     // Run the message if there are no errors.
-                    if (!error) {
+                    if (error) {
+                        LifeCycleMonitors.call(ProcessStep.Invalid, this);
+                    } else {
                         LifeCycleMonitors.call(ProcessStep.Processing, this);
                         for (Method m : onMessage) {
                             // Send the message to each handler.
@@ -64,11 +65,11 @@ public class MessageRunnable implements Runnable {
                         }
                     }
                 } catch (Throwable e) {
-                    addError(e.getMessage());
-                }
-
-                if (error) {
-                    LifeCycleMonitors.call(ProcessStep.Invalid, this);
+                    log.debug("Error processing", e);
+                    if (e.getCause() != null)
+                        addError(e.getCause().getMessage());
+                    else
+                        addError(e.getMessage());
                 }
             } finally {
                 // We've done all we can do to process this message, ack it from the queue, and move forward.
@@ -87,6 +88,9 @@ public class MessageRunnable implements Runnable {
     }
 
     public void addError(List<String> errors) {
+        if (errors == null)
+            return;
+
         this.errors.addAll(errors);
 
         if (this.errors.size() > 0)
@@ -100,6 +104,10 @@ public class MessageRunnable implements Runnable {
 
     public void setError() {
         this.error = true;
+    }
+
+    public List<String> getErrors() {
+        return errors;
     }
 
     public Message getJmsMsg() {

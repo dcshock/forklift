@@ -4,6 +4,7 @@ import forklift.Forklift;
 import forklift.concurrent.Executors;
 import forklift.deployment.Deployment;
 import forklift.deployment.DeploymentEvents;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,8 +72,8 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
 
     /**
      * We allow jar/zip files.
-     * @param  deployment 
-     * @return            
+     * @param  deployment
+     * @return
      */
     public boolean filter(Deployment deployment) {
         log.info("Filtering: " + deployment);
