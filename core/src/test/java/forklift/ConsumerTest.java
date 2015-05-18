@@ -115,7 +115,7 @@ public class ConsumerTest {
         ForkliftMessage msg = new ForkliftMessage(jmsMsg);
         msg.setMsg("{}");
 
-        Map<Header, String> headers = new HashMap<>();
+        Map<Header, Object> headers = new HashMap<>();
         headers.put(Header.DeliveryCount, "3");
         headers.put(Header.Producer, "testing");
         headers.put(Header.Priority, "1");
