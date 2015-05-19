@@ -1,6 +1,5 @@
 package forklift.connectors;
 
-import forklift.decorators.Headers;
 import forklift.message.Header;
 
 import java.util.Map;
@@ -12,7 +11,7 @@ public class ForkliftMessage {
     private String msg;
     private boolean flagged;
     private String warning;
-    private Map<Header, String> headers;
+    private Map<Header, Object> headers;
     private Map<String, Object> properties;
 
     public ForkliftMessage() {
@@ -20,6 +19,10 @@ public class ForkliftMessage {
 
     public ForkliftMessage(Message jmsMsg) {
         this.jmsMsg = jmsMsg;
+    }
+
+    public ForkliftMessage(String msg) {
+        this.setMsg(msg);
     }
 
     public Message getJmsMsg() {
@@ -50,11 +53,11 @@ public class ForkliftMessage {
         this.flagged = flagged;
     }
 
-    public void setHeaders(Map<Header, String> headers) {
+    public void setHeaders(Map<Header, Object> headers) {
         this.headers = headers;
     }
 
-    public Map<Header, String> getHeaders() {
+    public Map<Header, Object> getHeaders() {
         return headers;
     }
 

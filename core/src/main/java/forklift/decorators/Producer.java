@@ -7,11 +7,13 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Marks an object to have its properties populated with data from the Connector.getProducer 
+ * Marks a field to use defined properties when sending a message
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.FIELD})
+@Target({ElementType.METHOD, ElementType.FIELD})
 public @interface Producer {
-    String value();
+    String[] endpoints() default "";
+    String queue() default "";
+    String topic() default "";
 }

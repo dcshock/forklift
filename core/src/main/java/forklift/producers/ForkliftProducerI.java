@@ -13,12 +13,11 @@ import javax.jms.MessageProducer;
 public interface ForkliftProducerI {
     String send(String message) throws ProducerException;
     String send(ForkliftMessage message) throws ProducerException;
-    String send(Map<Header,String> headers, 
-                Map<String,String> props,
+    String send(Map<Header, String> headers, 
+                Map<String, Object> properties,
                 ForkliftMessage message) throws ProducerException;
-    void close() throws ProducerException;
     Map<Header, String> getHeaders() throws ProducerException;
     void setHeaders(Map<Header, String> headers) throws ProducerException;
-    Map<String, String> getProps() throws ProducerException;
-    void setProps(Map<String , String> props) throws ProducerException;
+    Map<String, Object> getProperties() throws ProducerException;
+    void setProperties(Map<String , Object> properties) throws ProducerException;
 }  

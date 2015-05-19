@@ -5,25 +5,13 @@ import forklift.message.Header;
 import forklift.producers.ForkliftProducerI;
 import forklift.producers.ProducerException;
 
-import org.apache.activemq.ActiveMQMessageProducer;
-
 import com.google.common.base.Strings;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.lang.IllegalAccessException;
-import java.lang.NoSuchFieldException;
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.UUID;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.stream.Stream;
+import java.util.UUID;
 
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
@@ -31,11 +19,10 @@ import javax.jms.Session;
 
 public class ActiveMQProducer implements ForkliftProducerI {
 
-    private static final Logger log = LoggerFactory.getLogger(ActiveMQProducer.class);
     private MessageProducer producer;
     private Destination destination;
     private Map<Header, String> headers;
-    private Map<String, String> props;
+    private Map<String, Object> properties;
     private Session session;
 
     public ActiveMQProducer(MessageProducer producer, Session session) {
@@ -46,13 +33,9 @@ public class ActiveMQProducer implements ForkliftProducerI {
     @Override
     public String send(String message) throws ProducerException {
         try {
-            ForkliftMessage fork = new ForkliftMessage();
-            fork.setMsg(message);
-            Message msg = prepAndValidate(fork);
-            producer.send(msg);
-            return msg.getJMSCorrelationID();
+            return send(new ForkliftMessage(message));
         } catch (Exception e) {
-            throw new ProducerException("Failed to send message");
+            throw new ProducerException("Failed to send message", e);
         }
     }
 
@@ -60,54 +43,37 @@ public class ActiveMQProducer implements ForkliftProducerI {
     public String send(ForkliftMessage message) throws ProducerException {
         try {
             Message msg = prepAndValidate(message);
-            producer.send(msg);
-            return msg.getJMSCorrelationID();
+            if (msg != null) {
+                producer.send(msg);
+                return msg.getJMSCorrelationID();
+            } else {
+                throw new ProducerException("Forklift MSG is null");
+            }
         } catch (Exception e) {
-            throw new ProducerException("Failed to send message");
+            throw new ProducerException("Failed to send message", e);
         }
     }
 
     @Override
     public String send(Map<Header, String> headers, 
-                       Map<String,String> props,
+                       Map<String, Object> properties,
                        ForkliftMessage message) throws ProducerException {
-        
         Message msg = prepAndValidate(message);
-
-        // set headers.
         try {
             setMessageHeaders(msg, headers);
         } catch (Exception e) {
-            throw new ProducerException("Failed to set message header: " + e);
+            throw new ProducerException("Failed to set message header", e);
         }
-
-        // set props
         try {
-            for(Map.Entry<String, String> prop : props.entrySet()) {
-                msg.setStringProperty(prop.getKey(), prop.getValue());
-            }
+            setMessageProperties(msg, properties);
         } catch (Exception e) {
-            throw new ProducerException("Failed to set message property: " + e);
+            throw new ProducerException("Failed to set message property", e);
         }
-
         try {
             producer.send(msg);
             return msg.getJMSCorrelationID();
         } catch (Exception e) {
-            throw new ProducerException("Failed to send message");
-        }
-    }
-
-    /**
-    * Generate javax.jms.Message from a Forklift Message
-    * @param message - Forklift message to be converted
-    * @return - a new javax.jms.Message
-    **/
-    private Message forkliftToJms(ForkliftMessage message) throws ProducerException {
-        try {
-            return message.getJmsMsg() != null ?  message.getJmsMsg() : session.createTextMessage(message.getMsg());
-        } catch (Exception e) {
-            throw new ProducerException("Error creating JMS Message, Forklift message was null");
+            throw new ProducerException("Failed to send message", e);
         }
     }
 
@@ -118,11 +84,10 @@ public class ActiveMQProducer implements ForkliftProducerI {
     **/
     private Message prepAndValidate(ForkliftMessage message) throws ProducerException {
         Message msg = forkliftToJms(message);
-
         // check the ID
         try {
             if (Strings.isNullOrEmpty(msg.getJMSCorrelationID())) {
-                msg.setJMSCorrelationID(UUID.randomUUID().toString().replaceAll("-", "")); 
+                msg.setJMSCorrelationID(UUID.randomUUID().toString().replaceAll("-", ""));
             }
         } catch (Exception e) {
             throw new ProducerException("Failed to set setJMSCorrelationID");
@@ -131,27 +96,61 @@ public class ActiveMQProducer implements ForkliftProducerI {
         return msg;
     }
 
+    /**
+    * Generate javax.jms.Message from a Forklift Message
+    * @param message - Forklift message to be converted
+    * @return - a new javax.jms.Message
+    **/
+    private Message forkliftToJms(ForkliftMessage message) throws ProducerException {
+        
+        try {
+            Message msg = null;
+            if (message.getJmsMsg() != null ) {
+                try {
+                    msg = message.getJmsMsg();
+                } catch (Exception e) {
+                    throw new ProducerException("Error assigning Forklift JMS message to new MSG", e);
+                }
+            } else if (message.getMsg() != null ) {
+                try {
+                    msg = session.createTextMessage(message.getMsg());
+                } catch (Exception e) {
+                    throw new ProducerException("Error creating new jms TextMessage", e);
+                }
+            }
+            setMessageHeaders(msg, message.getHeaders());
+            setMessageProperties(msg, message.getProperties());
+            return msg;
+        } catch (Exception e) {
+            throw new ProducerException("Error creating JMS Message, Forklift message was null", e);
+        }
+    }
+
     private void setMessageHeaders(Message msg, Map<Header, String> headers) throws ProducerException {
-        for (Map.Entry<Header,String> header : headers.entrySet()) {
-            Method method;
-            try {
-                method = msg.getClass().getMethod("set"+header.getKey().getJmsMessage() , String.class);
-                method.invoke(msg, header.getValue());
-            } catch (Exception e) {
-                throw new ProducerException("Failed to set" + header.getKey().getJmsMessage() + "(" + header.getValue() + ") message header");
+        if (msg != null && headers != null) {
+            for (Map.Entry<Header,String> header : headers.entrySet()) {
+                Method method;
+                try {
+                    method = msg.getClass().getMethod("set" + header.getKey().getJmsMessage() , String.class);
+                    method.invoke(msg, header.getValue());
+                } catch (Exception e) {
+                    throw new ProducerException("Failed to set message header", e);
+                }
             }
         }
     }
 
-    @Override
-    public void close() throws ProducerException {
-        try {
-            producer.close();
-        } catch (Exception e) {
-            throw new ProducerException("Failed to close producer");
+    private void setMessageProperties(Message msg, Map<String, Object> properties) throws ProducerException {
+        if (msg != null && properties != null) {
+            for (Map.Entry<String, Object> property : properties.entrySet()) {
+                try {
+                    msg.setObjectProperty(property.getKey(), property.getValue());
+                } catch (Exception e) {
+                    throw new ProducerException("Failed to set message properties", e);
+                }
+            }
         }
     }
-
 
     public int getDeliveryMode() throws ProducerException {
         try {
@@ -205,20 +204,20 @@ public class ActiveMQProducer implements ForkliftProducerI {
     }
 
     @Override
-    public Map<String, String> getProps() throws ProducerException {
+    public Map<String, Object> getProperties() throws ProducerException {
         try {
-            return this.props;
+            return this.properties;
         } catch (Exception e) {
-            throw new ProducerException("Failed to get props");
+            throw new ProducerException("Failed to get properties");
         }
     }
 
     @Override
-    public void setProps(Map<String , String> props) throws ProducerException {
+    public void setProperties(Map<String , Object> properties) throws ProducerException {
         try {
-            this.props = props;
+            this.properties = properties;
         } catch (Exception e) {
-            throw new ProducerException("Failed to set props");
+            throw new ProducerException("Failed to set properties");
         }
     }
 }

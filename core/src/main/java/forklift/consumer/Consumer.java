@@ -16,7 +16,6 @@ import forklift.decorators.Producer;
 import forklift.decorators.Queue;
 import forklift.decorators.Retry;
 import forklift.decorators.Topic;
-import forklift.producers.ForkliftProducerI;
 import forklift.properties.PropertiesManager;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -123,7 +122,6 @@ public class Consumer {
         injectFields.put(forklift.decorators.Message.class, new HashMap<>());
         injectFields.put(forklift.decorators.Headers.class, new HashMap<>());
         injectFields.put(forklift.decorators.Properties.class, new HashMap<>());
-        injectFields.put(forklift.decorators.Producer.class, new HashMap<>());
         for (Field f : msgHandler.getDeclaredFields()) {
             injectFields.keySet().forEach(type -> {
                 if (f.isAnnotationPresent(type)) {
@@ -135,48 +133,7 @@ public class Consumer {
                     injectFields.get(type).get(f.getType()).add(f);
                 }
             });
-        }
-
-        for(Map.Entry<Class, Map<Class<?>, List<Field>>> entry : injectFields.entrySet()) {
-            if(entry.getKey() == forklift.decorators.Producer.class) {
-                for (Map.Entry<Class<?>, List<Field>> childMap : entry.getValue().entrySet()) {
-                    for(Field field : childMap.getValue()){
-                            forklift.decorators.Producer annotation = field.getAnnotation(forklift.decorators.Producer.class);
-                            String[] values = annotation.value().split("[ :/\\/]+");
-                            try {
-                                if (values[0].equals("queue")) {
-                                    field.set(msgHandler, this.connector.getQueueProducer(values[1]));
-                                } else if (values[0].equals("topic")) {
-                                    field.set(msgHandler, this.connector.getTopicProducer(values[1]));
-                                } 
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }   
-                        
-                    }
-                }
-            }
-        }
-
-        // inject producers Map<Class,Map<Class<?>,List<Field>>>
-  /*      injectFields.entrySet().stream()
-                               .filter(entry -> entry.getKey() == forklift.decorators.Producer.class)
-                               .flatMap(entry -> entry.getValue().entrySet().stream().flatMap(e -> e.getValue().stream()))
-                               .collect(Collectors.toList())
-                               .forEach(field -> {
-                                    forklift.decorators.Producer producer = field.getAnnotation(forklift.decorators.Producer.class);
-                                    String[] values = producer.value().split("[ :/\\/]+");
-                                    try {
-                                        if (values[0].equals("queue")) {
-                                            field.set(this., this.connector.getQueueProducer(values[1]));
-                                        } else if (values[0].equals("topic")) {
-                                            field.set(forklift.producers.ForkliftProducerI, this.connector.getTopicProducer(values[1]));
-                                        } 
-                                    } catch (Exception e) {
-                                        e.printStackTrace();
-                                    }   
-                               });
-                               */
+        }                     
     }
 
     /**
