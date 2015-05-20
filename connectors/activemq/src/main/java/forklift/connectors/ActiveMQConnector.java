@@ -1,11 +1,19 @@
 package forklift.connectors;
 
+import forklift.ActiveMQHeaders;
+import forklift.message.Header;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQSession;
+import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.ActiveMQTopic;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
@@ -106,6 +114,22 @@ public class ActiveMQConnector implements ForkliftConnectorI {
                 msg.setFlagged(true);
                 msg.setWarning("Unexpected message type: " + m.getClass().getName());
             }
+
+            Map<Header, Object> headers = new HashMap<>();
+            ActiveMQMessage amq = (ActiveMQMessage) m;
+            // Build headers
+            for (Header h : Header.values()) {
+                headers.put(h, ActiveMQHeaders.getFunctions().get(h).get(amq));
+            }
+            msg.setHeaders(headers);
+
+            // Build properties
+            try {
+                msg.setProperties(amq.getProperties());
+            } catch (IOException ignored) {
+                // Shouldn't happen
+            }
+
             return msg;
         } catch (JMSException e) {
             return null;
