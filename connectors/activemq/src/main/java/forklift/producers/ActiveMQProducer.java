@@ -21,7 +21,7 @@ public class ActiveMQProducer implements ForkliftProducerI {
 
     private MessageProducer producer;
     private Destination destination;
-    private Map<Header, String> headers;
+    private Map<Header, Object> headers;
     private Map<String, Object> properties;
     private Session session;
 
@@ -55,7 +55,7 @@ public class ActiveMQProducer implements ForkliftProducerI {
     }
 
     @Override
-    public String send(Map<Header, String> headers, 
+    public String send(Map<Header, Object> headers, 
                        Map<String, Object> properties,
                        ForkliftMessage message) throws ProducerException {
         Message msg = prepAndValidate(message);
@@ -126,9 +126,9 @@ public class ActiveMQProducer implements ForkliftProducerI {
         }
     }
 
-    private void setMessageHeaders(Message msg, Map<Header, String> headers) throws ProducerException {
+    private void setMessageHeaders(Message msg, Map<Header, Object> headers) throws ProducerException {
         if (msg != null && headers != null) {
-            for (Map.Entry<Header,String> header : headers.entrySet()) {
+            for (Map.Entry<Header, Object> header : headers.entrySet()) {
                 Method method;
                 try {
                     method = msg.getClass().getMethod("set" + header.getKey().getJmsMessage() , String.class);
@@ -185,7 +185,7 @@ public class ActiveMQProducer implements ForkliftProducerI {
     }
 
     @Override
-    public Map<Header, String> getHeaders() throws ProducerException {
+    public Map<Header, Object> getHeaders() throws ProducerException {
         try {
             return this.headers;
         } catch (Exception e) {
@@ -195,7 +195,7 @@ public class ActiveMQProducer implements ForkliftProducerI {
     }
 
     @Override
-    public void setHeaders(Map<Header, String> headers) throws ProducerException {
+    public void setHeaders(Map<Header, Object> headers) throws ProducerException {
         try {
             this.headers = headers;
         } catch (Exception e) {

@@ -115,7 +115,7 @@ public class ProducerTest {
             final ActiveMQTextMessage m = new ActiveMQTextMessage();
             m.setJMSCorrelationID("" + i);
             m.setText("x=producer overload test");
-            Map<Header, String> headers = new HashMap<>();
+            Map<Header, Object> headers = new HashMap<>();
             headers.put(Header.Type, "SeriousBusiness");
             Map<String, Object> props = new HashMap<>();
             props.put("Foo", "bar");

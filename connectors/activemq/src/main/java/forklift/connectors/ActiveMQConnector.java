@@ -1,12 +1,9 @@
 package forklift.connectors;
 
-<<<<<<< HEAD
-import forklift.producers.ActiveMQProducer;
-import forklift.producers.ForkliftProducerI;
-=======
 import forklift.ActiveMQHeaders;
 import forklift.message.Header;
->>>>>>> develop
+import forklift.producers.ActiveMQProducer;
+import forklift.producers.ForkliftProducerI;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -16,13 +13,10 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.ActiveMQTopic;
 
-<<<<<<< HEAD
-import java.util.Arrays;
-=======
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
->>>>>>> develop
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
