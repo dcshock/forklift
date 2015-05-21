@@ -1,6 +1,6 @@
 package forklift.connectors;
 
-import forklift.ActiveMQHeaders;
+import forklift.message.ActiveMQHeaders;
 import forklift.message.Header;
 
 import org.apache.activemq.ActiveMQConnection;
