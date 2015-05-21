@@ -8,6 +8,7 @@ scalaVersion := "2.11.4"
 
 // target and Xlint cause sbt dist to fail
 javacOptions ++= Seq("-source", "1.8")//, "-target", "1.8", "-Xlint")
+javacOptions in compile ++= Seq("-g:lines,vars,source")
 
 initialize := {
   val _ = initialize.value
