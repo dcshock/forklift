@@ -55,7 +55,7 @@ public enum Header {
      * <li> Type: String
      * </ul>
      */
-    GroupID("JMSXGroupID", "JMSXGroupID", "application-properties.JMSXGroupID", String.class),
+    GroupId("JMSXGroupID", "JMSXGroupID", "application-properties.JMSXGroupID", String.class),
     /**
      * Specifies the sequence number in a Message Group
      * <ul>
@@ -73,7 +73,7 @@ public enum Header {
      * <li> JMS: JMSPPreviousDestination
      * <li> Stomp: "previous-destination"
      * <li> Amqp: "application-properties.previous-destination"
-     * <li> Type: Integer
+     * <li> Type: String
      * </ul>
      */
     PreviousDestination("JMSPPreviousDestination", "previous-destination", "application-properties.previous-destination", String.class),
@@ -99,9 +99,10 @@ public enum Header {
      */
     Producer("JMSPProducer", "producer", "application-properties.producer", String.class),
     /**
-     * Destination the consumer should send replies
+     * Destination the consumer should send replies. Should be a URI. If the implementation of the JMS
+     * provider does not support type String, use property.
      * <ul>
-     * <li> JMS: JMSReplyTo
+     * <li> JMS: JMSReplyTo or JMSPReplyTo
      * <li> Stomp: "reply-to"
      * <li> Amqp: "properties.reply-to"
      * <li> Type: String
