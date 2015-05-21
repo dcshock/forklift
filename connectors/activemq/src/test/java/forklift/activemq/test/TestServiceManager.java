@@ -74,10 +74,4 @@ public class TestServiceManager {
             return forklift;
         }
     }
-
-    public static void register(Object instance) {
-        synchronized (lock) {
-            connector.register(instance);
-        }
-    }
 }

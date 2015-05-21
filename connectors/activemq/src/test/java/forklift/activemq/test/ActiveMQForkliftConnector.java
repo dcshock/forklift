@@ -59,9 +59,4 @@ public class ActiveMQForkliftConnector implements ForkliftConnectorI {
     public ForkliftProducerI getTopicProducer(String name) {
         return TestServiceManager.getConnector().getTopicProducer(name);
     }
-
-    @Override
-    public void register(Object instance) {
-        TestServiceManager.register(instance);
-    }
 }

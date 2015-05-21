@@ -42,9 +42,6 @@ public class MessagingTest {
     @forklift.decorators.Message
     private ForkliftMessage m;
 
-    @forklift.decorators.Producer(queue="q1")
-    private ForkliftProducerI producer;
-
     // This is null right now and is just being used to ensure the code at least tries to hit the injection code for props. 
     @forklift.decorators.Config("none")
     private Properties props;
@@ -58,7 +55,6 @@ public class MessagingTest {
     @Before
     public void before() {
         TestServiceManager.start();
-        TestServiceManager.getConnector().register(this);
     }
 
     @After
@@ -106,7 +102,7 @@ public class MessagingTest {
     public void test() throws JMSException, ConnectorException, ProducerException {
         int msgCount = 100;
         LifeCycleMonitors.register(this.getClass());
-
+        ForkliftProducerI producer = TestServiceManager.getConnector().getQueueProducer("q1");
         for (int i = 0; i < msgCount; i++) {
             final ActiveMQTextMessage m = new ActiveMQTextMessage();
             m.setJMSCorrelationID("" + i);

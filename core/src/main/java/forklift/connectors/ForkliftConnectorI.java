@@ -22,11 +22,4 @@ public interface ForkliftConnectorI {
      * @return - a new ForkliftMessage.
      */
     ForkliftMessage jmsToForklift(Message m);
-
-    /**
-    * Inject various properties into the object.
-    * @example to inject  the connectors QueueProducer into a consumer
-    * @param clazz - class to find and inject things
-    */
-    void register(Object instance);
 }

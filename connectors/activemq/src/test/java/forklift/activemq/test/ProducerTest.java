@@ -46,13 +46,11 @@ public class ProducerTest {
     private ForkliftMessage m;
 
     @forklift.decorators.Producer(queue="q2")
-    private ForkliftProducerI producer;
+    private ForkliftProducerI injectedProducer;
 
     @Before
     public void before() {
-        producer = null;
         TestServiceManager.start();
-        TestServiceManager.getConnector().register(this);
         called.set(0);
         ordered = true;
     }
@@ -88,7 +86,7 @@ public class ProducerTest {
     @Test
     public void testStringMessage() throws ProducerException, ConnectorException {
         int msgCount = 100;
-
+        ForkliftProducerI producer = TestServiceManager.getConnector().getQueueProducer("q2");
         for (int i = 0; i < msgCount; i++) {
             String msg = new String("sending all the text, producer test");
             producer.send(msg);
@@ -110,7 +108,7 @@ public class ProducerTest {
     @Test
     public void testProducerSendOverload() throws JMSException, ConnectorException, ProducerException {
         int msgCount = 100;
-
+        ForkliftProducerI producer = TestServiceManager.getConnector().getQueueProducer("q2");
         for (int i = 0; i < msgCount; i++) {
             final ActiveMQTextMessage m = new ActiveMQTextMessage();
             m.setJMSCorrelationID("" + i);
@@ -129,6 +127,7 @@ public class ProducerTest {
             listener.shutdown();
             Assert.assertTrue(ordered);
             Assert.assertTrue("called was not == " + msgCount, called.get() == msgCount);
+            Assert.assertTrue("injectedProducer is null", injectedProducer != null);
         });
 
         // Start the consumer.

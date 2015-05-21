@@ -157,27 +157,4 @@ public class ActiveMQConnector implements ForkliftConnectorI {
             return null;
         }
     }
-
-    @Override
-    public void register(Object instance) {
-        try {
-            Arrays.stream(instance.getClass().getDeclaredFields())
-                                    .filter(field -> field.getType() == ForkliftProducerI.class)
-                                    .forEach(field -> {
-                                        forklift.decorators.Producer annotation = field.getAnnotation(forklift.decorators.Producer.class);
-                                        field.setAccessible(true);
-                                        try {
-                                            if (annotation.queue().length() > 0) {
-                                                field.set(instance, this.getQueueProducer(annotation.queue()));
-                                            } else if (annotation.topic().length() > 0) {
-                                                field.set(instance, this.getTopicProducer(annotation.topic()));
-                                            }
-                                        } catch (Exception e) {
-                                            e.printStackTrace();
-                                        }
-                                    });
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 }
