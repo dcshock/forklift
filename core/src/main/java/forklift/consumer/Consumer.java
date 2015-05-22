@@ -122,7 +122,7 @@ public class Consumer {
 
         injectFields = new HashMap<>();
         injectFields.put(Config.class, new HashMap<>());
-        injectFields.put(forklift.decorators.Inject.class, new HashMap<>());
+        injectFields.put(javax.inject.Inject.class, new HashMap<>());
         injectFields.put(forklift.decorators.Message.class, new HashMap<>());
         injectFields.put(forklift.decorators.Headers.class, new HashMap<>());
         injectFields.put(forklift.decorators.Properties.class, new HashMap<>());
@@ -244,9 +244,11 @@ public class Consumer {
                                 // Attempt to parse a json
                                 f.set(instance, mapper.readValue(msg.getMsg(), clazz));
                             }
-                        } else if (decorator == forklift.decorators.Inject.class) {
+                        } else if (decorator == javax.inject.Inject.class) {
                             if (clazz ==  ApplicationContext.class) {
                                 f.set(instance, context);
+                            } else {
+                                f.set(instance, context.getBean(clazz));
                             }
                         } else if (decorator == Config.class) {
                             if (clazz == Properties.class) {

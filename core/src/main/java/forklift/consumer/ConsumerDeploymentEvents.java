@@ -2,6 +2,7 @@ package forklift.consumer;
 
 import forklift.Forklift;
 import forklift.classloader.CoreClassLoaders;
+import forklift.classloader.RunAsClassLoader;
 import forklift.concurrent.Executors;
 import forklift.deployment.Deployment;
 import forklift.deployment.DeploymentEvents;
@@ -44,13 +45,16 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
 
         final List<ConsumerThread> threads = new ArrayList<>();
 
-        // Launch a Spring context if necessary.
-        final ApplicationContext context;
-        final Set<Class<?>> springConfigs = deployment.getReflections().getTypesAnnotatedWith(Configuration.class);
-        if (springConfigs.size() > 0)
-            context = ContextManager.start(deployment.getDeployedFile().getName(), (Class[])springConfigs.toArray());
-        else
-            context = null;
+        // Launch a Spring context if necessary. Note that we ensure that spring has access to the deployment's classloader since the 
+        // configurations will be there. We'll also need to be careful not to utilize spring in the forklift core since the system may
+        // spin up classes more than once. Never add a config with a scan that looks at forklift.*.
+        // TODO - Somehow fix the ability to use spring in the core safely - maybe a check to ensure forklift.* isn't scanned in a  consumer deployment. 
+        RunAsClassLoader.run(deployment.getClassLoader(), () -> {
+            final Set<Class<?>> springConfigs = deployment.getReflections().getTypesAnnotatedWith(Configuration.class);
+            if (springConfigs.size() > 0)
+                ContextManager.start(deployment.getDeployedFile().getName(), (Class[])springConfigs.toArray());
+        });
+        final ApplicationContext context = ContextManager.getContext(deployment.getDeployedFile().getName());
 
         // TODO initialize core services, and join classloaders.
         // CoreClassLoaders.getInstance().register(deployment.getClassLoader());
