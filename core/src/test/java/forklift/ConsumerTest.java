@@ -13,7 +13,6 @@ import forklift.decorators.Properties;
 import forklift.decorators.Queue;
 import forklift.decorators.Topic;
 import forklift.message.Header;
-
 import org.junit.Test;
 
 import java.util.HashMap;

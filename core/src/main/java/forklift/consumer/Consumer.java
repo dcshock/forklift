@@ -1,5 +1,6 @@
 package forklift.consumer;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import forklift.classloader.RunAsClassLoader;
 import forklift.concurrent.Callback;
 import forklift.connectors.ConnectorException;
@@ -16,8 +17,6 @@ import forklift.decorators.Queue;
 import forklift.decorators.Retry;
 import forklift.decorators.Topic;
 import forklift.properties.PropertiesManager;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -69,7 +68,11 @@ public class Consumer {
 
     private AtomicBoolean running = new AtomicBoolean(false);
     public Consumer(Class<?> msgHandler, ForkliftConnectorI connector) {
-        this(msgHandler, connector, null, null);
+        this(msgHandler, connector, null);
+    }
+
+    public Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader) {
+        this(msgHandler, connector, classLoader, null);
     }
 
     @SuppressWarnings("unchecked")
@@ -80,6 +83,8 @@ public class Consumer {
         this.msgHandler = msgHandler;
         this.retry = msgHandler.getAnnotation(Retry.class);
         this.context = context;
+        this.topic = msgHandler.getAnnotation(Topic.class);
+        this.queue = msgHandler.getAnnotation(Queue.class);
 
         if (this.queue != null && this.topic != null)
             throw new IllegalArgumentException("Msg Handler cannot consume a queue and topic");
