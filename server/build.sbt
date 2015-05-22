@@ -27,6 +27,7 @@ libraryDependencies ++= Seq(
   "commons-io" % "commons-io" % "2.4" % "test",
   "junit" % "junit" % "4.11"  % "test",
   "com.novocode" % "junit-interface" % "0.10" % "test",
+  "javax.inject" % "javax.inject" % "1" % "runtime",
   "ch.qos.logback.contrib" % "logback-json-core" % "0.1.2" % "runtime",
   "ch.qos.logback.contrib" % "logback-json-classic" % "0.1.2" % "runtime",
   "ch.qos.logback.contrib" % "logback-jackson" % "0.1.2" % "runtime",
