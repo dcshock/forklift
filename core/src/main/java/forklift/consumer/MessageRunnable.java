@@ -75,6 +75,7 @@ public class MessageRunnable implements Runnable {
                 // We've done all we can do to process this message, ack it from the queue, and move forward.
                 try {
                     if (error) {
+                        getErrors().stream().forEach(e -> log.error(e));
                         LifeCycleMonitors.call(ProcessStep.Error, this);
                     } else {
                         LifeCycleMonitors.call(ProcessStep.Complete, this);
@@ -82,6 +83,7 @@ public class MessageRunnable implements Runnable {
 
                     jmsMsg.acknowledge();
                 } catch (JMSException e) {
+                    log.error("Error while acking messgae.", e);
                 }
             }
         });
