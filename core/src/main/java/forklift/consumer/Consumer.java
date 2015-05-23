@@ -183,11 +183,10 @@ public class Consumer {
 
                         // Handle the message.
                         final MessageRunnable runner = new MessageRunnable(jmsMsg, classLoader, handler, onMessage, onValidate);
-                        if (threadPool != null) {
+                        if (threadPool != null)
                             threadPool.execute(runner);
-                        } else {
+                        else
                             runner.run();
-                        }
                     } catch (Exception e) {
                         // If this error occurs we had a massive problem with the conusmer class setup.
                         log.error("Consumer couldn't be used.", e);
