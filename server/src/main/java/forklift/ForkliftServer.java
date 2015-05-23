@@ -4,11 +4,15 @@ import forklift.connectors.ActiveMQConnector;
 import forklift.consumer.ConsumerDeploymentEvents;
 import forklift.deployment.DeploymentWatch;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * Start Forklift as a server.
  * @author zdavep
  */
 public final class ForkliftServer {
+    // Lock Waits
+    private static final AtomicBoolean running = new AtomicBoolean(false);
 
     // Logging
     private static org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ForkliftServer.class);
@@ -38,12 +42,26 @@ public final class ForkliftServer {
         log.info("Connected to broker on " + brokerUrl);
         log.info("Scanning for Forklift consumers at " + scanDir);
 
-        // Poll for new deployments
-        while (forklift.isRunning()) {
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run() {
+                // End the deployment watcher.
+                running.set(false);
+                synchronized (running) {
+                    running.notify();
+                }
+
+                deploymentWatch.shutdown();
+                forklift.shutdown();
+            }
+        });
+
+        running.set(true);
+        while (running.get()) {
             log.debug("Scanning for new deployments...");
             deploymentWatch.run();
-            Thread.sleep(SLEEP_INTERVAL);
+            synchronized (running) {
+                running.wait(SLEEP_INTERVAL);
+            }            
         }
     }
-
 }

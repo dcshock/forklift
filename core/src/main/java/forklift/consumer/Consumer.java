@@ -101,6 +101,7 @@ public class Consumer {
         // it'll just run in the current thread to prevent any message read ahead that would be performed.
         if (msgHandler.isAnnotationPresent(MultiThreaded.class)) {
             MultiThreaded multiThreaded = msgHandler.getAnnotation(MultiThreaded.class);
+            log.info("Creating thread pool of {}", multiThreaded.value());
             blockQueue = new ArrayBlockingQueue<Runnable>(multiThreaded.value() * 100 + 100);
             threadPool = new ThreadPoolExecutor(
                 Math.min(2, multiThreaded.value()), multiThreaded.value(), 5L, TimeUnit.MINUTES, blockQueue);
@@ -198,6 +199,12 @@ public class Consumer {
 
                 if (outOfMessages != null)
                     outOfMessages.handle(this);
+            }
+
+            // Shutdown the pool, but let actively executing work finish.
+            if (threadPool != null) {
+                log.info("Shutting down thread pool - active {}", threadPool.getActiveCount());
+                threadPool.shutdown();
             }
         } catch (JMSException e) {
             running.set(false);

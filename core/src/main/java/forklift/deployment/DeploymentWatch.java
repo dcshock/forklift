@@ -34,7 +34,7 @@ public class DeploymentWatch implements Runnable {
     }
 
     @Override
-    public void run() {
+    public synchronized void run() {
         final List<FileScanResult> results = fileScan.scan();
         for (FileScanResult result : results) {
             final File file = new File(fileScan.getDir(), result.getFilename());
@@ -64,5 +64,12 @@ public class DeploymentWatch implements Runnable {
                 }
             }
         }
+    }
+
+    /**
+     * Shutdown all running deployments.
+     */
+    public synchronized void shutdown() {
+        deploymentManager.getAll().stream().forEach(deploy -> events.onUndeploy(deploy));
     }
 }
