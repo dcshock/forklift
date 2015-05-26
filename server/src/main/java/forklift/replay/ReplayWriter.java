@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.io.Files;
 import forklift.connectors.ForkliftMessage;
+import forklift.consumer.Consumer;
 import forklift.consumer.ProcessStep;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,7 +66,7 @@ public class ReplayWriter extends Thread implements Closeable {
         }
     }
 
-    public void write(ForkliftMessage msg, ProcessStep step, List<String> errors) {
+    public void write(Consumer consumer, ForkliftMessage msg, ProcessStep step, List<String> errors) {
         try {
             final ReplayMsg replayMsg = new ReplayMsg();
             try {
@@ -77,6 +78,13 @@ public class ReplayWriter extends Thread implements Closeable {
             replayMsg.step = step;
             replayMsg.properties = msg.getProperties();
             replayMsg.errors = errors;
+
+            if (consumer.getQueue() != null)
+                replayMsg.queue = consumer.getQueue().value();
+
+            if (consumer.getTopic() != null)
+                replayMsg.topic = consumer.getTopic().value();
+
             queue.put(replayMsg);
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -98,6 +106,8 @@ public class ReplayWriter extends Thread implements Closeable {
 
     private class ReplayMsg {
         String messageId;
+        String queue;
+        String topic;
         ProcessStep step;
         String text;
         Map<forklift.message.Header, Object> headers;
@@ -106,6 +116,14 @@ public class ReplayWriter extends Thread implements Closeable {
 
         public String getMessageId() {
             return messageId;
+        }
+
+        public String getQueue() {
+            return queue;
+        }
+
+        public String getTopic() {
+            return topic;
         }
 
         public ProcessStep getStep() {

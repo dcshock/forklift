@@ -69,6 +69,6 @@ public class ReplayLogger {
     }
 
     public void theRest(MessageRunnable mr, ProcessStep step) {
-        this.writer.write(mr.getMsg(), step, mr.getErrors());
+        this.writer.write(mr.getConsumer(), mr.getMsg(), step, mr.getErrors());
     }
 }
