@@ -1,4 +1,4 @@
-package forklift.decorators;
+package forklift.retry;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

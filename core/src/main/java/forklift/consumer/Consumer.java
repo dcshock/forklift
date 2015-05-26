@@ -7,14 +7,12 @@ import forklift.connectors.ConnectorException;
 import forklift.connectors.ForkliftConnectorI;
 import forklift.connectors.ForkliftMessage;
 import forklift.consumer.parser.KeyValueParser;
-import forklift.decorators.Audit;
 import forklift.decorators.Config;
 import forklift.decorators.Headers;
 import forklift.decorators.MultiThreaded;
 import forklift.decorators.OnMessage;
 import forklift.decorators.OnValidate;
 import forklift.decorators.Queue;
-import forklift.decorators.Retry;
 import forklift.decorators.Topic;
 import forklift.properties.PropertiesManager;
 import org.slf4j.Logger;
@@ -45,7 +43,6 @@ public class Consumer {
     private static AtomicInteger id = new AtomicInteger(1);
     private static ObjectMapper mapper = new ObjectMapper();
 
-    private final Boolean audit;
     private final ClassLoader classLoader;
     private final ForkliftConnectorI connector;
     private final Map<Class, Map<Class<?>, List<Field>>> injectFields;
@@ -53,7 +50,6 @@ public class Consumer {
     private final String name;
     private final List<Method> onMessage;
     private final List<Method> onValidate;
-    private final Retry retry;
     private final Queue queue;
     private final Topic topic;
     private final ApplicationContext context;
@@ -77,11 +73,9 @@ public class Consumer {
 
     @SuppressWarnings("unchecked")
     public Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader, ApplicationContext context) {
-        this.audit = msgHandler.isAnnotationPresent(Audit.class);
         this.classLoader = classLoader;
         this.connector = connector;
         this.msgHandler = msgHandler;
-        this.retry = msgHandler.getAnnotation(Retry.class);
         this.context = context;
         this.topic = msgHandler.getAnnotation(Topic.class);
         this.queue = msgHandler.getAnnotation(Queue.class);
@@ -182,7 +176,7 @@ public class Consumer {
                         });
 
                         // Handle the message.
-                        final MessageRunnable runner = new MessageRunnable(msg, classLoader, handler, onMessage, onValidate);
+                        final MessageRunnable runner = new MessageRunnable(this, msg, classLoader, handler, onMessage, onValidate);
                         if (threadPool != null)
                             threadPool.execute(runner);
                         else
@@ -277,5 +271,17 @@ public class Consumer {
                 });
             });
         });
+    }
+
+    public Class<?> getMsgHandler() {
+        return msgHandler;
+    }
+
+    public Queue getQueue() {
+        return queue;
+    }
+
+    public Topic getTopic() {
+        return topic;
     }
 }

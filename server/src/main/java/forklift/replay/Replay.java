@@ -1,4 +1,4 @@
-package forklift.decorators;
+package forklift.replay;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -14,5 +14,5 @@ import java.lang.annotation.Target;
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
-public @interface Audit {
+public @interface Replay {
 }

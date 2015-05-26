@@ -1,7 +1,6 @@
 package forklift.consumer;
 
 import forklift.decorators.LifeCycle;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,6 +22,7 @@ public class LifeCycleMonitors {
         Class<?> clazz;
         Method method;
         Object instance;
+        Class<? extends Annotation> annotation;
     }
 
     private static AtomicInteger calls;
@@ -81,6 +81,7 @@ public class LifeCycleMonitors {
                         monitor.instance = instance;
 
                     final LifeCycle lifeCycle = (LifeCycle)a;
+                    monitor.annotation = lifeCycle.annotation();
                     monitors.get(lifeCycle.value()).add(monitor);
                 }
             }
@@ -131,7 +132,9 @@ public class LifeCycleMonitors {
                         try {
                             // In the case of static methods the registration() method leaves the
                             // instance as null.
-                            monitor.method.invoke(monitor.instance, mr);
+                            if (monitor.annotation == Annotation.class ||
+                                mr.getConsumer().getMsgHandler().isAnnotationPresent(monitor.annotation))
+                                monitor.method.invoke(monitor.instance, mr);
                         } catch (IllegalAccessException | InvocationTargetException e) {
                             log.debug("Error invoking LifeCycle Monitor", e);
                         }

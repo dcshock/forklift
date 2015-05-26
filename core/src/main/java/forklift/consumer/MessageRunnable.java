@@ -14,6 +14,7 @@ import javax.jms.JMSException;
 public class MessageRunnable implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(MessageRunnable.class);
 
+    private Consumer consumer;
     private ForkliftMessage msg;
     private ClassLoader classLoader;
     private Object handler;
@@ -22,7 +23,8 @@ public class MessageRunnable implements Runnable {
     private List<String> errors;
     private boolean error = false;
 
-    MessageRunnable(ForkliftMessage msg, ClassLoader classLoader, Object handler, List<Method> onMessage, List<Method> onValidate) {
+    MessageRunnable(Consumer consumer, ForkliftMessage msg, ClassLoader classLoader, Object handler, List<Method> onMessage, List<Method> onValidate) {
+        this.consumer = consumer;
         this.msg = msg;
         this.classLoader = classLoader;
         if (this.classLoader == null)
@@ -117,5 +119,9 @@ public class MessageRunnable implements Runnable {
 
     public Object getHandler() {
         return handler;
+    }
+
+    public Consumer getConsumer() {
+        return consumer;
     }
 }

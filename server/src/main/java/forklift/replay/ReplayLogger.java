@@ -28,47 +28,47 @@ public class ReplayLogger {
         this.writer.start();
     }
 
-    @LifeCycle(ProcessStep.Pending)
+    @LifeCycle(value=ProcessStep.Pending, annotation=Replay.class)
     public void pending(MessageRunnable mr) {
         theRest(mr, ProcessStep.Pending);
     }
 
-    @LifeCycle(ProcessStep.Validating)
+    @LifeCycle(value=ProcessStep.Validating, annotation=Replay.class)
     public void validating(MessageRunnable mr) {
         theRest(mr, ProcessStep.Validating);
     }
 
-    @LifeCycle(ProcessStep.Invalid)
+    @LifeCycle(value=ProcessStep.Invalid, annotation=Replay.class)
     public void invalid(MessageRunnable mr) {
         theRest(mr, ProcessStep.Invalid);
     }
 
-    @LifeCycle(ProcessStep.Processing)
+    @LifeCycle(value=ProcessStep.Processing, annotation=Replay.class)
     public void processing(MessageRunnable mr) {
         theRest(mr, ProcessStep.Processing);
     }
 
-    @LifeCycle(ProcessStep.Complete)
+    @LifeCycle(value=ProcessStep.Complete, annotation=Replay.class)
     public void complete(MessageRunnable mr) {
         theRest(mr, ProcessStep.Complete);
     }
 
-    @LifeCycle(ProcessStep.Error)
+    @LifeCycle(value=ProcessStep.Error, annotation=Replay.class)
     public void error(MessageRunnable mr) {
         theRest(mr, ProcessStep.Error);
     }
 
-    @LifeCycle(ProcessStep.Retrying)
+    @LifeCycle(value=ProcessStep.Retrying, annotation=Replay.class)
     public void retrying(MessageRunnable mr) {
         theRest(mr, ProcessStep.Retrying);
     }
 
-    @LifeCycle(ProcessStep.MaxRetriesExceeded)
+    @LifeCycle(value=ProcessStep.MaxRetriesExceeded, annotation=Replay.class)
     public void maxRetries(MessageRunnable mr) {
         theRest(mr, ProcessStep.MaxRetriesExceeded);
     }
 
     public void theRest(MessageRunnable mr, ProcessStep step) {
-        this.writer.write(mr.getMsg(), step);
+        this.writer.write(mr.getMsg(), step, mr.getErrors());
     }
 }

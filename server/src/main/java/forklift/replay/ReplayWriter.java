@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.io.Files;
 import forklift.connectors.ForkliftMessage;
 import forklift.consumer.ProcessStep;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedWriter;
 import java.io.Closeable;
@@ -23,6 +25,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.jms.JMSException;
 
 public class ReplayWriter extends Thread implements Closeable {
+    private static final Logger log = LoggerFactory.getLogger(ReplayWriter.class);
+
     private AtomicBoolean running = new AtomicBoolean(false);
     private BlockingQueue<ReplayMsg> queue = new ArrayBlockingQueue<>(1000);
     private ObjectMapper mapper;
@@ -44,14 +48,17 @@ public class ReplayWriter extends Thread implements Closeable {
         running.set(true);
         try {
             while (running.get()) {
-                writer.write(mapper.writeValueAsString(queue.poll(2, TimeUnit.SECONDS)) + "\n");
+                final ReplayMsg msg = queue.poll(2, TimeUnit.SECONDS);
+                if (msg != null)
+                    writer.write(mapper.writeValueAsString(msg) + "\n");
             }
 
             // Drain to the file.
             final List<ReplayMsg> msgs = new ArrayList<>();
             queue.drainTo(msgs);
-            for (ReplayMsg msg : msgs)
+            for (ReplayMsg msg : msgs) {
                 writer.write(mapper.writeValueAsString(msg) + "\n");
+            }
         } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
                 return;
