@@ -56,13 +56,14 @@ public class ReplayWriter extends Thread implements Closeable {
         }
     }
 
-    public void write(ForkliftMessage msg, ProcessStep step) {
+    public void write(ForkliftMessage msg, ProcessStep step, List<String> errors) {
         try {
-            ReplayMsg replayMsg = new ReplayMsg();
+            final ReplayMsg replayMsg = new ReplayMsg();
             replayMsg.text = msg.getMsg();
             replayMsg.headers = msg.getHeaders();
             replayMsg.step = step;
             replayMsg.properties = msg.getProperties();
+            replayMsg.errors = errors;
             queue.put(replayMsg);
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -87,6 +88,7 @@ public class ReplayWriter extends Thread implements Closeable {
         String text;
         Map<forklift.message.Header, Object> headers;
         Map<String, Object> properties;
+        List<String> errors;
 
         public ProcessStep getStep() {
             return step;
@@ -102,6 +104,10 @@ public class ReplayWriter extends Thread implements Closeable {
 
         public Map<String, Object> getProperties() {
             return properties;
+        }
+
+        public List<String> getErrors() {
+            return errors;
         }
     }
 }
