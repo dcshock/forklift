@@ -2,7 +2,9 @@ package forklift;
 
 import forklift.connectors.ActiveMQConnector;
 import forklift.consumer.ConsumerDeploymentEvents;
+import forklift.consumer.LifeCycleMonitors;
 import forklift.deployment.DeploymentWatch;
+import forklift.replay.ReplayLogger;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -39,6 +41,10 @@ public final class ForkliftServer {
         if (!forklift.isRunning()) {
             throw new RuntimeException("Unable to start Forklift");
         }
+
+        log.info("Registering ReplayLogger");
+        LifeCycleMonitors.register(ReplayLogger.class);
+
         log.info("Connected to broker on " + brokerUrl);
         log.info("Scanning for Forklift consumers at " + scanDir);
 

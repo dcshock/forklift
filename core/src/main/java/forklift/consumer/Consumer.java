@@ -182,7 +182,7 @@ public class Consumer {
                         });
 
                         // Handle the message.
-                        final MessageRunnable runner = new MessageRunnable(jmsMsg, classLoader, handler, onMessage, onValidate);
+                        final MessageRunnable runner = new MessageRunnable(msg, classLoader, handler, onMessage, onValidate);
                         if (threadPool != null)
                             threadPool.execute(runner);
                         else
