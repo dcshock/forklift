@@ -33,7 +33,6 @@ public class ReplayWriter extends Thread implements Closeable {
     private ObjectMapper mapper;
     private BufferedWriter writer;
 
-
     public ReplayWriter(File file) throws FileNotFoundException {
         super();
         this.setDaemon(true);
