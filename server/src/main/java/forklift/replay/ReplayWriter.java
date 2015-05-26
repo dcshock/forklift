@@ -40,8 +40,13 @@ public class ReplayWriter extends Thread implements Closeable {
         this.setName("ReplayWriter");
         this.mapper = new ObjectMapper();
         this.mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-
         this.writer = Files.newWriter(file, Charset.forName("UTF-8"));
+        this.setUncaughtExceptionHandler(new UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(Thread t, Throwable e) {
+                log.error(t.getName(), e);
+            }
+        });
     }
 
     @Override
