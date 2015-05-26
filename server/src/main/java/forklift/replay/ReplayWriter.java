@@ -20,6 +20,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.jms.JMSException;
+
 public class ReplayWriter extends Thread implements Closeable {
     private AtomicBoolean running = new AtomicBoolean(false);
     private BlockingQueue<ReplayMsg> queue = new ArrayBlockingQueue<>(1000);
@@ -59,6 +61,10 @@ public class ReplayWriter extends Thread implements Closeable {
     public void write(ForkliftMessage msg, ProcessStep step, List<String> errors) {
         try {
             final ReplayMsg replayMsg = new ReplayMsg();
+            try {
+                replayMsg.messageId = msg.getJmsMsg().getJMSMessageID();
+            } catch (JMSException ignored) {
+            }
             replayMsg.text = msg.getMsg();
             replayMsg.headers = msg.getHeaders();
             replayMsg.step = step;
@@ -84,11 +90,16 @@ public class ReplayWriter extends Thread implements Closeable {
     }
 
     private class ReplayMsg {
+        String messageId;
         ProcessStep step;
         String text;
         Map<forklift.message.Header, Object> headers;
         Map<String, Object> properties;
         List<String> errors;
+
+        public String getMessageId() {
+            return messageId;
+        }
 
         public ProcessStep getStep() {
             return step;

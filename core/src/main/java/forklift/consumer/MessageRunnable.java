@@ -2,7 +2,6 @@ package forklift.consumer;
 
 import forklift.classloader.RunAsClassLoader;
 import forklift.connectors.ForkliftMessage;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,7 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.jms.JMSException;
-import javax.jms.Message;
 
 public class MessageRunnable implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(MessageRunnable.class);
@@ -63,7 +61,7 @@ public class MessageRunnable implements Runnable {
                         for (Method m : onMessage) {
                             // Send the message to each handler.
                             m.invoke(handler, new Object[] {});
-                        }   
+                        }
                     }
                 } catch (Throwable e) {
                     log.debug("Error processing", e);
@@ -115,5 +113,9 @@ public class MessageRunnable implements Runnable {
 
     public ForkliftMessage getMsg() {
         return msg;
+    }
+
+    public Object getHandler() {
+        return handler;
     }
 }
