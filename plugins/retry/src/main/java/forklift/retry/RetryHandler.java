@@ -4,10 +4,9 @@ import forklift.consumer.MessageRunnable;
 import forklift.consumer.ProcessStep;
 import forklift.decorators.LifeCycle;
 
-import java.io.FileNotFoundException;
-
 public class RetryHandler {
-    public RetryHandler() throws FileNotFoundException {
+    public RetryHandler() {
+
     }
 
     @LifeCycle(value=ProcessStep.Error, annotation=Retry.class)

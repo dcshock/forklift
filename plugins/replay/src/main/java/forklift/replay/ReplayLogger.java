@@ -7,12 +7,14 @@ import forklift.decorators.LifeCycle;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 public class ReplayLogger {
     private final ReplayWriter writer;
 
     public ReplayLogger() throws FileNotFoundException {
-        this.writer = new ReplayWriter(new File("replay.log"));
+        this.writer = new ReplayWriter(new File("replay." + LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE) + ".log"));
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
