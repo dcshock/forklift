@@ -12,10 +12,12 @@ import forklift.decorators.Headers;
 import forklift.decorators.MultiThreaded;
 import forklift.decorators.OnMessage;
 import forklift.decorators.OnValidate;
+import forklift.decorators.Producer;
 import forklift.decorators.Queue;
 import forklift.decorators.Retry;
 import forklift.decorators.Topic;
 import forklift.properties.PropertiesManager;
+import forklift.producers.ForkliftProducerI;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -23,11 +25,13 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.stream.Collectors;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -79,6 +83,7 @@ public class Consumer {
         this.retry = msgHandler.getAnnotation(Retry.class);
         this.queue = msgHandler.getAnnotation(Queue.class);
         this.topic = msgHandler.getAnnotation(Topic.class);
+
         if (this.queue != null && this.topic != null)
             throw new IllegalArgumentException("Msg Handler cannot consume a queue and topic");
         if (this.queue != null)
@@ -118,6 +123,7 @@ public class Consumer {
         injectFields.put(forklift.decorators.Message.class, new HashMap<>());
         injectFields.put(forklift.decorators.Headers.class, new HashMap<>());
         injectFields.put(forklift.decorators.Properties.class, new HashMap<>());
+        injectFields.put(forklift.decorators.Producer.class, new HashMap<>());
         for (Field f : msgHandler.getDeclaredFields()) {
             injectFields.keySet().forEach(type -> {
                 if (f.isAnnotationPresent(type)) {
@@ -129,7 +135,7 @@ public class Consumer {
                     injectFields.get(type).get(f.getType()).add(f);
                 }
             });
-        }
+        }                     
     }
 
     /**
@@ -248,6 +254,15 @@ public class Consumer {
                         } else if (decorator == forklift.decorators.Properties.class) {
                             if (clazz == Map.class) {
                                 f.set(instance, msg.getProperties());
+                            }
+                        } else if (decorator == forklift.decorators.Producer.class) {
+                            if (clazz == ForkliftProducerI.class) {
+                                forklift.decorators.Producer producer = f.getAnnotation(forklift.decorators.Producer.class);
+                                if (producer.queue().length() > 0) {
+                                    f.set(instance, connector.getQueueProducer(producer.queue()));
+                                } else if (producer.topic().length() > 0) {
+                                    f.set(instance, connector.getTopicProducer(producer.topic()));
+                                }        
                             }
                         }
                     } catch (Exception e) {

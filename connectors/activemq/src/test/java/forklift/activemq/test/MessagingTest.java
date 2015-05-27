@@ -10,15 +10,22 @@ import forklift.consumer.ProcessStep;
 import forklift.decorators.LifeCycle;
 import forklift.decorators.OnMessage;
 import forklift.decorators.OnValidate;
+import forklift.decorators.Producer;
 import forklift.decorators.Queue;
+import forklift.message.Header;
+import forklift.producers.ForkliftProducerI;
+import forklift.producers.ProducerException;
 
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.Ignore;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -35,7 +42,7 @@ public class MessagingTest {
     @forklift.decorators.Message
     private ForkliftMessage m;
 
-    // This is null right now and is just being used to ensure the code at least tries to hit the injection code for props.
+    // This is null right now and is just being used to ensure the code at least tries to hit the injection code for props. 
     @forklift.decorators.Config("none")
     private Properties props;
 
@@ -92,26 +99,21 @@ public class MessagingTest {
     }
 
     @Test
-    public void test() throws JMSException, ConnectorException {
+    public void test() throws JMSException, ConnectorException, ProducerException {
         int msgCount = 100;
         LifeCycleMonitors.register(this.getClass());
-        final ForkliftConnectorI connector = TestServiceManager.getForklift().getConnector();
-        final MessageProducer producer = connector.getQueueProducer("q1");
-
+        ForkliftProducerI producer = TestServiceManager.getConnector().getQueueProducer("q1");
         for (int i = 0; i < msgCount; i++) {
             final ActiveMQTextMessage m = new ActiveMQTextMessage();
             m.setJMSCorrelationID("" + i);
-            m.setText("x=Hello");
-            producer.send(m);
+            m.setText("x=Hello, message test");
+            producer.send(new ForkliftMessage(m));
         }
-        producer.close();
 
         final Consumer c = new Consumer(getClass(), TestServiceManager.getConnector());
-
         // Shutdown the consumer after all the messages have been processed.
         c.setOutOfMessages((listener) -> {
             listener.shutdown();
-
             Assert.assertTrue(ordered);
             Assert.assertTrue("called was not == " + msgCount, called.get() == msgCount);
         });
