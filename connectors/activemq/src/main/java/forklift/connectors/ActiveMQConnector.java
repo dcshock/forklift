@@ -2,6 +2,8 @@ package forklift.connectors;
 
 import forklift.message.ActiveMQHeaders;
 import forklift.message.Header;
+import forklift.producers.ActiveMQProducer;
+import forklift.producers.ForkliftProducerI;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -12,6 +14,7 @@ import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.ActiveMQTopic;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,7 +22,6 @@ import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
 import javax.jms.Session;
 
 public class ActiveMQConnector implements ForkliftConnectorI {
@@ -137,19 +139,21 @@ public class ActiveMQConnector implements ForkliftConnectorI {
     }
 
     @Override
-    public MessageProducer getQueueProducer(String name) {
-         try {
-            return getSession().createProducer(new ActiveMQQueue(name));
+    public ForkliftProducerI getQueueProducer(String name) {
+        try {
+            return new ActiveMQProducer(getSession().createProducer(new ActiveMQQueue(name)), getSession());
         } catch (JMSException | ConnectorException e) {
+            System.out.println("getQueueProducer, throwing error");
             return null;
         }
     }
-
+    
     @Override
-    public MessageProducer getTopicProducer(String name) {
+    public ForkliftProducerI getTopicProducer(String name) {
          try {
-            return getSession().createProducer(new ActiveMQTopic(name));
+            return new ActiveMQProducer(getSession().createProducer(new ActiveMQTopic(name)), getSession());
         } catch (JMSException | ConnectorException e) {
+            System.out.println("getTopicProducer, throwing error");
             return null;
         }
     }

@@ -22,6 +22,10 @@ public class ForkliftMessage {
         this.jmsMsg = jmsMsg;
     }
 
+    public ForkliftMessage(String msg) {
+        this.setMsg(msg);
+    }
+
     public Message getJmsMsg() {
         return jmsMsg;
     }
