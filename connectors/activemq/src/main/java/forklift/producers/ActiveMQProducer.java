@@ -1,17 +1,12 @@
 package forklift.producers;
 
+import com.google.common.base.Strings;
 import forklift.connectors.ForkliftMessage;
 import forklift.message.ActiveMQHeaders;
 import forklift.message.Header;
-import forklift.producers.ForkliftProducerI;
-import forklift.producers.ProducerException;
-
 import org.apache.activemq.command.ActiveMQMessage;
-import com.google.common.base.Strings;
 
-import java.lang.reflect.Method;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.UUID;
 
 import javax.jms.Destination;
@@ -57,7 +52,7 @@ public class ActiveMQProducer implements ForkliftProducerI {
     }
 
     @Override
-    public String send(Map<Header, Object> headers, 
+    public String send(Map<Header, Object> headers,
                        Map<String, Object> properties,
                        ForkliftMessage message) throws ProducerException {
         Message msg = prepAndValidate(message, headers, properties);
@@ -107,7 +102,7 @@ public class ActiveMQProducer implements ForkliftProducerI {
     * @return - jms message ready to be sent to endpoint
     **/
     private Message prepAndValidate(ForkliftMessage message,
-                                    Map<Header, Object> headers, 
+                                    Map<Header, Object> headers,
                                     Map<String, Object> properties) throws ProducerException {
         Message msg = forkliftToJms(message);
         try {
@@ -137,7 +132,7 @@ public class ActiveMQProducer implements ForkliftProducerI {
     * @return - a new javax.jms.Message
     **/
     private Message forkliftToJms(ForkliftMessage message) throws ProducerException {
-        
+
         try {
             Message msg = null;
             if (message.getJmsMsg() != null ) {
@@ -166,7 +161,7 @@ public class ActiveMQProducer implements ForkliftProducerI {
             headers.entrySet().stream().filter(entry -> entry.getValue() != null)
                               .forEach(entry -> {
                                 if(ActiveMQHeaders.getFunctions().get(entry.getKey()).get((ActiveMQMessage)msg) == null) {
-                                   ActiveMQHeaders.getFunctions().get(entry.getKey()).set((ActiveMQMessage)msg,entry.getValue()); 
+                                   ActiveMQHeaders.getFunctions().get(entry.getKey()).set((ActiveMQMessage)msg,entry.getValue());
                                 }
                             });
         }
@@ -217,7 +212,7 @@ public class ActiveMQProducer implements ForkliftProducerI {
             this.producer.setTimeToLive(timeToLive);
         } catch (Exception e) {
             throw new ProducerException("Failed to set TimeToLive");
-        }   
+        }
     }
 
     @Override
@@ -225,9 +220,9 @@ public class ActiveMQProducer implements ForkliftProducerI {
         try {
             return this.headers;
         } catch (Exception e) {
-            throw new ProducerException("Failed to get headers");   
+            throw new ProducerException("Failed to get headers");
         }
-        
+
     }
 
     @Override

@@ -1,7 +1,7 @@
 package forklift.consumer;
 
 import forklift.classloader.RunAsClassLoader;
-
+import forklift.connectors.ForkliftMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,12 +10,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.jms.JMSException;
-import javax.jms.Message;
 
 public class MessageRunnable implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(MessageRunnable.class);
 
-    private Message jmsMsg;
+    private Consumer consumer;
+    private ForkliftMessage msg;
     private ClassLoader classLoader;
     private Object handler;
     private List<Method> onMessage;
@@ -23,8 +23,9 @@ public class MessageRunnable implements Runnable {
     private List<String> errors;
     private boolean error = false;
 
-    MessageRunnable(Message jmsMsg, ClassLoader classLoader, Object handler, List<Method> onMessage, List<Method> onValidate) {
-        this.jmsMsg = jmsMsg;
+    MessageRunnable(Consumer consumer, ForkliftMessage msg, ClassLoader classLoader, Object handler, List<Method> onMessage, List<Method> onValidate) {
+        this.consumer = consumer;
+        this.msg = msg;
         this.classLoader = classLoader;
         if (this.classLoader == null)
             this.classLoader = Thread.currentThread().getContextClassLoader();
@@ -65,7 +66,7 @@ public class MessageRunnable implements Runnable {
                         }
                     }
                 } catch (Throwable e) {
-                    log.debug("Error processing", e);
+                    log.info("Error processing", e);
                     if (e.getCause() != null)
                         addError(e.getCause().getMessage());
                     else
@@ -75,13 +76,15 @@ public class MessageRunnable implements Runnable {
                 // We've done all we can do to process this message, ack it from the queue, and move forward.
                 try {
                     if (error) {
+                        getErrors().stream().forEach(e -> log.error(e));
                         LifeCycleMonitors.call(ProcessStep.Error, this);
                     } else {
                         LifeCycleMonitors.call(ProcessStep.Complete, this);
                     }
 
-                    jmsMsg.acknowledge();
+                    msg.getJmsMsg().acknowledge();
                 } catch (JMSException e) {
+                    log.error("Error while acking messgae.", e);
                 }
             }
         });
@@ -110,7 +113,15 @@ public class MessageRunnable implements Runnable {
         return errors;
     }
 
-    public Message getJmsMsg() {
-        return jmsMsg;
+    public ForkliftMessage getMsg() {
+        return msg;
+    }
+
+    public Object getHandler() {
+        return handler;
+    }
+
+    public Consumer getConsumer() {
+        return consumer;
     }
 }

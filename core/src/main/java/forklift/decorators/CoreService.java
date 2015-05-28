@@ -8,11 +8,11 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Instruct a forklift to automatically send audit messages for a processor to the audit queue.
+ * Mark a class to be managed in the forklift classloader.
  */
 @Documented
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
-public @interface Audit {
+public @interface CoreService {
 }

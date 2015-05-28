@@ -3,10 +3,10 @@ package forklift.consumer;
 import static org.junit.Assert.assertTrue;
 
 import forklift.TestMsg;
+import forklift.connectors.ForkliftMessage;
 import forklift.decorators.LifeCycle;
 import forklift.decorators.OnMessage;
 import forklift.decorators.OnValidate;
-
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +26,7 @@ public class MessageRunnableTest {
         Message jmsMsg = new TestMsg("null");
 
         // jmsMsg is guaranteed to never be null when called.
-        MessageRunnable mr = new MessageRunnable(jmsMsg, null, null, null, null);
+        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), null, null, null, null);
         mr.run();
         assertTrue("Test complete", true);
     }
@@ -46,7 +46,7 @@ public class MessageRunnableTest {
         }
 
         // Make sure that if we don't have a classloader we fall back.
-        MessageRunnable mr = new MessageRunnable(jmsMsg, null, this, onMessage, onValidate);
+        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), null, this, onMessage, onValidate);
         mr.run();
         assertTrue("Test complete", true);
     }
@@ -70,7 +70,7 @@ public class MessageRunnableTest {
 
         TestConsumer1 tc = new TestConsumer1();
 
-        MessageRunnable mr = new MessageRunnable(jmsMsg, null, tc, onMessage, onValidate);
+        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), null, tc, onMessage, onValidate);
         mr.run();
         assertTrue(TestConsumer1.success.get());
         LifeCycleMonitors.deregister(TestListener1.class);
@@ -127,7 +127,7 @@ public class MessageRunnableTest {
 
         TestConsumer2 tc = new TestConsumer2();
 
-        MessageRunnable mr = new MessageRunnable(jmsMsg, null, tc, onMessage, onValidate);
+        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), null, tc, onMessage, onValidate);
         mr.run();
         assertTrue(TestConsumer2.success.get());
         LifeCycleMonitors.deregister(TestListener2.class);
@@ -184,7 +184,7 @@ public class MessageRunnableTest {
 
         TestConsumer3 tc = new TestConsumer3();
 
-        MessageRunnable mr = new MessageRunnable(jmsMsg, tc.getClass().getClassLoader(), tc, onMessage, onValidate);
+        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), tc.getClass().getClassLoader(), tc, onMessage, onValidate);
         mr.run();
         assertTrue(TestConsumer3.success.get());
         LifeCycleMonitors.deregister(TestListener3.class);
@@ -240,7 +240,7 @@ public class MessageRunnableTest {
 
         TestConsumer4 tc = new TestConsumer4();
 
-        MessageRunnable mr = new MessageRunnable(jmsMsg, tc.getClass().getClassLoader(), tc, onMessage, onValidate);
+        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), tc.getClass().getClassLoader(), tc, onMessage, onValidate);
         mr.run();
         assertTrue(TestConsumer4.success.get());
         LifeCycleMonitors.deregister(TestListener4.class);
@@ -301,7 +301,7 @@ public class MessageRunnableTest {
 
         TestConsumer5 tc = new TestConsumer5();
 
-        MessageRunnable mr = new MessageRunnable(jmsMsg, tc.getClass().getClassLoader(), tc, onMessage, onValidate);
+        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), tc.getClass().getClassLoader(), tc, onMessage, onValidate);
         mr.run();
         assertTrue(TestConsumer5.success.get());
         LifeCycleMonitors.deregister(TestListener5.class);
@@ -361,7 +361,7 @@ public class MessageRunnableTest {
 
         TestConsumer6 tc = new TestConsumer6();
 
-        MessageRunnable mr = new MessageRunnable(jmsMsg, tc.getClass().getClassLoader(), tc, onMessage, onValidate);
+        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), tc.getClass().getClassLoader(), tc, onMessage, onValidate);
         mr.run();
         assertTrue(TestConsumer6.success.get());
         LifeCycleMonitors.deregister(TestListener6.class);
@@ -418,7 +418,7 @@ public class MessageRunnableTest {
 
         TestConsumer7 tc = new TestConsumer7();
 
-        MessageRunnable mr = new MessageRunnable(jmsMsg, tc.getClass().getClassLoader(), tc, onMessage, onValidate);
+        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), tc.getClass().getClassLoader(), tc, onMessage, onValidate);
         mr.run();
         assertTrue(TestConsumer7.success.get());
         LifeCycleMonitors.deregister(TestListener7.class);
@@ -477,7 +477,7 @@ public class MessageRunnableTest {
 
         TestConsumer8 tc = new TestConsumer8();
 
-        MessageRunnable mr = new MessageRunnable(jmsMsg, tc.getClass().getClassLoader(), tc, onMessage, onValidate);
+        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), tc.getClass().getClassLoader(), tc, onMessage, onValidate);
         mr.run();
         assertTrue(TestConsumer8.success.get());
         LifeCycleMonitors.deregister(TestListener8.class);

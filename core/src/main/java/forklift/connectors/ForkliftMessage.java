@@ -2,6 +2,7 @@ package forklift.connectors;
 
 import forklift.message.Header;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.jms.Message;
@@ -54,7 +55,10 @@ public class ForkliftMessage {
     }
 
     public void setHeaders(Map<Header, Object> headers) {
-        this.headers = headers;
+        // Get rid of unmodifiable.
+        final Map<Header, Object> newHeaders = new HashMap<>();
+        headers.keySet().stream().forEach(key -> newHeaders.put(key, headers.get(key)));
+        this.headers = newHeaders;
     }
 
     public Map<Header, Object> getHeaders() {
@@ -62,7 +66,10 @@ public class ForkliftMessage {
     }
 
     public void setProperties(Map<String, Object> properties) {
-        this.properties = properties;
+        // Get rid of unmodifiable.
+        final Map<String, Object> newProps = new HashMap<>();
+        properties.keySet().stream().forEach(key -> newProps.put(key, properties.get(key)));
+        this.properties = newProps;
     }
 
     public Map<String, Object> getProperties() {

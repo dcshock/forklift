@@ -1,4 +1,4 @@
-package forklift.decorators;
+package forklift.notify;
 
 import forklift.consumer.ProcessStep;
 import forklift.message.Header;
