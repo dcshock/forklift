@@ -42,6 +42,14 @@ public class LifeCycleMonitors {
     }
 
     public static void register(Class<?> clazz) {
+        register(clazz, null);
+    }
+
+    public static void register(Object existingInstance) {
+        register(existingInstance.getClass(), existingInstance);
+    }
+
+    private static void register(Class<?> clazz, Object existingInstance) {
         synchronized (monitors) {
             while (calls.get() > 0) {
                 try {
@@ -52,7 +60,7 @@ public class LifeCycleMonitors {
                 throw new RuntimeException("Registering LifeCycleMonitor during active call.");
 
             // For methods that aren't static we'll need to have an instance around.
-            Object instance = null;
+            Object instance = existingInstance;
 
             // Get all of the methods that may have lifecycle annotations.
             for (Method m : clazz.getDeclaredMethods()) {
@@ -60,8 +68,10 @@ public class LifeCycleMonitors {
                 final boolean staticMethod = Modifier.isStatic(m.getModifiers());
                 if (!staticMethod && instance == null) {
                     try {
-                        instance = clazz.newInstance();
-                    } catch (IllegalAccessException | InstantiationException ignored) {
+                        if (existingInstance == null)
+                            instance = clazz.newInstance();
+                    } catch (Exception ignored) {
+                        log.error("", ignored);
                         return;
                     }
                 }

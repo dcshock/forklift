@@ -4,7 +4,6 @@ import forklift.message.ActiveMQHeaders;
 import forklift.message.Header;
 import forklift.producers.ActiveMQProducer;
 import forklift.producers.ForkliftProducerI;
-
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQSession;
@@ -12,9 +11,10 @@ import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,6 +25,8 @@ import javax.jms.MessageConsumer;
 import javax.jms.Session;
 
 public class ActiveMQConnector implements ForkliftConnectorI {
+    private Logger log = LoggerFactory.getLogger(ActiveMQConnector.class);
+
     private ActiveMQConnectionFactory factory;
     private ActiveMQConnection conn;
     private String brokerUrl;
@@ -143,17 +145,17 @@ public class ActiveMQConnector implements ForkliftConnectorI {
         try {
             return new ActiveMQProducer(getSession().createProducer(new ActiveMQQueue(name)), getSession());
         } catch (JMSException | ConnectorException e) {
-            System.out.println("getQueueProducer, throwing error");
+            log.error("getQueueProducer, throwing error", e);
             return null;
         }
     }
-    
+
     @Override
     public ForkliftProducerI getTopicProducer(String name) {
          try {
             return new ActiveMQProducer(getSession().createProducer(new ActiveMQTopic(name)), getSession());
         } catch (JMSException | ConnectorException e) {
-            System.out.println("getTopicProducer, throwing error");
+            log.error("getTopicProducer, throwing error", e);
             return null;
         }
     }

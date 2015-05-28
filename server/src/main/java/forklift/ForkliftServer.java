@@ -43,8 +43,8 @@ public final class ForkliftServer {
             throw new RuntimeException("Unable to start Forklift");
         }
 
-        log.info("Registering ReplayLogger");
-        LifeCycleMonitors.register(RetryHandler.class);
+        log.info("Registering LifeCycleMonitors");
+        LifeCycleMonitors.register(new RetryHandler(forklift.getConnector()));
         LifeCycleMonitors.register(ReplayLogger.class);
 
         log.info("Connected to broker on " + brokerUrl);

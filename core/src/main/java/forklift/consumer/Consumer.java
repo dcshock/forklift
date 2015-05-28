@@ -295,4 +295,8 @@ public class Consumer {
     public Topic getTopic() {
         return topic;
     }
+
+    public ForkliftConnectorI getConnector() {
+        return connector;
+    }
 }
