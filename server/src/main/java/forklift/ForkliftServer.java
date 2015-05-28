@@ -5,6 +5,7 @@ import forklift.consumer.ConsumerDeploymentEvents;
 import forklift.consumer.LifeCycleMonitors;
 import forklift.deployment.DeploymentWatch;
 import forklift.replay.ReplayLogger;
+import forklift.retry.RetryHandler;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -43,12 +44,14 @@ public final class ForkliftServer {
         }
 
         log.info("Registering ReplayLogger");
+        LifeCycleMonitors.register(RetryHandler.class);
         LifeCycleMonitors.register(ReplayLogger.class);
 
         log.info("Connected to broker on " + brokerUrl);
         log.info("Scanning for Forklift consumers at " + scanDir);
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
             public void run() {
                 // End the deployment watcher.
                 running.set(false);
@@ -67,7 +70,7 @@ public final class ForkliftServer {
             deploymentWatch.run();
             synchronized (running) {
                 running.wait(SLEEP_INTERVAL);
-            }            
+            }
         }
     }
 }

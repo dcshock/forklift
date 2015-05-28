@@ -66,7 +66,7 @@ public class MessageRunnable implements Runnable {
                         }
                     }
                 } catch (Throwable e) {
-                    log.debug("Error processing", e);
+                    log.info("Error processing", e);
                     if (e.getCause() != null)
                         addError(e.getCause().getMessage());
                     else

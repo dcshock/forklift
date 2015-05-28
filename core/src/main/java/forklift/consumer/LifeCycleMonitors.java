@@ -5,7 +5,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -133,10 +132,14 @@ public class LifeCycleMonitors {
                             // In the case of static methods the registration() method leaves the
                             // instance as null.
                             if (monitor.annotation == Annotation.class ||
-                                mr.getConsumer().getMsgHandler().isAnnotationPresent(monitor.annotation))
-                                monitor.method.invoke(monitor.instance, mr);
-                        } catch (IllegalAccessException | InvocationTargetException e) {
-                            log.debug("Error invoking LifeCycle Monitor", e);
+                                mr.getConsumer().getMsgHandler().isAnnotationPresent(monitor.annotation)) {
+                                if (monitor.method.getParameterCount() == 1)
+                                    monitor.method.invoke(monitor.instance, mr);
+                                else
+                                    monitor.method.invoke(monitor.instance, mr, mr.getConsumer().getMsgHandler().getAnnotation(monitor.annotation));
+                            }
+                        } catch (Throwable e) {
+                            log.error("Error invoking LifeCycle Monitor", e);
                         }
                     });
                 });
