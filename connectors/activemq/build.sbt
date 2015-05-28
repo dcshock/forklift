@@ -18,6 +18,7 @@ initialize := {
 
 libraryDependencies ++= Seq(
     "com.github.dcshock" % "forklift" % "0.1",
+    "javax.inject" % "javax.inject" % "1",
     "org.springframework" % "spring-jms" % "4.1.1.RELEASE",
     "ch.qos.logback" % "logback-classic" % "1.0.13",
     "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1",
