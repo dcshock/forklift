@@ -152,7 +152,7 @@ public class Consumer {
 
             messageLoop(consumer);
         } catch (ConnectorException e) {
-            log.error("", e);
+            log.debug("", e);
         }
     }
 
