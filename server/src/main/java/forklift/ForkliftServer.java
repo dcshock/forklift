@@ -1,5 +1,6 @@
 package forklift;
 
+import consul.Consul;
 import forklift.connectors.ActiveMQConnector;
 import forklift.consumer.ConsumerDeploymentEvents;
 import forklift.consumer.LifeCycleMonitors;
@@ -29,10 +30,33 @@ public final class ForkliftServer {
     public static void main(String[] args) throws Throwable {
 
         // Read CLI flags (if provided).
-        final String brokerUrl  = (args.length >= 1) ? args[0] : "tcp://127.0.0.1:61616";
+        String brokerUrl  = (args.length >= 1) ? args[0] : "tcp://127.0.0.1:61616";
         final String scanDir    = (args.length >= 2) ? args[1] : "/usr/local/forklift/consumers";
 
-        // TODO: Read connector from CLI or config file here...
+        if (brokerUrl.startsWith("consul.") && brokerUrl.length() > "consul.".length()) {
+            log.info("Building failover url using consul");
+
+            final Consul c = new Consul("http://dev4", 8500);
+
+            // Build the connection string.
+            final String serviceName = brokerUrl.split("\\.")[1];
+
+            brokerUrl = "failover:(" +
+                c.catalog().service(serviceName).getProviders().stream()
+                    .filter(srvc -> !srvc.isCritical())
+                    .map(srvc -> "tcp://" + srvc.getAddress() + ":" + srvc.getPort())
+                    .reduce("", (a, b) -> a + "," + b) +
+                ")";
+
+            c.shutdown();
+
+            log.info("url {}", brokerUrl);
+            if (brokerUrl.equals("failover:()")) {
+                log.error("No brokers found");
+                System.exit(-1);
+            }
+        }
+
 
         // Start a forklift server w/ specified connector.
         final Forklift forklift = new Forklift();
