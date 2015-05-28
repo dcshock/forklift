@@ -1,38 +1,55 @@
 package forklift.connectors;
 
-import javax.jms.Connection;
-import javax.jms.JMSException;
-import javax.jms.MessageConsumer;
-import javax.jms.Session;
-
+import forklift.message.ActiveMQHeaders;
+import forklift.message.Header;
+import forklift.producers.ActiveMQProducer;
+import forklift.producers.ForkliftProducerI;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQSession;
+import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTextMessage;
+import org.apache.activemq.command.ActiveMQTopic;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.jms.Connection;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.Session;
 
 public class ActiveMQConnector implements ForkliftConnectorI {
+    private Logger log = LoggerFactory.getLogger(ActiveMQConnector.class);
+
     private ActiveMQConnectionFactory factory;
-    private ActiveMQConnection conn; 
+    private ActiveMQConnection conn;
     private String brokerUrl;
-    
+
     public ActiveMQConnector() {
-        
+
     }
-    
+
     public ActiveMQConnector(String brokerUrl) {
         this.brokerUrl = brokerUrl;
     }
-    
+
     @Override
-    public synchronized void start() 
+    public synchronized void start()
       throws ConnectorException {
         if (brokerUrl == null)
             throw new ConnectorException("brokerUrl wasn't set");
-        
+
         factory = new ActiveMQConnectionFactory("", "", brokerUrl);
     }
 
     @Override
-    public synchronized void stop() 
+    public synchronized void stop()
       throws ConnectorException {
         if (conn != null)
             try {
@@ -43,7 +60,7 @@ public class ActiveMQConnector implements ForkliftConnectorI {
     }
 
     @Override
-    public synchronized Connection getConnection() 
+    public synchronized Connection getConnection()
       throws ConnectorException {
         if (conn == null || !conn.isStarted())
             try {
@@ -55,11 +72,11 @@ public class ActiveMQConnector implements ForkliftConnectorI {
 
         if (conn == null)
             throw new ConnectorException("Could not create connection to activemq.");
-        
+
         return conn;
     }
-    
-    public synchronized Session getSession() 
+
+    public synchronized Session getSession()
       throws ConnectorException {
         try {
             return getConnection().createSession(
@@ -68,9 +85,9 @@ public class ActiveMQConnector implements ForkliftConnectorI {
             throw new ConnectorException(e.getMessage());
         }
     }
-    
+
     @Override
-    public MessageConsumer getQueue(String name) 
+    public MessageConsumer getQueue(String name)
       throws ConnectorException {
         final Session s = getSession();
         try {
@@ -79,15 +96,67 @@ public class ActiveMQConnector implements ForkliftConnectorI {
             throw new ConnectorException(e.getMessage());
         }
     }
-    
+
     @Override
-    public MessageConsumer getTopic(String name) 
+    public MessageConsumer getTopic(String name)
       throws ConnectorException {
         final Session s = getSession();
         try {
             return s.createConsumer(s.createTopic(name));
         } catch (JMSException e) {
             throw new ConnectorException(e.getMessage());
+        }
+    }
+
+    @Override
+    public ForkliftMessage jmsToForklift(Message m) {
+        try {
+            final ForkliftMessage msg = new ForkliftMessage(m);
+            if (m instanceof ActiveMQTextMessage) {
+                msg.setMsg(((ActiveMQTextMessage)m).getText());
+            } else {
+                msg.setFlagged(true);
+                msg.setWarning("Unexpected message type: " + m.getClass().getName());
+            }
+
+            Map<Header, Object> headers = new HashMap<>();
+            ActiveMQMessage amq = (ActiveMQMessage) m;
+            // Build headers
+            for (Header h : Header.values()) {
+                headers.put(h, ActiveMQHeaders.getFunctions().get(h).get(amq));
+            }
+            msg.setHeaders(headers);
+
+            // Build properties
+            try {
+                msg.setProperties(amq.getProperties());
+            } catch (IOException ignored) {
+                // Shouldn't happen
+            }
+
+            return msg;
+        } catch (JMSException e) {
+            return null;
+        }
+    }
+
+    @Override
+    public ForkliftProducerI getQueueProducer(String name) {
+        try {
+            return new ActiveMQProducer(getSession().createProducer(new ActiveMQQueue(name)), getSession());
+        } catch (JMSException | ConnectorException e) {
+            log.error("getQueueProducer, throwing error", e);
+            return null;
+        }
+    }
+
+    @Override
+    public ForkliftProducerI getTopicProducer(String name) {
+         try {
+            return new ActiveMQProducer(getSession().createProducer(new ActiveMQTopic(name)), getSession());
+        } catch (JMSException | ConnectorException e) {
+            log.error("getTopicProducer, throwing error", e);
+            return null;
         }
     }
 }

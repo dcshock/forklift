@@ -1,15 +1,30 @@
+organization := "com.github.dcshock"
+
 name := "forklift-activemq"
 
 version := "0.1"
 
+scalaVersion := "2.11.4"
+
+// target and Xlint cause sbt dist to fail
+javacOptions ++= Seq("-source", "1.8")//, "-target", "1.8", "-Xlint")
+javacOptions in compile ++= Seq("-g:lines,vars,source")
+
+initialize := {
+  val _ = initialize.value
+  if (sys.props("java.specification.version") != "1.8")
+    sys.error("Java 8 is required for this project.")
+}
+
 libraryDependencies ++= Seq(
-    "forklift" % "forklift" % "0.1",
-    "org.springframework" % "spring-jms" % "3.2.4.RELEASE",
+    "com.github.dcshock" % "forklift" % "0.1",
+    "javax.inject" % "javax.inject" % "1",
+    "org.springframework" % "spring-jms" % "4.1.1.RELEASE",
     "ch.qos.logback" % "logback-classic" % "1.0.13",
     "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1",
-    "org.apache.activemq" % "activemq-all" % "5.8.0",
+    "org.apache.activemq" % "activemq-all" % "5.10.1",
     "commons-io" % "commons-io" % "2.4" % "test",
-    "com.novocode" % "junit-interface" % "0.10-M4" % "test"
+    "com.novocode" % "junit-interface" % "0.10" % "test"
 )
 
 crossPaths := false
@@ -20,3 +35,36 @@ resolvers ++= Seq(
     "Fuse Snapshots" at "http://repo.fusesource.com/nexus/content/repositories/snapshots",
     "Fuse" at "http://repo.fusesource.com/nexus/content/groups/public"
 )
+
+publishMavenStyle := true
+
+publishTo := {
+  val nexus = "https://oss.sonatype.org/"
+  if (isSnapshot.value)
+    Some("snapshots" at nexus + "content/repositories/snapshots")
+  else
+    Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+}
+
+pomIncludeRepository := { _ => false }
+
+pomExtra := (
+  <url>https://github.com/dcshock/forklift</url>
+  <licenses>
+    <license>
+      <name>BSD-style</name>
+      <url>http://www.opensource.org/licenses/bsd-license.php</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <scm>
+    <url>git@github.com:dcshock/forklift.git</url>
+    <connection>scm:git:git@github.com:dcshock/forklift.git</connection>
+  </scm>
+  <developers>
+    <developer>
+      <id>dcshock</id>
+      <name>Matt Conroy</name>
+      <url>http://www.mattconroy.com</url>
+    </developer>
+  </developers>)
