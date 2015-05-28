@@ -57,7 +57,6 @@ public final class ForkliftServer {
             }
         }
 
-
         // Start a forklift server w/ specified connector.
         final Forklift forklift = new Forklift();
         final ConsumerDeploymentEvents deploymentEvents = new ConsumerDeploymentEvents(forklift);
