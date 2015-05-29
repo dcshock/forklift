@@ -17,34 +17,43 @@ public class ChildFirstClassLoader extends URLClassLoader {
         system = getSystemClassLoader();
     }
 
-    @Override
-    protected synchronized Class<?> loadClass(String name, boolean resolve)
-      throws ClassNotFoundException {
-        // First, check if the class has already been loaded
-        Class<?> c = findLoadedClass(name);
-        if (c == null) {
-            try {
-                // checking local
-                c = findClass(name);
-            } catch (ClassNotFoundException e) {
-                // checking parent
-                // This call to loadClass may eventually call findClass
-                // again, in case the parent doesn't find anything.
-                try {
-                    c = super.loadClass(name, resolve);
-                } catch (ClassNotFoundException e2) {
-                    if (system != null) {
-                        // checking system: jvm classes, endorsed, cmd classpath,
-                        // etc.
-                        c = system.loadClass(name);
-                    }
-                }
-            }
-        }
-        if (resolve)
-            resolveClass(c);
-        return c;
-    }
+	@Override
+	protected synchronized Class<?> loadClass(String name, boolean resolve)
+	  throws ClassNotFoundException {
+		// First, check if the class has already been loaded
+		Class<?> c = findLoadedClass(name);
+		if (c == null) {
+			try {
+				// checking local
+				c = findClass(name);
+			} catch (ClassNotFoundException e) {
+				// checking parent
+				// This call to loadClass may eventually call findClass
+				// again, in case the parent doesn't find anything.
+				try {
+					c = super.loadClass(name, resolve);
+				} catch (ClassNotFoundException e2) {
+					try {
+						// Try core class loaders
+						for (ClassLoader cl : CoreClassLoaders.getInstance().getAll()) {
+							c = cl.loadClass(name);
+							if (c != null)
+								break;
+						}
+					} catch (ClassNotFoundException e3) {
+						if (system != null) {
+	                        // checking system: jvm classes, endorsed, cmd classpath,
+	                        // etc.
+	                        c = system.loadClass(name);
+						}
+					}
+				}
+			}
+		}
+		if (resolve)
+			resolveClass(c);
+		return c;
+	}
 
     @Override
     public URL getResource(String name) {

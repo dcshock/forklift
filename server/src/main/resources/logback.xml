@@ -1,8 +1,6 @@
 <configuration>
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <!-- Allow json format suppression with a local environment variable -->
-    <if condition='!isDefined("DEV_LOGGING")'>
-      <then>
         <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
           <layout class="ch.qos.logback.contrib.json.classic.JsonLayout">
             <jsonFormatter class="ch.qos.logback.contrib.jackson.JacksonJsonFormatter">
@@ -15,13 +13,6 @@
             <appendLineSeparator>true</appendLineSeparator>
           </layout>
         </encoder>
-      </then>
-      <else>
-        <encoder>
-          <pattern>%date - [%level] - from %logger in %thread %n%message%n%xException%n</pattern>
-        </encoder>
-      </else>
-    </if>
   </appender>
   <appender name="FILE" class="ch.qos.logback.core.FileAppender">
     <file>logs/application.log</file>

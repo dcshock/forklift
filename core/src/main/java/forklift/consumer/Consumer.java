@@ -1,37 +1,32 @@
 package forklift.consumer;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import forklift.classloader.RunAsClassLoader;
 import forklift.concurrent.Callback;
 import forklift.connectors.ConnectorException;
 import forklift.connectors.ForkliftConnectorI;
 import forklift.connectors.ForkliftMessage;
 import forklift.consumer.parser.KeyValueParser;
-import forklift.decorators.Audit;
 import forklift.decorators.Config;
 import forklift.decorators.Headers;
 import forklift.decorators.MultiThreaded;
 import forklift.decorators.OnMessage;
 import forklift.decorators.OnValidate;
-import forklift.decorators.Producer;
 import forklift.decorators.Queue;
-import forklift.decorators.Retry;
 import forklift.decorators.Topic;
-import forklift.properties.PropertiesManager;
 import forklift.producers.ForkliftProducerI;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
+import forklift.properties.PropertiesManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.stream.Collectors;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -49,7 +44,6 @@ public class Consumer {
     private static AtomicInteger id = new AtomicInteger(1);
     private static ObjectMapper mapper = new ObjectMapper();
 
-    private final Boolean audit;
     private final ClassLoader classLoader;
     private final ForkliftConnectorI connector;
     private final Map<Class, Map<Class<?>, List<Field>>> injectFields;
@@ -57,9 +51,9 @@ public class Consumer {
     private final String name;
     private final List<Method> onMessage;
     private final List<Method> onValidate;
-    private final Retry retry;
     private final Queue queue;
     private final Topic topic;
+    private final ApplicationContext context;
 
     // If a queue can process multiple messages at a time we
     // use a thread pool to manage how much cpu load the queue can
@@ -74,15 +68,18 @@ public class Consumer {
         this(msgHandler, connector, null);
     }
 
-    @SuppressWarnings("unchecked")
     public Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader) {
-        this.audit = msgHandler.isAnnotationPresent(Audit.class);
+        this(msgHandler, connector, classLoader, null);
+    }
+
+    @SuppressWarnings("unchecked")
+    public Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader, ApplicationContext context) {
         this.classLoader = classLoader;
         this.connector = connector;
         this.msgHandler = msgHandler;
-        this.retry = msgHandler.getAnnotation(Retry.class);
-        this.queue = msgHandler.getAnnotation(Queue.class);
+        this.context = context;
         this.topic = msgHandler.getAnnotation(Topic.class);
+        this.queue = msgHandler.getAnnotation(Queue.class);
 
         if (this.queue != null && this.topic != null)
             throw new IllegalArgumentException("Msg Handler cannot consume a queue and topic");
@@ -99,6 +96,7 @@ public class Consumer {
         // it'll just run in the current thread to prevent any message read ahead that would be performed.
         if (msgHandler.isAnnotationPresent(MultiThreaded.class)) {
             MultiThreaded multiThreaded = msgHandler.getAnnotation(MultiThreaded.class);
+            log.info("Creating thread pool of {}", multiThreaded.value());
             blockQueue = new ArrayBlockingQueue<Runnable>(multiThreaded.value() * 100 + 100);
             threadPool = new ThreadPoolExecutor(
                 Math.min(2, multiThreaded.value()), multiThreaded.value(), 5L, TimeUnit.MINUTES, blockQueue);
@@ -120,6 +118,7 @@ public class Consumer {
 
         injectFields = new HashMap<>();
         injectFields.put(Config.class, new HashMap<>());
+        injectFields.put(javax.inject.Inject.class, new HashMap<>());
         injectFields.put(forklift.decorators.Message.class, new HashMap<>());
         injectFields.put(forklift.decorators.Headers.class, new HashMap<>());
         injectFields.put(forklift.decorators.Properties.class, new HashMap<>());
@@ -135,7 +134,7 @@ public class Consumer {
                     injectFields.get(type).get(f.getType()).add(f);
                 }
             });
-        }                     
+        }
     }
 
     /**
@@ -155,7 +154,7 @@ public class Consumer {
 
             messageLoop(consumer);
         } catch (ConnectorException e) {
-            e.printStackTrace();
+            log.debug("", e);
         }
     }
 
@@ -179,12 +178,11 @@ public class Consumer {
                         });
 
                         // Handle the message.
-                        final MessageRunnable runner = new MessageRunnable(jmsMsg, classLoader, handler, onMessage, onValidate);
-                        if (threadPool != null) {
+                        final MessageRunnable runner = new MessageRunnable(this, msg, classLoader, handler, onMessage, onValidate);
+                        if (threadPool != null)
                             threadPool.execute(runner);
-                        } else {
+                        else
                             runner.run();
-                        }
                     } catch (Exception e) {
                         // If this error occurs we had a massive problem with the conusmer class setup.
                         log.error("Consumer couldn't be used.", e);
@@ -196,6 +194,12 @@ public class Consumer {
 
                 if (outOfMessages != null)
                     outOfMessages.handle(this);
+            }
+
+            // Shutdown the pool, but let actively executing work finish.
+            if (threadPool != null) {
+                log.info("Shutting down thread pool - active {}", threadPool.getActiveCount());
+                threadPool.shutdown();
             }
         } catch (JMSException e) {
             running.set(false);
@@ -242,6 +246,12 @@ public class Consumer {
                                 // Attempt to parse a json
                                 f.set(instance, mapper.readValue(msg.getMsg(), clazz));
                             }
+                        } else if (decorator == javax.inject.Inject.class) {
+                            if (clazz ==  ApplicationContext.class) {
+                                f.set(instance, context);
+                            } else {
+                                f.set(instance, context.getBean(clazz));
+                            }
                         } else if (decorator == Config.class) {
                             if (clazz == Properties.class) {
                                 forklift.decorators.Config config = f.getAnnotation(forklift.decorators.Config.class);
@@ -262,7 +272,7 @@ public class Consumer {
                                     f.set(instance, connector.getQueueProducer(producer.queue()));
                                 } else if (producer.topic().length() > 0) {
                                     f.set(instance, connector.getTopicProducer(producer.topic()));
-                                }        
+                                }
                             }
                         }
                     } catch (Exception e) {
@@ -272,5 +282,21 @@ public class Consumer {
                 });
             });
         });
+    }
+
+    public Class<?> getMsgHandler() {
+        return msgHandler;
+    }
+
+    public Queue getQueue() {
+        return queue;
+    }
+
+    public Topic getTopic() {
+        return topic;
+    }
+
+    public ForkliftConnectorI getConnector() {
+        return connector;
     }
 }

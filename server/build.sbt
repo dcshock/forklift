@@ -19,6 +19,9 @@ initialize := {
 libraryDependencies ++= Seq(
   "com.github.dcshock" % "forklift" % "0.1",
   "com.github.dcshock" % "forklift-activemq" % "0.1",
+  "com.github.dcshock" % "forklift-replay" % "0.1",
+  "com.github.dcshock" % "forklift-retry" % "0.1",
+  "com.github.dcshock" % "consul-rest-client" % "0.6",
   "org.springframework" % "spring-jms" % "4.1.1.RELEASE",
   "ch.qos.logback" % "logback-classic" % "1.0.13",
   "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1",
@@ -27,6 +30,7 @@ libraryDependencies ++= Seq(
   "commons-io" % "commons-io" % "2.4" % "test",
   "junit" % "junit" % "4.11"  % "test",
   "com.novocode" % "junit-interface" % "0.10" % "test",
+  "javax.inject" % "javax.inject" % "1" % "runtime",
   "ch.qos.logback.contrib" % "logback-json-core" % "0.1.2" % "runtime",
   "ch.qos.logback.contrib" % "logback-json-classic" % "0.1.2" % "runtime",
   "ch.qos.logback.contrib" % "logback-jackson" % "0.1.2" % "runtime",
@@ -42,3 +46,36 @@ resolvers ++= Seq(
     "Fuse Snapshots" at "http://repo.fusesource.com/nexus/content/repositories/snapshots",
     "Fuse" at "http://repo.fusesource.com/nexus/content/groups/public"
 )
+
+publishMavenStyle := true
+
+publishTo := {
+  val nexus = "https://oss.sonatype.org/"
+  if (isSnapshot.value)
+    Some("snapshots" at nexus + "content/repositories/snapshots")
+  else
+    Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+}
+
+pomIncludeRepository := { _ => false }
+
+pomExtra := (
+  <url>https://github.com/dcshock/forklift</url>
+  <licenses>
+    <license>
+      <name>BSD-style</name>
+      <url>http://www.opensource.org/licenses/bsd-license.php</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <scm>
+    <url>git@github.com:dcshock/forklift.git</url>
+    <connection>scm:git:git@github.com:dcshock/forklift.git</connection>
+  </scm>
+  <developers>
+    <developer>
+      <id>dcshock</id>
+      <name>Matt Conroy</name>
+      <url>http://www.mattconroy.com</url>
+    </developer>
+  </developers>)

@@ -1,13 +1,12 @@
 organization := "com.github.dcshock"
 
-name := "forklift"
+name := "forklift-retry"
 
 version := "0.1"
 
 scalaVersion := "2.11.4"
 
-// target and Xlint cause sbt dist to fail
-javacOptions ++= Seq("-source", "1.8")//, "-target", "1.8", "-Xlint")
+javacOptions ++= Seq("-source", "1.8")
 
 initialize := {
   val _ = initialize.value
@@ -16,15 +15,7 @@ initialize := {
 }
 
 libraryDependencies ++= Seq(
-    "org.springframework" % "spring-jms" % "4.1.1.RELEASE",
-    "com.google.guava" % "guava" % "18.0",
-    "com.fasterxml.jackson.core" % "jackson-databind" % "2.3.3",
-    "ch.qos.logback" % "logback-classic" % "1.0.13",
-    "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1",
-    "org.reflections" % "reflections" % "0.9.9-RC1",
-    "javax.inject" % "javax.inject" % "1",
-    "com.novocode" % "junit-interface" % "0.10" % "test",
-    "org.mockito" % "mockito-all" % "1.9.5" % "test"
+  "com.github.dcshock" % "forklift" % "0.1"
 )
 
 crossPaths := false
@@ -68,7 +59,3 @@ pomExtra := (
       <url>http://www.mattconroy.com</url>
     </developer>
   </developers>)
-
-javacOptions in compile ++= Seq("-g:lines,vars,source", "-deprecation")
-
-javacOptions in doc += "-Xdoclint:none"
