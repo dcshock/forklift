@@ -7,3 +7,11 @@ be shared by easily by annotating your code. To see what it can do for you check
 full documentation.
 
 link:doc/forklift.adoc[Documentation]
+
+
+== Releases
+* 0.2 
+** Fix for property file injection into consumer.
+
+* 0.1 
+** Initial beta release
