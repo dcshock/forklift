@@ -255,7 +255,7 @@ public class Consumer {
                         } else if (decorator == Config.class) {
                             if (clazz == Properties.class) {
                                 forklift.decorators.Config config = f.getAnnotation(forklift.decorators.Config.class);
-                                PropertiesManager.get(config.value());
+                                f.set(instance, PropertiesManager.get(config.value()));
                             }
                         } else if (decorator == Headers.class) {
                             if (clazz == Map.class) {
