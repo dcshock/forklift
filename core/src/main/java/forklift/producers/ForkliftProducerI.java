@@ -13,6 +13,7 @@ import javax.jms.MessageProducer;
 public interface ForkliftProducerI {
     String send(String message) throws ProducerException;
     String send(ForkliftMessage message) throws ProducerException;
+    String send(Object message) throws ProducerException;
     String send(Map<Header, Object> headers, 
                 Map<String, Object> properties,
                 ForkliftMessage message) throws ProducerException;
