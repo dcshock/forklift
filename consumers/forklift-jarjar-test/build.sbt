@@ -6,7 +6,7 @@ name := "forklift-jarjar-consumer"
 version := "0.2"
 
 libraryDependencies ++= Seq(
-    "com.github.dcshock" % "forklift" % "0.1" % "provided" intransitive(),
+    "com.github.dcshock" % "forklift" % "0.2" % "provided" intransitive(),
     "com.github.dcshock" % "forklift-multitq-consumer" % "[0.1,)" intransitive(),
     "com.github.dcshock" % "forklift-test-consumer" % "[0.1,)" intransitive()
 )
