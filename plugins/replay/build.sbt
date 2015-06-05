@@ -15,7 +15,7 @@ initialize := {
 }
 
 libraryDependencies ++= Seq(
-  "com.github.dcshock" % "forklift" % "0.2"
+  "com.github.dcshock" % "forklift" % "0.3"
 )
 
 crossPaths := false

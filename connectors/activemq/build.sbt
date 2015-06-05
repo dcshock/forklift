@@ -17,7 +17,7 @@ initialize := {
 }
 
 libraryDependencies ++= Seq(
-    "com.github.dcshock" % "forklift" % "0.2",
+    "com.github.dcshock" % "forklift" % "0.3",
     "javax.inject" % "javax.inject" % "1",
     "org.springframework" % "spring-jms" % "4.1.1.RELEASE",
     "ch.qos.logback" % "logback-classic" % "1.0.13",

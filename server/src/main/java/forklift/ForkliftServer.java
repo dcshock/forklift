@@ -1,5 +1,7 @@
 package forklift;
 
+import static org.kohsuke.args4j.ExampleMode.ALL;
+
 import consul.Consul;
 import forklift.connectors.ActiveMQConnector;
 import forklift.consumer.ConsumerDeploymentEvents;
@@ -7,6 +9,8 @@ import forklift.consumer.LifeCycleMonitors;
 import forklift.deployment.DeploymentWatch;
 import forklift.replay.ReplayLogger;
 import forklift.retry.RetryHandler;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -28,12 +32,27 @@ public final class ForkliftServer {
      * Launch a Forklift server instance.
      */
     public static void main(String[] args) throws Throwable {
+        final ForkliftOpts opts = new ForkliftOpts();
+        final CmdLineParser argParse = new CmdLineParser(opts);
+        try {
+            argParse.parseArgument(args);
+        } catch( CmdLineException e ) {
+            // if there's a problem in the command line,
+            // you'll get this exception. this will report
+            // an error message.
+            System.err.println(e.getMessage());
+            System.err.println("java SampleMain [options...] arguments...");
+            // print the list of available options
+            argParse.printUsage(System.err);
+            System.err.println();
 
-        // Read CLI flags (if provided).
-        String brokerUrl  = (args.length >= 1) ? args[0] : "tcp://127.0.0.1:61616";
-        final String scanDir    = (args.length >= 2) ? args[1] : "/usr/local/forklift/consumers";
-        final String propsDir = (args.length >= 3) ? args[1] : "/usr/local/forklift/props";
+            // print option sample. This is useful some time
+            System.err.println("  Example: java SampleMain" + argParse.printExample(ALL));
 
+            return;
+        }
+
+        String brokerUrl = opts.getBrokerUrl();
         if (brokerUrl.startsWith("consul.") && brokerUrl.length() > "consul.".length()) {
             log.info("Building failover url using consul");
 
@@ -61,8 +80,19 @@ public final class ForkliftServer {
         // Start a forklift server w/ specified connector.
         final Forklift forklift = new Forklift();
         final ConsumerDeploymentEvents deploymentEvents = new ConsumerDeploymentEvents(forklift);
-        final DeploymentWatch deploymentWatch = new DeploymentWatch(new java.io.File(scanDir), deploymentEvents);
-        final DeploymentWatch propsWatch = new DeploymentWatch(new java.io.File(propsDir), deploymentEvents);
+
+        final DeploymentWatch deploymentWatch;
+        if (opts.getConsumerDir() != null)
+            deploymentWatch = new DeploymentWatch(new java.io.File(opts.getConsumerDir()), deploymentEvents);
+        else
+            deploymentWatch = null;
+
+        final DeploymentWatch propsWatch;
+        if (opts.getPropsDir() != null)
+            propsWatch = new DeploymentWatch(new java.io.File(opts.getPropsDir()), deploymentEvents);
+        else
+            propsWatch = null;
+
         forklift.start(new ActiveMQConnector(brokerUrl));
         if (!forklift.isRunning()) {
             throw new RuntimeException("Unable to start Forklift");
@@ -73,7 +103,8 @@ public final class ForkliftServer {
         LifeCycleMonitors.register(ReplayLogger.class);
 
         log.info("Connected to broker on " + brokerUrl);
-        log.info("Scanning for Forklift consumers at " + scanDir);
+        log.info("Scanning for Forklift consumers at " + opts.getConsumerDir());
+        log.info("Scanning for Forklift consumers at " + opts.getPropsDir());
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
@@ -84,7 +115,12 @@ public final class ForkliftServer {
                     running.notify();
                 }
 
-                deploymentWatch.shutdown();
+                if (deploymentWatch != null)
+                    deploymentWatch.shutdown();
+
+                if (propsWatch != null)
+                    propsWatch.shutdown();
+
                 forklift.shutdown();
             }
         });
