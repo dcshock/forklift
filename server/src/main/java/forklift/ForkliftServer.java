@@ -12,6 +12,7 @@ import forklift.retry.RetryHandler;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 
+import java.io.File;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -99,8 +100,8 @@ public final class ForkliftServer {
         }
 
         log.info("Registering LifeCycleMonitors");
-        LifeCycleMonitors.register(new RetryHandler(forklift.getConnector()));
-        LifeCycleMonitors.register(ReplayLogger.class);
+        LifeCycleMonitors.register(new RetryHandler(forklift.getConnector(), new File(opts.getRetryDir())));
+        LifeCycleMonitors.register(new ReplayLogger(new File(opts.getReplayDir())));
 
         log.info("Connected to broker on " + brokerUrl);
         log.info("Scanning for Forklift consumers at " + opts.getConsumerDir());

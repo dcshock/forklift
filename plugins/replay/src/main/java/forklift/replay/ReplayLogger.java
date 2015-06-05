@@ -13,8 +13,8 @@ import java.time.ZoneOffset;
 public class ReplayLogger {
     private final ReplayWriter writer;
 
-    public ReplayLogger() throws FileNotFoundException {
-        this.writer = new ReplayWriter(new File("replay." + LocalDateTime.now().toEpochSecond(ZoneOffset.UTC) + ".log"));
+    public ReplayLogger(File dir) throws FileNotFoundException {
+        this.writer = new ReplayWriter(new File(dir, "replay." + LocalDateTime.now().toEpochSecond(ZoneOffset.UTC) + ".log"));
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
