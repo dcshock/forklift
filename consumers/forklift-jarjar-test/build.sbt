@@ -3,7 +3,7 @@ import com.github.dcshock.SbtBinks._
 organization := "com.github.dcshock"
 
 name := "forklift-jarjar-consumer"
-version := "0.2"
+version := "0.3"
 
 libraryDependencies ++= Seq(
     "com.github.dcshock" % "forklift" % "0.2" % "provided" intransitive(),
