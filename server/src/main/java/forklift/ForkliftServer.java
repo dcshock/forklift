@@ -32,6 +32,7 @@ public final class ForkliftServer {
         // Read CLI flags (if provided).
         String brokerUrl  = (args.length >= 1) ? args[0] : "tcp://127.0.0.1:61616";
         final String scanDir    = (args.length >= 2) ? args[1] : "/usr/local/forklift/consumers";
+        final String propsDir = (args.length >= 3) ? args[1] : "/usr/local/forklift/props";
 
         if (brokerUrl.startsWith("consul.") && brokerUrl.length() > "consul.".length()) {
             log.info("Building failover url using consul");
@@ -61,6 +62,7 @@ public final class ForkliftServer {
         final Forklift forklift = new Forklift();
         final ConsumerDeploymentEvents deploymentEvents = new ConsumerDeploymentEvents(forklift);
         final DeploymentWatch deploymentWatch = new DeploymentWatch(new java.io.File(scanDir), deploymentEvents);
+        final DeploymentWatch propsWatch = new DeploymentWatch(new java.io.File(propsDir), deploymentEvents);
         forklift.start(new ActiveMQConnector(brokerUrl));
         if (!forklift.isRunning()) {
             throw new RuntimeException("Unable to start Forklift");
