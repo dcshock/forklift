@@ -18,7 +18,8 @@ public class PropertiesManager {
     public void register(File deployment) {
         log.info("Deploying: " + deployment);
 
-        if (!deployment.getName().endsWith(".properties")) {
+        if (!deployment.getName().endsWith(".properties") &&
+            !deployment.getName().endsWith(".conf")) {
             log.warn("Invalid properties file.");
             return;
         }

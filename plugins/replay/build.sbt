@@ -2,7 +2,7 @@ organization := "com.github.dcshock"
 
 name := "forklift-replay"
 
-version := "0.2"
+version := "0.3"
 
 scalaVersion := "2.11.4"
 
@@ -15,7 +15,7 @@ initialize := {
 }
 
 libraryDependencies ++= Seq(
-  "com.github.dcshock" % "forklift" % "0.1"
+  "com.github.dcshock" % "forklift" % "0.3"
 )
 
 crossPaths := false
@@ -59,3 +59,5 @@ pomExtra := (
       <url>http://www.mattconroy.com</url>
     </developer>
   </developers>)
+
+useGpg := true

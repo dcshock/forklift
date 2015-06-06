@@ -33,11 +33,17 @@ import javax.jms.JMSException;
 public class RetryHandler {
     private static final Logger log = LoggerFactory.getLogger(RetryHandler.class);
 
+    private File dir;
     private ForkliftConnectorI connector;
     private ObjectMapper mapper;
     private ScheduledExecutorService executor;
 
     public RetryHandler(ForkliftConnectorI connector) {
+        this(connector, new File("."));
+    }
+
+    public RetryHandler(ForkliftConnectorI connector, File dir) {
+        this.dir = dir;
         this.connector = connector;
         this.mapper = new ObjectMapper();
         this.mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
@@ -98,7 +104,7 @@ public class RetryHandler {
                 BufferedWriter writer = null;
                 try {
                     // Create a new persisted file, and store the path so we can clean up later after the message is pushed on the queue.
-                    final File file = new File("retry." + mr.getMsg().getJmsMsg().getJMSMessageID().toString() + ".msg");
+                    final File file = new File(dir, "retry." + mr.getMsg().getJmsMsg().getJMSMessageID().toString() + ".msg");
                     retryMessage.setPersistedPath(file.getAbsolutePath());
 
                     // Write the message to a file so we don't lose it if a restart occurs.

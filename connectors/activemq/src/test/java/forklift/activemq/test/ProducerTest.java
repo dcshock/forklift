@@ -97,7 +97,7 @@ public class ProducerTest {
     }
 
     @Test
-    public void testStringMessage() throws ProducerException, ConnectorException {
+    public void testSendStringMessage() throws ProducerException, ConnectorException {
         int msgCount = 10;
         ForkliftProducerI producer = TestServiceManager.getConnector().getQueueProducer("q2");
         for (int i = 0; i < msgCount; i++) {
@@ -118,8 +118,30 @@ public class ProducerTest {
         Assert.assertTrue(called.get() > 0);
     }
 
+    @Test 
+    public void testSendObjectMessage() throws JMSException, ConnectorException, ProducerException {
+        int msgCount = 10;
+        ForkliftProducerI producer = TestServiceManager.getConnector().getQueueProducer("q2");
+        for (int i = 0; i < msgCount; i++) {
+            final TestMessage m = new TestMessage(new String("x=producer object send test"), i);  
+            producer.send(m);
+        }
+        
+        final Consumer c = new Consumer(getClass(), TestServiceManager.getConnector());
+        // Shutdown the consumer after all the messages have been processed.
+        c.setOutOfMessages((listener) -> {
+            listener.shutdown();
+            Assert.assertTrue("called was not == " + msgCount, called.get() == msgCount);
+        });
+
+        // Start the consumer.
+        c.listen();
+
+        Assert.assertTrue(called.get() > 0);
+    }
+
     @Test
-    public void testProducerSendOverload() throws JMSException, ConnectorException, ProducerException {
+    public void testSendTripleThreat() throws JMSException, ConnectorException, ProducerException {
         int msgCount = 10;
         ForkliftProducerI producer = TestServiceManager.getConnector().getQueueProducer("q2");
         for (int i = 0; i < msgCount; i++) {
@@ -193,5 +215,31 @@ public class ProducerTest {
         c.listen();
 
         Assert.assertTrue(called.get() > 0);
+    }
+
+    public class TestMessage {
+        private String text;
+        private int someNumber;
+
+        public TestMessage(String text, int someNumber) {
+            this.text = text;
+            this.someNumber = someNumber;
+        }
+
+        public String getText() {
+            return text;
+        }
+
+        public void setText(String text) {
+            this.text = text;
+        }
+
+        public int getSomeNumber() {
+            return someNumber;
+        }
+
+        public void setSomeNumber(int someNumber) {
+            this.someNumber = someNumber;
+        }
     }
 }

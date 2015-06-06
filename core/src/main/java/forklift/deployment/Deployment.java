@@ -1,6 +1,7 @@
 package forklift.deployment;
 
 import forklift.classloader.ChildFirstClassLoader;
+import forklift.classloader.RunAsClassLoader;
 import forklift.decorators.CoreService;
 import forklift.decorators.Service;
 import forklift.decorators.Queue;
@@ -74,10 +75,12 @@ public class Deployment {
             .addClassLoader(cl)
             .setUrls(urls));
 
-        coreServices.addAll(reflections.getTypesAnnotatedWith(CoreService.class));
-        queues.addAll(reflections.getTypesAnnotatedWith(Queue.class));
-        services.addAll(reflections.getTypesAnnotatedWith(Service.class));
-        topics.addAll(reflections.getTypesAnnotatedWith(Topic.class));
+        RunAsClassLoader.run(cl, () -> {
+            coreServices.addAll(reflections.getTypesAnnotatedWith(CoreService.class));
+            queues.addAll(reflections.getTypesAnnotatedWith(Queue.class));
+            services.addAll(reflections.getTypesAnnotatedWith(Service.class));
+            topics.addAll(reflections.getTypesAnnotatedWith(Topic.class));
+        });
 
         if (coreServices.size() > 0 && (queues.size() > 0 || topics.size() > 0 || services.size() > 0))
             throw new IOException("Invalid core service due to queues/topics/services being deployed along side.");

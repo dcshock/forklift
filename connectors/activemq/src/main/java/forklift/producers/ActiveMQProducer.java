@@ -1,9 +1,14 @@
 package forklift.producers;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
+
 import forklift.connectors.ForkliftMessage;
 import forklift.message.ActiveMQHeaders;
 import forklift.message.Header;
+import forklift.producers.ForkliftProducerI;
+import forklift.producers.ProducerException;
+
 import org.apache.activemq.command.ActiveMQMessage;
 
 import java.util.Map;
@@ -16,6 +21,7 @@ import javax.jms.Session;
 
 public class ActiveMQProducer implements ForkliftProducerI {
 
+    private static final ObjectMapper mapper = new ObjectMapper();
     private MessageProducer producer;
     private Destination destination;
     private Map<Header, Object> headers;
@@ -28,6 +34,11 @@ public class ActiveMQProducer implements ForkliftProducerI {
     }
 
     @Override
+    /**
+    * Send in a string and the producer generate a ForkliftMessage with it
+    * @param message - String representation of the message/data that needs to be sent
+    * @return String - JMSCorrelationID
+    **/
     public String send(String message) throws ProducerException {
         try {
             return send(new ForkliftMessage(message));
@@ -37,6 +48,25 @@ public class ActiveMQProducer implements ForkliftProducerI {
     }
 
     @Override
+    /**
+    * Send in an object and the producer will marshall it into a ForkliftMessage
+    * @param message - Object representation of the message/data that needs to be sent
+    * @return String - JMSCorrelationID
+    **/
+    public String send(Object message) throws ProducerException {
+        try {
+            return send(new ForkliftMessage(mapper.writeValueAsString(message)));
+        } catch (Exception e) {
+            throw new ProducerException("Failed to send message", e);
+        }
+    }
+
+    @Override
+    /**
+    * Send a ForkliftMessage.
+    * @param message - ForkliftMessage
+    * @return String - JMSCorrelationID
+    **/
     public String send(ForkliftMessage message) throws ProducerException {
         try {
             Message msg = prepAndValidate(message);
@@ -52,7 +82,14 @@ public class ActiveMQProducer implements ForkliftProducerI {
     }
 
     @Override
-    public String send(Map<Header, Object> headers,
+    /**
+    * Send in an object and the producer will marshall it into a ForkliftMessage
+    * @param headers - message headers
+    * @param properties - message properties
+    * @param message - ForkliftMessage
+    * @return String - JMSCorrelationID
+    **/
+    public String send(Map<Header, Object> headers, 
                        Map<String, Object> properties,
                        ForkliftMessage message) throws ProducerException {
         Message msg = prepAndValidate(message, headers, properties);
@@ -169,7 +206,6 @@ public class ActiveMQProducer implements ForkliftProducerI {
 
     private void setMessageProperties(Message msg, Map<String, Object> properties) throws ProducerException {
         if (msg != null && properties != null) {
-            System.out.println("Incoming Props : " + properties.size());
             properties.entrySet().stream().filter(entry -> entry.getValue() != null)
                                           .forEach(property -> {
                                             try {
@@ -177,7 +213,7 @@ public class ActiveMQProducer implements ForkliftProducerI {
                                                     msg.setObjectProperty(property.getKey(), property.getValue());
                                                 }
                                             } catch (Exception e) {
-                                                //log.error("Failed setting properties", e);
+                                                //Catch it but just move on.
                                             }
                                            });
         }

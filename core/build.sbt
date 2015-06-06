@@ -2,7 +2,7 @@ organization := "com.github.dcshock"
 
 name := "forklift"
 
-version := "0.2"
+version := "0.3"
 
 scalaVersion := "2.11.4"
 
@@ -72,3 +72,5 @@ pomExtra := (
 javacOptions in compile ++= Seq("-g:lines,vars,source", "-deprecation")
 
 javacOptions in doc += "-Xdoclint:none"
+
+useGpg := true

@@ -2,7 +2,7 @@ organization := "com.github.dcshock"
 
 name := "forklift-activemq"
 
-version := "0.2"
+version := "0.3"
 
 scalaVersion := "2.11.4"
 
@@ -17,7 +17,7 @@ initialize := {
 }
 
 libraryDependencies ++= Seq(
-    "com.github.dcshock" % "forklift" % "0.1",
+    "com.github.dcshock" % "forklift" % "0.3",
     "javax.inject" % "javax.inject" % "1",
     "org.springframework" % "spring-jms" % "4.1.1.RELEASE",
     "ch.qos.logback" % "logback-classic" % "1.0.13",
@@ -68,3 +68,5 @@ pomExtra := (
       <url>http://www.mattconroy.com</url>
     </developer>
   </developers>)
+
+useGpg := true
