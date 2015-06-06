@@ -10,6 +10,11 @@ link:doc/forklift.adoc[Documentation]
 
 
 == Releases
+* 0.3
+** Updates to docker container builds
+** New arguments to allow retry/replay dirs to be set
+** Allow two deployment directories to be scanned
+
 * 0.2 
 ** Fix for property file injection into consumer.
 
