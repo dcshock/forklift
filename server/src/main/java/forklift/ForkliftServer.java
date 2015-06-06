@@ -129,7 +129,13 @@ public final class ForkliftServer {
         running.set(true);
         while (running.get()) {
             log.debug("Scanning for new deployments...");
-            deploymentWatch.run();
+
+            if (deploymentWatch != null)
+                deploymentWatch.run();
+
+            if (propsWatch != null)
+                propsWatch.run();
+
             synchronized (running) {
                 running.wait(SLEEP_INTERVAL);
             }

@@ -59,3 +59,5 @@ pomExtra := (
       <url>http://www.mattconroy.com</url>
     </developer>
   </developers>)
+
+useGpg := true

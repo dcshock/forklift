@@ -16,13 +16,14 @@ RUN apt-get install unzip -y --force-yes --no-install-recommends
 
 # Add forklift server
 WORKDIR /tmp
-ADD https://github.com/dcshock/forklift/releases/download/0.2/forklift-server-0.2.zip forklift.zip
+ADD https://github.com/dcshock/forklift/releases/download/0.3/forklift-server-0.3.zip forklift.zip
 RUN yes | unzip -d /usr/local forklift.zip
-RUN ln -s /usr/local/forklift-server-0.2 /usr/local/forklift
+RUN ln -s /usr/local/forklift-server-0.3 /usr/local/forklift
 RUN mkdir -p /usr/local/forklift/consumers
 
 ENV FORKLIFT_HOME /usr/local/forklift
 ENV FORKLIFT_CONSUMER_HOME /usr/local/forklift/consumers
+ENV FORKLIFT_PROPS /usr/local/forklift/props
 ENV PATH $PATH:/usr/local/forklift/bin
 
 # Move to forklift

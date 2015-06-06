@@ -72,3 +72,5 @@ pomExtra := (
 javacOptions in compile ++= Seq("-g:lines,vars,source", "-deprecation")
 
 javacOptions in doc += "-Xdoclint:none"
+
+useGpg := true

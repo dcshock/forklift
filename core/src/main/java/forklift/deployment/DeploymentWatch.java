@@ -40,7 +40,7 @@ public class DeploymentWatch implements Runnable {
             final File file = new File(fileScan.getDir(), result.getFilename());
 
             boolean jar = file.getName().endsWith(".jar") || file.getName().endsWith(".zip");
-            boolean props = file.getName().endsWith(".properties");
+            boolean props = file.getName().endsWith(".properties") || file.getName().endsWith(".conf");
 
             if (result.getStatus() == FileStatus.Removed ||
                 result.getStatus() == FileStatus.Modified) {
