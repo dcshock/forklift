@@ -18,6 +18,9 @@ public class ForkliftOpts {
     @Option(name="-replayDir", usage="replay log directory")
     private String replayDir = ".";
 
+    @Option(name="-consulHost", usage="consul host name")
+    private String consulHost = "localhost";
+
     public String getConsumerDir() {
         return consumerDir;
     }
@@ -56,5 +59,13 @@ public class ForkliftOpts {
 
     public void setReplayDir(String replayDir) {
         this.replayDir = replayDir;
+    }
+
+    public String getConsulHost() {
+        return consulHost;
+    }
+
+    public void setConsulHost(String consulHost) {
+        this.consulHost = consulHost;
     }
 }

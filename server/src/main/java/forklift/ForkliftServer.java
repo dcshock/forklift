@@ -9,6 +9,7 @@ import forklift.consumer.LifeCycleMonitors;
 import forklift.deployment.DeploymentWatch;
 import forklift.replay.ReplayLogger;
 import forklift.retry.RetryHandler;
+
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 
@@ -57,7 +58,7 @@ public final class ForkliftServer {
         if (brokerUrl.startsWith("consul.") && brokerUrl.length() > "consul.".length()) {
             log.info("Building failover url using consul");
 
-            final Consul c = new Consul("http://dev4", 8500);
+            final Consul c = new Consul("http://" + opts.getConsulHost(), 8500);
 
             // Build the connection string.
             final String serviceName = brokerUrl.split("\\.")[1];
