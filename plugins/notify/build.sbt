@@ -15,7 +15,9 @@ initialize := {
 }
 
 libraryDependencies ++= Seq(
-  "com.github.dcshock" % "forklift" % "0.3"
+  "com.github.dcshock" % "forklift" % "0.4",
+  "org.apache.httpcomponents" % "httpclient" % "4.5",
+  "org.apache.httpcomponents" % "fluent-hc" % "4.4.1"
 )
 
 crossPaths := false
