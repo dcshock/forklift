@@ -22,6 +22,7 @@ public class MessageRunnable implements Runnable {
     private List<Method> onValidate;
     private List<String> errors;
     private boolean error = false;
+    private ProcessStep step = null;
 
     MessageRunnable(Consumer consumer, ForkliftMessage msg, ClassLoader classLoader, Object handler, List<Method> onMessage, List<Method> onValidate) {
         this.consumer = consumer;
@@ -35,6 +36,7 @@ public class MessageRunnable implements Runnable {
         this.onValidate = onValidate;
         this.errors = new ArrayList<>();
 
+        this.step = ProcessStep.Pending;
         LifeCycleMonitors.call(ProcessStep.Pending, this);
     }
 
@@ -44,6 +46,7 @@ public class MessageRunnable implements Runnable {
             try {
                 try {
                     // Validate the class.
+                    this.step = ProcessStep.Validating;
                     LifeCycleMonitors.call(ProcessStep.Validating, this);
                     for (Method m : onValidate) {
                         if (m.getReturnType() == List.class) {
@@ -57,8 +60,10 @@ public class MessageRunnable implements Runnable {
 
                     // Run the message if there are no errors.
                     if (error) {
+                        this.step = ProcessStep.Invalid;
                         LifeCycleMonitors.call(ProcessStep.Invalid, this);
                     } else {
+                        this.step = ProcessStep.Processing;
                         LifeCycleMonitors.call(ProcessStep.Processing, this);
                         for (Method m : onMessage) {
                             // Send the message to each handler.
@@ -77,8 +82,10 @@ public class MessageRunnable implements Runnable {
                 try {
                     if (error) {
                         getErrors().stream().forEach(e -> log.error(e));
+                        this.step = ProcessStep.Error;
                         LifeCycleMonitors.call(ProcessStep.Error, this);
                     } else {
+                        this.step = ProcessStep.Complete;
                         LifeCycleMonitors.call(ProcessStep.Complete, this);
                     }
 
@@ -123,5 +130,9 @@ public class MessageRunnable implements Runnable {
 
     public Consumer getConsumer() {
         return consumer;
+    }
+
+    public ProcessStep getProcessStep() {
+        return step;
     }
 }
