@@ -3,10 +3,9 @@ package forklift.deployment;
 import forklift.classloader.ChildFirstClassLoader;
 import forklift.classloader.RunAsClassLoader;
 import forklift.decorators.CoreService;
-import forklift.decorators.Service;
 import forklift.decorators.Queue;
+import forklift.decorators.Service;
 import forklift.decorators.Topic;
-
 import org.reflections.Reflections;
 import org.reflections.util.ConfigurationBuilder;
 
@@ -52,7 +51,7 @@ public class Deployment {
         // Read jars out of the deployed file.
         final JarFile jar = new JarFile(deployedFile);
         final List<URL> jarUrls = jar.stream().filter(entry -> {
-           return entry.getName().endsWith(".jar") || entry.getName().endsWith(".zip");
+           return !entry.getName().contains("spring") && (entry.getName().endsWith(".jar") || entry.getName().endsWith(".zip"));
         }).map(entry -> {
             try {
                 return jarEntryAsUri(jar, entry).toURL();
