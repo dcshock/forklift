@@ -10,6 +10,10 @@ link:doc/forklift.adoc[Documentation]
 
 
 == Releases
+* 0.4
+** Allow the consul host to be specified
+** Fix failover url construction when using service discovery with only one broker.
+
 * 0.3
 ** Updates to docker container builds
 ** New arguments to allow retry/replay dirs to be set
