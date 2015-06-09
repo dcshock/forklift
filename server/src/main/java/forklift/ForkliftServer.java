@@ -9,7 +9,6 @@ import forklift.consumer.LifeCycleMonitors;
 import forklift.deployment.DeploymentWatch;
 import forklift.replay.ReplayLogger;
 import forklift.retry.RetryHandler;
-
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 
@@ -71,6 +70,8 @@ public final class ForkliftServer {
                 ")";
 
             c.shutdown();
+
+            brokerUrl = brokerUrl.replaceAll("failover:\\(,", "failover:(");
 
             log.info("url {}", brokerUrl);
             if (brokerUrl.equals("failover:()")) {
