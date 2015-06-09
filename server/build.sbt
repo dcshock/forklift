@@ -2,7 +2,7 @@ organization := "com.github.dcshock"
 
 name := "forklift-server"
 
-version := "0.4"
+version := "0.5"
 
 scalaVersion := "2.11.4"
 
