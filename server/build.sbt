@@ -2,7 +2,7 @@ organization := "com.github.dcshock"
 
 name := "forklift-server"
 
-version := "0.5"
+version := "0.6"
 
 scalaVersion := "2.11.4"
 
@@ -19,7 +19,7 @@ initialize := {
 libraryDependencies ++= Seq(
   "com.github.dcshock" % "forklift" % "0.5",
   "com.github.dcshock" % "forklift-activemq" % "0.3",
-  "com.github.dcshock" % "forklift-replay" % "0.3",
+  "com.github.dcshock" % "forklift-replay" % "0.4",
   "com.github.dcshock" % "forklift-retry" % "0.3",
   "com.github.dcshock" % "consul-rest-client" % "0.6",
   "org.springframework" % "spring-jms" % "4.1.1.RELEASE",

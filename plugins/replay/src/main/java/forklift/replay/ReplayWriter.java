@@ -56,6 +56,9 @@ public class ReplayWriter extends Thread implements Closeable {
                 final ReplayMsg msg = queue.poll(2, TimeUnit.SECONDS);
                 if (msg != null)
                     writer.write(mapper.writeValueAsString(msg) + "\n");
+                else
+                    // Flush the contents to disk at least every 2 seconds.
+                    writer.flush();
             }
 
             // Drain to the file.
