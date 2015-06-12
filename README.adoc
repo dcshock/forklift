@@ -10,6 +10,14 @@ link:doc/forklift.adoc[Documentation]
 
 
 == Releases
+* 0.6
+** Replay logger flush periodically if no messages are received. Helps guarantee nothing gets lost in the buffer.
+** Log file configuration. Setup the container to drop a log file in /logs.
+
+* 0.5
+** Spring setup fixes
+** Main thread death fix when a consumer's spring context startup fails
+
 * 0.4
 ** Allow the consul host to be specified
 ** Fix failover url construction when using service discovery with only one broker.
