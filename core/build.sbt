@@ -2,7 +2,7 @@ organization := "com.github.dcshock"
 
 name := "forklift"
 
-version := "0.5"
+version := "0.6"
 
 scalaVersion := "2.11.4"
 
@@ -21,7 +21,7 @@ libraryDependencies ++= Seq(
     "com.fasterxml.jackson.core" % "jackson-databind" % "2.3.3",
     "ch.qos.logback" % "logback-classic" % "1.0.13",
     "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1",
-    "org.reflections" % "reflections" % "0.9.9-RC1",
+    "org.reflections" % "reflections" % "0.9.10",
     "javax.inject" % "javax.inject" % "1",
     "com.novocode" % "junit-interface" % "0.10" % "test",
     "org.mockito" % "mockito-all" % "1.9.5" % "test"
