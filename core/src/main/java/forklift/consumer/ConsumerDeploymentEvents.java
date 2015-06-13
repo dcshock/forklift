@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
 
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -66,17 +67,21 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
         // CoreClassLoaders.getInstance().register(deployment.getClassLoader());
 
         deployment.getQueues().forEach(c -> {
-            final ConsumerThread thread = new ConsumerThread(
-                new Consumer(c, forklift.getConnector(), deployment.getClassLoader(), context, c.getAnnotation(Queue.class)));
-            threads.add(thread);
-            executor.submit(thread);
+            for (Annotation a : c.getAnnotationsByType(Queue.class)) {
+                final ConsumerThread thread = new ConsumerThread(
+                    new Consumer(c, forklift.getConnector(), deployment.getClassLoader(), context, (Queue)a));
+                threads.add(thread);
+                executor.submit(thread);    
+            }
         });
 
         deployment.getTopics().forEach(c -> {
-            final ConsumerThread thread = new ConsumerThread(
-                new Consumer(c, forklift.getConnector(), deployment.getClassLoader(), context, c.getAnnotation(Topic.class)));
-            threads.add(thread);
-            executor.submit(thread);
+            for (Annotation a : c.getAnnotationsByType(Topic.class)) {
+                final ConsumerThread thread = new ConsumerThread(
+                    new Consumer(c, forklift.getConnector(), deployment.getClassLoader(), context, (Topic)a));
+                threads.add(thread);
+                executor.submit(thread);    
+            }
         });
 
         deployments.put(deployment, threads);
