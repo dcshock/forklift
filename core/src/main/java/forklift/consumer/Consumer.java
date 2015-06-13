@@ -48,10 +48,10 @@ public class Consumer {
     private final ForkliftConnectorI connector;
     private final Map<Class, Map<Class<?>, List<Field>>> injectFields;
     private final Class<?> msgHandler;
-    private final String name;
     private final List<Method> onMessage;
     private final List<Method> onValidate;
     private final ApplicationContext context;
+    private String name;
     private Queue queue;
     private Topic topic;
 
@@ -69,41 +69,55 @@ public class Consumer {
     }
 
     public Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader) {
-        this(msgHandler, connector, classLoader, null);
+        this(msgHandler, connector, classLoader, null, false);
     }
 
     public Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader, ApplicationContext context, Queue q) {
-        this(msgHandler, connector, classLoader, context);
+        this(msgHandler, connector, classLoader, context, true);
         this.queue = q;
+
+        if (this.queue == null)
+            throw new IllegalArgumentException("Msg Handler must handle a queue.");
+        
+        this.name = queue.value() + ":" + id.getAndIncrement();
+        log = LoggerFactory.getLogger(this.name);
     }
 
     public Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader, ApplicationContext context, Topic t) {
-        this(msgHandler, connector, classLoader, context);
+        this(msgHandler, connector, classLoader, context, true);
         this.topic = t;
+
+        if (this.topic == null)
+            throw new IllegalArgumentException("Msg Handler must handle a topic.");
+
+        this.name = topic.value() + ":" + id.getAndIncrement();
+        log = LoggerFactory.getLogger(this.name);
     }
 
     @SuppressWarnings("unchecked")
-    private Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader, ApplicationContext context) {
+    private Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader, ApplicationContext context, boolean preinit) {
         this.classLoader = classLoader;
         this.connector = connector;
         this.msgHandler = msgHandler;
         this.context = context;
 
-        if (queue == null && topic == null) {
+        if (!preinit && queue == null && topic == null) {
             this.queue = msgHandler.getAnnotation(Queue.class);
             this.topic = msgHandler.getAnnotation(Topic.class);
+            
+            if (this.queue != null && this.topic != null)
+                throw new IllegalArgumentException("Msg Handler cannot consume a queue and topic");
+            
+            if (this.queue != null)
+                this.name = queue.value() + ":" + id.getAndIncrement();
+            else if (this.topic != null)
+                this.name = topic.value() + ":" + id.getAndIncrement();
+            else
+                throw new IllegalArgumentException("Msg Handler must handle a queue or topic.");
+
         }
-
-        if (this.queue != null && this.topic != null)
-            throw new IllegalArgumentException("Msg Handler cannot consume a queue and topic");
-        if (this.queue != null)
-            this.name = queue.value() + ":" + id.getAndIncrement();
-        else if (this.topic != null)
-            this.name = topic.value() + ":" + id.getAndIncrement();
-        else
-            throw new IllegalArgumentException("Msg Handler must handle a queue or topic.");
-
-        log = LoggerFactory.getLogger(this.name);
+        
+        log = LoggerFactory.getLogger(Consumer.class);   
 
         // Init the thread pools if the msg handler is multi threaded. If the msg handler is single threaded
         // it'll just run in the current thread to prevent any message read ahead that would be performed.

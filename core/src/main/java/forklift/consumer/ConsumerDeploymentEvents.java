@@ -68,6 +68,7 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
 
         deployment.getQueues().forEach(c -> {
             for (Annotation a : c.getAnnotationsByType(Queue.class)) {
+                log.info("Found annotation {} on {}", a, c);
                 final ConsumerThread thread = new ConsumerThread(
                     new Consumer(c, forklift.getConnector(), deployment.getClassLoader(), context, (Queue)a));
                 threads.add(thread);
