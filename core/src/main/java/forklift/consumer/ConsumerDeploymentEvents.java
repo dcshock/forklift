@@ -4,6 +4,8 @@ import forklift.Forklift;
 import forklift.classloader.CoreClassLoaders;
 import forklift.classloader.RunAsClassLoader;
 import forklift.concurrent.Executors;
+import forklift.decorators.Queue;
+import forklift.decorators.Topic;
 import forklift.deployment.Deployment;
 import forklift.deployment.DeploymentEvents;
 import forklift.spring.ContextManager;
@@ -65,14 +67,14 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
 
         deployment.getQueues().forEach(c -> {
             final ConsumerThread thread = new ConsumerThread(
-                new Consumer(c, forklift.getConnector(), deployment.getClassLoader(), context));
+                new Consumer(c, forklift.getConnector(), deployment.getClassLoader(), context, c.getAnnotation(Queue.class)));
             threads.add(thread);
             executor.submit(thread);
         });
 
         deployment.getTopics().forEach(c -> {
             final ConsumerThread thread = new ConsumerThread(
-                new Consumer(c, forklift.getConnector(), deployment.getClassLoader(), context));
+                new Consumer(c, forklift.getConnector(), deployment.getClassLoader(), context, c.getAnnotation(Topic.class)));
             threads.add(thread);
             executor.submit(thread);
         });

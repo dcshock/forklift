@@ -51,9 +51,9 @@ public class Consumer {
     private final String name;
     private final List<Method> onMessage;
     private final List<Method> onValidate;
-    private final Queue queue;
-    private final Topic topic;
     private final ApplicationContext context;
+    private Queue queue;
+    private Topic topic;
 
     // If a queue can process multiple messages at a time we
     // use a thread pool to manage how much cpu load the queue can
@@ -72,14 +72,27 @@ public class Consumer {
         this(msgHandler, connector, classLoader, null);
     }
 
+    public Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader, ApplicationContext context, Queue q) {
+        this(msgHandler, connector, classLoader, context);
+        this.queue = q;
+    }
+
+    public Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader, ApplicationContext context, Topic t) {
+        this(msgHandler, connector, classLoader, context);
+        this.topic = t;
+    }
+
     @SuppressWarnings("unchecked")
-    public Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader, ApplicationContext context) {
+    private Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader, ApplicationContext context) {
         this.classLoader = classLoader;
         this.connector = connector;
         this.msgHandler = msgHandler;
         this.context = context;
-        this.topic = msgHandler.getAnnotation(Topic.class);
-        this.queue = msgHandler.getAnnotation(Queue.class);
+
+        if (queue == null && topic == null) {
+            this.queue = msgHandler.getAnnotation(Queue.class);
+            this.topic = msgHandler.getAnnotation(Topic.class);
+        }
 
         if (this.queue != null && this.topic != null)
             throw new IllegalArgumentException("Msg Handler cannot consume a queue and topic");
@@ -100,6 +113,7 @@ public class Consumer {
             blockQueue = new ArrayBlockingQueue<Runnable>(multiThreaded.value() * 100 + 100);
             threadPool = new ThreadPoolExecutor(
                 Math.min(2, multiThreaded.value()), multiThreaded.value(), 5L, TimeUnit.MINUTES, blockQueue);
+            threadPool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         } else {
             blockQueue = null;
             threadPool = null;
