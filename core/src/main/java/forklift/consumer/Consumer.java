@@ -24,6 +24,7 @@ import org.springframework.context.ApplicationContext;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -140,18 +141,14 @@ public class Consumer {
         onMessage = new ArrayList<>();
         onValidate = new ArrayList<>();
         onProcessStep = new HashMap<>();
+        Arrays.stream(ProcessStep.values()).forEach(step -> onProcessStep.put(step, new ArrayList<>()));
         for (Method m : msgHandler.getDeclaredMethods()) {
             if (m.isAnnotationPresent(OnMessage.class))
                 onMessage.add(m);
             else if (m.isAnnotationPresent(OnValidate.class))
                 onValidate.add(m);
             else if (m.isAnnotationPresent(On.class))
-                onProcessStep.compute(m.getAnnotation(On.class).value(), (step, tasks) -> {
-                    if (tasks == null)
-                        tasks = new ArrayList<>();
-                    tasks.add(m);
-                    return tasks;
-                });
+                onProcessStep.get(m.getAnnotation(On.class).value()).add(m);
         }
 
         injectFields = new HashMap<>();
