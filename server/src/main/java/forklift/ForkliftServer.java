@@ -15,6 +15,7 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -56,6 +57,17 @@ public final class ForkliftServer {
 
             return;
         }
+
+        File f = new File(opts.getConsumerDir());
+        if (!f.exists() || !f.isDirectory()) {
+            System.err.println();
+            System.err.println(" -monitor1 is not a valid directory.");
+            System.err.println();
+            argParse.printUsage(System.err);
+            System.err.println();
+            return;
+        }
+
 
         String brokerUrl = opts.getBrokerUrl();
         if (brokerUrl.startsWith("consul.") && brokerUrl.length() > "consul.".length()) {
