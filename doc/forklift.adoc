@@ -282,6 +282,8 @@ $ mkdir ~/forklift/deploy
 
 * Start Forklift
 
+Within the forklift-server-x.x directory run the following command:
+
 [source,bash]
 ----
 $ bin/forklift-server -monitor1 ~/forklift/deploy -url embedded
@@ -546,7 +548,11 @@ object and send Json messages instead of k/v pairs.
 
 ## Consumer Development
 
+*TBD*
+
 ## Server
+
+*TBD*
 
 ## Connectors
 
@@ -563,3 +569,5 @@ AMQP or perhaps RabbitMQ. We will extend this section as other connectors
 become available.
 
 ## Plugins
+
+*TBD*
