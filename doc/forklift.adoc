@@ -405,19 +405,22 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
-@Queue("test")
+@Queue("test") // <1>
 public class MyExampleConsumer {
     Logger log = LoggerFactory.getLogger(MyExampleConsumer.class);
 
-    @Message
+    @Message // <2>
     public Map<String, String> msg;
 
-    @OnMessage
+    @OnMessage // <3>
     public void processMyMessage() {
         log.info("My message was: {}", msg);
     }
 }
 ----
+<1> Tells the consumer to listen to /queue/test for messages
+<2> Injects the message into the msg property.
+<3> Tells Forklift to run this method when a message is received.
 
 ### Build Your Consumer
 
