@@ -12,6 +12,7 @@ import forklift.decorators.Headers;
 import forklift.decorators.MultiThreaded;
 import forklift.decorators.OnMessage;
 import forklift.decorators.OnValidate;
+import forklift.decorators.On;
 import forklift.decorators.Queue;
 import forklift.decorators.Topic;
 import forklift.producers.ForkliftProducerI;
@@ -51,6 +52,7 @@ public class Consumer {
     private final String name;
     private final List<Method> onMessage;
     private final List<Method> onValidate;
+    private final Map<ProcessStep, List<Method>> onProcessStep;
     private final Queue queue;
     private final Topic topic;
     private final ApplicationContext context;
@@ -109,11 +111,19 @@ public class Consumer {
         // message is received.
         onMessage = new ArrayList<>();
         onValidate = new ArrayList<>();
+        onProcessStep = new HashMap<>();
         for (Method m : msgHandler.getDeclaredMethods()) {
             if (m.isAnnotationPresent(OnMessage.class))
                 onMessage.add(m);
             else if (m.isAnnotationPresent(OnValidate.class))
                 onValidate.add(m);
+            else if (m.isAnnotationPresent(On.class))
+                onProcessStep.compute(m.getAnnotation(On.class).value(), (step, tasks) -> {
+                    if (tasks == null)
+                        tasks = new ArrayList<>();
+                    tasks.add(m);
+                    return tasks;
+                });
         }
 
         injectFields = new HashMap<>();
@@ -178,7 +188,7 @@ public class Consumer {
                         });
 
                         // Handle the message.
-                        final MessageRunnable runner = new MessageRunnable(this, msg, classLoader, handler, onMessage, onValidate);
+                        final MessageRunnable runner = new MessageRunnable(this, msg, classLoader, handler, onMessage, onValidate, onProcessStep);
                         if (threadPool != null)
                             threadPool.execute(runner);
                         else
