@@ -127,7 +127,7 @@ public class OnDecoratorTest {
 
         MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), tc.getClass().getClassLoader(), tc, onMessage, onValidate, onProcessStep);
         mr.run();
-        ProcessStep[] expected = {ProcessStep.Validating, ProcessStep.Invalid, ProcessStep.Error};
+        ProcessStep[] expected = {ProcessStep.Validating, ProcessStep.Invalid};
         Assert.assertArrayEquals(expected, tc.path.toArray());
     }
 
