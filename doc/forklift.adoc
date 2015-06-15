@@ -261,20 +261,44 @@ essence making it possible to resend a message that has already been processed.
 
 ## Quickstart Guide
 
-Download the forklift-server-x.x.zip release.
+* Download the https://github.com/dcshock/forklift/releases/download[forklift-server-x.x.zip] release.
 
-unzip the download
+* unzip the download
 
-cd into the unzipped directory
+* Using a command line, `cd` into the unzipped directory
 
+* Create a directory named `forklift` in your home directory.
+[source,bash]
+----
 $ mkdir ~/forklift
+----
 
+* Create a sub-directory named deploy.
+
+[source,bash]
+----
 $ mkdir ~/forklift/deploy
+----
 
+* Start Forklift
+
+[source,bash]
+----
 $ bin/forklift-server -monitor1 ~/forklift/deploy -url embedded
+----
+
+At this point, you should see a lot of log output from Forklift showing that it
+is running, but it really isn't doing anything other than waiting for you to start
+deploying consumers to it.
 
 ### Write Your First Consumer
 
+This guide will lead you through writing a quick consumer. Provided are build scripts
+for both Maven and Sbt. Please choose the method that you are most comfortable using.
+You can also do this directly within and IDE such as Eclipse, but this will be left
+up to the developer as their own exercise.
+
+#### Maven Setup of Your Project
 The Maven build file for your first consumer, if you're into that kind of thing.
 
 .pom.xml
@@ -301,21 +325,69 @@ The Maven build file for your first consumer, if you're into that kind of thing.
     <dependency>
       <groupId>com.github.dcshock</groupId>
       <artifactId>forklift</artifactId>
-      <version>0.5</version>
+      <version>[0.5,)</version>
     </dependency>
   </dependencies>
 </project>
 ----
+
+#### Sbt Setup of Your Project
 
 The Sbt build file for your first consumer, if you're into that kind of thing.
 
 .build.sbt
 [source,sbt]
 ----
-TBD
+import com.github.dcshock.SbtBinks._
+
+organization := "forklift.consumer"
+
+name := "MyExampleConsumer"
+
+version := "0.1"
+
+libraryDependencies ++= Seq(
+  "com.github.dcshock" % "forklift" % "[0.5,)" % "provided"
+  )
+
+resolvers ++= Seq(
+  "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+)
+
+// Inform sbt-eclipse to not add Scala nature
+EclipseKeys.projectFlavor := EclipseProjectFlavor.Java
+
+// Remove scala dependency for pure Java libraries
+autoScalaLibrary := false
+
+// Remove the scala version from the generated/published artifact
+crossPaths := false
+
+// With this enabled, compiled jars are easier to debug in other projects
+// variable names are visible.
+javacOptions in compile ++= Seq("-source", "1.8", "-g:lines,vars,source", "-deprecation")
+
+javacOptions in doc += "-Xdoclint:none"
+
+addCommandAlias("dist", ";compile;binks")
+
+binksSettings
 ----
 
-The source code for your first consumer
+For sbt, you will also be required to add this line to your project/plugins.sbt
+
+.plugins.sbt
+[source,sbt]
+----
+addSbtPlugin("com.github.dcshock" % "sbt-binks" % "0.1")
+----
+
+#### Source Code for First Example Consumer
+
+The first example, is very simple and should be easily understood by most developers.
+It listens to the "test" queue and then logs out the message it receives.
+
+The source code is as follows:
 
 .MyExampleConsumer.java
 [source,java]
@@ -345,32 +417,75 @@ public class MyExampleConsumer {
 }
 ----
 
+### Build Your Consumer
+
+.Maven
+[source,bash]
+----
+$ mvn package
+----
+
+Now your jar will be available in the target directory named `MyExampleConsumer-0.0.1-SNAPSHOT.jar`
+
+.Sbt
+[souce,bash]
+----
+$ sbt package
+----
+
+Now your jar will be available in the target directory named `myexampleconsumer-0.1.jar`
+
 ### Deploy Your Consumer
 
-Now compile your first consumer and create a jar with the resulting class
-file. Once the jar file is ready to go, just copy it to ~/forklift/deploy.
+With your jar now existing, it is quite easy to deploy your jar into the running
+Forklift instance. Just copy your jar file into ~/forklift/deploy and you should
+see log messages showing that the consumer is ready to consume messages on
+/queue/test. It may take a second or two since the deployment scanner is on a
+timer thread. See the following output from the logger:
+
+.Log ouput
+[source,log4j]
+----
+{"timestamp":"2015-06-15T17:18:32.439Z","level":"INFO","thread":"run-main-0","logger":"org.reflections.Reflections","message":"Reflections took 54 ms to scan 1 urls, producing 1 keys and 1 values ","context":"default"}
+{"timestamp":"2015-06-15T17:18:32.444Z","level":"INFO","thread":"run-main-0","logger":"forklift.consumer.ConsumerDeploymentEvents","message":"Deploying: Deployment [queues=[class forklift.consumer.MyExampleConsumer], topics=[], cl=forklift.classloader.ChildFirstClassLoader@5cbdc534, deployedFile=/Users/dthompson/forklift/deploy/myexampleconsumer-0.1.jar, reflections=org.reflections.Reflections@4e6016c]","context":"default"}
+{"timestamp":"2015-06-15T17:18:32.458Z","level":"INFO","thread":"consumer-deployment-events-1","logger":"consumer-thread-test:1","message":"starting consumer","context":"default"}
+----
 
 ### Send a Message to Your Queue
 
-Since we havne't installed the full ActiveMQ, then you need to install an interface
-to send messages to your queue. There are several tools that can be used to do this
-easily. Here are several:
+In this Quickstart guide, Forklift is using an embedded version of ActiveMQ, so there
+isn't a built-in way to send messages to a queue or topic. Most languages have API libraries
+that allow the developer to send messages to a broker. Below is a list of several of
+the APIs available.
 
 * stomp.py - A Python library for sending messages to ActiveMQ that has the stomp
 protocol enabled. Works okay for Json objects, but for K/V pairs needs modifications
 since its not possible to send newline characters.
 * stomp-client - For node.js, this client library can help easily send messages to
-to ActiveMQ.
+to ActiveMQ. Our example will show how to use this library.
 * Net::STOMP::Client - Perl library for working with communicating with the Stomp
-protocol.
-* forklift Producer - A little more heavy-weight since it is for Java, but uses the
-same ActiveMQ connector that forklift uses. It is based on JMS not the Stomp protocol.
+protocol. Contributed by a developer at CERN, this API is quite robust.
+* Forklift Producer - A little more heavy-weight API for Java, but uses the
+same ActiveMQ connector that Forklift uses. It is based on JMS not the Stomp protocol.
 More information can be found outside the Quickstart guide.
 
-Install node, stomp-client, modify frames.js,
-Change
+#### Using Node.js to Send Messages
 
-.frame.js
+* Install node.js. For a quick reference, please see http://howtonode.org/how-to-install-nodejs[this howto].
+
+* Install npm (node package manager). Using the same method for installing node.js, you should be able to install
+npm as well.
+
+* Create a directory where you can write a small node application and cd into that directory.
+
+* Install the node stomp-client module. `npm install stomp-client`
+
+* Modify frames.js. There is a small issue that needs to be corrected in the stomp-client
+that needs fixed in order to let our node application work.
+
+Within the following file, modify the code
+
+.node_modules/stomp-client/libframe.js
 [source,javascript]
 ----
 if (this.body.length > 0) {
@@ -384,7 +499,7 @@ to
 if (this.body.length > 0 && !this.headers.hasOwnProperty("suppress-content-length")) {
 ----
 
-write sendmessage.js. *TBD*
+Once you've completed the modification, create the node program below:
 
 .sendmessage.js
 [source,javascript]
@@ -404,12 +519,30 @@ client.connect(function(sessionId) {
 });
 ----
 
-From command line, run the node progam above. *TBD*
+#### Sending messages with sendmsg
+
+From command line, run the node program which you just created.
 
 [source,bash]
 ----
-$ node sender.js /queue/test $'test=val\nx=y\na=b'
+$ node sendmessage.js /queue/test $'who=Batman\ntype=Bat signal\n'
 ----
+
+Notice the `$'` syntax. That syntax allows you to send newlines within your message.
+At this point, you should be able to look at the log output of Forklift and you
+should see your message logged out. For example:
+
+[source,log4j]
+----
+{"timestamp":"2015-06-15T17:54:36.747Z","level":"INFO","thread":"consumer-deployment-events-1","logger":"forklift.consumer.MyExampleConsumer","message":"My message was: {type=Bat signal, who=Batman}","context":"default"}
+----
+
+### Conclusion
+
+You can now go and start playing with your example consumer to make it have different
+behavior and sending different types of messages. Try adding an `@OnValidate` method
+to make sure you have a valid message or change the `@Message` property type to an
+object and send Json messages instead of k/v pairs.
 
 ## Consumer Development
 
