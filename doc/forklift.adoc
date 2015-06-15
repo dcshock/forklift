@@ -261,34 +261,89 @@ essence making it possible to resend a message that has already been processed.
 
 ## Quickstart Guide
 
-Requirement, install sbt (the build framework used by Forklift).
+Download the forklift-server-x.x.zip release.
 
-Clone the forklift repository.
+unzip the download
 
-cd into the server directory.
+cd into the unzipped directory
 
 $ mkdir ~/forklift
 
 $ mkdir ~/forklift/deploy
 
-$ sbt clean compile "run -monitor1 ~/forklift/deploy -builtinActiveMQ"
+$ bin/forklift-server -monitor1 ~/forklift/deploy -url embedded
 
 ### Write Your First Consumer
 
-```
-import forklift.decorator.*;
+The Maven build file for your first consumer, if you're into that kind of thing.
+
+.pom.xml
+[source,xml]
+----
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>forklift.consumer</groupId>
+  <artifactId>MyExampleConsumer</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <name>My Example Consumer</name>
+  <description>An example Forklift consumer.</description>
+  <repositories>
+    <repository>
+        <id>oss-sonatype</id>
+        <name>oss-sonatype</name>
+        <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+        <snapshots>
+            <enabled>true</enabled>
+        </snapshots>
+    </repository>
+</repositories>
+  <dependencies>
+    <dependency>
+      <groupId>com.github.dcshock</groupId>
+      <artifactId>forklift</artifactId>
+      <version>0.5</version>
+    </dependency>
+  </dependencies>
+</project>
+----
+
+The Sbt build file for your first consumer, if you're into that kind of thing.
+
+.build.sbt
+[source,sbt]
+----
+TBD
+----
+
+The source code for your first consumer
+
+.MyExampleConsumer.java
+[source,java]
+----
+package forklift.consumer;
+
+import forklift.decorators.Message;
+import forklift.decorators.OnMessage;
+import forklift.decorators.Queue;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Map;
 
 @Queue("test")
-public class MyConsumer {
-  @Message
-  String msg;
+public class MyExampleConsumer {
+    Logger log = LoggerFactory.getLogger(MyExampleConsumer.class);
 
-  @OnMessage
-  public void processTestQueue() {
-    System.out.println("Message was: " + msg);
-  }
+    @Message
+    public Map<String, String> msg;
+
+    @OnMessage
+    public void processMyMessage() {
+        log.info("My message was: {}", msg);
+    }
 }
-```
+----
 
 ### Deploy Your Consumer
 
@@ -296,6 +351,65 @@ Now compile your first consumer and create a jar with the resulting class
 file. Once the jar file is ready to go, just copy it to ~/forklift/deploy.
 
 ### Send a Message to Your Queue
+
+Since we havne't installed the full ActiveMQ, then you need to install an interface
+to send messages to your queue. There are several tools that can be used to do this
+easily. Here are several:
+
+* stomp.py - A Python library for sending messages to ActiveMQ that has the stomp
+protocol enabled. Works okay for Json objects, but for K/V pairs needs modifications
+since its not possible to send newline characters.
+* stomp-client - For node.js, this client library can help easily send messages to
+to ActiveMQ.
+* Net::STOMP::Client - Perl library for working with communicating with the Stomp
+protocol.
+* forklift Producer - A little more heavy-weight since it is for Java, but uses the
+same ActiveMQ connector that forklift uses. It is based on JMS not the Stomp protocol.
+More information can be found outside the Quickstart guide.
+
+Install node, stomp-client, modify frames.js,
+Change
+
+.frame.js
+[source,javascript]
+----
+if (this.body.length > 0) {
+----
+
+to
+
+.frame.js
+[source,javascript]
+----
+if (this.body.length > 0 && !this.headers.hasOwnProperty("suppress-content-length")) {
+----
+
+write sendmessage.js. *TBD*
+
+.sendmessage.js
+[source,javascript]
+----
+var Stomp = require('stomp-client');
+var dest = process.argv[2];
+var client = new Stomp('localhost', 61613, null, null);
+
+client.on('error', function(e) {
+  console.log(e);
+});
+
+client.connect(function(sessionId) {
+  var msg = process.argv[3];
+  client.publish(dest, msg, {"suppress-content-length":"true", "persistent":"true"});
+  client.disconnect();
+});
+----
+
+From command line, run the node progam above. *TBD*
+
+[source,bash]
+----
+$ node sender.js /queue/test $'test=val\nx=y\na=b'
+----
 
 ## Consumer Development
 
