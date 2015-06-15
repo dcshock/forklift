@@ -96,6 +96,25 @@ that validates the message put on the queue before it is processed. Failed
 validation is then handled by the Error Handler, see Standardized
 Exception/Error Handling.
 
+Example:
+
+[source,java]
+----
+@Queue("example")
+public class MyConsumer {
+	@OnValidate
+	public List<String> validate() {
+		// code
+		return errors;
+	}
+
+	@OnMessage
+	public void handler() {
+		// code
+	}
+}
+----
+
 === Easy Configuration
 
 @Queue
@@ -145,6 +164,26 @@ again at a later time. Will only happen with process is annotated with the
 @Retry annotation.
 * Error - Message failed to process.
 * Complete - Message has succeeded at processing and has been acknowledged.
+
+==== Hooks
+
+`@On(step)` is an annotation that can be added to a method. Its parameter is any step except Pending. When entering that step, the method will be called. This can be used for easy error handling or chaining consumers.
+
+Example:
+
+[source,java]
+----
+	@On(ProcessStep.Invalid)
+	public void sendEmail() {
+		emailer.send(maintainer, "oops!");
+	}
+
+	@On(ProcessStep.Complete)
+	public void nextStep() {
+		messageQueue.send("step2", msg);
+	}
+----
+
 
 ==== Notifications
 
