@@ -49,13 +49,13 @@ public class Consumer {
     private final ForkliftConnectorI connector;
     private final Map<Class, Map<Class<?>, List<Field>>> injectFields;
     private final Class<?> msgHandler;
-    private final String name;
     private final List<Method> onMessage;
     private final List<Method> onValidate;
     private final Map<ProcessStep, List<Method>> onProcessStep;
-    private final Queue queue;
-    private final Topic topic;
     private final ApplicationContext context;
+    private String name;
+    private Queue queue;
+    private Topic topic;
 
     // If a queue can process multiple messages at a time we
     // use a thread pool to manage how much cpu load the queue can
@@ -71,28 +71,55 @@ public class Consumer {
     }
 
     public Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader) {
-        this(msgHandler, connector, classLoader, null);
+        this(msgHandler, connector, classLoader, null, false);
+    }
+
+    public Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader, ApplicationContext context, Queue q) {
+        this(msgHandler, connector, classLoader, context, true);
+        this.queue = q;
+
+        if (this.queue == null)
+            throw new IllegalArgumentException("Msg Handler must handle a queue.");
+        
+        this.name = queue.value() + ":" + id.getAndIncrement();
+        log = LoggerFactory.getLogger(this.name);
+    }
+
+    public Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader, ApplicationContext context, Topic t) {
+        this(msgHandler, connector, classLoader, context, true);
+        this.topic = t;
+
+        if (this.topic == null)
+            throw new IllegalArgumentException("Msg Handler must handle a topic.");
+
+        this.name = topic.value() + ":" + id.getAndIncrement();
+        log = LoggerFactory.getLogger(this.name);
     }
 
     @SuppressWarnings("unchecked")
-    public Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader, ApplicationContext context) {
+    private Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader, ApplicationContext context, boolean preinit) {
         this.classLoader = classLoader;
         this.connector = connector;
         this.msgHandler = msgHandler;
         this.context = context;
-        this.topic = msgHandler.getAnnotation(Topic.class);
-        this.queue = msgHandler.getAnnotation(Queue.class);
 
-        if (this.queue != null && this.topic != null)
-            throw new IllegalArgumentException("Msg Handler cannot consume a queue and topic");
-        if (this.queue != null)
-            this.name = queue.value() + ":" + id.getAndIncrement();
-        else if (this.topic != null)
-            this.name = topic.value() + ":" + id.getAndIncrement();
-        else
-            throw new IllegalArgumentException("Msg Handler must handle a queue or topic.");
+        if (!preinit && queue == null && topic == null) {
+            this.queue = msgHandler.getAnnotation(Queue.class);
+            this.topic = msgHandler.getAnnotation(Topic.class);
+            
+            if (this.queue != null && this.topic != null)
+                throw new IllegalArgumentException("Msg Handler cannot consume a queue and topic");
+            
+            if (this.queue != null)
+                this.name = queue.value() + ":" + id.getAndIncrement();
+            else if (this.topic != null)
+                this.name = topic.value() + ":" + id.getAndIncrement();
+            else
+                throw new IllegalArgumentException("Msg Handler must handle a queue or topic.");
 
-        log = LoggerFactory.getLogger(this.name);
+        }
+        
+        log = LoggerFactory.getLogger(Consumer.class);   
 
         // Init the thread pools if the msg handler is multi threaded. If the msg handler is single threaded
         // it'll just run in the current thread to prevent any message read ahead that would be performed.
@@ -102,6 +129,7 @@ public class Consumer {
             blockQueue = new ArrayBlockingQueue<Runnable>(multiThreaded.value() * 100 + 100);
             threadPool = new ThreadPoolExecutor(
                 Math.min(2, multiThreaded.value()), multiThreaded.value(), 5L, TimeUnit.MINUTES, blockQueue);
+            threadPool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         } else {
             blockQueue = null;
             threadPool = null;

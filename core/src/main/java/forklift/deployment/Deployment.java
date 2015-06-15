@@ -4,8 +4,10 @@ import forklift.classloader.ChildFirstClassLoader;
 import forklift.classloader.RunAsClassLoader;
 import forklift.decorators.CoreService;
 import forklift.decorators.Queue;
+import forklift.decorators.Queues;
 import forklift.decorators.Service;
 import forklift.decorators.Topic;
+import forklift.decorators.Topics;
 import org.reflections.Reflections;
 import org.reflections.util.ConfigurationBuilder;
 
@@ -77,8 +79,10 @@ public class Deployment {
         RunAsClassLoader.run(cl, () -> {
             coreServices.addAll(reflections.getTypesAnnotatedWith(CoreService.class));
             queues.addAll(reflections.getTypesAnnotatedWith(Queue.class));
+            queues.addAll(reflections.getTypesAnnotatedWith(Queues.class));
             services.addAll(reflections.getTypesAnnotatedWith(Service.class));
             topics.addAll(reflections.getTypesAnnotatedWith(Topic.class));
+            topics.addAll(reflections.getTypesAnnotatedWith(Topics.class));
         });
 
         if (coreServices.size() > 0 && (queues.size() > 0 || topics.size() > 0 || services.size() > 0))
