@@ -44,7 +44,7 @@ public class MessageRunnable implements Runnable {
     public void run() {
         RunAsClassLoader.run(classLoader, () -> {
             try {
-                // Validate the class.
+                // { Validating }
                 runHooks(ProcessStep.Validating);
                 for (Method m : onValidate) {
                     if (m.getReturnType() == List.class) {
@@ -59,10 +59,13 @@ public class MessageRunnable implements Runnable {
 
                 // Run the message if there are no errors.
                 if (errors.size() > 0) {
+                    // { Invalid }
+                    getErrors().stream().forEach(e -> log.error(e));
                     runHooks(ProcessStep.Invalid);
                     // !!EXIT!! if invalid, do not continue
                     return;
                 } else {
+                    // { Processing }
                     runHooks(ProcessStep.Processing);
                     for (Method m : onMessage) {
                         m.invoke(handler, new Object[] {});
@@ -78,6 +81,7 @@ public class MessageRunnable implements Runnable {
             }
             // We've done all we can do to process this message, ack it from the queue, and move forward.
             if (errors.size() > 0) {
+                // { Error }
                 getErrors().stream().forEach(e -> log.error(e));
                 try {
                     for (Method m : onProcessStep.get(ProcessStep.Error)) {
@@ -88,6 +92,7 @@ public class MessageRunnable implements Runnable {
                 }
                 LifeCycleMonitors.call(ProcessStep.Error, this);
             } else {
+                // { Complete }
                 try {
                     runHooks(ProcessStep.Complete);
                 } catch (Throwable e) {
