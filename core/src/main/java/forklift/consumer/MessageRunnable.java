@@ -68,7 +68,7 @@ public class MessageRunnable implements Runnable {
                     // { Processing }
                     runHooks(ProcessStep.Processing);
                     for (Method m : onMessage) {
-                        m.invoke(handler, new Object[] {});
+                        m.invoke(handler);
                     }
                 }
             } catch (Throwable e) {
