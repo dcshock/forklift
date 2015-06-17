@@ -1,6 +1,8 @@
 package forklift.consumer;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import forklift.classloader.RunAsClassLoader;
 import forklift.concurrent.Callback;
 import forklift.connectors.ConnectorException;
@@ -303,6 +305,8 @@ public class Consumer {
                                 }
                             }
                         }
+                    } catch (JsonMappingException | JsonParseException e) {
+                        log.warn("Unable to parse json for injection.", e);
                     } catch (Exception e) {
                         log.error("Error injecting data into Msg Handler", e);
                         throw new RuntimeException("Error injecting data into Msg Handler");
