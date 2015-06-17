@@ -10,6 +10,9 @@ link:doc/forklift.adoc[Documentation]
 
 
 == Releases
+* 0.7
+** Fix issue that would cause a consumer to stop processing due to a redelivery loop. This was caused any time a bad json parse occurred.
+
 * 0.6
 ** Replay logger flush periodically if no messages are received. Helps guarantee nothing gets lost in the buffer.
 ** Log file configuration. Setup the container to drop a log file in /logs.
