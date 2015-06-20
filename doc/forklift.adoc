@@ -21,7 +21,7 @@ exist today, ActiveMQ, RabbitMQ, Apache Kafka, etc. They can be setup to support
 the enterprise customer's needs by adding functionality such as persisting
 messages (guarantee delivery) and providing redundancy. Since they
 concentrate on message delivery, their performance can be tuned to provide
-very high message delievery rates.
+very high message delivery rates.
 
 Several message protocols for sending messages to these brokers exist,
 including Stomp, JMS, and AMQP. There are APIs for different languages to
@@ -52,7 +52,7 @@ having some common functionality that all services can use.
 
 === Prime Functions
 
-Forklift performs the the following prime duties of an ESB of:
+Forklift performs the following prime duties of an ESB of:
 
 * An abstraction layer provided for sub-components
 * Control deployment and versioning of services
@@ -69,7 +69,7 @@ image::forklift-diagram-1.png[650,650,caption="Diagram 1. ",title="Forklift ESB"
 
 === Language Support
 
-Forklift is written in Java and and its consumers are to be written in Java.
+Forklift is written in Java and its consumers are to be written in Java.
 _(can we say this will work with other JVM languages that can be loaded as a
 jar?)_
 However, it can consume messages that are placed on a message queue written
@@ -105,13 +105,13 @@ the routine things provided by Forklift. Here are a few examples of annotations
 that provide functionality:
 
 * @Queue - specified on a class given a name will begin processing any messages on the
-named queue and running specified methods on the messages
+named queue and running specified methods on the messages.
 * @OnMessage - specified on a method designates the method that should process every
 time a message is received.
 * @Message - Specified on a property of the class will try and inject the received message
 into the property to be used to read the message contents easily.
 
-=== Extendible
+=== Extendable
 
 Forklift provides a method to extend the base life-cycle functionality using plug-ins.
 There are several plug-ins that have already been developed, for example, the way to
@@ -167,7 +167,7 @@ be scanned and made available to the consumers.
 
 @Named @Entity and other Spring configurable objects. - TBD
 
-=== Marshalling of Messages to Objects
+=== Marshaling of Messages to Objects
 A lot of the base code when dealing JMS messages from Java involves marshaling
 the message from the message into a usable object that can then just be used.
 Forklift provides nice annotations that can be placed on properties to do
@@ -261,7 +261,7 @@ essence making it possible to resend a message that has already been processed.
 
 ## Quickstart Guide
 
-* Download the https://github.com/dcshock/forklift/releases/download[forklift-server-x.x.zip] release.
+* Download the https://github.com/dcshock/forklift/releases[forklift-server-x.x.zip] release.
 
 * unzip the download
 
@@ -386,7 +386,7 @@ addSbtPlugin("com.github.dcshock" % "sbt-binks" % "0.1")
 
 #### Source Code for First Example Consumer
 
-The first example, is very simple and should be easily understood by most developers.
+The first example is very simple and should be easily understood by most developers.
 It listens to the "test" queue and then logs out the message it receives.
 
 The source code is as follows:
@@ -435,7 +435,7 @@ Now your jar will be available in the target directory named `MyExampleConsumer-
 .Sbt
 [souce,bash]
 ----
-$ sbt package
+$ sbt dist
 ----
 
 Now your jar will be available in the target directory named `myexampleconsumer-0.1.jar`
@@ -448,7 +448,7 @@ see log messages showing that the consumer is ready to consume messages on
 /queue/test. It may take a second or two since the deployment scanner is on a
 timer thread. See the following output from the logger:
 
-.Log ouput
+.Log output
 [source,log4j]
 ----
 {"timestamp":"2015-06-15T17:18:32.439Z","level":"INFO","thread":"run-main-0","logger":"org.reflections.Reflections","message":"Reflections took 54 ms to scan 1 urls, producing 1 keys and 1 values ","context":"default"}
@@ -466,7 +466,7 @@ the APIs available.
 * stomp.py - A Python library for sending messages to ActiveMQ that has the stomp
 protocol enabled. Works okay for Json objects, but for K/V pairs needs modifications
 since its not possible to send newline characters.
-* stomp-client - For node.js, this client library can help easily send messages to
+* stomp-client - For node.js, this client library can help easily send messages
 to ActiveMQ. Our example will show how to use this library.
 * Net::STOMP::Client - Perl library for working with communicating with the Stomp
 protocol. Contributed by a developer at CERN, this API is quite robust.
@@ -476,7 +476,7 @@ More information can be found outside the Quickstart guide.
 
 #### Using Node.js to Send Messages
 
-* Install node.js. For a quick reference, please see http://howtonode.org/how-to-install-nodejs[this howto].
+* Install node.js. For a quick reference, please see http://howtonode.org/how-to-install-nodejs[this how-to].
 
 * Install npm (node package manager). Using the same method for installing node.js, you should be able to install
 npm as well.
@@ -526,7 +526,7 @@ client.connect(function(sessionId) {
 
 #### Sending messages with sendmsg
 
-From command line, run the node program which you just created.
+From command line, run the node program that you just created.
 
 [source,bash]
 ----
