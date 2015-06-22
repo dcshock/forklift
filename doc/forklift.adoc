@@ -376,12 +376,14 @@ addCommandAlias("dist", ";compile;binks")
 binksSettings
 ----
 
-For sbt, you will also be required to add this line to your project/plugins.sbt
+For sbt, you will also be required to add these lines to your project/plugins.sbt
 
 .plugins.sbt
 [source,sbt]
 ----
 addSbtPlugin("com.github.dcshock" % "sbt-binks" % "0.1")
+
+addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "3.0.0")
 ----
 
 #### Source Code for First Example Consumer
