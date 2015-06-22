@@ -50,7 +50,7 @@ public class RetryHandler {
         this.executor = Executors.newScheduledThreadPool(1);
 
         // Load up any existing messages.
-        new FileScanner(new File(".")).scan().stream()
+        new FileScanner(dir).scan().stream()
             .filter(result -> result.getFilename().startsWith("retry") && result.getFilename().endsWith(".msg"))
             .forEach(result -> {
                 try {
