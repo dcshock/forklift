@@ -16,7 +16,7 @@ initialize := {
 }
 
 libraryDependencies ++= Seq(
-    "org.springframework" % "spring-jms" % "4.1.1.RELEASE",
+    //"org.springframework" % "spring-jms" % "4.1.1.RELEASE",
     "com.google.guava" % "guava" % "18.0",
     "com.fasterxml.jackson.core" % "jackson-databind" % "2.3.3",
     "ch.qos.logback" % "logback-classic" % "1.0.13",

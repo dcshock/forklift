@@ -20,7 +20,6 @@ import forklift.producers.ForkliftProducerI;
 import forklift.properties.PropertiesManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationContext;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -52,7 +51,6 @@ public class Consumer {
     private final Class<?> msgHandler;
     private final List<Method> onMessage;
     private final List<Method> onValidate;
-    private final ApplicationContext context;
     private String name;
     private Queue queue;
     private Topic topic;
@@ -71,11 +69,11 @@ public class Consumer {
     }
 
     public Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader) {
-        this(msgHandler, connector, classLoader, null, false);
+        this(msgHandler, connector, classLoader, false);
     }
 
-    public Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader, ApplicationContext context, Queue q) {
-        this(msgHandler, connector, classLoader, context, true);
+    public Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader, Queue q) {
+        this(msgHandler, connector, classLoader, true);
         this.queue = q;
 
         if (this.queue == null)
@@ -85,8 +83,8 @@ public class Consumer {
         log = LoggerFactory.getLogger(this.name);
     }
 
-    public Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader, ApplicationContext context, Topic t) {
-        this(msgHandler, connector, classLoader, context, true);
+    public Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader, Topic t) {
+        this(msgHandler, connector, classLoader, true);
         this.topic = t;
 
         if (this.topic == null)
@@ -97,11 +95,10 @@ public class Consumer {
     }
 
     @SuppressWarnings("unchecked")
-    private Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader, ApplicationContext context, boolean preinit) {
+    private Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader, boolean preinit) {
         this.classLoader = classLoader;
         this.connector = connector;
         this.msgHandler = msgHandler;
-        this.context = context;
 
         if (!preinit && queue == null && topic == null) {
             this.queue = msgHandler.getAnnotation(Queue.class);
@@ -277,11 +274,7 @@ public class Consumer {
                                 f.set(instance, mapper.readValue(msg.getMsg(), clazz));
                             }
                         } else if (decorator == javax.inject.Inject.class) {
-                            if (clazz ==  ApplicationContext.class) {
-                                f.set(instance, context);
-                            } else {
-                                f.set(instance, context.getBean(clazz));
-                            }
+                            log.warn("Spring not currently supported.");
                         } else if (decorator == Config.class) {
                             if (clazz == Properties.class) {
                                 forklift.decorators.Config config = f.getAnnotation(forklift.decorators.Config.class);

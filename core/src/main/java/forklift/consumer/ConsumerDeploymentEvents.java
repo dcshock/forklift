@@ -8,11 +8,8 @@ import forklift.decorators.Queue;
 import forklift.decorators.Topic;
 import forklift.deployment.Deployment;
 import forklift.deployment.DeploymentEvents;
-import forklift.spring.ContextManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Configuration;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -47,21 +44,14 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
 
         final List<ConsumerThread> threads = new ArrayList<>();
 
-        // Launch a Spring context if necessary. Note that we ensure that spring has access to the deployment's classloader since the
-        // configurations will be there. We'll also need to be careful not to utilize spring in the forklift core since the system may
-        // spin up classes more than once. Never add a config with a scan that looks at forklift.*.
-        // TODO - Somehow fix the ability to use spring in the core safely - maybe a check to ensure forklift.* isn't scanned in a  consumer deployment.
-        RunAsClassLoader.run(deployment.getClassLoader(), () -> {
-            final List<Class<?>> springConfigs = deployment.getReflections().getTypesAnnotatedWith(Configuration.class).stream().collect(Collectors.toList());
-            if (springConfigs.size() > 0) {
-                final Class<?>[] clazzes = new Class<?>[springConfigs.size()];
-                for (int i = 0; i < clazzes.length; i++)
-                    clazzes[i] = springConfigs.get(i);
+        // Start services by instantiating them. 
+        deployment.getServices().forEach(s -> {
+            try {
+                s.newInstance();
+            } catch (Exception e) {
 
-                ContextManager.start(deployment.getDeployedFile().getName(), clazzes);
             }
         });
-        final ApplicationContext context = ContextManager.getContext(deployment.getDeployedFile().getName());
 
         // TODO initialize core services, and join classloaders.
         // CoreClassLoaders.getInstance().register(deployment.getClassLoader());
@@ -70,7 +60,7 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
             for (Annotation a : c.getAnnotationsByType(Queue.class)) {
                 log.info("Found annotation {} on {}", a, c);
                 final ConsumerThread thread = new ConsumerThread(
-                    new Consumer(c, forklift.getConnector(), deployment.getClassLoader(), context, (Queue)a));
+                    new Consumer(c, forklift.getConnector(), deployment.getClassLoader(), (Queue)a));
                 threads.add(thread);
                 executor.submit(thread);    
             }
@@ -79,7 +69,7 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
         deployment.getTopics().forEach(c -> {
             for (Annotation a : c.getAnnotationsByType(Topic.class)) {
                 final ConsumerThread thread = new ConsumerThread(
-                    new Consumer(c, forklift.getConnector(), deployment.getClassLoader(), context, (Topic)a));
+                    new Consumer(c, forklift.getConnector(), deployment.getClassLoader(), (Topic)a));
                 threads.add(thread);
                 executor.submit(thread);    
             }
@@ -102,9 +92,6 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
                 }
             });
         }
-
-        // We manage the context here to avoid shutdown before the threads are stopped.
-        ContextManager.stop(deployment.getDeployedFile().getName());
 
         CoreClassLoaders.getInstance().unregister(deployment.getClassLoader());
     }
