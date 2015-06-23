@@ -18,11 +18,10 @@ initialize := {
 
 libraryDependencies ++= Seq(
   "com.github.dcshock" % "forklift" % "0.8",
-  "com.github.dcshock" % "forklift-activemq" % "0.3",
+  "com.github.dcshock" % "forklift-activemq" % "0.4",
   "com.github.dcshock" % "forklift-replay" % "0.4",
   "com.github.dcshock" % "forklift-retry" % "0.4",
   "com.github.dcshock" % "consul-rest-client" % "0.6",
-  "org.springframework" % "spring-jms" % "4.1.1.RELEASE",
   "ch.qos.logback" % "logback-classic" % "1.0.13",
   "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1",
   "org.apache.activemq" % "activemq-all" % "5.8.0",

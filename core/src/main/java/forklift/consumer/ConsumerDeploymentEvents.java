@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,11 +26,13 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
     // private final Map<Deployment, ConsumerService> coreServices;
     // private final Map<Deployment, ConsumerService> services;
     private final Map<Deployment, List<ConsumerThread>> deployments;
+    private final Map<Deployment, List<ConsumerService>> serviceDeployments;
     private final Forklift forklift;
     private final ExecutorService executor;
 
     public ConsumerDeploymentEvents(Forklift forklift, ExecutorService executor) {
         this.deployments = new HashMap<>();
+        this.serviceDeployments = new HashMap<>();
         this.forklift = forklift;
         this.executor = executor;
     }
@@ -43,14 +46,13 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
         log.info("Deploying: " + deployment);
 
         final List<ConsumerThread> threads = new ArrayList<>();
+        final List<ConsumerService> services = new ArrayList<>();
 
         // Start services by instantiating them. 
-        deployment.getServices().forEach(s -> {
-            try {
-                s.newInstance();
-            } catch (Exception e) {
-
-            }
+        RunAsClassLoader.run(deployment.getClassLoader(), () ->{
+            deployment.getServices().forEach(s -> {
+                services.add(new ConsumerService(s));
+            });
         });
 
         // TODO initialize core services, and join classloaders.
@@ -76,6 +78,7 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
         });
 
         deployments.put(deployment, threads);
+        serviceDeployments.put(deployment, services);
     }
 
     @Override
