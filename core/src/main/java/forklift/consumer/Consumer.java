@@ -54,6 +54,7 @@ public class Consumer {
     private String name;
     private Queue queue;
     private Topic topic;
+    private List<ConsumerService> services;
 
     // If a queue can process multiple messages at a time we
     // use a thread pool to manage how much cpu load the queue can
@@ -273,8 +274,19 @@ public class Consumer {
                                 // Attempt to parse a json
                                 f.set(instance, mapper.readValue(msg.getMsg(), clazz));
                             }
-                        } else if (decorator == javax.inject.Inject.class) {
-                            log.warn("Spring not currently supported.");
+                        } else if (decorator == javax.inject.Inject.class && this.services != null) {
+                            // Try to resolve the class from any available BeanResolvers.
+                            for (ConsumerService s : this.services) {
+                                try {
+                                    final Object o = s.resolve(clazz, null);
+                                    if (o != null) {
+                                        f.set(instance, o);
+                                        break;
+                                    }
+                                } catch (Exception e) {
+                                    log.debug("", e);
+                                }                             
+                            }
                         } else if (decorator == Config.class) {
                             if (clazz == Properties.class) {
                                 forklift.decorators.Config config = f.getAnnotation(forklift.decorators.Config.class);
@@ -323,5 +335,9 @@ public class Consumer {
 
     public ForkliftConnectorI getConnector() {
         return connector;
+    }
+
+    public void setServices(List<ConsumerService> services) {
+        this.services = services;
     }
 }

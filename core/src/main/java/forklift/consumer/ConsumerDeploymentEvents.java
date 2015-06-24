@@ -23,8 +23,6 @@ import java.util.stream.Collectors;
 public class ConsumerDeploymentEvents implements DeploymentEvents {
     private static final Logger log = LoggerFactory.getLogger(ConsumerDeploymentEvents.class);
 
-    // private final Map<Deployment, ConsumerService> coreServices;
-    // private final Map<Deployment, ConsumerService> services;
     private final Map<Deployment, List<ConsumerThread>> deployments;
     private final Map<Deployment, List<ConsumerService>> serviceDeployments;
     private final Forklift forklift;
@@ -51,7 +49,15 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
         // Start services by instantiating them. 
         RunAsClassLoader.run(deployment.getClassLoader(), () -> {
             deployment.getServices().forEach(s -> {
-                services.add(new ConsumerService(s));
+                try {
+                    log.info("Starting service {}", s);
+                    final ConsumerService service = new ConsumerService(s);
+                    service.onDeploy();
+                    services.add(service);
+                } catch (Exception e) {
+                    log.error("", e);
+                    return;
+                }
             });
         });
 
@@ -61,8 +67,10 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
         deployment.getQueues().forEach(c -> {
             for (Annotation a : c.getAnnotationsByType(Queue.class)) {
                 log.info("Found annotation {} on {}", a, c);
-                final ConsumerThread thread = new ConsumerThread(
-                    new Consumer(c, forklift.getConnector(), deployment.getClassLoader(), (Queue)a));
+                final Consumer consumer = new Consumer(c, forklift.getConnector(), deployment.getClassLoader(), (Queue)a); 
+                consumer.setServices(services);
+                
+                final ConsumerThread thread = new ConsumerThread(consumer);
                 threads.add(thread);
                 executor.submit(thread);    
             }
@@ -70,8 +78,11 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
 
         deployment.getTopics().forEach(c -> {
             for (Annotation a : c.getAnnotationsByType(Topic.class)) {
-                final ConsumerThread thread = new ConsumerThread(
-                    new Consumer(c, forklift.getConnector(), deployment.getClassLoader(), (Topic)a));
+                log.info("Found annotation {} on {}", a, c);
+                final Consumer consumer = new Consumer(c, forklift.getConnector(), deployment.getClassLoader(), (Topic)a); 
+                consumer.setServices(services);
+
+                final ConsumerThread thread = new ConsumerThread(consumer);
                 threads.add(thread);
                 executor.submit(thread);    
             }
@@ -94,6 +105,15 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
                 } catch (Exception e) {
                 }
             });
+        }
+
+        // Shutdown each of the services by calling all of their undeployment methods.
+        for (ConsumerService s : serviceDeployments.remove(deployment)) {
+            try {
+                s.onUndeploy();
+            } catch (Exception e) {
+                log.warn("", e);
+            }
         }
 
         CoreClassLoaders.getInstance().unregister(deployment.getClassLoader());
