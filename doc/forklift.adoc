@@ -1,11 +1,12 @@
 = Forklift
-David Thompson <dthompsn1@gmail.com>
+Matt Conroy<dcshock@gmail.com>, @David Thompson <dthompsn1@gmail.com>
 v1.0, 2015-02-14
 :library: Asciidoctor
 :imagesdir: images
-:toc:
-:toc-placement: preamble
 :homepage: https://github.com/dcshock/forklift
+
+:toc: macro
+toc::[]
 
 == Forklift as an Enterprise Service Bus
 
@@ -89,75 +90,489 @@ testable, queued, message processing.
 
 Just like a Java based application server, Forklift can be started up all on
 its own to do nothing. It doesn't start processing anything until a consumer
-is deployed to it. Consumers are written and implement a Consumer interface. The
-interface must have a process method at minimum. This method is run
-each time a new message is available. It can implement the validate method
-that validates the message put on the queue before it is processed. Failed
-validation is then handled by the Error Handler, see Standardized
+is deployed to it. Consumers are written to identify which queue/topic they will
+consume. A method within the class must be designated to process the messages and
+is run each time a new message is available. Other features such as designating
+methods to validate the messages can easily be added. Failed
+validation is handled by the Error Handler, see Standardized
 Exception/Error Handling.
 
 === Easy Configuration
 
-@Queue
+The way that Forklift provides easy configuration is by using a set of Java Annotations
+provided by the system to wrap your business logic with core code to handle all
+the routine things provided by Forklift. Here are a few examples of annotations
+that provide functionality:
 
-@Topic
+* @Queue - specified on a class given a name will begin processing any messages on the
+named queue and running specified methods on the messages
+* @OnMessage - specified on a method designates the method that should process every
+time a message is received.
+* @Message - Specified on a property of the class will try and inject the received message
+into the property to be used to read the message contents easily.
 
-Deployable property files for configuration - _I'm assuming we're going to
-support this?_
+=== Extendible
+
+Forklift provides a method to extend the base life-cycle functionality using plug-ins.
+There are several plug-ins that have already been developed, for example, the way to
+have a message retry on error, or create audit logs that store an entire message that
+can be replayed.
+
+=== Message Lifecycle
+
+Years of development experience led to Forklift being developed. Forklift needed to process
+messages asynchronously, but end-users wanted to know exactly what happened with each of their
+messages. After many discussions, the developers decided on the following minimal life-cycle processing
+for each message.
+
+image::forklift-message-lifecycle.png[707,540,caption="Diagram 2. ",title="Forklift Lifecycle"]
+
+* Pending - Message has been picked up from the broker and is going to passed onto the consumer.
+* Validating - Forklift will start running any @OnValidate methods to validate the message.
+* Processing - Forklift is going to run any @OnMessage methods within the consumer to process the
+message.
+* Complete - Forklift successfully validated and processed the message without error.
+* Invalid - Validation did not succeed successfully so the message won't be processed.
+* Error - Validation may have succeeded but some other type of error occurred while processing the
+message with the consumer.
+
+Since the life-cycle is built for the developer to be able to track processing, Forklift
+provides the ability to intercept each step. Components written and installed within
+Forklift can add the @LifeCycle annotation on methods to have targeted code run when
+messages reach each step. With this ability, it is quite easy to write specialized
+message life-cycle auditing. Plug-ins are available that intercept the life-cycle to be
+able to replay messages or allow for retrying a message in the event that a message
+errors during processing.
+
+==== Broker Consumer Related Configuration
+The purpose of a consumer is to process messages off of queues or topics from the
+broker. To make this easier, Forklift provides easy configuration of the consumer
+by annotating the consumer Java class with annotations:
+
+* @Queue - All messages placed on the named queue will be passed to this consumer.
+* @Topic - All messages placed on the named topic will be passed to this consumer.
+* @MultiThread - Forklift will run the specified number of consumers to process
+messages off the queue when needed. Helps when consumers may be longer running
+processes.
+* @Order - TBD
+* @RequireSystem - TBD
+
+While making it easy to consume messages, it is also easy to configure the
+consumer. Properties files containing data values that can be picked up by
+the consumer at run-time can be deployed independently of the consumer. This
+provides a quick way to deploy the same consumer in different environments (such as
+production or test) and just change the properties for different behavior.
+Files with the file extension .properties placed in the deployment directory will
+be scanned and made available to the consumers.
+
+@Named @Entity and other Spring configurable objects. - TBD
 
 === Marshalling of Messages to Objects
+A lot of the base code when dealing JMS messages from Java involves marshaling
+the message from the message into a usable object that can then just be used.
+Forklift provides nice annotations that can be placed on properties to do
+all this marshaling for you.
 
-@Inject applied to objects automatically marshal message values into object
-properties, or a map of key/value provided.
+* @Config - Place this annotation on a java.util.Properties object.
+All properties deployed properties files are made available for use.
+* @Message - Placed on different property types, this will try and
+marshal the message data into the object.
+* @Headers - Placed on a Map of string and object, Forklift will marshal
+the message headers into the map.
+* @Properties - Placed on a Map of string and object, Forklift will marshal
+the message properties into the map.
 
-=== Specialized Message Handling
-
-@MultiThread
-
-@Order
-
-@Retry
-
+@Inject - TBD
 
 === Standardized Exception/Error Handling
+In helping the developer organize their code and inject code into the life-cycle,
+the developer can easily write message validation routines that can run
+before the message processing is started. Forklift provides an annotation
+to easily provide this functionality.
 
-_I'm assuming we're going to support some kind of validate and
-configValidate(). Do we extend a base class or implement an interface?_
+* @OnValidate - Place this annotation on methods to validate the message. Any
+method that fails to validate will stop processing of the message and send
+the life-cycle to the Invalid state.
 
-validate()
+If a consumer errors (throwing an exception - Checked or Runtime), Forklift
+will automatically route the life-cycle to the Error state. This event can
+then be hooked to show the errors. For more information on logging and
+auditing see information about some of the plug-ins that have been built.
 
-configValidate()
+=== Plug-ins
+Forklift has been thoughtfully designed enough to allow developers to
+extend the base functionality for message processing. One of the major
+requirements when originally developing this system was the ability to
+log/audit every step of the life-cycle. However, every developer has
+different logging requirements, whether that be logging to a file or sending
+all logs to a database table. So integrating a single solution for auditing
+did not make sense.
 
-thrown Exceptions
+Several plug-ins have been developed that may be useful to other developers
+for general use or as a template to build their own. These are part of
+the Forklift project and are described below.
 
-==== Processing Steps
+==== Specialized Message Handling
 
-When a message is picked up to be processed, forklift will report the
-steps as the message is processed. The steps are:
+===== Retry Message Handler.
+There are times when a consumer may not be able to successfully complete
+processing a message. Say for example that a message is placed on the queue
+and the data is to be pushed to a remote web-service. Of course the consumer
+could write all the code to send the message, catch any exceptions and then
+retry if it fails. Problem is, threads get bogged down doing retries and there
+is no record of failed attempts. The retry message handler adds an annotation
+that can be placed on the consumer that instructs Forklift on failure of
+consuming a message to schedule to retry processing the message a set
+number of times after a specified delay.
 
-* Pending - Message has been dequeued from the broker and has entered the
-processing stage.
-* Validating - Message is being run through the message validation method.
-* Invalid - Message failed validation.
-* Processing - Message passed validation and is now being processed.
-* Retrying - Message had failed to process and is being rescheduled to try
-again at a later time. Will only happen with process is annotated with the
-@Retry annotation.
-* Error - Message failed to process.
-* Complete - Message has succeeded at processing and has been acknowledged.
+* @Retry - Placed on the consumer class will tell Forklift to reschedule
+the message to be rerun if it errors.
 
-==== Notifications
+===== Notifications - TBD
+The best coders in the world can't guard against every last possible situation
+that may arise in code. In a past life, we had a developer named Dan that
+stated that a specific error case could never-ever happen. We called it the
+DanException. Guess what--we did eventually see the DanException. The problem
+was that even though we coded for it--we didn't have a way to handle it.
+The Notification plug-in provides a way for a single consumer to intercept
+the life-cycle and perform a specified notification when the life-cycle
+event happens. For example, it is possible to write an Email notification
+handler and then easily add to the consumer the ability to send an
+email notification to a specific email address when a consumer Errors within
+the life-cycle.
 
-@Notify
+* @Notify - Placed on the consumer class will tell Forklift to send the
+specified notification when the consumer enters into the specified life-cycle
+events.
 
-_How do we register Notifiers with the system such as a NotifyEmail
-Annotation?_
+===== Replay Auditing
+One of the joys of auditing is seeing what actually happened when the system
+executes. Being able to view the entire life-cycle on every message that
+goes through a system provides some with a great sense of comfort. In the
+case when a consumer errors, it may be for a reason outside the consumer's
+control. In this case just being able to resend the message as it originally
+existed, may allow it to process. The replay auditor provides a log of
+every life-cycle event for each annotated consumer that can then be parsed
+and used to recreate an event.
 
-=== Other Features
+* @Replay - Placed on the consumer class will log out all the life-cycle
+events to a log file with enough data to be able to replay the message. In
+essence making it possible to resend a message that has already been processed.
 
-@RequireSystem
+## Quickstart Guide
 
-@Audit
+* Download the https://github.com/dcshock/forklift/releases/download[forklift-server-x.x.zip] release.
 
-_How do we register Auditors with the system such as LogfileAuditor or
-DatabaseAuditor?_
+* unzip the download
+
+* Using a command line, `cd` into the unzipped directory
+
+* Create a directory named `forklift` in your home directory.
+[source,bash]
+----
+$ mkdir ~/forklift
+----
+
+* Create a sub-directory named deploy.
+
+[source,bash]
+----
+$ mkdir ~/forklift/deploy
+----
+
+* Start Forklift
+
+Within the forklift-server-x.x directory run the following command:
+
+[source,bash]
+----
+$ bin/forklift-server -monitor1 ~/forklift/deploy -url embedded
+----
+
+At this point, you should see a lot of log output from Forklift showing that it
+is running, but it really isn't doing anything other than waiting for you to start
+deploying consumers to it.
+
+### Write Your First Consumer
+
+This guide will lead you through writing a quick consumer. Provided are build scripts
+for both Maven and Sbt. Please choose the method that you are most comfortable using.
+You can also do this directly within and IDE such as Eclipse, but this will be left
+up to the developer as their own exercise.
+
+#### Maven Setup of Your Project
+The Maven build file for your first consumer, if you're into that kind of thing.
+
+.pom.xml
+[source,xml]
+----
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>forklift.consumer</groupId>
+  <artifactId>MyExampleConsumer</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <name>My Example Consumer</name>
+  <description>An example Forklift consumer.</description>
+  <repositories>
+    <repository>
+        <id>oss-sonatype</id>
+        <name>oss-sonatype</name>
+        <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+        <snapshots>
+            <enabled>true</enabled>
+        </snapshots>
+    </repository>
+</repositories>
+  <dependencies>
+    <dependency>
+      <groupId>com.github.dcshock</groupId>
+      <artifactId>forklift</artifactId>
+      <version>[0.5,)</version>
+    </dependency>
+  </dependencies>
+</project>
+----
+
+#### Sbt Setup of Your Project
+
+The Sbt build file for your first consumer, if you're into that kind of thing.
+
+.build.sbt
+[source,sbt]
+----
+import com.github.dcshock.SbtBinks._
+
+organization := "forklift.consumer"
+
+name := "MyExampleConsumer"
+
+version := "0.1"
+
+libraryDependencies ++= Seq(
+  "com.github.dcshock" % "forklift" % "[0.5,)" % "provided"
+  )
+
+resolvers ++= Seq(
+  "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+)
+
+// Inform sbt-eclipse to not add Scala nature
+EclipseKeys.projectFlavor := EclipseProjectFlavor.Java
+
+// Remove scala dependency for pure Java libraries
+autoScalaLibrary := false
+
+// Remove the scala version from the generated/published artifact
+crossPaths := false
+
+// With this enabled, compiled jars are easier to debug in other projects
+// variable names are visible.
+javacOptions in compile ++= Seq("-source", "1.8", "-g:lines,vars,source", "-deprecation")
+
+javacOptions in doc += "-Xdoclint:none"
+
+addCommandAlias("dist", ";compile;binks")
+
+binksSettings
+----
+
+For sbt, you will also be required to add these lines to your project/plugins.sbt
+
+.plugins.sbt
+[source,sbt]
+----
+addSbtPlugin("com.github.dcshock" % "sbt-binks" % "0.1")
+
+addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "3.0.0")
+----
+
+#### Source Code for First Example Consumer
+
+The first example, is very simple and should be easily understood by most developers.
+It listens to the "test" queue and then logs out the message it receives.
+
+The source code is as follows:
+
+.MyExampleConsumer.java
+[source,java]
+----
+package forklift.consumer;
+
+import forklift.decorators.Message;
+import forklift.decorators.OnMessage;
+import forklift.decorators.Queue;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Map;
+
+@Queue("test") // <1>
+public class MyExampleConsumer {
+    Logger log = LoggerFactory.getLogger(MyExampleConsumer.class);
+
+    @Message // <2>
+    public Map<String, String> msg;
+
+    @OnMessage // <3>
+    public void processMyMessage() {
+        log.info("My message was: {}", msg);
+    }
+}
+----
+<1> Tells the consumer to listen to /queue/test for messages
+<2> Injects the message into the msg property.
+<3> Tells Forklift to run this method when a message is received.
+
+### Build Your Consumer
+
+.Maven
+[source,bash]
+----
+$ mvn package
+----
+
+Now your jar will be available in the target directory named `MyExampleConsumer-0.0.1-SNAPSHOT.jar`
+
+.Sbt
+[souce,bash]
+----
+$ sbt package
+----
+
+Now your jar will be available in the target directory named `myexampleconsumer-0.1.jar`
+
+### Deploy Your Consumer
+
+With your jar now existing, it is quite easy to deploy your jar into the running
+Forklift instance. Just copy your jar file into ~/forklift/deploy and you should
+see log messages showing that the consumer is ready to consume messages on
+/queue/test. It may take a second or two since the deployment scanner is on a
+timer thread. See the following output from the logger:
+
+.Log ouput
+[source,log4j]
+----
+{"timestamp":"2015-06-15T17:18:32.439Z","level":"INFO","thread":"run-main-0","logger":"org.reflections.Reflections","message":"Reflections took 54 ms to scan 1 urls, producing 1 keys and 1 values ","context":"default"}
+{"timestamp":"2015-06-15T17:18:32.444Z","level":"INFO","thread":"run-main-0","logger":"forklift.consumer.ConsumerDeploymentEvents","message":"Deploying: Deployment [queues=[class forklift.consumer.MyExampleConsumer], topics=[], cl=forklift.classloader.ChildFirstClassLoader@5cbdc534, deployedFile=/Users/dthompson/forklift/deploy/myexampleconsumer-0.1.jar, reflections=org.reflections.Reflections@4e6016c]","context":"default"}
+{"timestamp":"2015-06-15T17:18:32.458Z","level":"INFO","thread":"consumer-deployment-events-1","logger":"consumer-thread-test:1","message":"starting consumer","context":"default"}
+----
+
+### Send a Message to Your Queue
+
+In this Quickstart guide, Forklift is using an embedded version of ActiveMQ, so there
+isn't a built-in way to send messages to a queue or topic. Most languages have API libraries
+that allow the developer to send messages to a broker. Below is a list of several of
+the APIs available.
+
+* stomp.py - A Python library for sending messages to ActiveMQ that has the stomp
+protocol enabled. Works okay for Json objects, but for K/V pairs needs modifications
+since its not possible to send newline characters.
+* stomp-client - For node.js, this client library can help easily send messages to
+to ActiveMQ. Our example will show how to use this library.
+* Net::STOMP::Client - Perl library for working with communicating with the Stomp
+protocol. Contributed by a developer at CERN, this API is quite robust.
+* Forklift Producer - A little more heavy-weight API for Java, but uses the
+same ActiveMQ connector that Forklift uses. It is based on JMS not the Stomp protocol.
+More information can be found outside the Quickstart guide.
+
+#### Using Node.js to Send Messages
+
+* Install node.js. For a quick reference, please see http://howtonode.org/how-to-install-nodejs[this howto].
+
+* Install npm (node package manager). Using the same method for installing node.js, you should be able to install
+npm as well.
+
+* Create a directory where you can write a small node application and cd into that directory.
+
+* Install the node stomp-client module. `npm install stomp-client`
+
+* Modify frames.js. There is a small issue that needs to be corrected in the stomp-client
+that needs fixed in order to let our node application work.
+
+Within the following file, modify the code
+
+.node_modules/stomp-client/libframe.js
+[source,javascript]
+----
+if (this.body.length > 0) {
+----
+
+to
+
+.frame.js
+[source,javascript]
+----
+if (this.body.length > 0 && !this.headers.hasOwnProperty("suppress-content-length")) {
+----
+
+Once you've completed the modification, create the node program below:
+
+.sendmessage.js
+[source,javascript]
+----
+var Stomp = require('stomp-client');
+var dest = process.argv[2];
+var client = new Stomp('localhost', 61613, null, null);
+
+client.on('error', function(e) {
+  console.log(e);
+});
+
+client.connect(function(sessionId) {
+  var msg = process.argv[3];
+  client.publish(dest, msg, {"suppress-content-length":"true", "persistent":"true"});
+  client.disconnect();
+});
+----
+
+#### Sending messages with sendmsg
+
+From command line, run the node program which you just created.
+
+[source,bash]
+----
+$ node sendmessage.js /queue/test $'who=Batman\ntype=Bat signal\n'
+----
+
+Notice the `$'` syntax. That syntax allows you to send newlines within your message.
+At this point, you should be able to look at the log output of Forklift and you
+should see your message logged out. For example:
+
+[source,log4j]
+----
+{"timestamp":"2015-06-15T17:54:36.747Z","level":"INFO","thread":"consumer-deployment-events-1","logger":"forklift.consumer.MyExampleConsumer","message":"My message was: {type=Bat signal, who=Batman}","context":"default"}
+----
+
+### Conclusion
+
+You can now go and start playing with your example consumer to make it have different
+behavior and sending different types of messages. Try adding an `@OnValidate` method
+to make sure you have a valid message or change the `@Message` property type to an
+object and send Json messages instead of k/v pairs.
+
+## Consumer Development
+
+*TBD*
+
+## Server
+
+*TBD*
+
+## Connectors
+
+### ActiveMQ JMS Connector
+A very popular broker in the world of Java Messaging Services (JMS) is
+Apache's ActiveMQ. Forklift has been used very successfully with ActiveMQ
+as its primary broker. Forklift provides an out of the box connector for
+immediate use with ActiveMQ (located in connectors/ActiveMQ).
+
+### Others
+Currently we have not written any other connectors, but it would be quite
+easy to implement other connectors for other brokers such as ActiveMQ using
+AMQP or perhaps RabbitMQ. We will extend this section as other connectors
+become available.
+
+## Plugins
+
+*TBD*

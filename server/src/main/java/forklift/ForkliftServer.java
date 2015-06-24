@@ -9,10 +9,13 @@ import forklift.consumer.LifeCycleMonitors;
 import forklift.deployment.DeploymentWatch;
 import forklift.replay.ReplayLogger;
 import forklift.retry.RetryHandler;
+
+import org.apache.activemq.broker.BrokerService;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -28,6 +31,8 @@ public final class ForkliftServer {
 
     // Consumer deployment interval
     private static int SLEEP_INTERVAL = 10000; // 10 seconds
+
+    private static BrokerService broker = null;
 
     /**
      * Launch a Forklift server instance.
@@ -53,11 +58,22 @@ public final class ForkliftServer {
             return;
         }
 
+        File f = new File(opts.getConsumerDir());
+        if (!f.exists() || !f.isDirectory()) {
+            System.err.println();
+            System.err.println(" -monitor1 is not a valid directory.");
+            System.err.println();
+            argParse.printUsage(System.err);
+            System.err.println();
+            return;
+        }
+
+
         String brokerUrl = opts.getBrokerUrl();
         if (brokerUrl.startsWith("consul.") && brokerUrl.length() > "consul.".length()) {
             log.info("Building failover url using consul");
 
-            final Consul c = new Consul("http://dev4", 8500);
+            final Consul c = new Consul("http://" + opts.getConsulHost(), 8500);
 
             // Build the connection string.
             final String serviceName = brokerUrl.split("\\.")[1];
@@ -71,11 +87,22 @@ public final class ForkliftServer {
 
             c.shutdown();
 
+            brokerUrl = brokerUrl.replaceAll("failover:\\(,", "failover:(");
+
             log.info("url {}", brokerUrl);
             if (brokerUrl.equals("failover:()")) {
                 log.error("No brokers found");
                 System.exit(-1);
             }
+        } else if (brokerUrl.startsWith("embed")) {
+            brokerUrl = "tcp://localhost:61616";
+            broker = new BrokerService();
+
+            // configure the broker
+            broker.addConnector(brokerUrl);
+            broker.addConnector("stomp://localhost:61613");
+
+            broker.start();
         }
 
         // Start a forklift server w/ specified connector.
@@ -123,6 +150,11 @@ public final class ForkliftServer {
                     propsWatch.shutdown();
 
                 forklift.shutdown();
+
+                if (broker != null)
+                    try {
+                        broker.stop();
+                    } catch (Exception ignored) { }
             }
         });
 
@@ -130,11 +162,19 @@ public final class ForkliftServer {
         while (running.get()) {
             log.debug("Scanning for new deployments...");
 
-            if (deploymentWatch != null)
-                deploymentWatch.run();
+            try {
+                if (deploymentWatch != null)
+                    deploymentWatch.run();
+            } catch (Throwable e) {
+                log.error("", e);
+            }
 
-            if (propsWatch != null)
-                propsWatch.run();
+            try {
+                if (propsWatch != null)
+                    propsWatch.run();
+            } catch (Throwable e) {
+                log.error("", e);
+            }
 
             synchronized (running) {
                 running.wait(SLEEP_INTERVAL);

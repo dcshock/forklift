@@ -4,21 +4,23 @@ import forklift.Forklift;
 import forklift.classloader.CoreClassLoaders;
 import forklift.classloader.RunAsClassLoader;
 import forklift.concurrent.Executors;
+import forklift.decorators.Queue;
+import forklift.decorators.Topic;
 import forklift.deployment.Deployment;
 import forklift.deployment.DeploymentEvents;
 import forklift.spring.ContextManager;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
 
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 
 public class ConsumerDeploymentEvents implements DeploymentEvents {
     private static final Logger log = LoggerFactory.getLogger(ConsumerDeploymentEvents.class);
@@ -45,14 +47,19 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
 
         final List<ConsumerThread> threads = new ArrayList<>();
 
-        // Launch a Spring context if necessary. Note that we ensure that spring has access to the deployment's classloader since the 
+        // Launch a Spring context if necessary. Note that we ensure that spring has access to the deployment's classloader since the
         // configurations will be there. We'll also need to be careful not to utilize spring in the forklift core since the system may
         // spin up classes more than once. Never add a config with a scan that looks at forklift.*.
-        // TODO - Somehow fix the ability to use spring in the core safely - maybe a check to ensure forklift.* isn't scanned in a  consumer deployment. 
+        // TODO - Somehow fix the ability to use spring in the core safely - maybe a check to ensure forklift.* isn't scanned in a  consumer deployment.
         RunAsClassLoader.run(deployment.getClassLoader(), () -> {
-            final Set<Class<?>> springConfigs = deployment.getReflections().getTypesAnnotatedWith(Configuration.class);
-            if (springConfigs.size() > 0)
-                ContextManager.start(deployment.getDeployedFile().getName(), (Class[])springConfigs.toArray());
+            final List<Class<?>> springConfigs = deployment.getReflections().getTypesAnnotatedWith(Configuration.class).stream().collect(Collectors.toList());
+            if (springConfigs.size() > 0) {
+                final Class<?>[] clazzes = new Class<?>[springConfigs.size()];
+                for (int i = 0; i < clazzes.length; i++)
+                    clazzes[i] = springConfigs.get(i);
+
+                ContextManager.start(deployment.getDeployedFile().getName(), clazzes);
+            }
         });
         final ApplicationContext context = ContextManager.getContext(deployment.getDeployedFile().getName());
 
@@ -60,17 +67,22 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
         // CoreClassLoaders.getInstance().register(deployment.getClassLoader());
 
         deployment.getQueues().forEach(c -> {
-            final ConsumerThread thread = new ConsumerThread(
-                new Consumer(c, forklift.getConnector(), deployment.getClassLoader(), context));
-            threads.add(thread);
-            executor.submit(thread);
+            for (Annotation a : c.getAnnotationsByType(Queue.class)) {
+                log.info("Found annotation {} on {}", a, c);
+                final ConsumerThread thread = new ConsumerThread(
+                    new Consumer(c, forklift.getConnector(), deployment.getClassLoader(), context, (Queue)a));
+                threads.add(thread);
+                executor.submit(thread);    
+            }
         });
 
         deployment.getTopics().forEach(c -> {
-            final ConsumerThread thread = new ConsumerThread(
-                new Consumer(c, forklift.getConnector(), deployment.getClassLoader(), context));
-            threads.add(thread);
-            executor.submit(thread);
+            for (Annotation a : c.getAnnotationsByType(Topic.class)) {
+                final ConsumerThread thread = new ConsumerThread(
+                    new Consumer(c, forklift.getConnector(), deployment.getClassLoader(), context, (Topic)a));
+                threads.add(thread);
+                executor.submit(thread);    
+            }
         });
 
         deployments.put(deployment, threads);

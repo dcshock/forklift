@@ -10,6 +10,23 @@ link:doc/forklift.adoc[Documentation]
 
 
 == Releases
+* 0.7
+** Fix issue that would cause a consumer to stop processing due to a redelivery loop. This was caused any time a bad json parse occurred.
+
+* 0.6
+** Replay logger flush periodically if no messages are received. Helps guarantee nothing gets lost in the buffer.
+** Log file configuration. Setup the container to drop a log file in /logs.
+** Fix lost msgs that end up in the dead letter queue by using the core thread to process messages during a thread pool overload.
+** Allow multiple Queue/Topic annotations per consumer. This helps when needing to monitor two different queues for fast vs slow processing.
+
+* 0.5
+** Spring setup fixes
+** Main thread death fix when a consumer's spring context startup fails
+
+* 0.4
+** Allow the consul host to be specified
+** Fix failover url construction when using service discovery with only one broker.
+
 * 0.3
 ** Updates to docker container builds
 ** New arguments to allow retry/replay dirs to be set
