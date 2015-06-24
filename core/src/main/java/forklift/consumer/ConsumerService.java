@@ -50,7 +50,7 @@ public class ConsumerService {
 	  throws Exception {
 		// Attempt to resolve the class via name and type.
 		for (Method m : beanResolvers) {
-			final Object o = m.invoke(c, name);
+			final Object o = m.invoke(instance, c, name);
 
 			if (o != null)
 				return o;
@@ -65,7 +65,7 @@ public class ConsumerService {
 	public void onDeploy() 
 	  throws Exception {
 		for (Method m : onDeploy)
-			m.invoke(new Object[0]);
+			m.invoke(instance);
 	}
 
 	/**
@@ -74,6 +74,6 @@ public class ConsumerService {
 	public void onUndeploy() 
 	  throws Exception {
 		for (Method m : onUndeploy) 
-			m.invoke(new Object[0]);
+			m.invoke(instance);
 	}
 }
