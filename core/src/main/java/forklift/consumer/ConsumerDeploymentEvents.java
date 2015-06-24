@@ -49,7 +49,7 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
         final List<ConsumerService> services = new ArrayList<>();
 
         // Start services by instantiating them. 
-        RunAsClassLoader.run(deployment.getClassLoader(), () ->{
+        RunAsClassLoader.run(deployment.getClassLoader(), () -> {
             deployment.getServices().forEach(s -> {
                 services.add(new ConsumerService(s));
             });
