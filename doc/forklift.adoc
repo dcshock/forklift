@@ -492,7 +492,7 @@ that needs fixed in order to let our node application work.
 
 Within the following file, modify the code
 
-.node_modules/stomp-client/libframe.js
+.node_modules/stomp-client/lib/frame.js
 [source,javascript]
 ----
 if (this.body.length > 0) {
