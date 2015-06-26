@@ -5,8 +5,7 @@ import forklift.connectors.ForkliftConnectorI;
 import forklift.connectors.ForkliftMessage;
 import forklift.producers.ForkliftProducerI;
 
-import org.springframework.stereotype.Component;
-
+import javax.inject.Named;
 import javax.jms.Connection;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
@@ -17,7 +16,7 @@ import javax.jms.MessageConsumer;
  * @author mconroy
  *
  */
-@Component
+@Named
 public class ActiveMQForkliftConnector implements ForkliftConnectorI {
 
     @Override

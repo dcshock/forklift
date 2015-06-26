@@ -17,10 +17,7 @@ initialize := {
 }
 
 libraryDependencies ++= Seq(
-    "com.github.dcshock" % "forklift" % "0.3",
-    "javax.inject" % "javax.inject" % "1",
-    "ch.qos.logback" % "logback-classic" % "1.0.13",
-    "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1",
+    "com.github.dcshock" % "forklift" % "0.8",
     "org.apache.activemq" % "activemq-all" % "5.10.1",
     "commons-io" % "commons-io" % "2.4" % "test",
     "com.novocode" % "junit-interface" % "0.10" % "test"
