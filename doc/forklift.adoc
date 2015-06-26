@@ -21,7 +21,7 @@ exist today, ActiveMQ, RabbitMQ, Apache Kafka, etc. They can be setup to support
 the enterprise customer's needs by adding functionality such as persisting
 messages (guarantee delivery) and providing redundancy. Since they
 concentrate on message delivery, their performance can be tuned to provide
-very high message delievery rates.
+very high message delivery rates.
 
 Several message protocols for sending messages to these brokers exist,
 including Stomp, JMS, and AMQP. There are APIs for different languages to
@@ -79,7 +79,7 @@ to communicate to other services.
 == What Forklift is Not
 
 Purposely, Forklift is built to quickly create consumers in code to perform
-actions based on messages. There is no xml configuration, there is no
+actions based on messages. There is no XML configuration, there is no
 business process modeling, no developed flow tools. It is built for developers
 who can read/write code to implement redundant, retry capable, provable,
 testable, queued, message processing.
@@ -111,7 +111,7 @@ time a message is received.
 * @Message - Specified on a property of the class will try and inject the received message
 into the property to be used to read the message contents easily.
 
-=== Extendible
+=== Extendable
 
 Forklift provides a method to extend the base life-cycle functionality using plug-ins.
 There are several plug-ins that have already been developed, for example, the way to
@@ -435,7 +435,7 @@ $ mvn package
 Now your jar will be available in the target directory named `MyExampleConsumer-0.0.1-SNAPSHOT.jar`
 
 .Sbt
-[souce,bash]
+[source,bash]
 ----
 $ sbt package
 ----
@@ -450,7 +450,7 @@ see log messages showing that the consumer is ready to consume messages on
 /queue/test. It may take a second or two since the deployment scanner is on a
 timer thread. See the following output from the logger:
 
-.Log ouput
+.Log output
 [source,log4j]
 ----
 {"timestamp":"2015-06-15T17:18:32.439Z","level":"INFO","thread":"run-main-0","logger":"org.reflections.Reflections","message":"Reflections took 54 ms to scan 1 urls, producing 1 keys and 1 values ","context":"default"}
