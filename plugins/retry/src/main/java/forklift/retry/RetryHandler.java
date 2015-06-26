@@ -54,7 +54,7 @@ public class RetryHandler {
             .filter(result -> result.getFilename().startsWith("retry") && result.getFilename().endsWith(".msg"))
             .forEach(result -> {
                 try {
-                    final RetryMessage retryMessage = mapper.readValue(new File(result.getFilename()), RetryMessage.class);
+                    final RetryMessage retryMessage = mapper.readValue(new File(dir, result.getFilename()), RetryMessage.class);
                     executor.schedule(new RetryRunnable(retryMessage, connector),
                         Long.parseLong(Integer.toString((int)retryMessage.getProperties().get("forklift-retry-timeout"))), TimeUnit.SECONDS);
                 } catch (Exception e) {

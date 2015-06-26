@@ -2,7 +2,7 @@ organization := "com.github.dcshock"
 
 name := "forklift-retry"
 
-version := "0.3"
+version := "0.4"
 
 scalaVersion := "2.11.4"
 
@@ -15,7 +15,7 @@ initialize := {
 }
 
 libraryDependencies ++= Seq(
-  "com.github.dcshock" % "forklift" % "0.3"
+  "com.github.dcshock" % "forklift" % "0.8"
 )
 
 crossPaths := false

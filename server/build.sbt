@@ -2,7 +2,7 @@ organization := "com.github.dcshock"
 
 name := "forklift-server"
 
-version := "0.7"
+version := "0.8"
 
 scalaVersion := "2.11.4"
 
@@ -17,25 +17,24 @@ initialize := {
 }
 
 libraryDependencies ++= Seq(
-  "com.github.dcshock" % "forklift" % "0.7",
-  "com.github.dcshock" % "forklift-activemq" % "0.3",
+  "com.github.dcshock" % "forklift" % "0.8",
+  "com.github.dcshock" % "forklift-activemq" % "0.4",
   "com.github.dcshock" % "forklift-replay" % "0.4",
-  "com.github.dcshock" % "forklift-retry" % "0.3",
+  "com.github.dcshock" % "forklift-retry" % "0.4",
   "com.github.dcshock" % "consul-rest-client" % "0.6",
-  "org.springframework" % "spring-jms" % "4.1.1.RELEASE",
   "ch.qos.logback" % "logback-classic" % "1.0.13",
   "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1",
   "org.apache.activemq" % "activemq-all" % "5.8.0",
   "args4j" % "args4j" % "2.0.31",
-  "commons-io" % "commons-io" % "2.4" % "test",
-  "junit" % "junit" % "4.11"  % "test",
-  "com.novocode" % "junit-interface" % "0.10" % "test",
-  "javax.inject" % "javax.inject" % "1" % "runtime",
-  "ch.qos.logback.contrib" % "logback-json-core" % "0.1.2" % "runtime",
-  "ch.qos.logback.contrib" % "logback-json-classic" % "0.1.2" % "runtime",
-  "ch.qos.logback.contrib" % "logback-jackson" % "0.1.2" % "runtime",
+  "ch.qos.logback.contrib" % "logback-json-core" % "0.1.2",
+  "ch.qos.logback.contrib" % "logback-json-classic" % "0.1.2",
+  "ch.qos.logback.contrib" % "logback-jackson" % "0.1.2",
   "com.fasterxml.jackson.core" % "jackson-databind" % "2.5.1",
-  "org.codehaus.janino" % "janino" % "2.6.1" % "runtime"
+  "javax.inject" % "javax.inject" % "1",
+  "org.codehaus.janino" % "janino" % "2.6.1",
+  "com.novocode" % "junit-interface" % "0.10" % "test",
+  "commons-io" % "commons-io" % "2.4" % "test",
+  "junit" % "junit" % "4.11"  % "test"
 )
 
 crossPaths := false

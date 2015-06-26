@@ -2,7 +2,7 @@ organization := "com.github.dcshock"
 
 name := "forklift"
 
-version := "0.7"
+version := "0.8"
 
 scalaVersion := "2.11.4"
 
@@ -16,7 +16,6 @@ initialize := {
 }
 
 libraryDependencies ++= Seq(
-    "org.springframework" % "spring-jms" % "4.1.1.RELEASE",
     "com.google.guava" % "guava" % "18.0",
     "com.fasterxml.jackson.core" % "jackson-databind" % "2.3.3",
     "ch.qos.logback" % "logback-classic" % "1.0.13",

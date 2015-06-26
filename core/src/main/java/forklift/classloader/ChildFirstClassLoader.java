@@ -52,6 +52,10 @@ public class ChildFirstClassLoader extends URLClassLoader {
 		}
 		if (resolve)
 			resolveClass(c);
+
+        if (c == null)
+            throw new ClassNotFoundException(name);
+
 		return c;
 	}
 
