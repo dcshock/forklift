@@ -10,6 +10,9 @@ link:doc/forklift.adoc[Documentation]
 
 
 == Releases
+* 0.8
+** Remove spring completely from the core and replace with a service mechanism.
+
 * 0.7
 ** Fix issue that would cause a consumer to stop processing due to a redelivery loop. This was caused any time a bad json parse occurred.
 
