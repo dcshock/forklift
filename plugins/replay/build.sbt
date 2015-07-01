@@ -4,8 +4,6 @@ name := "forklift-replay"
 
 version := "0.5"
 
-scalaVersion := "2.11.4"
-
 javacOptions ++= Seq("-source", "1.8")
 
 initialize := {
@@ -27,8 +25,6 @@ resolvers ++= Seq(
     "Fuse" at "http://repo.fusesource.com/nexus/content/groups/public"
 )
 
-publishMavenStyle := true
-
 publishTo := {
   val nexus = "https://oss.sonatype.org/"
   if (isSnapshot.value)
@@ -36,6 +32,12 @@ publishTo := {
   else
     Some("releases"  at nexus + "service/local/staging/deploy/maven2")
 }
+
+// Remove scala dependency for pure Java libraries
+autoScalaLibrary := false
+
+// Remove the scala version from the generated/published artifact
+crossPaths := false
 
 pomIncludeRepository := { _ => false }
 
