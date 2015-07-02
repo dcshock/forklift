@@ -27,7 +27,7 @@ public @interface Retry {
      *
      * @return timeout in seconds. Default 12 hrs
      */
-    long timeout() default 12 * 60 * 60 * 1000;
+    long timeout() default 12 * 60 * 60;
 
     /**
      * Should the message be persisted between retries. Default is true
