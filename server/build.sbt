@@ -24,7 +24,7 @@ libraryDependencies ++= Seq(
   "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1",
   "args4j" % "args4j" % "2.0.31",
   "org.codehaus.janino" % "janino" % "2.6.1",
-  "ch.qos.logback" % "logback-classic" % "1.0.13",
+  "ch.qos.logback" % "logback-classic" % "1.1.2",
   "ch.qos.logback.contrib" % "logback-json-core"    % "0.1.2",
   "ch.qos.logback.contrib" % "logback-json-classic" % "0.1.2",
   "ch.qos.logback.contrib" % "logback-jackson"      % "0.1.2",
