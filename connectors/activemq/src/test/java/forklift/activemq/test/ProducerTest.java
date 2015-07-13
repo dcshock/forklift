@@ -140,6 +140,29 @@ public class ProducerTest {
         Assert.assertTrue(called.get() > 0);
     }
 
+    @Test 
+    public void testSendKeyValueMessage() throws JMSException, ConnectorException, ProducerException {
+        int msgCount = 10;
+        ForkliftProducerI producer = TestServiceManager.getConnector().getQueueProducer("q2");
+        for (int i = 0; i < msgCount; i++) {
+            final Map<String, String> m = new HashMap<>();
+            m.put("x", "producer key value send test");
+            producer.send(m);
+        }
+        
+        final Consumer c = new Consumer(getClass(), TestServiceManager.getConnector());
+        // Shutdown the consumer after all the messages have been processed.
+        c.setOutOfMessages((listener) -> {
+            listener.shutdown();
+            Assert.assertTrue("called was not == " + msgCount, called.get() == msgCount);
+        });
+
+        // Start the consumer.
+        c.listen();
+
+        Assert.assertTrue(called.get() > 0);
+    }
+
     @Test
     public void testSendTripleThreat() throws JMSException, ConnectorException, ProducerException {
         int msgCount = 10;
