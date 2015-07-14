@@ -2,9 +2,7 @@ organization := "com.github.dcshock"
 
 name := "forklift-activemq"
 
-version := "0.3"
-
-scalaVersion := "2.11.4"
+version := "0.5"
 
 // target and Xlint cause sbt dist to fail
 javacOptions ++= Seq("-source", "1.8")//, "-target", "1.8", "-Xlint")
@@ -18,17 +16,11 @@ initialize := {
 }
 
 libraryDependencies ++= Seq(
-    "com.github.dcshock" % "forklift" % "0.3",
-    "javax.inject" % "javax.inject" % "1",
-    "org.springframework" % "spring-jms" % "4.1.1.RELEASE",
-    "ch.qos.logback" % "logback-classic" % "1.0.13",
-    "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1",
+    "com.github.dcshock" % "forklift" % "0.8",
     "org.apache.activemq" % "activemq-all" % "5.10.1",
     "commons-io" % "commons-io" % "2.4" % "test",
     "com.novocode" % "junit-interface" % "0.10" % "test"
 )
-
-crossPaths := false
 
 resolvers ++= Seq(
     "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
@@ -36,6 +28,12 @@ resolvers ++= Seq(
     "Fuse Snapshots" at "http://repo.fusesource.com/nexus/content/repositories/snapshots",
     "Fuse" at "http://repo.fusesource.com/nexus/content/groups/public"
 )
+
+// Remove scala dependency for pure Java libraries
+autoScalaLibrary := false
+
+// Remove the scala version from the generated/published artifact
+crossPaths := false
 
 publishMavenStyle := true
 

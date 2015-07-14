@@ -16,9 +16,9 @@ RUN apt-get install unzip -y --force-yes --no-install-recommends
 
 # Add forklift server
 WORKDIR /tmp
-ADD https://github.com/dcshock/forklift/releases/download/0.6/forklift-server-0.6.zip forklift.zip
+ADD https://github.com/dcshock/forklift/releases/download/0.8/forklift-server-0.8.zip forklift.zip
 RUN yes | unzip -d /usr/local forklift.zip
-RUN ln -s /usr/local/forklift-server-0.6 /usr/local/forklift
+RUN ln -s /usr/local/forklift-server-0.8 /usr/local/forklift
 RUN mkdir -p /usr/local/forklift/consumers
 
 ENV FORKLIFT_HOME /usr/local/forklift

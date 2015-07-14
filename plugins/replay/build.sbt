@@ -2,9 +2,7 @@ organization := "com.github.dcshock"
 
 name := "forklift-replay"
 
-version := "0.4"
-
-scalaVersion := "2.11.4"
+version := "0.5"
 
 javacOptions ++= Seq("-source", "1.8")
 
@@ -15,7 +13,7 @@ initialize := {
 }
 
 libraryDependencies ++= Seq(
-  "com.github.dcshock" % "forklift" % "0.3"
+  "com.github.dcshock" % "forklift" % "0.8"
 )
 
 crossPaths := false
@@ -27,8 +25,6 @@ resolvers ++= Seq(
     "Fuse" at "http://repo.fusesource.com/nexus/content/groups/public"
 )
 
-publishMavenStyle := true
-
 publishTo := {
   val nexus = "https://oss.sonatype.org/"
   if (isSnapshot.value)
@@ -36,6 +32,12 @@ publishTo := {
   else
     Some("releases"  at nexus + "service/local/staging/deploy/maven2")
 }
+
+// Remove scala dependency for pure Java libraries
+autoScalaLibrary := false
+
+// Remove the scala version from the generated/published artifact
+crossPaths := false
 
 pomIncludeRepository := { _ => false }
 
