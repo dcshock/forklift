@@ -4,10 +4,9 @@ name := "forklift-activemq"
 
 version := "0.5"
 
-scalaVersion := "2.11.4"
-
 // target and Xlint cause sbt dist to fail
 javacOptions ++= Seq("-source", "1.8")//, "-target", "1.8", "-Xlint")
+
 javacOptions in compile ++= Seq("-g:lines,vars,source")
 
 initialize := {
@@ -23,14 +22,18 @@ libraryDependencies ++= Seq(
     "com.novocode" % "junit-interface" % "0.10" % "test"
 )
 
-crossPaths := false
-
 resolvers ++= Seq(
     "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
     "Maven Central" at "http://repo1.maven.org/maven2",
     "Fuse Snapshots" at "http://repo.fusesource.com/nexus/content/repositories/snapshots",
     "Fuse" at "http://repo.fusesource.com/nexus/content/groups/public"
 )
+
+// Remove scala dependency for pure Java libraries
+autoScalaLibrary := false
+
+// Remove the scala version from the generated/published artifact
+crossPaths := false
 
 publishMavenStyle := true
 

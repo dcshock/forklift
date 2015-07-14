@@ -14,6 +14,7 @@ import forklift.decorators.Headers;
 import forklift.decorators.MultiThreaded;
 import forklift.decorators.OnMessage;
 import forklift.decorators.OnValidate;
+import forklift.decorators.On;
 import forklift.decorators.Queue;
 import forklift.decorators.Topic;
 import forklift.producers.ForkliftProducerI;
@@ -24,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,6 +53,7 @@ public class Consumer {
     private final Class<?> msgHandler;
     private final List<Method> onMessage;
     private final List<Method> onValidate;
+    private final Map<ProcessStep, List<Method>> onProcessStep;
     private String name;
     private Queue queue;
     private Topic topic;
@@ -137,11 +140,15 @@ public class Consumer {
         // message is received.
         onMessage = new ArrayList<>();
         onValidate = new ArrayList<>();
+        onProcessStep = new HashMap<>();
+        Arrays.stream(ProcessStep.values()).forEach(step -> onProcessStep.put(step, new ArrayList<>()));
         for (Method m : msgHandler.getDeclaredMethods()) {
             if (m.isAnnotationPresent(OnMessage.class))
                 onMessage.add(m);
             else if (m.isAnnotationPresent(OnValidate.class))
                 onValidate.add(m);
+            else if (m.isAnnotationPresent(On.class))
+                onProcessStep.get(m.getAnnotation(On.class).value()).add(m);
         }
 
         injectFields = new HashMap<>();
@@ -206,7 +213,7 @@ public class Consumer {
                         });
 
                         // Handle the message.
-                        final MessageRunnable runner = new MessageRunnable(this, msg, classLoader, handler, onMessage, onValidate);
+                        final MessageRunnable runner = new MessageRunnable(this, msg, classLoader, handler, onMessage, onValidate, onProcessStep);
                         if (threadPool != null)
                             threadPool.execute(runner);
                         else
