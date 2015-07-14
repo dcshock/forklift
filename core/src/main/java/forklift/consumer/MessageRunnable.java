@@ -43,63 +43,45 @@ public class MessageRunnable implements Runnable {
     @Override
     public void run() {
         RunAsClassLoader.run(classLoader, () -> {
-            try {
-                // { Validating }
-                runHooks(ProcessStep.Validating);
-                for (Method m : onValidate) {
-                    if (m.getReturnType() == List.class) {
-                        addError((List<String>)m.invoke(handler));
-                    } else if (m.getReturnType() == boolean.class) {
-                        if (!(boolean)m.invoke(handler))
-                            addError("Validator " + m.getName() + " returned false");
-                    } else {
-                        throw new RuntimeException("onValidate method " + m.getName() + " has wrong return type " + m.getReturnType());
-                    }
-                }
-
-                // Run the message if there are no errors.
-                if (errors.size() > 0) {
-                    // { Invalid }
-                    getErrors().stream().forEach(e -> log.error(e));
-                    runHooks(ProcessStep.Invalid);
-                    // !!EXIT!! if invalid, do not continue
-                    return;
+            // { Validating }
+            runHooks(ProcessStep.Validating);
+            LifeCycleMonitors.call(ProcessStep.Validating, this);
+            for (Method m : onValidate) {
+                if (m.getReturnType() == List.class) {
+                    addError(runLoggingErrors(() -> (List<String>)m.invoke(handler)));
+                } else if (m.getReturnType() == boolean.class) {
+                    boolean valid = runLoggingErrors(() -> (boolean)m.invoke(handler));
+                    if (!valid)
+                        addError("Validator " + m.getName() + " returned false");
                 } else {
-                    // { Processing }
-                    runHooks(ProcessStep.Processing);
-                    for (Method m : onMessage) {
-                        m.invoke(handler);
-                    }
+                    addError("onValidate method " + m.getName() + " has wrong return type " + m.getReturnType());
                 }
-            } catch (Throwable e) {
-                // If we got any errors, log them
-                log.info("Error processing", e);
-                if (e.getCause() != null)
-                    addError(e.getCause().getMessage());
-                else
-                    addError(e.getMessage());
             }
-            // We've done all we can do to process this message, ack it from the queue, and move forward.
+
             if (errors.size() > 0) {
-                // { Error }
-                getErrors().stream().forEach(e -> log.error(e));
-                try {
-                    for (Method m : onProcessStep.get(ProcessStep.Error)) {
-                        m.invoke(handler);
-                    }
-                } catch (Throwable e) {
-                    log.error("Error in @On(ProcessStep.Error) handler.", e);
-                }
-                LifeCycleMonitors.call(ProcessStep.Error, this);
+                // { Invalid }
+                runHooks(ProcessStep.Invalid);
+                LifeCycleMonitors.call(ProcessStep.Invalid, this);
             } else {
-                // { Complete }
-                try {
-                    runHooks(ProcessStep.Complete);
-                } catch (Throwable e) {
-                    log.error("Error in @On(ProcessStep.Complete) handler.", e);
+                // { Processing }
+                runHooks(ProcessStep.Processing);
+                LifeCycleMonitors.call(ProcessStep.Processing, this);
+                for (Method m : onMessage) {
+                    runLoggingErrors(() -> m.invoke(handler));
+                }
+                if (errors.size() > 0) {
+                    // { Error }
+                    runHooks(ProcessStep.Error);
                     LifeCycleMonitors.call(ProcessStep.Error, this);
+                } else {
+                    // { Complete }
+                    runHooks(ProcessStep.Complete);
+                    LifeCycleMonitors.call(ProcessStep.Complete, this);
                 }
             }
+            // Always log all errors
+            getErrors().stream().forEach(e -> log.error(e));
+            // Always ack message to prevent activemq deadlock
             try {
                 msg.getJmsMsg().acknowledge();
             } catch (JMSException e) {
@@ -135,10 +117,28 @@ public class MessageRunnable implements Runnable {
         return consumer;
     }
 
-    private void runHooks(ProcessStep step) throws Exception {
-        for (Method m : onProcessStep.get(step)) {
-            m.invoke(handler);
+    // This interface and method are for wrapping functions that throw errors, logging and swa
+    @FunctionalInterface
+    private interface DangerousSupplier<T> {
+        T get() throws Throwable;
+    }
+    private <T> T runLoggingErrors(DangerousSupplier<T> func) {
+        try {
+            return func.get();
+        } catch (Throwable e) {
+            if (e.getCause() == null) {
+                addError(e.getMessage());
+            }
+            else {
+                addError(e.getCause().getMessage());
+            }
+            return null;
         }
-        LifeCycleMonitors.call(step, this);
+    }
+
+    private void runHooks(ProcessStep step) {
+        for (Method m : onProcessStep.get(step)) {
+            runLoggingErrors(() -> m.invoke(handler));
+        }
     }
 }
