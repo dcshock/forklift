@@ -11,6 +11,7 @@ import forklift.producers.ProducerException;
 
 import org.apache.activemq.command.ActiveMQMessage;
 
+import java.lang.StringBuilder;
 import java.util.Map;
 import java.util.UUID;
 
@@ -59,6 +60,18 @@ public class ActiveMQProducer implements ForkliftProducerI {
         } catch (Exception e) {
             throw new ProducerException("Failed to send message", e);
         }
+    }
+
+    @Override
+    /**
+    * Send in a map and the producer will convert it to a key-value pair before sending a ForkliftMessage
+    * @param message - Map<String, String> of the message/data that needs to be sent
+    * @return String - JMSCorrelationID
+    **/
+    public String send(Map<String, String> message) throws ProducerException {
+        final StringBuilder output = new StringBuilder();
+        message.forEach((k, v) -> output.append(k).append('=').append(v).append('\n'));
+        return send(new ForkliftMessage(output.toString()));
     }
 
     @Override
@@ -285,6 +298,17 @@ public class ActiveMQProducer implements ForkliftProducerI {
             this.properties = properties;
         } catch (Exception e) {
             throw new ProducerException("Failed to set properties");
+        }
+    }
+
+    @Override
+    public void close() throws java.io.IOException { 
+        try {
+            if (producer != null) {
+                producer.close();
+            }
+        } catch (javax.jms.JMSException e) {
+            throw new java.io.IOException("Failed to close MessageProducer", e);
         }
     }
 }
