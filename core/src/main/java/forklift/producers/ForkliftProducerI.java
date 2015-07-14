@@ -3,6 +3,7 @@ package forklift.producers;
 import forklift.connectors.ForkliftMessage;
 import forklift.message.Header;
 
+import java.io.Closeable;
 import java.util.List;
 import java.util.Map;
 
@@ -10,7 +11,7 @@ import javax.jms.Destination;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
 
-public interface ForkliftProducerI {
+public interface ForkliftProducerI extends Closeable {
     String send(String message) throws ProducerException;
     String send(ForkliftMessage message) throws ProducerException;
     String send(Object message) throws ProducerException;

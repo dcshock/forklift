@@ -300,4 +300,15 @@ public class ActiveMQProducer implements ForkliftProducerI {
             throw new ProducerException("Failed to set properties");
         }
     }
+
+    @Override
+    public void close() throws java.io.IOException { 
+        try {
+            if (producer != null) {
+                producer.close();
+            }
+        } catch (javax.jms.JMSException e) {
+            throw new java.io.IOException("Failed to close MessageProducer", e);
+        }
+    }
 }
