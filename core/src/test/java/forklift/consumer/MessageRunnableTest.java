@@ -12,44 +12,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.Message;
 
 public class MessageRunnableTest {
     private static Logger log = LoggerFactory.getLogger(MessageRunnableTest.class);
-
-    @Test
-    public void msgRunNullCheck() {
-        Message jmsMsg = new TestMsg("null");
-
-        // jmsMsg is guaranteed to never be null when called.
-        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), null, null, null, null);
-        mr.run();
-        assertTrue("Test complete", true);
-    }
-
-    @Test
-    public void msgRunNoClassLoader() {
-        Message jmsMsg = new TestMsg("no class");
-
-        List<Method> onMessage = new ArrayList<>();
-        List<Method> onValidate = new ArrayList<>();
-
-        for (Method m : MessageRunnableTest.class.getDeclaredMethods()) {
-            if (m.isAnnotationPresent(OnMessage.class))
-                onMessage.add(m);
-            else if (m.isAnnotationPresent(OnValidate.class))
-                onValidate.add(m);
-        }
-
-        // Make sure that if we don't have a classloader we fall back.
-        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), null, this, onMessage, onValidate);
-        mr.run();
-        assertTrue("Test complete", true);
-    }
 
     // Given a message runner, make sure that the invalid is called when the OnValidate signature
     // is incorrect.
@@ -70,7 +39,7 @@ public class MessageRunnableTest {
 
         TestConsumer1 tc = new TestConsumer1();
 
-        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), null, tc, onMessage, onValidate);
+        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), null, tc, onMessage, onValidate, createOnProcessStepMap());
         mr.run();
         assertTrue(TestConsumer1.success.get());
         LifeCycleMonitors.deregister(TestListener1.class);
@@ -89,22 +58,18 @@ public class MessageRunnableTest {
 
         // The following has a bad return type for an OnValidate
         @OnValidate
-        public void validateMsg() { }
+        public void validateMsg() {}
     }
 
     public static class TestListener1 {
         @LifeCycle(ProcessStep.Invalid)
         public static void invalid(MessageRunnable mr) {
-            log.debug("checing for known error: " + mr.getErrors());
+            TestConsumer1.success.set(true);
         }
         @LifeCycle(ProcessStep.Processing)
         public static void process(MessageRunnable mr) {
             // This shouldn't run. If it does we have an issue
             TestConsumer1.success.set(false);
-        }
-        @LifeCycle(ProcessStep.Error)
-        public static void error(MessageRunnable mr) {
-            TestConsumer1.success.set(true);
         }
     }
 
@@ -127,7 +92,7 @@ public class MessageRunnableTest {
 
         TestConsumer2 tc = new TestConsumer2();
 
-        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), null, tc, onMessage, onValidate);
+        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), null, tc, onMessage, onValidate, createOnProcessStepMap());
         mr.run();
         assertTrue(TestConsumer2.success.get());
         LifeCycleMonitors.deregister(TestListener2.class);
@@ -184,7 +149,7 @@ public class MessageRunnableTest {
 
         TestConsumer3 tc = new TestConsumer3();
 
-        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), tc.getClass().getClassLoader(), tc, onMessage, onValidate);
+        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), tc.getClass().getClassLoader(), tc, onMessage, onValidate, createOnProcessStepMap());
         mr.run();
         assertTrue(TestConsumer3.success.get());
         LifeCycleMonitors.deregister(TestListener3.class);
@@ -240,7 +205,7 @@ public class MessageRunnableTest {
 
         TestConsumer4 tc = new TestConsumer4();
 
-        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), tc.getClass().getClassLoader(), tc, onMessage, onValidate);
+        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), tc.getClass().getClassLoader(), tc, onMessage, onValidate, createOnProcessStepMap());
         mr.run();
         assertTrue(TestConsumer4.success.get());
         LifeCycleMonitors.deregister(TestListener4.class);
@@ -301,7 +266,7 @@ public class MessageRunnableTest {
 
         TestConsumer5 tc = new TestConsumer5();
 
-        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), tc.getClass().getClassLoader(), tc, onMessage, onValidate);
+        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), tc.getClass().getClassLoader(), tc, onMessage, onValidate, createOnProcessStepMap());
         mr.run();
         assertTrue(TestConsumer5.success.get());
         LifeCycleMonitors.deregister(TestListener5.class);
@@ -327,7 +292,7 @@ public class MessageRunnableTest {
 
     public static class TestListener5 {
         @LifeCycle(ProcessStep.Validating)
-        public static void invalid(MessageRunnable mr) {
+        public static void validate(MessageRunnable mr) {
             TestConsumer5.success.set(false);
             log.debug("checing for known error: " + mr.getErrors());
         }
@@ -336,8 +301,8 @@ public class MessageRunnableTest {
             TestConsumer5.success.set(false);
             log.debug("processing");
         }
-        @LifeCycle(ProcessStep.Error)
-        public static void error(MessageRunnable mr) {
+        @LifeCycle(ProcessStep.Invalid)
+        public static void invalid(MessageRunnable mr) {
             TestConsumer5.success.set(true);
         }
     }
@@ -361,7 +326,7 @@ public class MessageRunnableTest {
 
         TestConsumer6 tc = new TestConsumer6();
 
-        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), tc.getClass().getClassLoader(), tc, onMessage, onValidate);
+        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), tc.getClass().getClassLoader(), tc, onMessage, onValidate, createOnProcessStepMap());
         mr.run();
         assertTrue(TestConsumer6.success.get());
         LifeCycleMonitors.deregister(TestListener6.class);
@@ -418,7 +383,7 @@ public class MessageRunnableTest {
 
         TestConsumer7 tc = new TestConsumer7();
 
-        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), tc.getClass().getClassLoader(), tc, onMessage, onValidate);
+        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), tc.getClass().getClassLoader(), tc, onMessage, onValidate, createOnProcessStepMap());
         mr.run();
         assertTrue(TestConsumer7.success.get());
         LifeCycleMonitors.deregister(TestListener7.class);
@@ -451,7 +416,7 @@ public class MessageRunnableTest {
             log.debug("processing");
             TestConsumer7.success.set(false);
         }
-        @LifeCycle(ProcessStep.Error)
+        @LifeCycle(ProcessStep.Invalid)
         public static void error(MessageRunnable mr) {
             log.debug(mr.getErrors().toString());
             if (mr.getErrors().toString().contains("Error Validating"))
@@ -477,7 +442,7 @@ public class MessageRunnableTest {
 
         TestConsumer8 tc = new TestConsumer8();
 
-        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), tc.getClass().getClassLoader(), tc, onMessage, onValidate);
+        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), tc.getClass().getClassLoader(), tc, onMessage, onValidate, createOnProcessStepMap());
         mr.run();
         assertTrue(TestConsumer8.success.get());
         LifeCycleMonitors.deregister(TestListener8.class);
@@ -515,5 +480,12 @@ public class MessageRunnableTest {
             if (mr.getErrors().toString().contains("Error processing"))
                     TestConsumer8.success.set(true);
         }
+    }
+
+    // Creates a mock map with empty on-trigger lists
+    private Map<ProcessStep, List<Method>> createOnProcessStepMap() {
+        Map<ProcessStep, List<Method>> map = new HashMap<>();
+        Arrays.stream(ProcessStep.values()).forEach(step -> map.put(step, new ArrayList<>()));
+        return map;
     }
 }

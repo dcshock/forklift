@@ -97,6 +97,25 @@ methods to validate the messages can easily be added. Failed
 validation is handled by the Error Handler, see Standardized
 Exception/Error Handling.
 
+Example:
+
+[source,java]
+----
+@Queue("example")
+public class MyConsumer {
+	@OnValidate
+	public List<String> validate() {
+		// code
+		return errors;
+	}
+
+	@OnMessage
+	public void handler() {
+		// code
+	}
+}
+----
+
 === Easy Configuration
 
 The way that Forklift provides easy configuration is by using a set of Java Annotations
@@ -554,6 +573,25 @@ object and send Json messages instead of k/v pairs.
 ## Consumer Development
 
 *TBD*
+
+==== Hooks
+
+`@On(step)` is an annotation that can be added to a method. Its parameter is any step except Pending. When entering that step, the method will be called. This can be used for easy error handling or chaining consumers.
+
+Example:
+
+[source,java]
+----
+	@On(ProcessStep.Invalid)
+	public void sendEmail() {
+		emailer.send(maintainer, "oops!");
+	}
+
+	@On(ProcessStep.Complete)
+	public void nextStep() {
+		messageQueue.send("step2", msg);
+	}
+----
 
 ## Server
 
