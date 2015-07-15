@@ -22,6 +22,16 @@ public class ChildFirstClassLoader extends URLClassLoader {
 	  throws ClassNotFoundException {
 		// First, check if the class has already been loaded
 		Class<?> c = findLoadedClass(name);
+
+        // There are some classes that we can't go to the child first to resolve. In these instances we'll intercept the call
+        // and delegate it to the system classloader. All of these relate to base jre libraries that are bundled in java.
+        if (name.startsWith("java") || name.startsWith("com.sun") || name.startsWith("sun") || name.startsWith("org.xml")) {
+            try {
+                c = system.loadClass(name);
+            } catch (ClassNotFoundException e3) {
+            }
+        }
+
 		if (c == null) {
 			try {
 				// checking local
