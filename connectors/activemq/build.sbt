@@ -2,7 +2,7 @@ organization := "com.github.dcshock"
 
 name := "forklift-activemq"
 
-version := "0.5"
+version := "0.6"
 
 // target and Xlint cause sbt dist to fail
 javacOptions ++= Seq("-source", "1.8")//, "-target", "1.8", "-Xlint")
@@ -16,7 +16,7 @@ initialize := {
 }
 
 libraryDependencies ++= Seq(
-    "com.github.dcshock" % "forklift" % "0.8",
+    "com.github.dcshock" % "forklift" % "0.9",
     "org.apache.activemq" % "activemq-all" % "5.10.1",
     "commons-io" % "commons-io" % "2.4" % "test",
     "com.novocode" % "junit-interface" % "0.10" % "test"

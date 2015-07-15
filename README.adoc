@@ -10,6 +10,12 @@ link:doc/forklift.adoc[Documentation]
 
 
 == Releases
+* 0.9
+** Removed Scala build dependencies.
+** Added the ability to close the forklift producer to avoid memory leaks in client code. 
+** Added key/value pair send viathe forklift producer.
+** Added a new On decorator that allows the lifecycle to be intercepted at any point by a method intercept.
+
 * 0.8
 ** Remove spring completely from the core and replace with a service mechanism.
 
