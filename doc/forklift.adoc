@@ -200,6 +200,9 @@ marshal the message data into the object.
 the message headers into the map.
 * @Properties - Placed on a Map of string and object, Forklift will marshal
 the message properties into the map.
+* @Properties("name") - Loads a specific property "name". If you just want to marshal
+a few specific properties but dont need the entire object, use this.
+If you don't provide a name, it will infer from the field name.
 
 @Inject - TBD
 

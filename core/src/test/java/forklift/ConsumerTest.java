@@ -62,7 +62,7 @@ public class ConsumerTest {
         assertEquals("x=y\nname=Scooby Doo\n", ec.str);
     }
 
-    // TODO put this back in with a real test. 
+    // TODO put this back in with a real test.
     // The system shouldn't hand the bad json to the consumer, and let the consumer mark the message as invalid to avoid redelivery of a bad message.
     // @Test(expected=RuntimeException.class)
     public void injectBadJson() {
@@ -106,6 +106,7 @@ public class ConsumerTest {
         assertEquals("http://forklift", ec.msg.url);
         assertNull(ec.headers);
         assertNull(ec.properties);
+        assertEquals("default", ec.strval);
     }
 
     @Test
@@ -124,7 +125,7 @@ public class ConsumerTest {
 
         Map<String, Object> properties = new HashMap<>();
         properties.put("my-cool-prop", new Integer(3));
-        properties.put("my-str-val", "blah");
+        properties.put("mystrval", "blah");
         properties.put("my-long-val", new Long(123123));
         properties.put("my-float-val", new Float(123123));
         msg.setProperties(properties);
@@ -132,6 +133,8 @@ public class ConsumerTest {
         test.inject(msg,ec);
         assertEquals(3, ec.headers.size());
         assertEquals(4, ec.properties.size());
+        assertEquals("blah", ec.mystrval);
+        assertEquals("blah", ec.strval);
     }
 
     // Class doesn't have queue or topic should throw IllegalArgException
@@ -173,6 +176,12 @@ public class ConsumerTest {
 
         @Properties
         Map<String, Object> properties;
+
+        @Properties("mystrval")
+        String strval = "default";
+
+        @Properties
+        String mystrval;
 
         @Message
         ForkliftMessage fmsg;

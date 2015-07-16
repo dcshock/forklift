@@ -82,7 +82,7 @@ public class Consumer {
 
         if (this.queue == null)
             throw new IllegalArgumentException("Msg Handler must handle a queue.");
-        
+
         this.name = queue.value() + ":" + id.getAndIncrement();
         log = LoggerFactory.getLogger(this.name);
     }
@@ -107,10 +107,10 @@ public class Consumer {
         if (!preinit && queue == null && topic == null) {
             this.queue = msgHandler.getAnnotation(Queue.class);
             this.topic = msgHandler.getAnnotation(Topic.class);
-            
+
             if (this.queue != null && this.topic != null)
                 throw new IllegalArgumentException("Msg Handler cannot consume a queue and topic");
-            
+
             if (this.queue != null)
                 this.name = queue.value() + ":" + id.getAndIncrement();
             else if (this.topic != null)
@@ -119,8 +119,8 @@ public class Consumer {
                 throw new IllegalArgumentException("Msg Handler must handle a queue or topic.");
 
         }
-        
-        log = LoggerFactory.getLogger(Consumer.class);   
+
+        log = LoggerFactory.getLogger(Consumer.class);
 
         // Init the thread pools if the msg handler is multi threaded. If the msg handler is single threaded
         // it'll just run in the current thread to prevent any message read ahead that would be performed.
@@ -268,6 +268,7 @@ public class Consumer {
 
             fields.keySet().stream().forEach(clazz -> {
                 fields.get(clazz).forEach(f -> {
+                    log.trace("Inject target> Field: ({})  Decorator: ({})", f, decorator);
                     try {
                         if (decorator == forklift.decorators.Message.class) {
                             if (clazz ==  ForkliftMessage.class) {
@@ -292,7 +293,7 @@ public class Consumer {
                                     }
                                 } catch (Exception e) {
                                     log.debug("", e);
-                                }                             
+                                }
                             }
                         } else if (decorator == Config.class) {
                             if (clazz == Properties.class) {
@@ -304,8 +305,23 @@ public class Consumer {
                                 f.set(instance, msg.getHeaders());
                             }
                         } else if (decorator == forklift.decorators.Properties.class) {
+                            forklift.decorators.Properties annotation = f.getAnnotation(forklift.decorators.Properties.class);
+                            Map<String, Object> properties = msg.getProperties();
                             if (clazz == Map.class) {
                                 f.set(instance, msg.getProperties());
+                            } else if (properties != null) {
+                                String key = annotation.value();
+                                if (key.equals("")) {
+                                    key = f.getName();
+                                }
+                                if (properties == null) {
+                                    log.warn("Attempt to inject field {} from properties, but properties is null", key);
+                                    return;
+                                }
+                                final Object value = properties.get(key);
+                                if (value != null) {
+                                    f.set(instance, value);
+                                }
                             }
                         } else if (decorator == forklift.decorators.Producer.class) {
                             if (clazz == ForkliftProducerI.class) {
