@@ -296,9 +296,32 @@ public class Consumer {
                                 }
                             }
                         } else if (decorator == Config.class) {
+                            final forklift.decorators.Config annotation = f.getAnnotation(forklift.decorators.Config.class);
                             if (clazz == Properties.class) {
-                                forklift.decorators.Config config = f.getAnnotation(forklift.decorators.Config.class);
-                                f.set(instance, PropertiesManager.get(config.value()));
+                                String confName = annotation.value();
+                                if (confName.equals("")) {
+                                    confName = f.getName();
+                                }
+                                final Properties config = PropertiesManager.get(confName);
+                                if (config == null) {
+                                    log.warn("Attempt to inject field failed because resource file {} was not found", annotation.value());
+                                    return;
+                                }
+                                f.set(instance, config);
+                            } else {
+                                final Properties config = PropertiesManager.get(annotation.value());
+                                if (config == null) {
+                                    log.warn("Attempt to inject field failed because resource file {} was not found", annotation.value());
+                                    return;
+                                }
+                                String key = annotation.field();
+                                if (key.equals("")) {
+                                    key = f.getName();
+                                }
+                                Object value = config.get(key);
+                                if (value != null) {
+                                    f.set(instance, value);
+                                }
                             }
                         } else if (decorator == Headers.class) {
                             if (clazz == Map.class) {
