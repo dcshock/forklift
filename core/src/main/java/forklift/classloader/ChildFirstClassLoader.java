@@ -25,7 +25,7 @@ public class ChildFirstClassLoader extends URLClassLoader {
 
         // There are some classes that we can't go to the child first to resolve. In these instances we'll intercept the call
         // and delegate it to the system classloader. All of these relate to base jre libraries that are bundled in java.
-        if (name.startsWith("java") || name.startsWith("com.sun") || name.startsWith("sun") || name.startsWith("org.xml")) {
+        if (name.startsWith("java") || name.startsWith("com.sun") || name.startsWith("sun") || name.startsWith("org.xml") || name.startsWith("org.w3c")) {
             try {
                 c = system.loadClass(name);
             } catch (ClassNotFoundException e3) {
