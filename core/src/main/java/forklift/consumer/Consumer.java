@@ -1,5 +1,7 @@
 package forklift.consumer;
 
+import forklift.message.Header;
+
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -22,6 +24,7 @@ import forklift.properties.PropertiesManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -36,6 +39,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -324,8 +328,22 @@ public class Consumer {
                                 }
                             }
                         } else if (decorator == Headers.class) {
+                            final Headers annotation = f.getAnnotation(Headers.class);
+                            final Map<Header, Object> headers = msg.getHeaders();
                             if (clazz == Map.class) {
-                                f.set(instance, msg.getHeaders());
+                                f.set(instance, headers);
+                            } else {
+                                final Header key = annotation.value();
+                                if (headers == null) {
+                                    log.warn("Attempt to inject {} from headers, but headers are null", key);
+                                } else if (!key.getHeaderType().equals(f.getType())) {
+                                    log.warn("Injecting field {} failed because it is not type {}", f.getName(), key.getHeaderType());
+                                } else {
+                                    final Object value = headers.get(key);
+                                    if (value != null) {
+                                        f.set(instance, value);
+                                    }
+                                }
                             }
                         } else if (decorator == forklift.decorators.Properties.class) {
                             forklift.decorators.Properties annotation = f.getAnnotation(forklift.decorators.Properties.class);

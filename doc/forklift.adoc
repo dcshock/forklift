@@ -201,6 +201,7 @@ If you dont specify a field, it will try to infer from the field name.
 marshal the message data into the object.
 * @Headers - Placed on a Map of string and object, Forklift will marshal
 the message headers into the map.
+* @Headers(Header....) - Injects a specific header.
 * @Properties - Placed on a Map of string and object, Forklift will marshal
 the message properties into the map.
 * @Properties("name") - Loads a specific property "name". If you just want to marshal

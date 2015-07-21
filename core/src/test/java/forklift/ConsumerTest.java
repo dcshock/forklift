@@ -106,6 +106,8 @@ public class ConsumerTest {
         assertEquals("http://forklift", ec.msg.url);
         assertNull(ec.headers);
         assertNull(ec.properties);
+        assertNull(ec.cid);
+        assertEquals(ec.producer, "replace");
         assertEquals("default", ec.strval);
     }
 
@@ -121,6 +123,7 @@ public class ConsumerTest {
         headers.put(Header.DeliveryCount, "3");
         headers.put(Header.Producer, "testing");
         headers.put(Header.Priority, "1");
+        headers.put(Header.CorrelationId, "abcd");
         msg.setHeaders(headers);
 
         Map<String, Object> properties = new HashMap<>();
@@ -131,10 +134,12 @@ public class ConsumerTest {
         msg.setProperties(properties);
 
         test.inject(msg,ec);
-        assertEquals(3, ec.headers.size());
+        assertEquals(4, ec.headers.size());
         assertEquals(4, ec.properties.size());
         assertEquals("blah", ec.mystrval);
         assertEquals("blah", ec.strval);
+        assertEquals(ec.cid, "abcd");
+        assertEquals(ec.producer, "testing");
     }
 
     // Class doesn't have queue or topic should throw IllegalArgException
@@ -173,6 +178,12 @@ public class ConsumerTest {
     public class ExampleJsonConsumer {
         @Headers
         Map<Headers, String> headers;
+
+        @Headers
+        String cid;
+
+        @Headers(Header.Producer)
+        String producer = "replace";
 
         @Properties
         Map<String, Object> properties;
