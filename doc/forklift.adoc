@@ -582,6 +582,7 @@ Example:
 
 [source,java]
 ----
+	@On(ProcessStep.Error)
 	@On(ProcessStep.Invalid)
 	public void sendEmail() {
 		emailer.send(maintainer, "oops!");

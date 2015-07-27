@@ -1,5 +1,7 @@
 package forklift.consumer;
 
+import forklift.decorators.Ons;
+
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -82,7 +84,7 @@ public class Consumer {
 
         if (this.queue == null)
             throw new IllegalArgumentException("Msg Handler must handle a queue.");
-        
+
         this.name = queue.value() + ":" + id.getAndIncrement();
         log = LoggerFactory.getLogger(this.name);
     }
@@ -107,10 +109,10 @@ public class Consumer {
         if (!preinit && queue == null && topic == null) {
             this.queue = msgHandler.getAnnotation(Queue.class);
             this.topic = msgHandler.getAnnotation(Topic.class);
-            
+
             if (this.queue != null && this.topic != null)
                 throw new IllegalArgumentException("Msg Handler cannot consume a queue and topic");
-            
+
             if (this.queue != null)
                 this.name = queue.value() + ":" + id.getAndIncrement();
             else if (this.topic != null)
@@ -119,8 +121,8 @@ public class Consumer {
                 throw new IllegalArgumentException("Msg Handler must handle a queue or topic.");
 
         }
-        
-        log = LoggerFactory.getLogger(Consumer.class);   
+
+        log = LoggerFactory.getLogger(Consumer.class);
 
         // Init the thread pools if the msg handler is multi threaded. If the msg handler is single threaded
         // it'll just run in the current thread to prevent any message read ahead that would be performed.
@@ -147,8 +149,8 @@ public class Consumer {
                 onMessage.add(m);
             else if (m.isAnnotationPresent(OnValidate.class))
                 onValidate.add(m);
-            else if (m.isAnnotationPresent(On.class))
-                onProcessStep.get(m.getAnnotation(On.class).value()).add(m);
+            else if (m.isAnnotationPresent(On.class) || m.isAnnotationPresent(Ons.class))
+                Arrays.stream(m.getAnnotationsByType(On.class)).map(on -> on.value()).distinct().forEach(x -> onProcessStep.get(x).add(m));
         }
 
         injectFields = new HashMap<>();
@@ -292,7 +294,7 @@ public class Consumer {
                                     }
                                 } catch (Exception e) {
                                     log.debug("", e);
-                                }                             
+                                }
                             }
                         } else if (decorator == Config.class) {
                             if (clazz == Properties.class) {
