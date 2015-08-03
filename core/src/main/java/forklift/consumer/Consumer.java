@@ -306,8 +306,16 @@ public class Consumer {
                                 f.set(instance, msg.getHeaders());
                             }
                         } else if (decorator == forklift.decorators.Properties.class) {
-                            if (clazz == Map.class) {
+                            forklift.decorators.Properties props = f.getAnnotation(forklift.decorators.Properties.class);
+                            if (clazz == Map.class && props.value().equals("")) {
                                 f.set(instance, msg.getProperties());
+                            } else {
+                                try  {
+                                    f.set(instance, msg.getProperties().get(props.value()));
+                                } catch (Exception e) {
+                                    log.warn("Unable to inject property " + props.value(), e);
+                                    throw e;
+                                }   
                             }
                         } else if (decorator == forklift.decorators.Producer.class) {
                             if (clazz == ForkliftProducerI.class) {

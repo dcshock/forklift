@@ -134,6 +134,29 @@ public class ConsumerTest {
         assertEquals(4, ec.properties.size());
     }
 
+    @Test
+    public void testInjectProperty() {
+        Consumer test = new Consumer(ExamplePropConsumer.class, null, this.getClass().getClassLoader());
+        ExamplePropConsumer epc = new ExamplePropConsumer();
+
+        javax.jms.Message jmsMsg = new TestMsg("1");
+        ForkliftMessage msg = new ForkliftMessage(jmsMsg);
+        msg.setMsg("{}");
+
+        Map<String, Object> properties = new HashMap<>();
+        properties.put("my-cool-prop", new Integer(3));
+        properties.put("my-str-val", "blah");
+        properties.put("my-long-val", new Long(123123));
+        properties.put("my-float-val", new Float(123123));
+        msg.setProperties(properties);
+
+        test.inject(msg,epc);
+        assertEquals(properties.get("my-str-val"), epc.injectString);
+        assertEquals(properties.get("my-cool-prop"), epc.injectInteger);
+        assertEquals(properties.get("my-long-val"), epc.injectLong);
+        assertEquals(properties.get("my-float-val"), epc.injectFloat);
+    }
+
     // Class doesn't have queue or topic should throw IllegalArgException
     public class BadConsumer {
     }
@@ -185,6 +208,34 @@ public class ConsumerTest {
 
         @Message
         ExpectedMsg msg;
+    }
+
+    @Queue("wooo")
+    public class ExamplePropConsumer {
+
+        @Headers
+        Map<Headers, String> headers;
+
+        @Properties
+        Map<String, Object> properties;
+
+        @Properties("my-str-val")
+        String injectMe;
+
+        @Properties("my-str-val")
+        String injectString;
+
+        @Properties("my-cool-prop")
+        Integer injectInteger;
+
+        @Properties("my-long-val")
+        Long injectLong;
+
+        @Properties("my-float-val")
+        Float injectFloat;
+
+        @Message
+        ForkliftMessage fmsg;
     }
 
     public static class ExpectedMsg {
