@@ -26,7 +26,7 @@ public class ChildFirstClassLoader extends URLClassLoader {
 
         // There are some classes that we can't go to the child first to resolve. In these instances we'll intercept the call
         // and delegate it to the system classloader. All of these relate to base jre libraries that are bundled in java.
-        List<String> things = Arrays.asList("java", "com.sun", "sun", "org.xml", "org.wc3");
+        List<String> things = Arrays.asList("java", "com.sun", "sun", "org.xml", "org.w3c");
 
         if(things.stream().filter(s -> name.startsWith(s)).count() > 0){
             try {
