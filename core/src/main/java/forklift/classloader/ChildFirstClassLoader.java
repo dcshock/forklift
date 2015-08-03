@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
@@ -17,57 +18,59 @@ public class ChildFirstClassLoader extends URLClassLoader {
         system = getSystemClassLoader();
     }
 
-	@Override
-	protected synchronized Class<?> loadClass(String name, boolean resolve)
-	  throws ClassNotFoundException {
-		// First, check if the class has already been loaded
-		Class<?> c = findLoadedClass(name);
+    @Override
+    protected synchronized Class<?> loadClass(String name, boolean resolve)
+      throws ClassNotFoundException {
+        // First, check if the class has already been loaded
+        Class<?> c = findLoadedClass(name);
 
         // There are some classes that we can't go to the child first to resolve. In these instances we'll intercept the call
         // and delegate it to the system classloader. All of these relate to base jre libraries that are bundled in java.
-        if (name.startsWith("java") || name.startsWith("com.sun") || name.startsWith("sun") || name.startsWith("org.xml") || name.startsWith("org.w3c")) {
+        List<String> things = Arrays.asList("java", "com.sun", "sun", "org.xml", "org.wc3");
+
+        if(things.stream().filter(s -> name.startsWith(s)).count() > 0){
             try {
                 c = system.loadClass(name);
             } catch (ClassNotFoundException e3) {
             }
         }
 
-		if (c == null) {
-			try {
-				// checking local
-				c = findClass(name);
-			} catch (ClassNotFoundException e) {
-				// checking parent
-				// This call to loadClass may eventually call findClass
-				// again, in case the parent doesn't find anything.
-				try {
-					c = super.loadClass(name, resolve);
-				} catch (ClassNotFoundException e2) {
-					try {
-						// Try core class loaders
-						for (ClassLoader cl : CoreClassLoaders.getInstance().getAll()) {
-							c = cl.loadClass(name);
-							if (c != null)
-								break;
-						}
-					} catch (ClassNotFoundException e3) {
-						if (system != null) {
-	                        // checking system: jvm classes, endorsed, cmd classpath,
-	                        // etc.
-	                        c = system.loadClass(name);
-						}
-					}
-				}
-			}
-		}
-		if (resolve)
-			resolveClass(c);
+        if (c == null) {
+            try {
+                // checking local
+                c = findClass(name);
+            } catch (ClassNotFoundException e) {
+                // checking parent
+                // This call to loadClass may eventually call findClass
+                // again, in case the parent doesn't find anything.
+                try {
+                    c = super.loadClass(name, resolve);
+                } catch (ClassNotFoundException e2) {
+                    try {
+                        // Try core class loaders
+                        for (ClassLoader cl : CoreClassLoaders.getInstance().getAll()) {
+                            c = cl.loadClass(name);
+                            if (c != null)
+                                break;
+                        }
+                    } catch (ClassNotFoundException e3) {
+                        if (system != null) {
+                            // checking system: jvm classes, endorsed, cmd classpath,
+                            // etc.
+                            c = system.loadClass(name);
+                        }
+                    }
+                }
+            }
+        }
+        if (resolve)
+            resolveClass(c);
 
         if (c == null)
             throw new ClassNotFoundException(name);
 
-		return c;
-	}
+        return c;
+    }
 
     @Override
     public URL getResource(String name) {
