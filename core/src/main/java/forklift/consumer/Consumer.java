@@ -1,7 +1,5 @@
 package forklift.consumer;
 
-import forklift.message.Header;
-
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -17,8 +15,10 @@ import forklift.decorators.MultiThreaded;
 import forklift.decorators.OnMessage;
 import forklift.decorators.OnValidate;
 import forklift.decorators.On;
+import forklift.decorators.Ons;
 import forklift.decorators.Queue;
 import forklift.decorators.Topic;
+import forklift.message.Header;
 import forklift.producers.ForkliftProducerI;
 import forklift.properties.PropertiesManager;
 import org.slf4j.Logger;
@@ -151,8 +151,8 @@ public class Consumer {
                 onMessage.add(m);
             else if (m.isAnnotationPresent(OnValidate.class))
                 onValidate.add(m);
-            else if (m.isAnnotationPresent(On.class))
-                onProcessStep.get(m.getAnnotation(On.class).value()).add(m);
+            else if (m.isAnnotationPresent(On.class) || m.isAnnotationPresent(Ons.class))
+                Arrays.stream(m.getAnnotationsByType(On.class)).map(on -> on.value()).distinct().forEach(x -> onProcessStep.get(x).add(m));
         }
 
         injectFields = new HashMap<>();
