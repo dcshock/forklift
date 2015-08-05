@@ -161,14 +161,15 @@ public enum Header {
     Type("JMSType", "type", "message-annotations.x-opt-jms-type", String.class);
 
 
-    private String jmsMessage;
-    private String stompMessage;
-    private String amqpMessage;
-    private Type headerType;
+    private final String jmsMessage;
+    private final String stompMessage;
+    private final String amqpMessage;
+    private final Type headerType;
     private Header(String jmsMessage, String stompMessage, String amqpMessage, Type headerType) {
         this.jmsMessage = jmsMessage;
         this.stompMessage = stompMessage;
         this.amqpMessage = amqpMessage;
+        this.headerType = headerType;
     }
 
     public String getJmsMessage() { return jmsMessage; }
