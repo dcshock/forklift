@@ -1,10 +1,9 @@
+
+
 package forklift.consumer;
 
-import forklift.decorators.Queue;
-
-import static org.junit.Assert.fail;
-import forklift.decorators.Ons;
 import org.junit.Assert;
+
 import forklift.TestMsg;
 import forklift.connectors.ForkliftMessage;
 import forklift.consumer.ProcessStep;
@@ -17,16 +16,13 @@ import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.EnumMap;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 
 import javax.jms.Message;
 
@@ -34,13 +30,37 @@ public class OnDecoratorTest {
 
     @Test
     public void onProcessStepHappyPath() {
+        Message jmsMsg = new TestMsg("Happy");
+
+        List<Method> onMessage = new ArrayList<>();
+        List<Method> onValidate = new ArrayList<>();
+        Map<ProcessStep, List<Method>> onProcessStep = new HashMap<>();
+
+        for (Method m : TestConsumerHappy.class.getDeclaredMethods()) {
+            if (m.isAnnotationPresent(OnMessage.class))
+                onMessage.add(m);
+            else if (m.isAnnotationPresent(OnValidate.class))
+                onValidate.add(m);
+            else if (m.isAnnotationPresent(On.class)) {
+                onProcessStep.compute(m.getAnnotation(On.class).value(), (step, tasks) -> {
+                    if (tasks == null)
+                        tasks = new ArrayList<>();
+                    tasks.add(m);
+                    return tasks;
+                });
+            }
+        }
+
         TestConsumerHappy tc = new TestConsumerHappy();
-        runTest(tc);
+
+        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), tc.getClass().getClassLoader(), tc, onMessage, onValidate, onProcessStep);
+        mr.run();
         ProcessStep[] expected = {ProcessStep.Validating, ProcessStep.Processing, ProcessStep.Complete};
         Assert.assertArrayEquals(expected, tc.path.toArray());
     }
 
-    @Queue("1")
+    // Test class for testing @On annotation
+    // Different input messages result in different results
     public class TestConsumerHappy {
         public List<ProcessStep> path = new ArrayList<>();
 
@@ -82,18 +102,43 @@ public class OnDecoratorTest {
 
     @Test
     public void onProcessStepInvalidPath() {
+        Message jmsMsg = new TestMsg("Invalid");
+
+        List<Method> onMessage = new ArrayList<>();
+        List<Method> onValidate = new ArrayList<>();
+        Map<ProcessStep, List<Method>> onProcessStep = new HashMap<>();
+
+        for (Method m : TestConsumerInvalid.class.getDeclaredMethods()) {
+            if (m.isAnnotationPresent(OnMessage.class))
+                onMessage.add(m);
+            else if (m.isAnnotationPresent(OnValidate.class))
+                onValidate.add(m);
+            else if (m.isAnnotationPresent(On.class)) {
+                onProcessStep.compute(m.getAnnotation(On.class).value(), (step, tasks) -> {
+                    if (tasks == null)
+                        tasks = new ArrayList<>();
+                    tasks.add(m);
+                    return tasks;
+                });
+            }
+        }
+
         TestConsumerInvalid tc = new TestConsumerInvalid();
-        runTest(tc);
+
+        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), tc.getClass().getClassLoader(), tc, onMessage, onValidate, onProcessStep);
+        mr.run();
         ProcessStep[] expected = {ProcessStep.Validating, ProcessStep.Invalid};
         Assert.assertArrayEquals(expected, tc.path.toArray());
     }
 
-    @Queue("1")
+    // Test class for testing @On annotation
+    // Different input messages result in different results
     public class TestConsumerInvalid {
         public List<ProcessStep> path = new ArrayList<>();
 
         @OnValidate
         public boolean validation() {
+            System.out.println("ever here??");
             return false;
         }
 
@@ -130,13 +175,37 @@ public class OnDecoratorTest {
 
     @Test
     public void onProcessStepErrorPath() {
+        Message jmsMsg = new TestMsg("Error");
+
+        List<Method> onMessage = new ArrayList<>();
+        List<Method> onValidate = new ArrayList<>();
+        Map<ProcessStep, List<Method>> onProcessStep = new HashMap<>();
+
+        for (Method m : TestConsumerError.class.getDeclaredMethods()) {
+            if (m.isAnnotationPresent(OnMessage.class))
+                onMessage.add(m);
+            else if (m.isAnnotationPresent(OnValidate.class))
+                onValidate.add(m);
+            else if (m.isAnnotationPresent(On.class)) {
+                onProcessStep.compute(m.getAnnotation(On.class).value(), (step, tasks) -> {
+                    if (tasks == null)
+                        tasks = new ArrayList<>();
+                    tasks.add(m);
+                    return tasks;
+                });
+            }
+        }
+
         TestConsumerError tc = new TestConsumerError();
-        runTest(tc);
+
+        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), tc.getClass().getClassLoader(), tc, onMessage, onValidate, onProcessStep);
+        mr.run();
         ProcessStep[] expected = {ProcessStep.Validating, ProcessStep.Processing, ProcessStep.Error};
         Assert.assertArrayEquals(expected, tc.path.toArray());
     }
 
-    @Queue("1")
+    // Test class for testing @On annotation
+    // Different input messages result in different results
     public class TestConsumerError {
         public List<ProcessStep> path = new ArrayList<>();
 
@@ -173,59 +242,6 @@ public class OnDecoratorTest {
         @On(ProcessStep.Complete)
         public void c() {
             path.add(ProcessStep.Complete);
-        }
-    }
-
-    @Test
-    public void repeatOn() {
-        TestConsumerMulti tc = new TestConsumerMulti();
-        runTest(tc);
-        Assert.assertEquals(3, tc.callCount);
-    }
-
-    @Queue("1")
-    public class TestConsumerMulti {
-        int callCount = 0;
-
-        @OnValidate
-        public boolean validation() {
-            return true;
-        }
-
-        @OnMessage
-        public void processing() {
-            // success
-        }
-
-        @On(ProcessStep.Validating)
-        @On(ProcessStep.Processing)
-        @On(ProcessStep.Complete)
-        @On(ProcessStep.Complete)
-        public void c() {
-            callCount++;
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private static <T> void runTest(T c) {
-        final ForkliftMessage msg = new ForkliftMessage(new TestMsg("Message"));
-        final Consumer consumer = new Consumer(c.getClass(), null);
-        consumer.inject(msg, c);
-        List<Method> onMessage = (List<Method>) fetch(consumer, "onMessage");
-        List<Method> onValidate = (List<Method>) fetch(consumer, "onValidate");
-        Map<ProcessStep, List<Method>> onProcessStep = (Map<ProcessStep, List<Method>>) fetch(consumer, "onProcessStep");
-        final MessageRunnable mr = new MessageRunnable(consumer, msg, consumer.getClass().getClassLoader(), c, onMessage, onValidate, onProcessStep);
-        mr.run();
-    }
-
-    private static Object fetch(Object object, String name) {
-        try {
-            final Field field = object.getClass().getDeclaredField(name);
-            field.setAccessible(true);
-            return field.get(object);
-        } catch (Exception e) {
-            fail(e.toString());
-            return null;
         }
     }
 }
