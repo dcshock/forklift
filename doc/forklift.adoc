@@ -192,14 +192,21 @@ the message from the message into a usable object that can then just be used.
 Forklift provides nice annotations that can be placed on properties to do
 all this marshaling for you.
 
-* @Config - Place this annotation on a java.util.Properties object.
+* @Config("file") - Place this annotation on a java.util.Properties object.
 All properties deployed properties files are made available for use.
+If you dont specify a file, it will infer from the field name.
+* @Config("file", "field") - Injects the specified field from the property file.
+If you dont specify a field, it will try to infer from the field name.
 * @Message - Placed on different property types, this will try and
 marshal the message data into the object.
 * @Headers - Placed on a Map of string and object, Forklift will marshal
 the message headers into the map.
+* @Headers(Header....) - Injects a specific header.
 * @Properties - Placed on a Map of string and object, Forklift will marshal
 the message properties into the map.
+* @Properties("name") - Loads a specific property "name". If you just want to marshal
+a few specific properties but dont need the entire object, use this.
+If you don't provide a name, it will infer from the field name.
 
 @Inject - TBD
 
@@ -582,6 +589,7 @@ Example:
 
 [source,java]
 ----
+	@On(ProcessStep.Error)
 	@On(ProcessStep.Invalid)
 	public void sendEmail() {
 		emailer.send(maintainer, "oops!");

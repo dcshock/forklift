@@ -15,12 +15,15 @@ import forklift.decorators.MultiThreaded;
 import forklift.decorators.OnMessage;
 import forklift.decorators.OnValidate;
 import forklift.decorators.On;
+import forklift.decorators.Ons;
 import forklift.decorators.Queue;
 import forklift.decorators.Topic;
+import forklift.message.Header;
 import forklift.producers.ForkliftProducerI;
 import forklift.properties.PropertiesManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -36,6 +39,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -82,7 +86,7 @@ public class Consumer {
 
         if (this.queue == null)
             throw new IllegalArgumentException("Msg Handler must handle a queue.");
-        
+
         this.name = queue.value() + ":" + id.getAndIncrement();
         log = LoggerFactory.getLogger(this.name);
     }
@@ -107,10 +111,10 @@ public class Consumer {
         if (!preinit && queue == null && topic == null) {
             this.queue = msgHandler.getAnnotation(Queue.class);
             this.topic = msgHandler.getAnnotation(Topic.class);
-            
+
             if (this.queue != null && this.topic != null)
                 throw new IllegalArgumentException("Msg Handler cannot consume a queue and topic");
-            
+
             if (this.queue != null)
                 this.name = queue.value() + ":" + id.getAndIncrement();
             else if (this.topic != null)
@@ -119,8 +123,8 @@ public class Consumer {
                 throw new IllegalArgumentException("Msg Handler must handle a queue or topic.");
 
         }
-        
-        log = LoggerFactory.getLogger(Consumer.class);   
+
+        log = LoggerFactory.getLogger(Consumer.class);
 
         // Init the thread pools if the msg handler is multi threaded. If the msg handler is single threaded
         // it'll just run in the current thread to prevent any message read ahead that would be performed.
@@ -147,8 +151,8 @@ public class Consumer {
                 onMessage.add(m);
             else if (m.isAnnotationPresent(OnValidate.class))
                 onValidate.add(m);
-            else if (m.isAnnotationPresent(On.class))
-                onProcessStep.get(m.getAnnotation(On.class).value()).add(m);
+            else if (m.isAnnotationPresent(On.class) || m.isAnnotationPresent(Ons.class))
+                Arrays.stream(m.getAnnotationsByType(On.class)).map(on -> on.value()).distinct().forEach(x -> onProcessStep.get(x).add(m));
         }
 
         injectFields = new HashMap<>();
@@ -268,6 +272,7 @@ public class Consumer {
 
             fields.keySet().stream().forEach(clazz -> {
                 fields.get(clazz).forEach(f -> {
+                    log.trace("Inject target> Field: ({})  Decorator: ({})", f, decorator);
                     try {
                         if (decorator == forklift.decorators.Message.class) {
                             if (clazz ==  ForkliftMessage.class) {
@@ -292,20 +297,72 @@ public class Consumer {
                                     }
                                 } catch (Exception e) {
                                     log.debug("", e);
-                                }                             
+                                }
                             }
                         } else if (decorator == Config.class) {
+                            final forklift.decorators.Config annotation = f.getAnnotation(forklift.decorators.Config.class);
                             if (clazz == Properties.class) {
-                                forklift.decorators.Config config = f.getAnnotation(forklift.decorators.Config.class);
-                                f.set(instance, PropertiesManager.get(config.value()));
+                                String confName = annotation.value();
+                                if (confName.equals("")) {
+                                    confName = f.getName();
+                                }
+                                final Properties config = PropertiesManager.get(confName);
+                                if (config == null) {
+                                    log.warn("Attempt to inject field failed because resource file {} was not found", annotation.value());
+                                    return;
+                                }
+                                f.set(instance, config);
+                            } else {
+                                final Properties config = PropertiesManager.get(annotation.value());
+                                if (config == null) {
+                                    log.warn("Attempt to inject field failed because resource file {} was not found", annotation.value());
+                                    return;
+                                }
+                                String key = annotation.field();
+                                if (key.equals("")) {
+                                    key = f.getName();
+                                }
+                                Object value = config.get(key);
+                                if (value != null) {
+                                    f.set(instance, value);
+                                }
                             }
                         } else if (decorator == Headers.class) {
+                            final Headers annotation = f.getAnnotation(Headers.class);
+                            final Map<Header, Object> headers = msg.getHeaders();
                             if (clazz == Map.class) {
-                                f.set(instance, msg.getHeaders());
+                                f.set(instance, headers);
+                            } else {
+                                final Header key = annotation.value();
+                                if (headers == null) {
+                                    log.warn("Attempt to inject {} from headers, but headers are null", key);
+                                } else if (!key.getHeaderType().equals(f.getType())) {
+                                    log.warn("Injecting field {} failed because it is not type {}", f.getName(), key.getHeaderType());
+                                } else {
+                                    final Object value = headers.get(key);
+                                    if (value != null) {
+                                        f.set(instance, value);
+                                    }
+                                }
                             }
                         } else if (decorator == forklift.decorators.Properties.class) {
+                            forklift.decorators.Properties annotation = f.getAnnotation(forklift.decorators.Properties.class);
+                            Map<String, Object> properties = msg.getProperties();
                             if (clazz == Map.class) {
                                 f.set(instance, msg.getProperties());
+                            } else if (properties != null) {
+                                String key = annotation.value();
+                                if (key.equals("")) {
+                                    key = f.getName();
+                                }
+                                if (properties == null) {
+                                    log.warn("Attempt to inject field {} from properties, but properties is null", key);
+                                    return;
+                                }
+                                final Object value = properties.get(key);
+                                if (value != null) {
+                                    f.set(instance, value);
+                                }
                             }
                         } else if (decorator == forklift.decorators.Producer.class) {
                             if (clazz == ForkliftProducerI.class) {
