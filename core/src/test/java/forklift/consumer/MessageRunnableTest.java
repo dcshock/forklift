@@ -40,6 +40,7 @@ public class MessageRunnableTest {
         TestConsumer1 tc = new TestConsumer1();
 
         MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), null, tc, onMessage, onValidate, createOnProcessStepMap());
+        TestConsumer1.success = new AtomicBoolean(false);
         mr.run();
         assertTrue(TestConsumer1.success.get());
         LifeCycleMonitors.deregister(TestListener1.class);
@@ -48,7 +49,7 @@ public class MessageRunnableTest {
 
     // Supportive classes for invalidOnValidate
     public static class TestConsumer1 {
-        public static AtomicBoolean success = new AtomicBoolean(false);
+        public static AtomicBoolean success = null;
 
         @OnMessage
         public void consumeMsg() {
