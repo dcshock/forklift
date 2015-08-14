@@ -10,6 +10,12 @@ link:doc/forklift.adoc[Documentation]
 
 
 == Releases
+* 0.10
+** Added a new @Property annotation that injects message properties into the consumer
+** Extended @Config and @Headers to allow you to inject specific headers and config fields
+** The @On decorator now is repeatable; one method can now intercept multiple lifecycle events
+** Override classloader to delegate to the JVM libraries in cases where libs that start with these packages ("java", "com.sun", "sun", "org.xml", "org.w3c").
+
 * 0.9
 ** Removed Scala build dependencies.
 ** Added the ability to close the forklift producer to avoid memory leaks in client code. 
