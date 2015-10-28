@@ -10,6 +10,9 @@ link:doc/forklift.adoc[Documentation]
 
 
 == Releases
+* 0.11
+** Close jms sessions correctly to avoid open session buildup on the amq nodes.
+
 * 0.10
 ** Added a new @Property annotation that injects message properties into the consumer
 ** Extended @Config and @Headers to allow you to inject specific headers and config fields
