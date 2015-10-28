@@ -3,6 +3,7 @@ package forklift.activemq.test;
 import forklift.connectors.ConnectorException;
 import forklift.connectors.ForkliftConnectorI;
 import forklift.connectors.ForkliftMessage;
+import forklift.consumer.ForkliftConsumerI;
 import forklift.producers.ForkliftProducerI;
 
 import javax.inject.Named;
@@ -35,12 +36,12 @@ public class ActiveMQForkliftConnector implements ForkliftConnectorI {
     }
 
     @Override
-    public MessageConsumer getQueue(String name) throws ConnectorException {
+    public ForkliftConsumerI getQueue(String name) throws ConnectorException {
         return TestServiceManager.getConnector().getQueue(name);
     }
 
     @Override
-    public MessageConsumer getTopic(String name) throws ConnectorException {
+    public ForkliftConsumerI getTopic(String name) throws ConnectorException {
         return TestServiceManager.getConnector().getTopic(name);
     }
 

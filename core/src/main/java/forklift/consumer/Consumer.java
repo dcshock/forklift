@@ -24,7 +24,6 @@ import forklift.properties.PropertiesManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -40,10 +39,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-
 import javax.jms.JMSException;
 import javax.jms.Message;
-import javax.jms.MessageConsumer;
 
 public class Consumer {
     private Logger log;
@@ -182,7 +179,7 @@ public class Consumer {
      * get a new JMS consumer.
      */
     public void listen() {
-        final MessageConsumer consumer;
+        final ForkliftConsumerI consumer;
         try {
             if (topic != null)
                 consumer = connector.getTopic(topic.value());
@@ -201,7 +198,7 @@ public class Consumer {
         return name;
     }
 
-    public void messageLoop(MessageConsumer consumer) {
+    public void messageLoop(ForkliftConsumerI consumer) {
         try {
             running.set(true);
 
