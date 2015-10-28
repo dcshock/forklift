@@ -302,11 +302,13 @@ public class ActiveMQProducer implements ForkliftProducerI {
     }
 
     @Override
-    public void close() throws java.io.IOException { 
+    public void close() throws java.io.IOException {
         try {
-            if (producer != null) {
+            if (producer != null)
                 producer.close();
-            }
+
+            if (session != null)
+                session.close();
         } catch (javax.jms.JMSException e) {
             throw new java.io.IOException("Failed to close MessageProducer", e);
         }

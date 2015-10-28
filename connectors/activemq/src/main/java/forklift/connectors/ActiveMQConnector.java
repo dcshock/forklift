@@ -1,5 +1,7 @@
 package forklift.connectors;
 
+import forklift.consumer.ActiveMQMessageConsumer;
+import forklift.consumer.ForkliftConsumerI;
 import forklift.message.ActiveMQHeaders;
 import forklift.message.Header;
 import forklift.producers.ActiveMQProducer;
@@ -87,22 +89,22 @@ public class ActiveMQConnector implements ForkliftConnectorI {
     }
 
     @Override
-    public MessageConsumer getQueue(String name)
+    public ForkliftConsumerI getQueue(String name)
       throws ConnectorException {
         final Session s = getSession();
         try {
-            return s.createConsumer(s.createQueue(name));
+            return new ActiveMQMessageConsumer(s.createConsumer(s.createQueue(name)), s);
         } catch (JMSException e) {
             throw new ConnectorException(e.getMessage());
         }
     }
 
     @Override
-    public MessageConsumer getTopic(String name)
+    public ForkliftConsumerI getTopic(String name)
       throws ConnectorException {
         final Session s = getSession();
         try {
-            return s.createConsumer(s.createTopic(name));
+            return new ActiveMQMessageConsumer(s.createConsumer(s.createTopic(name)), s);
         } catch (JMSException e) {
             throw new ConnectorException(e.getMessage());
         }
@@ -143,7 +145,8 @@ public class ActiveMQConnector implements ForkliftConnectorI {
     @Override
     public ForkliftProducerI getQueueProducer(String name) {
         try {
-            return new ActiveMQProducer(getSession().createProducer(new ActiveMQQueue(name)), getSession());
+            final Session s = getSession();
+            return new ActiveMQProducer(s.createProducer(new ActiveMQQueue(name)), s);
         } catch (JMSException | ConnectorException e) {
             log.error("getQueueProducer, throwing error", e);
             return null;
@@ -153,7 +156,8 @@ public class ActiveMQConnector implements ForkliftConnectorI {
     @Override
     public ForkliftProducerI getTopicProducer(String name) {
          try {
-            return new ActiveMQProducer(getSession().createProducer(new ActiveMQTopic(name)), getSession());
+            final Session s = getSession();
+            return new ActiveMQProducer(s.createProducer(new ActiveMQTopic(name)), s);
         } catch (JMSException | ConnectorException e) {
             log.error("getTopicProducer, throwing error", e);
             return null;
