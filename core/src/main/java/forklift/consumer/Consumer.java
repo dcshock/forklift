@@ -24,6 +24,7 @@ import forklift.properties.PropertiesManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Closeable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -209,16 +210,22 @@ public class Consumer {
                     try {
                         final Object handler = msgHandler.newInstance();
 
+                        final List<Closeable> closeMe = new ArrayList<Closeable>();
                         RunAsClassLoader.run(classLoader, () -> {
-                            inject(msg, handler);
+                            closeMe.addAll(inject(msg, handler));
                         });
 
                         // Handle the message.
-                        final MessageRunnable runner = new MessageRunnable(this, msg, classLoader, handler, onMessage, onValidate, onProcessStep);
-                        if (threadPool != null)
-                            threadPool.execute(runner);
-                        else
-                            runner.run();
+                        try {
+                            final MessageRunnable runner = new MessageRunnable(this, msg, classLoader, handler, onMessage, onValidate, onProcessStep);
+                            if (threadPool != null)
+                                threadPool.execute(runner);
+                            else
+                                runner.run();
+                        } finally {
+                            for (Closeable c : closeMe)
+                                c.close();
+                        }
                     } catch (Exception e) {
                         // If this error occurs we had a massive problem with the conusmer class setup.
                         log.error("Consumer couldn't be used.", e);
@@ -262,7 +269,10 @@ public class Consumer {
      * @param msg containing data
      * @param instance an instance of the msgHandler class.
      */
-    public void inject(ForkliftMessage msg, final Object instance) {
+    public List<Closeable> inject(ForkliftMessage msg, final Object instance) {
+        // Keep any closable resources around so the injection utilizer can cleanup.
+        final List<Closeable> closeMe = new ArrayList<Closeable>();
+
         // Inject the forklift msg
         injectFields.keySet().stream().forEach(decorator -> {
             final Map<Class<?>, List<Field>> fields = injectFields.get(decorator);
@@ -364,11 +374,18 @@ public class Consumer {
                         } else if (decorator == forklift.decorators.Producer.class) {
                             if (clazz == ForkliftProducerI.class) {
                                 forklift.decorators.Producer producer = f.getAnnotation(forklift.decorators.Producer.class);
-                                if (producer.queue().length() > 0) {
-                                    f.set(instance, connector.getQueueProducer(producer.queue()));
-                                } else if (producer.topic().length() > 0) {
-                                    f.set(instance, connector.getTopicProducer(producer.topic()));
-                                }
+
+                                final ForkliftProducerI p;
+                                if (producer.queue().length() > 0)
+                                    p = connector.getQueueProducer(producer.queue());
+                                else if (producer.topic().length() > 0)
+                                    p = connector.getTopicProducer(producer.topic());
+                                else
+                                    p = null;
+
+                                if (p != null)
+                                    closeMe.add(p);
+                                f.set(instance, p);
                             }
                         }
                     } catch (JsonMappingException | JsonParseException e) {
@@ -380,6 +397,8 @@ public class Consumer {
                 });
             });
         });
+
+        return closeMe;
     }
 
     public Class<?> getMsgHandler() {
