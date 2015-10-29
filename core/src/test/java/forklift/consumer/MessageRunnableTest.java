@@ -39,7 +39,7 @@ public class MessageRunnableTest {
 
         TestConsumer1 tc = new TestConsumer1();
 
-        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), null, tc, onMessage, onValidate, createOnProcessStepMap());
+        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), null, tc, onMessage, onValidate, createOnProcessStepMap(), Collections.emptyList());
         mr.run();
         assertTrue(TestConsumer1.success.get());
         LifeCycleMonitors.deregister(TestListener1.class);
@@ -92,7 +92,7 @@ public class MessageRunnableTest {
 
         TestConsumer2 tc = new TestConsumer2();
 
-        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), null, tc, onMessage, onValidate, createOnProcessStepMap());
+        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), null, tc, onMessage, onValidate, createOnProcessStepMap(), Collections.emptyList());
         mr.run();
         assertTrue(TestConsumer2.success.get());
         LifeCycleMonitors.deregister(TestListener2.class);
@@ -149,7 +149,7 @@ public class MessageRunnableTest {
 
         TestConsumer3 tc = new TestConsumer3();
 
-        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), tc.getClass().getClassLoader(), tc, onMessage, onValidate, createOnProcessStepMap());
+        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), tc.getClass().getClassLoader(), tc, onMessage, onValidate, createOnProcessStepMap(), Collections.emptyList());
         mr.run();
         assertTrue(TestConsumer3.success.get());
         LifeCycleMonitors.deregister(TestListener3.class);
@@ -205,7 +205,7 @@ public class MessageRunnableTest {
 
         TestConsumer4 tc = new TestConsumer4();
 
-        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), tc.getClass().getClassLoader(), tc, onMessage, onValidate, createOnProcessStepMap());
+        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), tc.getClass().getClassLoader(), tc, onMessage, onValidate, createOnProcessStepMap(), Collections.emptyList());
         mr.run();
         assertTrue(TestConsumer4.success.get());
         LifeCycleMonitors.deregister(TestListener4.class);
@@ -266,7 +266,7 @@ public class MessageRunnableTest {
 
         TestConsumer5 tc = new TestConsumer5();
 
-        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), tc.getClass().getClassLoader(), tc, onMessage, onValidate, createOnProcessStepMap());
+        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), tc.getClass().getClassLoader(), tc, onMessage, onValidate, createOnProcessStepMap(), Collections.emptyList());
         mr.run();
         assertTrue(TestConsumer5.success.get());
         LifeCycleMonitors.deregister(TestListener5.class);
@@ -326,7 +326,7 @@ public class MessageRunnableTest {
 
         TestConsumer6 tc = new TestConsumer6();
 
-        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), tc.getClass().getClassLoader(), tc, onMessage, onValidate, createOnProcessStepMap());
+        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), tc.getClass().getClassLoader(), tc, onMessage, onValidate, createOnProcessStepMap(), Collections.emptyList());
         mr.run();
         assertTrue(TestConsumer6.success.get());
         LifeCycleMonitors.deregister(TestListener6.class);
@@ -383,7 +383,7 @@ public class MessageRunnableTest {
 
         TestConsumer7 tc = new TestConsumer7();
 
-        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), tc.getClass().getClassLoader(), tc, onMessage, onValidate, createOnProcessStepMap());
+        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), tc.getClass().getClassLoader(), tc, onMessage, onValidate, createOnProcessStepMap(), Collections.emptyList());
         mr.run();
         assertTrue(TestConsumer7.success.get());
         LifeCycleMonitors.deregister(TestListener7.class);
@@ -442,7 +442,7 @@ public class MessageRunnableTest {
 
         TestConsumer8 tc = new TestConsumer8();
 
-        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), tc.getClass().getClassLoader(), tc, onMessage, onValidate, createOnProcessStepMap());
+        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage(jmsMsg), tc.getClass().getClassLoader(), tc, onMessage, onValidate, createOnProcessStepMap(), Collections.emptyList());
         mr.run();
         assertTrue(TestConsumer8.success.get());
         LifeCycleMonitors.deregister(TestListener8.class);

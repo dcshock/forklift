@@ -5,6 +5,8 @@ import forklift.connectors.ForkliftMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,8 +25,10 @@ public class MessageRunnable implements Runnable {
     private List<Method> onValidate;
     private Map<ProcessStep, List<Method>> onProcessStep;
     private List<String> errors;
+    private List<Closeable> closeMe;
 
-    MessageRunnable(Consumer consumer, ForkliftMessage msg, ClassLoader classLoader, Object handler, List<Method> onMessage, List<Method> onValidate, Map<ProcessStep, List<Method>> onProcessStep) {
+    MessageRunnable(Consumer consumer, ForkliftMessage msg, ClassLoader classLoader, Object handler, List<Method> onMessage,
+                    List<Method> onValidate, Map<ProcessStep, List<Method>> onProcessStep, List<Closeable> closeMe) {
         this.consumer = consumer;
         this.msg = msg;
         this.classLoader = classLoader;
@@ -36,6 +40,7 @@ public class MessageRunnable implements Runnable {
         this.onValidate = onValidate;
         this.onProcessStep = onProcessStep;
         this.errors = new ArrayList<>();
+        this.closeMe = closeMe;
 
         LifeCycleMonitors.call(ProcessStep.Pending, this);
     }
@@ -86,6 +91,14 @@ public class MessageRunnable implements Runnable {
                 msg.getJmsMsg().acknowledge();
             } catch (JMSException e) {
                 log.error("Error while acking message.", e);
+            }
+
+            // Close resources.
+            try {
+                for (Closeable c : closeMe)
+                    c.close();
+            } catch (IOException e) {
+                log.error("Unable to close a resource", e);
             }
         });
     }

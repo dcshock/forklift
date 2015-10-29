@@ -21,6 +21,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.HashMap;
@@ -214,7 +215,7 @@ public class OnDecoratorTest {
         List<Method> onMessage = (List<Method>) fetch(consumer, "onMessage");
         List<Method> onValidate = (List<Method>) fetch(consumer, "onValidate");
         Map<ProcessStep, List<Method>> onProcessStep = (Map<ProcessStep, List<Method>>) fetch(consumer, "onProcessStep");
-        final MessageRunnable mr = new MessageRunnable(consumer, msg, consumer.getClass().getClassLoader(), c, onMessage, onValidate, onProcessStep);
+        final MessageRunnable mr = new MessageRunnable(consumer, msg, consumer.getClass().getClassLoader(), c, onMessage, onValidate, onProcessStep, Collections.emptyList());
         mr.run();
     }
 

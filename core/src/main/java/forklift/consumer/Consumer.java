@@ -216,16 +216,11 @@ public class Consumer {
                         });
 
                         // Handle the message.
-                        try {
-                            final MessageRunnable runner = new MessageRunnable(this, msg, classLoader, handler, onMessage, onValidate, onProcessStep);
-                            if (threadPool != null)
-                                threadPool.execute(runner);
-                            else
-                                runner.run();
-                        } finally {
-                            for (Closeable c : closeMe)
-                                c.close();
-                        }
+                        final MessageRunnable runner = new MessageRunnable(this, msg, classLoader, handler, onMessage, onValidate, onProcessStep, closeMe);
+                        if (threadPool != null)
+                            threadPool.execute(runner);
+                        else
+                            runner.run();
                     } catch (Exception e) {
                         // If this error occurs we had a massive problem with the conusmer class setup.
                         log.error("Consumer couldn't be used.", e);
