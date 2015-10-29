@@ -10,6 +10,9 @@ link:doc/forklift.adoc[Documentation]
 
 
 == Releases
+* 0.13
+** Fix MultiThreaded consumer auto closing of resources.
+
 * 0.12
 ** Auto closing of producers that are injected. 
 
