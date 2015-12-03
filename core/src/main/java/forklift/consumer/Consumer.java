@@ -412,6 +412,14 @@ public class Consumer {
         return connector;
     }
 
+    public void addServices(ConsumerService... services) {
+        if (this.services == null)
+            this.services = new ArrayList<ConsumerService>();
+
+        for (ConsumerService s : services)
+            this.services.add(s);
+    }
+
     public void setServices(List<ConsumerService> services) {
         this.services = services;
     }

@@ -21,16 +21,24 @@ public class ConsumerService {
 	private List<Method> onDeploy = new ArrayList<>();
 	private List<Method> onUndeploy = new ArrayList<>();
 
-	public ConsumerService(Class<?> clazz) {
+	public ConsumerService(Class<?> clazz) 
+	  throws Exception {
+		this(clazz, clazz.newInstance());
+	}
+
+	public ConsumerService(Object instance) {
+		this(instance.getClass(), instance);
+	}
+
+	public ConsumerService(Class<?> clazz, Object instance) {
 		this.clazz = clazz;
+		this.instance = instance;
 
 		try {
-			this.instance = clazz.newInstance();
-
 			for (Method m : clazz.getDeclaredMethods()) {
-                if (m.isAnnotationPresent(BeanResolver.class)) 
+                if (m.isAnnotationPresent(BeanResolver.class))
                     beanResolvers.add(m);
-                else if (m.isAnnotationPresent(OnDeploy.class)) 
+                else if (m.isAnnotationPresent(OnDeploy.class))
                 	onDeploy.add(m);
                 else if (m.isAnnotationPresent(OnUndeploy.class))
                 	onUndeploy.add(m);
@@ -46,7 +54,7 @@ public class ConsumerService {
 	 * @param  name name of the field.
 	 * @return      [description]
 	 */
-	public Object resolve(Class c, String name) 
+	public Object resolve(Class c, String name)
 	  throws Exception {
 		// Attempt to resolve the class via name and type.
 		for (Method m : beanResolvers) {
@@ -62,7 +70,7 @@ public class ConsumerService {
 	/**
 	 * Invoke all onDeploy annotated methods.
 	 */
-	public void onDeploy() 
+	public void onDeploy()
 	  throws Exception {
 		for (Method m : onDeploy)
 			m.invoke(instance);
@@ -71,9 +79,9 @@ public class ConsumerService {
 	/**
 	 * Invoke all onUndeploy annotated methods.
 	 */
-	public void onUndeploy() 
+	public void onUndeploy()
 	  throws Exception {
-		for (Method m : onUndeploy) 
+		for (Method m : onUndeploy)
 			m.invoke(instance);
 	}
 }

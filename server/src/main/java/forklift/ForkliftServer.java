@@ -95,12 +95,12 @@ public final class ForkliftServer {
                 System.exit(-1);
             }
         } else if (brokerUrl.startsWith("embed")) {
-            brokerUrl = "tcp://localhost:61616";
+            brokerUrl = "tcp://0.0.0.0:61616";
             broker = new BrokerService();
 
             // configure the broker
             broker.addConnector(brokerUrl);
-            broker.addConnector("stomp://localhost:61613");
+            broker.addConnector("stomp://0.0.0.0:61613");
 
             broker.start();
         }
