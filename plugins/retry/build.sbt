@@ -2,7 +2,7 @@ organization := "com.github.dcshock"
 
 name := "forklift-retry"
 
-version := "0.6"
+version := "0.7"
 
 javacOptions ++= Seq("-source", "1.8")
 
@@ -13,7 +13,8 @@ initialize := {
 }
 
 libraryDependencies ++= Seq(
-  "com.github.dcshock" % "forklift" % "0.8"
+  "com.github.dcshock" % "forklift" % "0.8",
+  "io.searchbox" % "jest" % "2.0.0"
 )
 
 resolvers ++= Seq(

@@ -2,7 +2,7 @@ organization := "com.github.dcshock"
 
 name := "forklift-replay"
 
-version := "0.5"
+version := "0.6"
 
 javacOptions ++= Seq("-source", "1.8")
 
@@ -13,7 +13,9 @@ initialize := {
 }
 
 libraryDependencies ++= Seq(
-  "com.github.dcshock" % "forklift" % "0.8"
+  "com.github.dcshock" % "forklift" % "0.14",
+  "org.elasticsearch" % "elasticsearch" % "2.1.1",
+  "io.searchbox" % "jest" % "2.0.0"
 )
 
 crossPaths := false

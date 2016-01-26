@@ -1,22 +1,24 @@
 package forklift.retry;
 
+import forklift.concurrent.Callback;
 import forklift.connectors.ForkliftConnectorI;
 import forklift.connectors.ForkliftMessage;
+import forklift.message.Header;
 import forklift.producers.ForkliftProducerI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
 
 public class RetryRunnable implements Runnable {
     public static final Logger log = LoggerFactory.getLogger(RetryRunnable.class);
 
     private RetryMessage msg;
     private ForkliftConnectorI connector;
+    private Callback<RetryMessage> complete;
 
-    public RetryRunnable(RetryMessage msg, ForkliftConnectorI connector) {
+    public RetryRunnable(RetryMessage msg, ForkliftConnectorI connector, Callback<RetryMessage> complete) {
         this.msg = msg;
         this.connector = connector;
+        this.complete = complete;
     }
 
     @Override
@@ -42,14 +44,12 @@ public class RetryRunnable implements Runnable {
             return;
         }
 
-        log.info("Cleaning up persistent file {}", msg.getPersistedPath());
-        final File f = new File(msg.getPersistedPath());
-        if (f.exists())
-            f.delete();
+        complete.handle(msg);
     }
 
     private ForkliftMessage toForkliftMessage(RetryMessage msg) {
         final ForkliftMessage forkliftMsg = new ForkliftMessage();
+        msg.getHeaders().put(Header.CorrelationId, msg.getMessageId());
         forkliftMsg.setHeaders(msg.getHeaders());
         forkliftMsg.setMsg(msg.getText());
         forkliftMsg.setProperties(msg.getProperties());

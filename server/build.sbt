@@ -2,7 +2,7 @@ organization := "com.github.dcshock"
 
 name := "forklift-server"
 
-version := "0.14"
+version := "0.15"
 
 enablePlugins(JavaAppPackaging)
 
@@ -17,9 +17,10 @@ initialize := {
 libraryDependencies ++= Seq(
   "com.github.dcshock" % "forklift"           % "0.14",
   "com.github.dcshock" % "forklift-activemq"  % "0.7",
-  "com.github.dcshock" % "forklift-replay"    % "0.5",
-  "com.github.dcshock" % "forklift-retry"     % "0.5",
+  "com.github.dcshock" % "forklift-replay"    % "0.6",
+  "com.github.dcshock" % "forklift-retry"     % "0.7",
   "com.github.dcshock" % "consul-rest-client" % "0.6",
+  "io.searchbox" % "jest" % "2.0.0",
   "org.apache.activemq" % "activemq-all" % "5.8.0",
   "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1",
   "args4j" % "args4j" % "2.0.31",

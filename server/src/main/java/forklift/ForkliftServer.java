@@ -7,15 +7,15 @@ import forklift.connectors.ActiveMQConnector;
 import forklift.consumer.ConsumerDeploymentEvents;
 import forklift.consumer.LifeCycleMonitors;
 import forklift.deployment.DeploymentWatch;
+import forklift.replay.ReplayES;
 import forklift.replay.ReplayLogger;
+import forklift.retry.RetryES;
 import forklift.retry.RetryHandler;
-
 import org.apache.activemq.broker.BrokerService;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 
 import java.io.File;
-import java.nio.file.Files;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -127,8 +127,17 @@ public final class ForkliftServer {
         }
 
         log.info("Registering LifeCycleMonitors");
-        LifeCycleMonitors.register(new RetryHandler(forklift.getConnector(), new File(opts.getRetryDir())));
-        LifeCycleMonitors.register(new ReplayLogger(new File(opts.getReplayDir())));
+        if (opts.getReplayDir() != null)
+            LifeCycleMonitors.register(new ReplayLogger(new File(opts.getReplayDir())));
+
+        if (opts.getReplayESHost() != null)
+            LifeCycleMonitors.register(new ReplayES(!opts.isReplayESServer(), opts.isReplayESSsl(), opts.getReplayESHost(), opts.getReplayESPort()));
+
+        if (opts.getRetryDir() != null)
+            LifeCycleMonitors.register(new RetryHandler(forklift.getConnector(), new File(opts.getRetryDir())));
+
+        if (opts.getRetryESHost() != null)
+            LifeCycleMonitors.register(new RetryES(forklift.getConnector(), opts.isRetryESSsl(), opts.getRetryESHost(), opts.getRetryESPort(), opts.isRunRetries()));
 
         log.info("Connected to broker on " + brokerUrl);
         log.info("Scanning for Forklift consumers at " + opts.getConsumerDir());
