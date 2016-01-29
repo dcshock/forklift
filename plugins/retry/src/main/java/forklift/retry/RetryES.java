@@ -87,12 +87,13 @@ public class RetryES {
          */
         if (runRetries) {
             try {
-                final String query = "{\"query\" : { \"match_all\" : {} }}";
+                final String query = "{\"size\" : \"1000000\", \"query\" : { \"match_all\" : {} }}";
                 final Search search = new Search.Builder(query).addIndex("forklift-retry").addType("msg").build();
                 final SearchResult results = client.execute(search);
                 for (Hit<JsonObject, Void> msg : results.getHits(JsonObject.class)) {
                     try {
                         final RetryMessage retryMessage = mapper.readValue(msg.source.get("forklift-retry-msg").getAsString(), RetryMessage.class);
+                        log.info("Retrying: {}", retryMessage);
                         executor.schedule(new RetryRunnable(retryMessage, connector, cleanup),
                             Long.parseLong(Integer.toString((int)retryMessage.getProperties().get("forklift-retry-timeout"))), TimeUnit.SECONDS);
                     } catch (Exception e) {

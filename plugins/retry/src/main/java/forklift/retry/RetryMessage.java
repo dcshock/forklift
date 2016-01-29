@@ -77,4 +77,10 @@ public class RetryMessage {
     public void setPersistedPath(String persistedPath) {
         this.persistedPath = persistedPath;
     }
+
+    @Override
+    public String toString() {
+        return "RetryMessage [messageId=" + messageId + ", queue=" + queue + ", topic=" + topic + ", step=" + step + ", text=" + text +
+                        ", headers=" + headers + ", properties=" + properties + ", persistedPath=" + persistedPath + "]";
+    }
 }
