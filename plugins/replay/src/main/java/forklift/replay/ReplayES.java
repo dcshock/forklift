@@ -12,6 +12,8 @@ import io.searchbox.core.Index;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -24,6 +26,8 @@ import java.util.Optional;
 import javax.jms.JMSException;
 
 public class ReplayES {
+    private static final Logger log = LoggerFactory.getLogger(ReplayES.class);
+
     private final Node node;
     private final JestClient client;
 
@@ -172,7 +176,7 @@ public class ReplayES {
         try {
             client.execute(new Index.Builder(fields).index(index).type("log").id(id).build());
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("Unable to index replay log", e);
         }
     }
 }

@@ -13,7 +13,7 @@ public class ForkliftOpts {
     private String brokerUrl;
 
     @Option(name="-retryDir", usage="directory for persisted retry messages")
-    private String retryDir = ".";
+    private String retryDir;
 
     @Option(name="-retryESHost", usage="elastic search host name for retry storage")
     private String retryESHost;
@@ -28,7 +28,7 @@ public class ForkliftOpts {
     private boolean runRetries;
 
     @Option(name="-replayDir", usage="replay log directory")
-    private String replayDir = ".";
+    private String replayDir;
 
     @Option(name="-replayESHost", usage="elastic search host name for replay storage")
     private String replayESHost;
