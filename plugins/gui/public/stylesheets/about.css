@@ -1,0 +1,79 @@
+p {
+    display: inline;
+}
+.red {
+    color: red;
+}
+.green {
+    color: greenyellow;
+}
+.blue {
+    color: deepskyblue;
+}
+
+#about {
+    margin: 50px auto;
+    text-align: center;
+    word-wrap: normal;
+}
+
+.large-h3 {
+    font-size: 3.5em;
+}
+
+h1 {
+    color: deepskyblue;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 5em;
+    font-weight: lighter;
+
+    animation: fadein 3s;
+    -moz-animation: fadein 3s; /* Firefox */
+    -webkit-animation: fadein 3s; /* Safari and Chrome */
+    -o-animation: fadein 3s; /* Opera */
+}
+
+h3 {
+    color: whitesmoke;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 2.5em;
+    font-weight: lighter;
+
+    animation: fadein 3s;
+    -moz-animation: fadein 3s; /* Firefox */
+    -webkit-animation: fadein 3s; /* Safari and Chrome */
+    -o-animation: fadein 3s; /* Opera */
+}
+
+@keyframes fadein {
+    from {
+        opacity:0;
+    }
+    to {
+        opacity:1;
+    }
+}
+@-moz-keyframes fadein { /* Firefox */
+    from {
+        opacity:0;
+    }
+    to {
+        opacity:1;
+    }
+}
+@-webkit-keyframes fadein { /* Safari and Chrome */
+    from {
+        opacity:0;
+    }
+    to {
+        opacity:1;
+    }
+}
+@-o-keyframes fadein { /* Opera */
+    from {
+        opacity:0;
+    }
+    to {
+        opacity: 1;
+    }
+}

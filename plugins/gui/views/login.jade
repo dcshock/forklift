@@ -1,0 +1,22 @@
+html
+    head
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
+        link(rel='stylesheet', href='css/bootstrap.min.css')
+        link(rel='stylesheet', href='css/bootstrap-social.css')
+        link(rel='stylesheet', href='css/font-awesome.css')
+        link(rel='stylesheet', href='css/login.css')
+        title="Forklift GUI"
+    body
+        .container
+            div(class="row")
+                center
+                    h1(class="text-center login-title") Welcome to Forklift
+                    div(class="account-wall")
+                        img(class="logo-img" src="img/forklift.png")
+                        form(class="form-signin")
+                            <a id="loginButton" class="btn btn-lg btn-block btn-social btn-google" href='auth/google'>
+                            <span class="fa fa-google"></span> Sign in with Google
+                            </a>
+
+    script(src='js/jquery-1.11.3.min.js')
+    script(src='js/docs.js')
