@@ -1,12 +1,12 @@
 FROM build.sofi.com:5000/sofi-node-base
 
 # Add source
-ADD . /noise
+ADD . /forklift-gui
 
-WORKDIR /noise
+WORKDIR /forklift-gui
 
 # Expose the default node hosting port.
 EXPOSE 3000
 
-RUN chmod 755 /noise/bin/run
-ENTRYPOINT ["/noise/bin/run"]
+RUN chmod 755 /forklift-gui/bin/run
+ENTRYPOINT ["/forklift-gui/bin/run"]

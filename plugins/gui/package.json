@@ -1,5 +1,5 @@
 {
-  "name": "Noise",
+  "name": "Forklift GUI",
   "version": "0.0.0",
   "private": false,
   "scripts": {
@@ -20,7 +20,6 @@
     "passport": "^0.3.2",
     "passport-google-oauth2": "^0.1.6",
     "serve-favicon": "~2.2.1",
-    "socket.io": "^1.4.4",
     "winston": "^2.1.1"
   }
 }

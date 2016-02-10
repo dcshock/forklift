@@ -19,10 +19,6 @@ router.get('/noise/health', function (req, res) {
     res.sendStatus(200);
 });
 
-router.get('/welcome', function (req, res) {
-    res.render('welcome');
-});
-
 router.get('/login', function (req, res) {
     if (req.isAuthenticated()) {
         res.redirect('dashboard');
