@@ -12,11 +12,11 @@ var client = new elasticsearch.Client({
 router.post('/poll/', ensureAuthenticated, function (req, res) {
     var service = req.body.service;
     var logs = [];
-    var index = 'logstash-*';
+    var index = 'forklift-'+service+'*';
 
     client.search({
         index: index,
-        sort: "@timestamp:desc",
+        size: 5000,
         body: {
             query: {
                 query_string: {

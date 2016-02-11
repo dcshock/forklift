@@ -148,40 +148,39 @@ function addLogToStack(logs) {
     {
         logs.forEach(function (log) {
             var logSource = log._source;
-            var request = null;
-            var app = logSource.docker.name;
-            var logType = "info";
+            var messageId = null
+            var retryCount = 0;//logSource.forklift-retry-count;
+            var maxRetries = 0;//logSource.forklift-retry-max-retries;
+            var errors = logSource.errors;
+            var text = logSource.text;
+            var queue = logSource.queue;
+
+            var messageHtml = null;
+            if (currentService == "retry") {
+                messageId = JSON.parse(logSource["forklift-retry-msg"]).messageId;
+                messageHtml = '<strong>Message ID:</strong> ' + messageId;
+            } else {
+                messageId = log._id;
+                messageHtml = '<strong>Message ID:</strong> ' + messageId;
+            }
 
             selectedId = log._id;
-            var message = logSource.message;
-            if (logSource.mdc) {
-                request = logSource.mdc.request;
-            } else {
-                request = logSource.request;
-            }
-            var level = logSource.level;
-            var timestamp = logSource.timestamp;
-            var host = log._source.docker.hostname;
+            var timestamp = logSource.time;;
 
-            if (level == "ERROR") {
-                logType = "danger";
-            } else if (level == "WARN") {
-                logType = "warning";
-            }
-            var reqHtml = '';
-            if (request != null) {
-                reqHtml = ' <strong>Request: </strong>' + request;
-            }
             var logHtml = {
                 id: log._id,
-                level: level,
-                message: message,
-                html: '<a href="#" class="list-group-item list-group-item-' + logType + '">' +
+                html: '<a href="#" class="list-group-item list-group-item-default">' +
                 '<button id="' + log._id + '"class="btn btn-default retryButton"><span class="glyphicon glyphicon-repeat"></span> Retry</button>' +
                 ' <button id="' + log._id + '" class="btn btn-default fixedButton"><span class="glyphicon glyphicon-ok"></span> Fixed</button>' +
-                '<span class="badge pull-right alert-' + logType + '">' + timestamp + '</span>' +
+                '<span class="badge pull-right alert-default">' + timestamp + '</span>' +
                 '<br>' +
-                '<strong>Level:</strong> ' + level + ' <strong>App: </strong>'+app+' <strong>Host: </strong>' + host + '' + reqHtml + ' <strong>Message: </strong>' + message + '</a>'
+                messageHtml +
+                '<br>' +
+                '<strong>Queue:</strong> ' + queue +
+                '<br>' +
+                '<strong>Errors:</strong> ' + errors +
+                '<br>' +
+                '<strong>Text:</strong> '+text+'</a>'
             }
             logStack.push(logHtml);
             displayLogs();
