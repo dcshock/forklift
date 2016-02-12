@@ -75,16 +75,6 @@ function reset() {
     displayLogs();
 }
 
-function timeoutReset() {
-    logStack = [];
-    logHistory = [];
-    idStack = [];
-    selectedId = null;
-    newestId = null;
-    clearTimeout(displayTimer);
-    clearTimeout(overlayTimer);
-}
-
 function clearConsole() {
     $("#welcome").addClass("hidden");
     $("#liveLogs").addClass("hidden");
@@ -115,19 +105,19 @@ function displayErrorWarning(err) {
     $("#liveLogs").addClass("hidden");
     if (err.status) {
         if (err.status == "timeout") {
-            $("#errorPlaceholder").html("<h3 class='error'>There was a problem fetching logs.<br><p class='red'>" + err.message + "</p></h3>")
+            $("#errorPlaceholder").html("<h3 class='error'>There was a problem fetching forklift logs.<br><p class='red'>" + err.message + "</p></h3>")
         } else if (err.status != "200") {
             if (err.status == "404") {
                 var date = new Date();
-                $("#errorPlaceholder").html("<h3 class='error'>No logs were found under index: logstash-" + date.getFullYear() + "." + date.getMonth() + 1 + "." + date.getDate() + "<br><p class='red'>Status 404 returned.</p></h3>")
+                $("#errorPlaceholder").html("<h3 class='error'>No logs were found under index: forklift-"+currentService+"*<br><p class='red'>Status 404 returned.</p></h3>")
             } else {
-                $("#errorPlaceholder").html("<h3 class='error'>There was a problem fetching logs.<br><p class='red'>Status " + err.status + ": " + err.message + "</p></h3>")
+                $("#errorPlaceholder").html("<h3 class='error'>There was a problem fetching forklift logs.<br><p class='red'>Status " + err.status + ": " + err.message + "</p></h3>")
             }
         } else {
             $("#errorPlaceholder").html("<h3 class='error'>" + err.message + "</h3>")
         }
     } else {
-        $("#errorPlaceholder").html("<h3 class='error'>There was a problem fetching logs.<br><p class='red'>" + err.message + "</h3>")
+        $("#errorPlaceholder").html("<h3 class='error'>There was a problem fetching forklift logs.<br><p class='red'>" + err.message + "</h3>")
     }
     clearTimeout(overlayTimer);
 }
