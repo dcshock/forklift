@@ -1,5 +1,6 @@
 var t = new Object();
 
+var logHistory = []
 var logStack = [];
 var idStack = [];
 var selectedId = null;
@@ -14,7 +15,7 @@ t.preload = function () {
     $('[data-toggle="tooltip"]').tooltip();
 
     $("#home").click(function() {
-        $(".navbar-brand").html("Noise");
+        $(".navbar-brand").html("Forklift GUI");
         reset();
         clearConsole();
     });
@@ -23,14 +24,14 @@ t.preload = function () {
     $("#console-list-group").on('click', '.retryButton', function(e) {
         selectedId = $(this).attr("id");
         $(this).parent().remove();
-        console.log("retrying "+selectedId);
+        retry(findLog(selectedId));
         e.preventDefault();
     });
 
     $("#console-list-group").on('click', '.fixedButton', function(e) {
         selectedId = $(this).attr("id");
-        console.log("fixed "+selectedId);
         $(this).parent().remove();
+        fixed(findLog(selectedId));
         e.preventDefault();
     });
 
@@ -50,9 +51,20 @@ t.preload = function () {
     });
 }
 
+function findLog(id) {
+    for(var i = 0; i < logHistory.length; i++) {
+        if (logHistory[i].id == id) {
+            log = logHistory[i];
+            return log;
+        }
+    }
+    return null;
+}
+
 function reset() {
     $.fn.overlayout();
     logStack = [];
+    logHistory = [];
     idStack = [];
     selectedId = null;
     newestId = null;
@@ -65,6 +77,7 @@ function reset() {
 
 function timeoutReset() {
     logStack = [];
+    logHistory = [];
     idStack = [];
     selectedId = null;
     newestId = null;
@@ -127,7 +140,8 @@ function displayCustomError(title, message) {
     $("#errorPlaceholder").html("<h3 class='error'>"+title+"<br><p class='red'>" + message + "</h3>")
     clearTimeout(overlayTimer);
 }
-function pollElasticSearch () {
+
+function pollElasticSearch() {
     $.post(
         "dashboard/poll/",
         {service: currentService},
@@ -142,48 +156,110 @@ function pollElasticSearch () {
     );
 }
 
+function retry(log) {
+    if (log != null) {
+        console.log("posting...");
+        $.post(
+            "dashboard/retry/",
+            {
+                correlationId: log.correlationId,
+                text: log.text,
+                queue: log.queue
+            }
+        )
+    }
+}
+
+function fixed(log) {
+    if (log != null) {
+        console.log("marking as fixed...");
+        $.post(
+            "dashboard/fixed/",
+            {
+                id: log.id,
+                date: log.date
+            }
+        )
+    }
+}
+
 function addLogToStack(logs) {
     //we got a valid response, remove service errors if they exist
     if (logs.length > 0)
     {
         logs.forEach(function (log) {
             var logSource = log._source;
-            var messageId = null
-            var retryCount = 0;//logSource.forklift-retry-count;
-            var maxRetries = 0;//logSource.forklift-retry-max-retries;
-            var errors = logSource.errors;
-            var text = logSource.text;
-            var queue = logSource.queue;
-
-            var messageHtml = null;
-            if (currentService == "retry") {
-                messageId = JSON.parse(logSource["forklift-retry-msg"]).messageId;
-                messageHtml = '<strong>Message ID:</strong> ' + messageId;
-            } else {
-                messageId = log._id;
-                messageHtml = '<strong>Message ID:</strong> ' + messageId;
+            var retryCount = null;
+            var maxRetries = null;
+            if (currentService == "replay") {
+                retryCount = logSource["forklift-retry-count"];
+                maxRetries = logSource["forklift-retry-max-retries"];
             }
+            console.log(retryCount + " " + maxRetries);
+            if (currentService == "retry" || (currentService == "replay" && (retryCount == maxRetries))) {
+                console.log("in");
+                var messageId = null
+                var retryCount = 0;//logSource.forklift-retry-count;
+                var maxRetries = 0;//logSource.forklift-retry-max-retries;
+                var errors = logSource.errors;
+                var text = logSource.text;
+                var queue = logSource.queue;
+                var correlationId = null;
 
-            selectedId = log._id;
-            var timestamp = logSource.time;;
+                var messageHtml = null;
+                var buttonHtml = '';
+                var retryHtml = '';
+                var correlationHtml = '';
+                if (currentService == "retry") {
+                    messageId = JSON.parse(logSource["forklift-retry-msg"]).messageId;
+                    correlationId = JSON.parse(logSource["forklift-retry-msg"]).correlationId;
+                    if (!correlationId) {
+                        correlationId = messageId;
+                    }
+                    messageHtml = '<strong>Message ID:</strong> ' + messageId;
+                    correlationHtml = '<br><strong>Correlation ID: </strong>' + correlationId;
+                    retryHtml = '<br><strong>Retry Count: </strong> ' + logSource["forklift-retry-count"] + ' / ' + logSource["forklift-retry-max-retries"];
+                } else {
+                    messageId = log._id;
+                    messageHtml = '<br><strong>Message ID:</strong> ' + messageId;
+                    correlationHtml = '<br><strong>Correlation ID: </strong>' + messageId;
+                    correlationId = messageId;
+                    buttonHtml = '<button id="' + log._id + '"class="btn btn-warning retryButton"><span class="glyphicon glyphicon-repeat"></span> Retry</button> ' +
+                                '<button id="' + log._id + '" class="btn btn-success fixedButton"><span class="glyphicon glyphicon-ok"></span> Fixed</button>';
+                }
 
-            var logHtml = {
-                id: log._id,
-                html: '<a href="#" class="list-group-item list-group-item-default">' +
-                '<button id="' + log._id + '"class="btn btn-default retryButton"><span class="glyphicon glyphicon-repeat"></span> Retry</button>' +
-                ' <button id="' + log._id + '" class="btn btn-default fixedButton"><span class="glyphicon glyphicon-ok"></span> Fixed</button>' +
-                '<span class="badge pull-right alert-default">' + timestamp + '</span>' +
-                '<br>' +
-                messageHtml +
-                '<br>' +
-                '<strong>Queue:</strong> ' + queue +
-                '<br>' +
-                '<strong>Errors:</strong> ' + errors +
-                '<br>' +
-                '<strong>Text:</strong> '+text+'</a>'
+                selectedId = log._id;
+                var timestamp = logSource.time;
+                var docDate = timestamp.split("T")[0].replace(/-/g, "");
+
+                var logHtml = {
+                    id: log._id,
+                    date: docDate,
+                    service: currentService,
+                    queue: queue,
+                    text: text,
+                    correlationId: correlationId,
+                    html: '<a href="#" class="list-group-item list-group-item-default">' +
+                    buttonHtml +
+                    '<span class="badge pull-right alert-default">' + timestamp + '</span>' +
+                    messageHtml +
+                    '<br>' +
+                    '<strong>Queue:</strong> ' + queue +
+                    '<br>' +
+                    '<strong>Errors:</strong> ' + errors +
+                    '<br>' +
+                    '<strong>Text:</strong> ' + text +
+                    correlationHtml +
+                    retryHtml +
+                    '</a>'
+                }
+                logStack.push(logHtml);
+                if (currentService == "retry") {
+
+                }
+                logHistory.push(logHtml);
+                displayLogs();
             }
-            logStack.push(logHtml);
-            displayLogs();
             clearTimeout(overlayTimer);
         });
     } else {

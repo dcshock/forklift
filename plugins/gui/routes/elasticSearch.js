@@ -20,7 +20,7 @@ router.post('/poll/', ensureAuthenticated, function (req, res) {
         body: {
             query: {
                 query_string: {
-                    query: "ERROR",
+                    query: "Error",
                     fields: ["step"]
                 }
             }
@@ -42,6 +42,27 @@ router.post('/poll/', ensureAuthenticated, function (req, res) {
         }
         res.end(JSON.stringify(json));
 
+    });
+});
+
+router.post('/fixed/', ensureAuthenticated, function(req, res) {
+    var updateId = req.body.id;
+    var docDate = req.body.date;
+    var index = 'forklift-replay-'+docDate;
+
+    client.update({
+        index: index,
+        id: updateId,
+        type: 'log',
+        body:  {
+            doc: {
+                step: 'Fixed'
+            }
+        }
+    }, function (err, resp) {
+        if (err) {
+            console.log(err);
+        }
     });
 });
 

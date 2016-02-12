@@ -4,10 +4,11 @@ var logger = require('../utils/logger');
 var config = require('../config/config');
 var router = express.Router();
 
-router.use('/dashboard', require('./elasticSearch'))
+router.use('/dashboard', require('./elasticSearch'));
+router.use('/dashboard', require('./retry'));
 
 router.get('/', function (req, res, next) {
-    res.redirect('login')
+    res.redirect('login');
 });
 
 router.get('/health', function (req, res) {
