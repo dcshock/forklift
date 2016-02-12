@@ -188,9 +188,7 @@ function addLogToStack(logs) {
             console.log(retryCount + " " + maxRetries);
             if (currentService == "retry" || (currentService == "replay" && (retryCount == maxRetries))) {
                 console.log("in");
-                var messageId = null
-                var retryCount = 0;//logSource.forklift-retry-count;
-                var maxRetries = 0;//logSource.forklift-retry-max-retries;
+                var messageId = null;
                 var errors = logSource.errors;
                 var text = logSource.text;
                 var queue = logSource.queue;

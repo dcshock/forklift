@@ -36,12 +36,9 @@ router.get('/logout', function (req, res) {
 router.get('/dashboard', ensureAuthenticated,  function (req, res) {
     //Get the users email, name, and profile picture
     var sofiEmail = req.user.emails[0].value.split("@");
-    //var profilePicUrl = req.user.photos[0].value.split("?");
-    //profilePicUrl = profilePicUrl[0] + "?sz=100";
-    if (sofiEmail[1] == 'sofi.org') {
+    if (sofiEmail[1] == 'sofi.org' || sofiEmail[1] == 'sofi.com') {
         GLOBAL.user = sofiEmail[0];
         res.render('dashboard');
-        //res.render('dashboard', {user: req.user, email: req.user.emails[0].value});
     } else {
         req.logout();
         res.status(401);
