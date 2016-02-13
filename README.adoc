@@ -10,6 +10,9 @@ link:doc/forklift.adoc[Documentation]
 
 
 == Releases
+* 0.15
+** Elasticsearch implementation of retries and replay logs.
+
 * 0.13
 ** Fix MultiThreaded consumer auto closing of resources.
 
