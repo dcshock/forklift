@@ -127,17 +127,23 @@ public final class ForkliftServer {
         }
 
         log.info("Registering LifeCycleMonitors");
-        if (opts.getReplayDir() != null)
-            LifeCycleMonitors.register(new ReplayLogger(new File(opts.getReplayDir())));
 
+        // Create the replay ES first if it's needed just in case we are utilizing the startup of the embedded es engine.
+        ReplayES replayES = null;
         if (opts.getReplayESHost() != null)
-            LifeCycleMonitors.register(new ReplayES(!opts.isReplayESServer(), opts.isReplayESSsl(), opts.getReplayESHost(), opts.getReplayESPort()));
+             new ReplayES(!opts.isReplayESServer(), opts.isReplayESSsl(), opts.getReplayESHost(), opts.getReplayESPort());
 
+        // Setup retry handling.
         if (opts.getRetryDir() != null)
             LifeCycleMonitors.register(new RetryHandler(forklift.getConnector(), new File(opts.getRetryDir())));
-
         if (opts.getRetryESHost() != null)
             LifeCycleMonitors.register(new RetryES(forklift.getConnector(), opts.isRetryESSsl(), opts.getRetryESHost(), opts.getRetryESPort(), opts.isRunRetries()));
+
+        // Always add replay last so that other plugins can update props.
+        if (replayES != null)
+            LifeCycleMonitors.register(replayES);
+        if (opts.getReplayDir() != null)
+            LifeCycleMonitors.register(new ReplayLogger(new File(opts.getReplayDir())));
 
         log.info("Connected to broker on " + brokerUrl);
         log.info("Scanning for Forklift consumers at " + opts.getConsumerDir());
