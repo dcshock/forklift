@@ -131,7 +131,7 @@ public final class ForkliftServer {
         // Create the replay ES first if it's needed just in case we are utilizing the startup of the embedded es engine.
         ReplayES replayES = null;
         if (opts.getReplayESHost() != null)
-             new ReplayES(!opts.isReplayESServer(), opts.isReplayESSsl(), opts.getReplayESHost(), opts.getReplayESPort());
+             replayES = new ReplayES(!opts.isReplayESServer(), opts.isReplayESSsl(), opts.getReplayESHost(), opts.getReplayESPort());
 
         // Setup retry handling.
         if (opts.getRetryDir() != null)
