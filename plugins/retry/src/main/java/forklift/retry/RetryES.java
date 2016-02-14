@@ -50,6 +50,37 @@ public class RetryES {
     private final ObjectMapper mapper;
     private final Callback<RetryMessage> cleanup;
 
+    /*
+     * Just a test case.
+     */
+//    public static void main(String[] args) throws IOException {
+//        final JestClientFactory factory = new JestClientFactory();
+//        factory.setHttpClientConfig(
+//            new HttpClientConfig.Builder("http://localhost:9200")
+//               .multiThreaded(true)
+//               .build());
+//        JestClient client = factory.getObject();
+//
+//        final ObjectMapper mapper = new ObjectMapper();
+//        mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+//
+//        final String query = "{\"size\" : \"10000\", \"query\" : { \"match_all\" : {} }}";
+//        final Search search = new Search.Builder(query).addIndex("forklift-retry").addType("msg").build();
+//        final SearchResult results = client.execute(search);
+//
+//        log.error(results.getErrorMessage());
+//        log.info("{}", results.getHits(JsonObject.class));
+//
+//        for (Hit<JsonObject, Void> msg : results.getHits(JsonObject.class)) {
+//            try {
+//                final RetryMessage retryMessage = mapper.readValue(msg.source.get("forklift-retry-msg").getAsString(), RetryMessage.class);
+//                log.info("Retrying: {}", retryMessage);
+//            } catch (Exception e) {
+//                log.error("Unable to read result {}", msg.source);
+//            }
+//        }
+//    }
+
     public RetryES(ForkliftConnectorI connector, boolean ssl, String hostname, int port, boolean runRetries) {
         this.connector = connector;
         this.executor = Executors.newScheduledThreadPool(1);
@@ -87,8 +118,8 @@ public class RetryES {
          */
         if (runRetries) {
             try {
-                final String query = "{\"size\" : \"1000000\", \"query\" : { \"match_all\" : {} }}";
-                final Search search = new Search.Builder(query).addIndex("forklift-retry").addType("msg").build();
+                final String query = "{\"size\" : \"10000\", \"query\" : { \"match_all\" : {} }}";
+                final Search search = new Search.Builder(query).addIndex("forklift-retry").build();
                 final SearchResult results = client.execute(search);
                 for (Hit<JsonObject, Void> msg : results.getHits(JsonObject.class)) {
                     try {
