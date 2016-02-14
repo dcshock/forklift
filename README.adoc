@@ -12,6 +12,7 @@ link:doc/forklift.adoc[Documentation]
 == Releases
 * 0.16
 ** Fix bug that causes the max retries exceeded prop to not show in replay logs. 
+** Fix bug that caused the retry startup search to fail due to having too many results.
 
 * 0.15
 ** Elasticsearch implementation of retries and replay logs.
