@@ -16,7 +16,7 @@ router.get('/health', function (req, res) {
     res.sendStatus(200);
 });
 
-router.get('/noise/health', function (req, res) {
+router.get('/forklift-gui/health', function (req, res) {
     res.sendStatus(200);
 });
 
