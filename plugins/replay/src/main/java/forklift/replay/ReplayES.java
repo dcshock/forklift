@@ -49,6 +49,7 @@ public class ReplayES {
         }
 
         this.writer = new ReplayESWriter(ssl, hostname);
+        this.writer.start();
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
