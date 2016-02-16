@@ -64,6 +64,7 @@ router.post('/fixed/', ensureAuthenticated, function(req, res) {
             console.log(err);
         }
     });
+    res.end();
 });
 
 function ensureAuthenticated(req, res, next) {
