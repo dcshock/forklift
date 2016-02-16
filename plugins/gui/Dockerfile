@@ -1,4 +1,4 @@
-FROM node:5.5-onbuild
+FROM node:5.6-onbuild
 
 # Add source
 ADD . /forklift-gui
