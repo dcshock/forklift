@@ -1,4 +1,4 @@
-FROM build.sofi.com:5000/sofi-node-base
+FROM node:4-onbuild
 
 # Add source
 ADD . /forklift-gui
