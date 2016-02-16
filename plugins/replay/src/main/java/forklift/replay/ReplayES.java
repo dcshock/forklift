@@ -5,18 +5,10 @@ import forklift.consumer.MessageRunnable;
 import forklift.consumer.ProcessStep;
 import forklift.decorators.LifeCycle;
 import forklift.message.Header;
-import io.searchbox.client.JestClient;
-import io.searchbox.client.JestClientFactory;
-import io.searchbox.client.config.HttpClientConfig;
-import io.searchbox.core.Index;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -26,30 +18,14 @@ import java.util.Optional;
 import javax.jms.JMSException;
 
 public class ReplayES {
-    private static final Logger log = LoggerFactory.getLogger(ReplayES.class);
-
     private final Node node;
-    private final JestClient client;
+    private final ReplayESWriter writer;
 
     public ReplayES(boolean clientOnly, boolean ssl, String hostname) {
         this(clientOnly, ssl, hostname, 9200);
     }
 
     public ReplayES(boolean clientOnly, boolean ssl, String hostname, int port) {
-        final String prefix;
-        if (ssl)
-            prefix = "https://";
-        else
-            prefix = "http://";
-
-
-         final JestClientFactory factory = new JestClientFactory();
-         factory.setHttpClientConfig(
-            new HttpClientConfig.Builder(prefix + hostname + ":" + port)
-               .multiThreaded(true)
-               .build());
-         client = factory.getObject();
-
         /*
          * Setup the connection to the server. If we are only a client we'll not setup a node locally to run.
          * This will help developers and smaller setups avoid the pain of setting up elastic search.
@@ -72,12 +48,11 @@ public class ReplayES {
             }
         }
 
+        this.writer = new ReplayESWriter(ssl, hostname);
+
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
-                if (client != null)
-                    client.shutdownClient();
-
                 if (node != null && !node.isClosed())
                     node.close();
             }
@@ -172,11 +147,7 @@ public class ReplayES {
         } catch (JMSException ignored) {
         }
 
-        final String index = "forklift-replay-" + LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE);
-        try {
-            client.execute(new Index.Builder(fields).index(index).type("log").id(id).build());
-        } catch (IOException e) {
-            log.error("Unable to index replay log", e);
-        }
+        // Push the message to the writer.
+        writer.put(new ReplayESWriter.ReplayESWriterMsg(id, fields));
     }
 }
