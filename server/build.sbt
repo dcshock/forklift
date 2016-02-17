@@ -2,7 +2,7 @@ organization := "com.github.dcshock"
 
 name := "forklift-server"
 
-version := "0.16"
+version := "0.17"
 
 enablePlugins(JavaAppPackaging)
 
