@@ -1,11 +1,14 @@
 package forklift.replay;
 
+import com.google.gson.JsonArray;
 import forklift.replay.ReplayESWriter.ReplayESWriterMsg;
 import io.searchbox.client.JestClient;
 import io.searchbox.client.JestClientFactory;
 import io.searchbox.client.config.HttpClientConfig;
 import io.searchbox.core.Delete;
 import io.searchbox.core.Index;
+import io.searchbox.core.Search;
+import io.searchbox.core.SearchResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,7 +63,24 @@ public class ReplayESWriter extends ReplayStoreThread<ReplayESWriterMsg> {
     protected void poll(ReplayESWriterMsg t) {
         final String index = "forklift-replay-" + LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE);
         try {
-            client.execute(new Delete.Builder(t.id).index("forklift-replay*").type("msg").build());
+            // In order to ensure there is only one replay msg for a given id we have to clean the msg id from
+            // any previously created indexes.
+            final String q = String.format(
+                "{\"query\":{\"filtered\":{\"query\":{\"query_string\":{\"query\":\"_id:\\\"%s\\\"\"}}}},\"fields\":[],\"from\":0,\"size\":50,\"explain\":false}", t.id);
+            final Search search = new Search.Builder(q).addIndex("forklift-replay*").build();
+            final SearchResult results = client.execute(search);
+            if (results != null && results.getTotal() > 0) {
+                final JsonArray arr = results.getJsonObject().get("hits").getAsJsonObject().get("hits").getAsJsonArray();
+                arr.forEach((a) -> {
+                    try {
+                        client.execute(new Delete.Builder(t.id).index(a.getAsJsonObject().get("_index").getAsString()).type("log").build());
+                    } catch (Exception e) {
+                        log.error("", e);
+                    }
+                });
+            }
+
+            // Index the new information.
             client.execute(new Index.Builder(t.fields).index(index).type("log").id(t.id).build());
         } catch (IOException e) {
             log.error("Unable to index replay log", e);
