@@ -6,7 +6,7 @@ var config = require('../config/config');
 var router = express.Router();
 
 var client = new elasticsearch.Client({
-    host: process.env.NOISE_ES_HOST
+    host: process.env.FK_ES_HOST
 });
 
 router.post('/poll/', ensureAuthenticated, function (req, res) {
@@ -48,7 +48,7 @@ router.post('/poll/', ensureAuthenticated, function (req, res) {
 router.post('/fixed/', ensureAuthenticated, function(req, res) {
     var updateId = req.body.id;
     var docDate = req.body.date;
-    var index = 'forklift-replay-'+docDate;
+    var index = req.body.index;
 
     client.update({
         index: index,
@@ -59,9 +59,9 @@ router.post('/fixed/', ensureAuthenticated, function(req, res) {
                 step: 'Fixed'
             }
         }
-    }, function (err, resp) {
+    }, function (err) {
         if (err) {
-            console.log(err);
+            logger.error(err);
         }
     });
     res.end();

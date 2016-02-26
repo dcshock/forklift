@@ -148,7 +148,6 @@ function pollElasticSearch() {
 
 function retry(log) {
     if (log != null) {
-        console.log("posting...");
         $.post(
             "dashboard/retry/",
             {
@@ -162,12 +161,12 @@ function retry(log) {
 
 function fixed(log) {
     if (log != null) {
-        console.log("marking as fixed...");
         $.post(
             "dashboard/fixed/",
             {
                 id: log.id,
-                date: log.date
+                date: log.date,
+                index: log.index
             }
         )
     }
@@ -185,9 +184,7 @@ function addLogToStack(logs) {
                 retryCount = logSource["forklift-retry-count"];
                 maxRetries = logSource["forklift-retry-max-retries"];
             }
-            console.log(retryCount + " " + maxRetries);
             if (currentService == "retry" || (currentService == "replay" && (retryCount == maxRetries))) {
-                console.log("in");
                 var messageId = null;
                 var errors = logSource.errors;
                 var text = logSource.text;
@@ -221,6 +218,7 @@ function addLogToStack(logs) {
                 var docDate = timestamp.split("T")[0].replace(/-/g, "");
 
                 var logHtml = {
+                    index: log._index,
                     id: log._id,
                     date: docDate,
                     service: currentService,
@@ -251,7 +249,7 @@ function addLogToStack(logs) {
             clearTimeout(overlayTimer);
         });
     } else {
-        displayCustomError("No logs were found!", "Are logs being pushed to ElasticSearch?");
+        displayCustomError("No forklift messages were found!", "");
     }
 }
 t.preload();

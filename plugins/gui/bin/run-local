@@ -2,6 +2,6 @@
 
 # Setup config
 cp config/config.json.example config/config.json
-export NOISE_ES_HOST="192.168.99.100:9200"
+export FK_ES_HOST="192.168.99.100:9200"
 
 npm start

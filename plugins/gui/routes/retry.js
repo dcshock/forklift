@@ -25,9 +25,8 @@ router.post('/retry/', ensureAuthenticated, function (req, res) {
     });
 
     client.connect(function() {
-        console.log("Connected");
 
-        console.log('Sending: ' + msg.jmsHeaders['correlation-id']);
+        logger.info('Sending: ' + msg.jmsHeaders['correlation-id']);
 
         // messages to the stomp connector should persist through restarts
         msg.jmsHeaders['persistent'] = 'true';
