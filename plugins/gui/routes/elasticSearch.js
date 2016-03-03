@@ -23,7 +23,10 @@ router.post('/poll/', ensureAuthenticated, function (req, res) {
                     query: "Error",
                     fields: ["step"]
                 }
-            }
+            },
+            "sort:" [{
+                "time": {"order": "desc"}
+            }]
         }
     }).then(function (resp) {
         resp.hits.hits.forEach(function(hit) {
