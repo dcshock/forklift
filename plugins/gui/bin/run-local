@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+# Setup config
+cp config/config.json.example config/config.json
+export FK_ES_HOST="localhost:9200"
+
+npm start

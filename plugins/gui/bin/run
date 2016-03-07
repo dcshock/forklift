@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+# Copy over the config file and set environment
+if [ -d "/config" ]; then
+    cp /config/forklift-gui.conf /forklift-gui/config/config.json
+fi
+
+# Run the application
+/usr/bin/npm install
+/usr/bin/npm start 

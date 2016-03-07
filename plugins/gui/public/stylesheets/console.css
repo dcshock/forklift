@@ -1,0 +1,79 @@
+body, html {
+    margin: 0;
+    overflow: hidden;
+    height:100%;
+}
+
+@media {
+    #console {
+        position: absolute;
+        top: 50px;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        /*overflow-y: scroll;*/
+    }
+}
+
+#console {
+    background-color: #262626;
+    text-align: left;
+    height:98%;
+}
+
+.list-group-item {
+    margin-top: 2px;
+}
+
+.list-group-item-danger {
+    animation: errorGlow .5s;
+    -moz-animation: errorGlow .5s 5; /* Firefox */
+    -webkit-animation: errorGlow .5s 5; /* Safari and Chrome */
+}
+
+.list-group-item-warning {
+    animation: warningGlow .5s;
+    -moz-animation: warningGlow .5s 5; /* Firefox */
+    -webkit-animation: warningGlow .5s 5; /* Safari and Chrome */
+}
+
+#pinned-list-group {
+    max-height: 30%;
+    overflow: auto;
+}
+#console-list-group {
+    max-height:90%;
+    overflow: auto;
+}
+
+@-moz-keyframes errorGlow /* Firefox */
+{
+    0% {background-color: #ebcccc;}
+    50% {background-color:#dba3a3;}
+    100% {background-color:#ebcccc;}
+}
+
+@-webkit-keyframes errorGlow /* Firefox */
+{
+    0% {background-color: #ebcccc;}
+    50% {background-color:#dba3a3;}
+    100% {background-color:#ebcccc;}
+}
+
+@-moz-keyframes warningGlow /* Firefox */
+{
+    0% {background-color: #fcf8e3;}
+    50% {background-color: #f2e28c;}
+    100% {background-color: #fcf8e3;}
+}
+
+@-webkit-keyframes warningGlow /* Firefox */
+{
+    0% {background-color: #fcf8e3;}
+    50% {background-color: #f2e28c;}
+    100% {background-color: #fcf8e3;}
+}
+
+/*#console::-webkit-scrollbar {*/
+    /*display: none;*/
+/*}*/
