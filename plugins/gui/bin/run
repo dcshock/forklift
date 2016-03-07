@@ -2,7 +2,7 @@
 
 # Copy over the config file and set environment
 if [ -d "/config" ]; then
-    cp /config/forklift-gui.conf /noise/config/config.json
+    cp /config/forklift-gui.conf /forklift-gui/config/config.json
 fi
 
 # Run the application
