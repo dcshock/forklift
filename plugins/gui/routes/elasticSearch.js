@@ -1,4 +1,3 @@
-var config = require('../config/config');
 var elasticsearch = require('elasticsearch');
 var ensureAuthenticated = require('../utils/auth').ensureAuthenticated;
 var express = require('express');
@@ -7,7 +6,7 @@ var passport = require('passport');
 var router = express.Router();
 
 var client = new elasticsearch.Client({
-    host: process.env.FK_ES_HOST
+    host: (process.env.FK_ES_HOST || 'localhost') + ":" + (process.env.FK_ES_PORT || 9200)
 });
 
 router.post('/poll/', ensureAuthenticated, function (req, res) {

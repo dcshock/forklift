@@ -1,4 +1,3 @@
-var config = require('../config/config');
 var ensureAuthenticated = require('../utils/auth').ensureAuthenticated;
 var express = require('express');
 var logger = require('../utils/logger');
@@ -14,10 +13,6 @@ router.get('/', function (req, res, next) {
 
 router.get('/health', function (req, res) {
     //If the app is running fine, then a health check should return 200.
-    res.sendStatus(200);
-});
-
-router.get('/forklift-gui/health', function (req, res) {
     res.sendStatus(200);
 });
 
@@ -38,7 +33,6 @@ router.get('/dashboard', ensureAuthenticated,  function (req, res) {
     //Get the users email, name, and profile picture
     var domain = req.user.split("@")[1];
     if (domain == 'sofi.org' || domain == 'sofi.com') {
-        GLOBAL.user = req.user;
         res.render('dashboard');
     } else {
         req.logout();
@@ -48,11 +42,15 @@ router.get('/dashboard', ensureAuthenticated,  function (req, res) {
 });
 
 router.get('/about', ensureAuthenticated, (req, res) => res.render('about'))
-router.get('/auth/google', passport.authenticate('google', {scope: config.google.scope}));
+router.get('/auth/google', passport.authenticate('google', {scope: [
+      "https://www.googleapis.com/auth/userinfo.profile",
+      "https://www.googleapis.com/auth/userinfo.email"
+    ]})
+);
 router.get('/auth/google/callback',
     passport.authenticate('google', {
-        successRedirect: config.google.domain + 'dashboard',
-        failureRedirect: config.google.domain + 'login'
+        successRedirect: process.env.GOOGLE_DOMAIN + 'dashboard',
+        failureRedirect: process.env.GOOGLE_DOMAIN + 'login'
     })
 );
 

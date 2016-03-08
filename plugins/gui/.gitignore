@@ -3,5 +3,4 @@ node_modules
 .DS_Store
 .idea/
 *.iml
-config.json
-config.json.example
+gui.env

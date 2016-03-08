@@ -16,6 +16,9 @@ router.post('/retry/', ensureAuthenticated, function (req, res) {
     var text = req.body.text;
     var queue = req.body.queue;
     var msg = {
+        // jmsHeaders : { 'correlation-id' : correlationId,
+        //                'forklift-retry-count': 0,
+        //                'forklift-retry-max-retries': 0 },
         jmsHeaders : { 'correlation-id' : correlationId },
         body : text,
         queue : queue
@@ -32,7 +35,6 @@ router.post('/retry/', ensureAuthenticated, function (req, res) {
 
         client.publish(msg.queue, msg.body, msg.jmsHeaders);
 
-        res.status(200);
         res.end();
     });
 });
