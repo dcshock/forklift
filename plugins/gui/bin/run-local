@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+if [ ! -e gui.env ]
+  then
+    echo "gui.env file not found"
+    echo "gui.env must contain env vars for:"
+    echo "GOOGLE_DOMAIN, GOOGLE_SECRET, GOOGLE_KEY, COOKIE_SECRET"
+    exit -1
+fi
+
+source gui.env
+nodemon www
