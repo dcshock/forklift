@@ -1,8 +1,9 @@
-var express = require('express');
-var passport = require('passport');
-var elasticsearch = require('elasticsearch');
-var logger = require('../utils/logger');
 var config = require('../config/config');
+var elasticsearch = require('elasticsearch');
+var ensureAuthenticated = require('../utils/auth').ensureAuthenticated;
+var express = require('express');
+var logger = require('../utils/logger');
+var passport = require('passport');
 var router = express.Router();
 
 var client = new elasticsearch.Client({
@@ -24,7 +25,7 @@ router.post('/poll/', ensureAuthenticated, function (req, res) {
                     fields: ["step"]
                 }
             },
-            "sort:" [{
+            "sort": [{
                 "time": {"order": "desc"}
             }]
         }
@@ -70,17 +71,4 @@ router.post('/fixed/', ensureAuthenticated, function(req, res) {
     res.end();
 });
 
-function ensureAuthenticated(req, res, next) {
-    if (req.isAuthenticated()) {
-        return next();
-    }
-    logger.info("Unauthorized");
-    res.status(401);
-    res.render('401');
-    return res.statusCode;
-}
-
 module.exports = router;
-
-
-

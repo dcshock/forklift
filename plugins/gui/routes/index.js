@@ -1,7 +1,8 @@
-var express = require('express');
-var passport = require('passport');
-var logger = require('../utils/logger');
 var config = require('../config/config');
+var ensureAuthenticated = require('../utils/auth').ensureAuthenticated;
+var express = require('express');
+var logger = require('../utils/logger');
+var passport = require('passport');
 var router = express.Router();
 
 router.use('/dashboard', require('./elasticSearch'));
@@ -35,9 +36,9 @@ router.get('/logout', function (req, res) {
 
 router.get('/dashboard', ensureAuthenticated,  function (req, res) {
     //Get the users email, name, and profile picture
-    var sofiEmail = req.user.emails[0].value.split("@");
-    if (sofiEmail[1] == 'sofi.org' || sofiEmail[1] == 'sofi.com') {
-        GLOBAL.user = sofiEmail[0];
+    var domain = req.user.split("@")[1];
+    if (domain == 'sofi.org' || domain == 'sofi.com') {
+        GLOBAL.user = req.user;
         res.render('dashboard');
     } else {
         req.logout();
@@ -46,30 +47,13 @@ router.get('/dashboard', ensureAuthenticated,  function (req, res) {
     }
 });
 
-router.get('/about', ensureAuthenticated, function (req, res) {
-    res.render('about');
-});
-
-router.get('/auth/google',
-    passport.authenticate('google', {scope: config.google.scope}
-    ));
-
+router.get('/about', ensureAuthenticated, (req, res) => res.render('about'))
+router.get('/auth/google', passport.authenticate('google', {scope: config.google.scope}));
 router.get('/auth/google/callback',
     passport.authenticate('google', {
         successRedirect: config.google.domain + 'dashboard',
         failureRedirect: config.google.domain + 'login'
     })
 );
-
-
-function ensureAuthenticated(req, res, next) {
-    if (req.isAuthenticated()) {
-        return next();
-    }
-    logger.info("Unauthorized");
-    res.status(401);
-    res.render('401');
-    return res.statusCode;
-}
 
 module.exports = router;

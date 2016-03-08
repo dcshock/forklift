@@ -1,31 +1,27 @@
+var ensureAuthenticated = require("../utils/auth").ensureAuthenticated;
 var express = require('express');
-var Stomp = require('stomp-client');
 var fs = require('fs');
-var passport = require('passport');
 var logger = require('../utils/logger');
+var passport = require('passport');
 var router = express.Router();
+var Stomp = require('stomp-client');
 
+var client = new Stomp('localhost', 61613, null, null);
+client.on('error', function(e) {
+    console.log(e);
+});
 
 router.post('/retry/', ensureAuthenticated, function (req, res) {
     var correlationId = req.body.correlationId;
     var text = req.body.text;
     var queue = req.body.queue;
-
-
-    var headers = { 'correlation-id' : correlationId };
     var msg = {
-        jmsHeaders : headers,
+        jmsHeaders : { 'correlation-id' : correlationId },
         body : text,
         queue : queue
     };
 
-    var client = new Stomp('localhost', 61613, null, null);
-    client.on('error', function(e) {
-        console.log(e);
-    });
-
     client.connect(function() {
-
         logger.info('Sending: ' + msg.jmsHeaders['correlation-id']);
 
         // messages to the stomp connector should persist through restarts
@@ -35,17 +31,10 @@ router.post('/retry/', ensureAuthenticated, function (req, res) {
         msg.jmsHeaders['suppress-content-length'] = 'true';
 
         client.publish(msg.queue, msg.body, msg.jmsHeaders);
+
+        res.status(200);
+        res.end();
     });
 });
-
-function ensureAuthenticated(req, res, next) {
-    if (req.isAuthenticated()) {
-        return next();
-    }
-    logger.info("Unauthorized");
-    res.status(401);
-    res.render('401');
-    return res.statusCode;
-}
 
 module.exports = router;
