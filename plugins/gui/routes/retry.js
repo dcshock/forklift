@@ -6,11 +6,6 @@ var passport = require('passport');
 var router = express.Router();
 var Stomp = require('stomp-client');
 
-var client = new Stomp('localhost', 61613, null, null);
-client.on('error', function(e) {
-    console.log(e);
-});
-
 router.post('/retry/', ensureAuthenticated, function (req, res) {
     var correlationId = req.body.correlationId;
     var text = req.body.text;
@@ -24,6 +19,11 @@ router.post('/retry/', ensureAuthenticated, function (req, res) {
         queue : queue
     };
 
+    var client = new Stomp(process.env.FK_STOMP_HOST || 'localhost', process.env.FK_STOMP_PORT || 61613, null, null);
+    client.on('error', function(e) {
+        logger.error(e);
+    });
+
     client.connect(function() {
         logger.info('Sending: ' + msg.jmsHeaders['correlation-id']);
 
@@ -34,7 +34,7 @@ router.post('/retry/', ensureAuthenticated, function (req, res) {
         msg.jmsHeaders['suppress-content-length'] = 'true';
 
         client.publish(msg.queue, msg.body, msg.jmsHeaders);
-
+        client.disconnect();
         res.end();
     });
 });
