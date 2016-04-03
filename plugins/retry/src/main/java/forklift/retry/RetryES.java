@@ -163,8 +163,18 @@ public class RetryES {
             // Read props of the message to see what we need to do with retry counts
             final Map<String, Object> props = msg.getProperties();
 
+            // Determine the current retry count. We have to handle string or integer input types
+            // since stomp doesn't differentiate the two.
+            final Integer retryCount;
+            final Object obj = props.get("forklift-retry-count");
+            if (obj instanceof String.class)
+                retryCount = Integer.parse(obj);
+            else if (obj instanceof Integer.class)
+                retryCount = obj;
+            else
+                retryCount = null;
+
             // Handle retries
-            Integer retryCount = (Integer)props.get("forklift-retry-count");
             if (retryCount == null)
                 retryCount = 1;
             else

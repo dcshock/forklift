@@ -48,6 +48,15 @@ public class MessageRunnable implements Runnable {
     @Override
     public void run() {
         RunAsClassLoader.run(classLoader, () -> {
+            // Always ack message to prevent activemq deadlock
+            try {
+                msg.getJmsMsg().acknowledge();
+            } catch (JMSException e) {
+                log.error("Error while acking message.", e);
+                close();
+                return;
+            }
+
             // { Validating }
             runHooks(ProcessStep.Validating);
             LifeCycleMonitors.call(ProcessStep.Validating, this);
@@ -86,20 +95,8 @@ public class MessageRunnable implements Runnable {
             }
             // Always log all errors
             getErrors().stream().forEach(e -> log.error(e));
-            // Always ack message to prevent activemq deadlock
-            try {
-                msg.getJmsMsg().acknowledge();
-            } catch (JMSException e) {
-                log.error("Error while acking message.", e);
-            }
+            close();
 
-            // Close resources.
-            try {
-                for (Closeable c : closeMe)
-                    c.close();
-            } catch (IOException e) {
-                log.error("Unable to close a resource", e);
-            }
         });
     }
 
@@ -128,6 +125,16 @@ public class MessageRunnable implements Runnable {
 
     public Consumer getConsumer() {
         return consumer;
+    }
+
+    private void close() {
+        // Close resources.
+        try {
+            for (Closeable c : closeMe)
+                c.close();
+        } catch (IOException e) {
+            log.error("Unable to close a resource", e);
+        }
     }
 
     // This interface and method are for wrapping functions that throw errors, logging and swa
