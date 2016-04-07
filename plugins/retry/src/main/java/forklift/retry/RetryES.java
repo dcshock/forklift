@@ -165,12 +165,12 @@ public class RetryES {
 
             // Determine the current retry count. We have to handle string or integer input types
             // since stomp doesn't differentiate the two.
-            final Integer retryCount;
+            Integer retryCount;
             final Object obj = props.get("forklift-retry-count");
-            if (obj instanceof String.class)
-                retryCount = Integer.parse(obj);
-            else if (obj instanceof Integer.class)
-                retryCount = obj;
+            if (obj instanceof String)
+                retryCount = Integer.parseInt((String)obj);
+            else if (obj instanceof Integer)
+                retryCount = (Integer)obj;
             else
                 retryCount = null;
 
