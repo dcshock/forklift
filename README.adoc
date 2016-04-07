@@ -1,21 +1,24 @@
 = Forklift
 
 '''
-The Enterprise Service Bus that supports building and deploying microservices quickly 
+The Enterprise Service Bus that supports building and deploying microservices quickly
 and easily. Forklift makes your life easier by providing common functionality that can
 be shared by easily by annotating your code. To see what it can do for you check out the
 full documentation.
 
 link:doc/forklift.adoc[Documentation]
 
-
 == Releases
+* 0.18
+** Acknowledge messages once forklift has obtained the message and begins processing it. This
+corrects a bug that could cause a message to be processed twice in the event of a broker node failure.
+
 * 0.17
-** Add a separate thread to push replay logs to elastic search. This will allow msgs to be unhindered by the REST calls to ES. 
+** Add a separate thread to push replay logs to elastic search. This will allow msgs to be unhindered by the REST calls to ES.
 ** Cleanup old errors from previous indexes before indexing the new doc. This can be inefficient, but guarantees the msg id is only in the system once.
 
 * 0.16
-** Fix bug that causes the max retries exceeded prop to not show in replay logs. 
+** Fix bug that causes the max retries exceeded prop to not show in replay logs.
 ** Fix bug that caused the retry startup search to fail due to having too many results.
 
 * 0.15
@@ -25,7 +28,7 @@ link:doc/forklift.adoc[Documentation]
 ** Fix MultiThreaded consumer auto closing of resources.
 
 * 0.12
-** Auto closing of producers that are injected. 
+** Auto closing of producers that are injected.
 
 * 0.11
 ** Close jms sessions correctly to avoid open session buildup on the amq nodes.
@@ -38,7 +41,7 @@ link:doc/forklift.adoc[Documentation]
 
 * 0.9
 ** Removed Scala build dependencies.
-** Added the ability to close the forklift producer to avoid memory leaks in client code. 
+** Added the ability to close the forklift producer to avoid memory leaks in client code.
 ** Added key/value pair send viathe forklift producer.
 ** Added a new On decorator that allows the lifecycle to be intercepted at any point by a method intercept.
 
@@ -67,8 +70,8 @@ link:doc/forklift.adoc[Documentation]
 ** New arguments to allow retry/replay dirs to be set
 ** Allow two deployment directories to be scanned
 
-* 0.2 
+* 0.2
 ** Fix for property file injection into consumer.
 
-* 0.1 
+* 0.1
 ** Initial beta release
