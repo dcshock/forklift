@@ -1,8 +1,8 @@
 package forklift.consumer;
 
 import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import forklift.classloader.RunAsClassLoader;
 import forklift.concurrent.Callback;
 import forklift.connectors.ConnectorException;
@@ -12,11 +12,12 @@ import forklift.consumer.parser.KeyValueParser;
 import forklift.decorators.Config;
 import forklift.decorators.Headers;
 import forklift.decorators.MultiThreaded;
+import forklift.decorators.On;
 import forklift.decorators.OnMessage;
 import forklift.decorators.OnValidate;
-import forklift.decorators.On;
 import forklift.decorators.Ons;
 import forklift.decorators.Queue;
+import forklift.decorators.Response;
 import forklift.decorators.Topic;
 import forklift.message.Header;
 import forklift.producers.ForkliftProducerI;
@@ -44,10 +45,11 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 
 public class Consumer {
-    private Logger log;
+    static ObjectMapper mapper = new ObjectMapper();
 
+    private Logger log;
     private static AtomicInteger id = new AtomicInteger(1);
-    private static ObjectMapper mapper = new ObjectMapper();
+
 
     private final ClassLoader classLoader;
     private final ForkliftConnectorI connector;
@@ -55,6 +57,7 @@ public class Consumer {
     private final Class<?> msgHandler;
     private final List<Method> onMessage;
     private final List<Method> onValidate;
+    private final List<Method> onResponse;
     private final Map<ProcessStep, List<Method>> onProcessStep;
     private String name;
     private Queue queue;
@@ -120,7 +123,6 @@ public class Consumer {
                 this.name = topic.value() + ":" + id.getAndIncrement();
             else
                 throw new IllegalArgumentException("Msg Handler must handle a queue or topic.");
-
         }
 
         log = LoggerFactory.getLogger(Consumer.class);
@@ -129,6 +131,7 @@ public class Consumer {
         // message is received.
         onMessage = new ArrayList<>();
         onValidate = new ArrayList<>();
+        onResponse = new ArrayList<>();
         onProcessStep = new HashMap<>();
         Arrays.stream(ProcessStep.values()).forEach(step -> onProcessStep.put(step, new ArrayList<>()));
         for (Method m : msgHandler.getDeclaredMethods()) {
@@ -136,6 +139,8 @@ public class Consumer {
                 onMessage.add(m);
             else if (m.isAnnotationPresent(OnValidate.class))
                 onValidate.add(m);
+            else if (m.isAnnotationPresent(Response.class))
+                onResponse.add(m);
             else if (m.isAnnotationPresent(On.class) || m.isAnnotationPresent(Ons.class))
                 Arrays.stream(m.getAnnotationsByType(On.class)).map(on -> on.value()).distinct().forEach(x -> onProcessStep.get(x).add(m));
         }
@@ -221,7 +226,7 @@ public class Consumer {
                         });
 
                         // Handle the message.
-                        final MessageRunnable runner = new MessageRunnable(this, msg, classLoader, handler, onMessage, onValidate, onProcessStep, closeMe);
+                        final MessageRunnable runner = new MessageRunnable(this, msg, classLoader, handler, onMessage, onValidate, onResponse, onProcessStep, closeMe);
                         if (threadPool != null)
                             threadPool.execute(runner);
                         else
@@ -287,7 +292,7 @@ public class Consumer {
                                 f.set(instance, msg);
                             } else if (clazz == String.class) {
                                 f.set(instance, msg.getMsg());
-                            } else if (clazz == Map.class) {
+                            } else if (clazz == Map.class && !msg.getMsg().startsWith("{")) {
                                 // We assume that the map is <String, String>.
                                 f.set(instance, KeyValueParser.parse(msg.getMsg()));
                             } else {

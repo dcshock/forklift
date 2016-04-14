@@ -1,35 +1,22 @@
 package forklift.consumer;
 
-import forklift.decorators.Queue;
-
 import static org.junit.Assert.fail;
-import forklift.decorators.Ons;
-import org.junit.Assert;
+
 import forklift.TestMsg;
 import forklift.connectors.ForkliftMessage;
-import forklift.consumer.ProcessStep;
-import forklift.consumer.MessageRunnable;
 import forklift.decorators.On;
 import forklift.decorators.OnMessage;
 import forklift.decorators.OnValidate;
+import forklift.decorators.Queue;
+import org.junit.Assert;
 import org.junit.Test;
-import org.mockito.Mockito;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.EnumMap;
 import java.util.List;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
-
-import javax.jms.Message;
 
 public class OnDecoratorTest {
 
@@ -215,7 +202,7 @@ public class OnDecoratorTest {
         List<Method> onMessage = (List<Method>) fetch(consumer, "onMessage");
         List<Method> onValidate = (List<Method>) fetch(consumer, "onValidate");
         Map<ProcessStep, List<Method>> onProcessStep = (Map<ProcessStep, List<Method>>) fetch(consumer, "onProcessStep");
-        final MessageRunnable mr = new MessageRunnable(consumer, msg, consumer.getClass().getClassLoader(), c, onMessage, onValidate, onProcessStep, Collections.emptyList());
+        final MessageRunnable mr = new MessageRunnable(consumer, msg, consumer.getClass().getClassLoader(), c, onMessage, onValidate, null, onProcessStep, Collections.emptyList());
         mr.run();
     }
 
