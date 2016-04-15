@@ -1,8 +1,8 @@
 package forklift.consumer;
 
 import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import forklift.classloader.RunAsClassLoader;
 import forklift.concurrent.Callback;
 import forklift.connectors.ConnectorException;
@@ -12,11 +12,12 @@ import forklift.consumer.parser.KeyValueParser;
 import forklift.decorators.Config;
 import forklift.decorators.Headers;
 import forklift.decorators.MultiThreaded;
+import forklift.decorators.On;
 import forklift.decorators.OnMessage;
 import forklift.decorators.OnValidate;
-import forklift.decorators.On;
 import forklift.decorators.Ons;
 import forklift.decorators.Queue;
+import forklift.decorators.RequireSystem;
 import forklift.decorators.Topic;
 import forklift.message.Header;
 import forklift.producers.ForkliftProducerI;
@@ -60,6 +61,7 @@ public class Consumer {
     private Queue queue;
     private Topic topic;
     private List<ConsumerService> services;
+    private List<System> requiredSystems;
 
     // If a queue can process multiple messages at a time we
     // use a thread pool to manage how much cpu load the queue can
@@ -153,6 +155,14 @@ public class Consumer {
                 Arrays.stream(m.getAnnotationsByType(On.class)).map(on -> on.value()).distinct().forEach(x -> onProcessStep.get(x).add(m));
         }
 
+        requiredSystems = new ArrayList<>();
+        Arrays.stream(msgHandler.getAnnotationsByType(RequireSystem.class)).forEach(rs -> {
+            try {
+                requiredSystems.add(new System(rs.value().newInstance(), rs.msTimeout()));
+            } catch (Exception ignored) {
+            }
+        });
+
         injectFields = new HashMap<>();
         injectFields.put(Config.class, new HashMap<>());
         injectFields.put(javax.inject.Inject.class, new HashMap<>());
@@ -180,7 +190,7 @@ public class Consumer {
      * get a new JMS consumer.
      */
     public void listen() {
-        final ForkliftConsumerI consumer;
+        ForkliftConsumerI consumer = null;
         try {
             if (topic != null)
                 consumer = connector.getTopic(topic.value());
@@ -193,6 +203,17 @@ public class Consumer {
         } catch (ConnectorException e) {
             log.debug("", e);
         }
+
+        // Ensure that the consumer if still connected is disconnected to return unack'd messages back to the queue.
+        try {
+            if (consumer != null)
+                consumer.close();
+        } catch (JMSException e) {
+            log.debug("", e);
+        }
+
+        // Clear the thread queue so that unack'd messages are reloaded to the processing queue later.
+        blockQueue.clear();
     }
 
     public String getName() {
@@ -206,6 +227,11 @@ public class Consumer {
             while (running.get()) {
                 Message jmsMsg;
                 while ((jmsMsg = consumer.receive(2500)) != null) {
+                    // Verify that all systems are ready to go. If they aren't, punt and the
+                    // wrapper thread can deal.
+                    if (sysReqCheck().size() > 0)
+                        return;
+
                     final ForkliftMessage msg = connector.jmsToForklift(jmsMsg);
                     try {
                         final Object handler = msgHandler.newInstance();
@@ -394,6 +420,27 @@ public class Consumer {
         });
 
         return closeMe;
+    }
+
+    /**
+     * Test all required systems to ensure availability.
+     * @return List of all failed systems.
+     */
+    List<FailedSystem> sysReqCheck() {
+        final List<FailedSystem> failed = new ArrayList<>();
+
+        requiredSystems.forEach(s -> {
+            try {
+                if (!s.system().checkUp()) {
+                    failed.add(new FailedSystem(s.system(), s.getRecoveryTime()));
+                    log.info("Failed system check {}", s.system().desc());
+                }
+            } catch (Throwable e) {
+                log.warn("", e);
+            }
+        });
+
+        return failed;
     }
 
     public Class<?> getMsgHandler() {

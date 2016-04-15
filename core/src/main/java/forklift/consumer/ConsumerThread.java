@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -40,6 +41,21 @@ public class ConsumerThread extends Thread {
         int connectAttempt = 0;
         do {
             lastConnectAttemptTime = LocalDateTime.now();
+
+            // Wait for all required systems to become available before starting the listener.
+            log.info("verifying available systems");
+            synchronized(lock) {
+                List<FailedSystem> failed;
+                do {
+                    failed = consumer.sysReqCheck();
+
+                    try {
+                        if (failed.size() > 0)
+                            lock.wait(failed.stream().map(f -> f.getRecoveryTime()).max(Long::compare).get());
+                    } catch (InterruptedException ignored) {
+                    }
+                } while (running.get() && failed.size() > 0);
+            }
 
             log.info("starting consumer");
             try {
