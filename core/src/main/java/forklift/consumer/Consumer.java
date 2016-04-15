@@ -63,9 +63,10 @@ public class Consumer {
 
     // If a queue can process multiple messages at a time we
     // use a thread pool to manage how much cpu load the queue can
-    // take.
-    private final BlockingQueue<Runnable> blockQueue;
-    private final ThreadPoolExecutor threadPool;
+    // take. These are reinstantiated anytime the consumer is asked
+    // to listen for messages.
+    private BlockingQueue<Runnable> blockQueue;
+    private ThreadPoolExecutor threadPool;
 
     private Callback<Consumer> outOfMessages;
 
@@ -124,20 +125,6 @@ public class Consumer {
 
         log = LoggerFactory.getLogger(Consumer.class);
 
-        // Init the thread pools if the msg handler is multi threaded. If the msg handler is single threaded
-        // it'll just run in the current thread to prevent any message read ahead that would be performed.
-        if (msgHandler.isAnnotationPresent(MultiThreaded.class)) {
-            MultiThreaded multiThreaded = msgHandler.getAnnotation(MultiThreaded.class);
-            log.info("Creating thread pool of {}", multiThreaded.value());
-            blockQueue = new ArrayBlockingQueue<Runnable>(multiThreaded.value() * 100 + 100);
-            threadPool = new ThreadPoolExecutor(
-                Math.min(2, multiThreaded.value()), multiThreaded.value(), 5L, TimeUnit.MINUTES, blockQueue);
-            threadPool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
-        } else {
-            blockQueue = null;
-            threadPool = null;
-        }
-
         // Look for all methods that need to be called when a
         // message is received.
         onMessage = new ArrayList<>();
@@ -189,6 +176,20 @@ public class Consumer {
             else
                 throw new RuntimeException("No queue/topic specified");
 
+            // Init the thread pools if the msg handler is multi threaded. If the msg handler is single threaded
+            // it'll just run in the current thread to prevent any message read ahead that would be performed.
+            if (msgHandler.isAnnotationPresent(MultiThreaded.class)) {
+                final MultiThreaded multiThreaded = msgHandler.getAnnotation(MultiThreaded.class);
+                log.info("Creating thread pool of {}", multiThreaded.value());
+                blockQueue = new ArrayBlockingQueue<Runnable>(multiThreaded.value() * 100 + 100);
+                threadPool = new ThreadPoolExecutor(
+                    Math.min(2, multiThreaded.value()), multiThreaded.value(), 5L, TimeUnit.MINUTES, blockQueue);
+                threadPool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+            } else {
+                blockQueue = null;
+                threadPool = null;
+            }
+
             messageLoop(consumer);
         } catch (ConnectorException e) {
             log.debug("", e);
@@ -238,6 +239,7 @@ public class Consumer {
             if (threadPool != null) {
                 log.info("Shutting down thread pool - active {}", threadPool.getActiveCount());
                 threadPool.shutdown();
+                blockQueue.clear();
             }
         } catch (JMSException e) {
             running.set(false);

@@ -9,6 +9,9 @@ full documentation.
 link:doc/forklift.adoc[Documentation]
 
 == Releases
+* 0.20
+** Fix thread pool restart after a consumer receives a badly formed message.
+
 * 0.18
 ** Acknowledge messages once forklift has obtained the message and begins processing it. This
 corrects a bug that could cause a message to be processed twice in the event of a broker node failure.
