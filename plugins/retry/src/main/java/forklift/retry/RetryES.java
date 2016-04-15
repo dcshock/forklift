@@ -107,6 +107,7 @@ public class RetryES {
                 try {
                     client.execute(new Delete.Builder(msg.getMessageId()).index("forklift-retry").type("msg").build());
                 } catch (IOException e) {
+                    log.error("Unable to cleanup retry: {}", msg.getMessageId(), e);
                 }
             }
         };
@@ -132,7 +133,7 @@ public class RetryES {
                     }
                 }
             } catch (Exception e) {
-                log.error("", e);
+                log.error("@trevor - don't ignore this!", e);
             }
         }
     }
@@ -223,12 +224,21 @@ public class RetryES {
             final RetryMessage retryMsg = buildRetry(mr, retry, id);
             fields.put("forklift-retry-msg", mapper.writeValueAsString(retryMsg));
 
-            client.execute(new Index.Builder(fields).index("forklift-retry").type("msg").id(id).build());
+            for (int i = 0; i < 3; i++) {
+                try {
+                    // Index the new information.
+                    client.execute(new Index.Builder(fields).index("forklift-retry").type("msg").id(id).build());
+                    break;
+                } catch (IOException e) {
+                    if (i == 2)
+                        log.error("Unable to index retry: {}", fields.toString(), e);
+                }
+            }
 
             // Scheule the message to be retried.
             executor.schedule(new RetryRunnable(retryMsg, connector, cleanup), retry.timeout(), TimeUnit.SECONDS);
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("Unable to index retry: {}", fields.toString(), e);
         }
     }
 
