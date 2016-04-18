@@ -47,6 +47,14 @@ passport.use(new GoogleStrategy({
     }
 ));
 
+console.log("=========ENVIRONMENT VARIABLES=========")
+console.log("GOOGLE_KEY: "+process.env.GOOGLE_KEY)
+console.log("GOOGLE_SECRET: "+process.env.GOOGLE_SECRET)
+console.log("GOOGLE_DOMAIN: "+process.env.GOOGLE_DOMAIN)
+console.log("SESSION_SECRET (might not exist): "+process.env.SESSION_SECRET)
+console.log("FK_STOMP_HOST: "+process.env.FK_STOMP_HOST)
+console.log("FK_STOMP_PORT:"+process.env.FK_STOMP_PORT)
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 
