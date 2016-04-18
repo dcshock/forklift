@@ -8,7 +8,7 @@ var child = new forever.Monitor('./bin/www', {
     options: [],
     env: {
         TZ: process.env.TZ || "America/New_York",
-        PORT: process.env.PORT || 3001
+        PORT: process.env.PORT || 3000
     }
 });
 
