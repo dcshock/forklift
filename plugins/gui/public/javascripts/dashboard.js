@@ -254,6 +254,7 @@ function addLogToStack(logs) {
             clearTimeout(overlayTimer);
         });
     } else {
+        $.fn.overlayout();
         $("#no-logs").removeClass("hidden");
     }
 }
