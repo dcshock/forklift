@@ -9,6 +9,9 @@ full documentation.
 link:doc/forklift.adoc[Documentation]
 
 == Releases
+* 0.21
+** Ensure consumers connections are cleaned up correctly.
+
 * 0.20
 ** Fix thread pool restart after a consumer receives a badly formed message.
 

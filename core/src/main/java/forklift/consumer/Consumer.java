@@ -191,7 +191,11 @@ public class Consumer {
             }
 
             messageLoop(consumer);
-        } catch (ConnectorException e) {
+
+            // Always cleanup the consumer.
+            if (consumer != null)
+                consumer.close();
+        } catch (ConnectorException | JMSException e) {
             log.debug("", e);
         }
     }
