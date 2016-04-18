@@ -77,6 +77,7 @@ function reset() {
 
 function clearConsole() {
     $("#welcome").addClass("hidden");
+    $("#no-logs").addClass("hidden");
     $("#liveLogs").addClass("hidden");
     $("#errorPlaceholder").addClass("hidden");
     $("#welcome").removeClass("hidden");
@@ -176,6 +177,7 @@ function addLogToStack(logs) {
     //we got a valid response, remove service errors if they exist
     if (logs.length > 0)
     {
+        $("#no-logs").addClass("hidden");
         logs.forEach(function (log) {
             var logSource = log._source;
             var retryCount = null;
@@ -245,11 +247,14 @@ function addLogToStack(logs) {
                 }
                 logHistory.push(logHtml);
                 displayLogs();
+            } else {
+                $.fn.overlayout();
+                $("#no-logs").removeClass("hidden");
             }
             clearTimeout(overlayTimer);
         });
     } else {
-        displayCustomError("No forklift messages were found!", "");
+        $("#no-logs").removeClass("hidden");
     }
 }
 t.preload();

@@ -60,7 +60,7 @@ h3 {
     -o-animation: fadein 1s; /* Opera */
 }
 
-#welcome {
+#welcome, #no-logs {
     margin: 175px auto;
     text-align: center;
 }
@@ -85,7 +85,7 @@ h3 {
     -o-animation: fadein 3s; /* Opera */
 }
 
-#welcome img {
+#welcome img, #no-logs img {
     animation: fadein 5s;
     -moz-animation: fadein 5s; /* Firefox */
     -webkit-animation: fadein 5s; /* Safari and Chrome */
@@ -176,7 +176,7 @@ h2.double:before {
 }
 
 @media screen and (max-width: 768px) {
-    #welcome {
+    #welcome, #no-logs {
         margin: 50px auto;
     }
     #errorPlaceholder {
