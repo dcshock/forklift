@@ -29,7 +29,6 @@ libraryDependencies ++= Seq(
   "ch.qos.logback.contrib" % "logback-json-core"    % "0.1.2",
   "ch.qos.logback.contrib" % "logback-json-classic" % "0.1.2",
   "ch.qos.logback.contrib" % "logback-jackson"      % "0.1.2",
-  "com.fasterxml.jackson.core" % "jackson-databind" % "2.5.1",
   "javax.inject" % "javax.inject" % "1",
   "com.novocode" % "junit-interface" % "0.11" % "test",
   "commons-io" % "commons-io" % "2.4" % "test"

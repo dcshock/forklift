@@ -3,6 +3,7 @@ package forklift.consumer;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import forklift.classloader.RunAsClassLoader;
 import forklift.concurrent.Callback;
 import forklift.connectors.ConnectorException;
@@ -45,7 +46,7 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 
 public class Consumer {
-    static ObjectMapper mapper = new ObjectMapper();
+    static ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());;
 
     private Logger log;
     private static AtomicInteger id = new AtomicInteger(1);

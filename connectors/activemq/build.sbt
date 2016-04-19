@@ -16,7 +16,7 @@ initialize := {
 }
 
 libraryDependencies ++= Seq(
-    "com.github.dcshock" % "forklift" % "0.16",
+    "com.github.dcshock" % "forklift" % "0.17",
     "org.apache.activemq" % "activemq-all" % "5.10.1",
     "commons-io" % "commons-io" % "2.4" % "test",
     "com.novocode" % "junit-interface" % "0.10" % "test"
