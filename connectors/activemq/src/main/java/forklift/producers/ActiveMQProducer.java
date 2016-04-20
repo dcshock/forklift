@@ -1,13 +1,13 @@
 package forklift.producers;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.base.Strings;
 
 import forklift.connectors.ForkliftMessage;
 import forklift.message.ActiveMQHeaders;
 import forklift.message.Header;
-import forklift.producers.ForkliftProducerI;
-import forklift.producers.ProducerException;
 
 import org.apache.activemq.command.ActiveMQMessage;
 
@@ -22,7 +22,8 @@ import javax.jms.Session;
 
 public class ActiveMQProducer implements ForkliftProducerI {
 
-    private static final ObjectMapper mapper = new ObjectMapper();
+    private static final ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule())
+                                                                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);;
     private MessageProducer producer;
     private Destination destination;
     private Map<Header, Object> headers;
