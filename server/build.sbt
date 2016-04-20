@@ -16,12 +16,13 @@ initialize := {
 
 libraryDependencies ++= Seq(
   "com.github.dcshock" % "forklift"           % "0.17",
-  "com.github.dcshock" % "forklift-activemq"  % "0.7",
+  "com.github.dcshock" % "forklift-activemq"  % "0.8",
   "com.github.dcshock" % "forklift-replay"    % "0.7",
   "com.github.dcshock" % "forklift-retry"     % "0.9",
   "com.github.dcshock" % "consul-rest-client" % "0.6",
   "io.searchbox" % "jest" % "2.0.0",
-  "org.apache.activemq" % "activemq-all" % "5.8.0",
+  "com.fasterxml.jackson.core" % "jackson-databind" % "2.7.3",
+  "com.fasterxml.jackson.datatype" % "jackson-datatype-jsr310" % "2.7.3",
   "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1",
   "args4j" % "args4j" % "2.0.31",
   "org.codehaus.janino" % "janino" % "2.6.1",
