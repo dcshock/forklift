@@ -144,8 +144,8 @@ public class MessageRunnable implements Runnable {
                     LifeCycleMonitors.call(ProcessStep.Complete, this);
                 }
             }
-            // Always log all errors
-            getErrors().stream().forEach(e -> log.error(e));
+            // Always log all non-null errors
+            getErrors().stream().filter(e -> e != null).forEach(e -> log.error(e));
             close();
 
         });
