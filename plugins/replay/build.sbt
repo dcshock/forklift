@@ -13,7 +13,7 @@ initialize := {
 }
 
 libraryDependencies ++= Seq(
-  "com.github.dcshock" % "forklift" % "0.14",
+  "com.github.dcshock" % "forklift" % "0.17",
   "org.elasticsearch" % "elasticsearch" % "2.1.1",
   "io.searchbox" % "jest" % "2.0.0",
   "com.novocode" % "junit-interface" % "0.11" % "test"
