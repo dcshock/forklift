@@ -25,7 +25,7 @@ public class ForkliftSyncProducer<T> implements ForkliftSyncProducerI<T> {
         this.producer = producer;
         try {
             this.producer.setProperties(new HashMap<>());
-            this.producer.getProperties().put("@Response.uri", this.uri.toString());
+            this.producer.getProperties().put("@ResponseUri", this.uri.toString());
 
             this.resolver = resolver;
         } catch (ProducerException e) {

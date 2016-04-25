@@ -23,7 +23,7 @@ import javax.jms.Session;
 public class ActiveMQProducer implements ForkliftProducerI {
 
     private static final ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule())
-                                                                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);;
+                                                                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     private MessageProducer producer;
     private Destination destination;
     private Map<Header, Object> headers;

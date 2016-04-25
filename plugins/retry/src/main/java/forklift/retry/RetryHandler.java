@@ -50,7 +50,6 @@ public class RetryHandler {
         this.dir = dir;
         this.connector = connector;
         this.mapper = new ObjectMapper().registerModule(new JavaTimeModule())
-                                        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
                                         .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
         this.executor = Executors.newScheduledThreadPool(1);
 
