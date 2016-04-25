@@ -1,7 +1,9 @@
 package forklift.replay;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.io.Files;
 
 import java.io.BufferedWriter;
@@ -16,8 +18,9 @@ public class ReplayWriter extends ReplayStoreThread<ReplayMsg> {
 
     public ReplayWriter(File file) throws FileNotFoundException {
         super();
-        this.mapper = new ObjectMapper();
-        this.mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+        this.mapper = new ObjectMapper().registerModule(new JavaTimeModule())
+                                        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                                        .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
         this.writer = Files.newWriter(file, Charset.forName("UTF-8"));
     }
 

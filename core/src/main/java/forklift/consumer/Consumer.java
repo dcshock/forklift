@@ -1,6 +1,7 @@
 package forklift.consumer;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -46,8 +47,8 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 
 public class Consumer {
-    static ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());;
-
+    static ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule())
+                                                   .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     private Logger log;
     private static AtomicInteger id = new AtomicInteger(1);
 

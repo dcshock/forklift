@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.ArrayList;
@@ -18,7 +20,7 @@ import javax.jms.JMSException;
 
 public class MessageRunnable implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(MessageRunnable.class);
-    private static final String RESPONSE = "@Response.uri";
+    private static final String RESPONSE = "@ResponseUri";
 
     private final Consumer consumer;
     private ForkliftMessage msg;
@@ -68,7 +70,7 @@ public class MessageRunnable implements Runnable {
             LifeCycleMonitors.call(ProcessStep.Validating, this);
             for (Method m : onValidate) {
                 if (m.getReturnType() == List.class) {
-                    addError(runLoggingErrors(() -> (List<String>)m.invoke(handler)));
+                    runLoggingErrors(() -> (List<String>)m.invoke(handler));
                 } else if (m.getReturnType() == boolean.class) {
                     boolean valid = runLoggingErrors(() -> (boolean)m.invoke(handler));
                     if (!valid)
@@ -144,8 +146,8 @@ public class MessageRunnable implements Runnable {
                     LifeCycleMonitors.call(ProcessStep.Complete, this);
                 }
             }
-            // Always log all errors
-            getErrors().stream().forEach(e -> log.error(e));
+            // Always log all non-null errors
+            getErrors().stream().filter(e -> e != null).forEach(e -> log.error(e));
             close();
 
         });
@@ -197,12 +199,16 @@ public class MessageRunnable implements Runnable {
         try {
             return func.get();
         } catch (Throwable e) {
+            StringWriter sw = new StringWriter();
+            e.printStackTrace(new PrintWriter(sw)); // stack trace as a string
+
             if (e.getCause() == null) {
-                addError(e.getMessage());
+                addError(e.getMessage() + '\n' + sw.toString());
             }
             else {
-                addError(e.getCause().getMessage());
+                addError(e.getCause().getMessage() + '\n' + sw.toString());
             }
+
             return null;
         }
     }

@@ -1,7 +1,9 @@
 package forklift.retry;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.io.Files;
 import forklift.concurrent.Callback;
 import forklift.connectors.ForkliftConnectorI;
@@ -47,8 +49,8 @@ public class RetryHandler {
     public RetryHandler(ForkliftConnectorI connector, File dir) {
         this.dir = dir;
         this.connector = connector;
-        this.mapper = new ObjectMapper();
-        this.mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+        this.mapper = new ObjectMapper().registerModule(new JavaTimeModule())
+                                        .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
         this.executor = Executors.newScheduledThreadPool(1);
 
         // Cleanup after a retry is completed.

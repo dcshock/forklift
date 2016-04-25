@@ -1,7 +1,9 @@
 package forklift.retry;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.gson.JsonObject;
 import forklift.concurrent.Callback;
 import forklift.connectors.ForkliftConnectorI;
@@ -61,7 +63,8 @@ public class RetryES {
 //               .build());
 //        JestClient client = factory.getObject();
 //
-//        final ObjectMapper mapper = new ObjectMapper();
+//        final ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule())
+//                                                      .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 //        mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
 //
 //        final String query = "{\"size\" : \"10000\", \"query\" : { \"match_all\" : {} }}";
@@ -84,8 +87,9 @@ public class RetryES {
     public RetryES(ForkliftConnectorI connector, boolean ssl, String hostname, int port, boolean runRetries) {
         this.connector = connector;
         this.executor = Executors.newScheduledThreadPool(1);
-        this.mapper = new ObjectMapper();
-        this.mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+        this.mapper = new ObjectMapper().registerModule(new JavaTimeModule())
+                                        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                                        .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
 
         final String prefix;
         if (ssl)
@@ -121,14 +125,23 @@ public class RetryES {
                 final String query = "{\"size\" : \"10000\", \"query\" : { \"match_all\" : {} }}";
                 final Search search = new Search.Builder(query).addIndex("forklift-retry").build();
                 final SearchResult results = client.execute(search);
-                for (Hit<JsonObject, Void> msg : results.getHits(JsonObject.class)) {
+                if (results != null) {
                     try {
-                        final RetryMessage retryMessage = mapper.readValue(msg.source.get("forklift-retry-msg").getAsString(), RetryMessage.class);
-                        log.info("Retrying: {}", retryMessage);
-                        executor.schedule(new RetryRunnable(retryMessage, connector, cleanup),
-                            Long.parseLong(Integer.toString((int)retryMessage.getProperties().get("forklift-retry-timeout"))), TimeUnit.SECONDS);
+                        for (Hit<JsonObject, Void> msg : results.getHits(JsonObject.class)) {
+                            try {
+                                final RetryMessage
+                                                retryMessage =
+                                                mapper.readValue(msg.source.get("forklift-retry-msg").getAsString(), RetryMessage.class);
+                                log.info("Retrying: {}", retryMessage);
+                                executor.schedule(new RetryRunnable(retryMessage, connector, cleanup),
+                                                  Long.parseLong(Integer.toString((int)retryMessage.getProperties().get("forklift-retry-timeout"))), TimeUnit.SECONDS);
+                            } catch (Exception e) {
+                                log.error("Unable to read result {}", msg.source);
+                            }
+                        }
                     } catch (Exception e) {
-                        log.error("Unable to read result {}", msg.source);
+                        log.error("Search Results: {}", results.getJsonObject().toString());
+                        log.error("", e);
                     }
                 }
             } catch (Exception e) {
