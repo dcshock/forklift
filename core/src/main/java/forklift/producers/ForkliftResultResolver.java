@@ -23,6 +23,6 @@ public class ForkliftResultResolver<T> implements ForkliftResultResolverI<T> {
     public void resolve(String correlationId, T t) {
         final ResultFuture<T> future = futures.remove(correlationId);
         if (future != null)
-            future.resolve(t);
+            future.complete(t);
     }
 }
