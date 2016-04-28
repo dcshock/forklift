@@ -2,12 +2,16 @@ package forklift.consumer;
 
 import forklift.classloader.RunAsClassLoader;
 import forklift.connectors.ForkliftMessage;
+import forklift.producers.ForkliftProducerI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Method;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -16,19 +20,22 @@ import javax.jms.JMSException;
 
 public class MessageRunnable implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(MessageRunnable.class);
+    private static final String RESPONSE = "@ResponseUri";
 
-    private Consumer consumer;
+    private final Consumer consumer;
     private ForkliftMessage msg;
     private ClassLoader classLoader;
     private Object handler;
     private List<Method> onMessage;
     private List<Method> onValidate;
+    private List<Method> onResponse;
     private Map<ProcessStep, List<Method>> onProcessStep;
     private List<String> errors;
     private List<Closeable> closeMe;
 
     MessageRunnable(Consumer consumer, ForkliftMessage msg, ClassLoader classLoader, Object handler, List<Method> onMessage,
-                    List<Method> onValidate, Map<ProcessStep, List<Method>> onProcessStep, List<Closeable> closeMe) {
+                    List<Method> onValidate, List<Method> onResponse, Map<ProcessStep, List<Method>> onProcessStep,
+                    List<Closeable> closeMe) {
         this.consumer = consumer;
         this.msg = msg;
         this.classLoader = classLoader;
@@ -38,6 +45,7 @@ public class MessageRunnable implements Runnable {
         this.handler = handler;
         this.onMessage = onMessage;
         this.onValidate = onValidate;
+        this.onResponse = onResponse;
         this.onProcessStep = onProcessStep;
         this.errors = new ArrayList<>();
         this.closeMe = closeMe;
@@ -62,7 +70,7 @@ public class MessageRunnable implements Runnable {
             LifeCycleMonitors.call(ProcessStep.Validating, this);
             for (Method m : onValidate) {
                 if (m.getReturnType() == List.class) {
-                    addError(runLoggingErrors(() -> (List<String>)m.invoke(handler)));
+                    runLoggingErrors(() -> (List<String>)m.invoke(handler));
                 } else if (m.getReturnType() == boolean.class) {
                     boolean valid = runLoggingErrors(() -> (boolean)m.invoke(handler));
                     if (!valid)
@@ -90,11 +98,56 @@ public class MessageRunnable implements Runnable {
                 } else {
                     // { Complete }
                     runHooks(ProcessStep.Complete);
+
+                    // Handle response decoratored methods.
+                    if (msg.getProperties().containsKey(RESPONSE)) {
+                        try {
+                            final URI uri = new URI(msg.getProperties().get(RESPONSE).toString());
+
+                            onResponse.stream().forEach((m) -> {
+                                runLoggingErrors(() -> {
+                                    final Object obj = m.invoke(handler);
+
+                                    final ForkliftMessage respMsg = new ForkliftMessage();
+                                    respMsg.setHeaders(msg.getHeaders());
+
+                                    if (m.getReturnType() == String.class)
+                                        respMsg.setMsg(obj.toString());
+                                    else
+                                        respMsg.setMsg(consumer.mapper.writeValueAsString(obj));
+                                    switch (uri.getScheme()) {
+                                        case "queue":
+                                            try (ForkliftProducerI producer = consumer.getConnector().getQueueProducer(uri.getHost())) {
+                                                System.out.println("Sending: " + respMsg.getMsg());
+                                                producer.send(respMsg);
+                                            }
+                                            break;
+                                        case "topic":
+                                            try (ForkliftProducerI producer = consumer.getConnector().getTopicProducer(uri.getHost())) {
+                                                producer.send(respMsg);
+                                            }
+                                            break;
+                                        case "http":
+                                            // Fall through to https
+                                        case "https":
+                                            break;
+                                        default:
+                                            log.warn("Unable to find mapping for response uri scheme {}", uri.getScheme());
+                                            break;
+                                    }
+                                    return null;
+                                });
+                            });
+                        } catch (Exception e) {
+                            log.error("Unable to determine response uri from {}", msg.getProperties().get(RESPONSE), e);
+                        }
+                    }
+
                     LifeCycleMonitors.call(ProcessStep.Complete, this);
                 }
             }
-            // Always log all errors
-            getErrors().stream().forEach(e -> log.error(e));
+            // Always log all non-null errors
+            getErrors().stream().filter(e -> e != null).forEach(e -> log.error(e));
             close();
 
         });
@@ -146,12 +199,16 @@ public class MessageRunnable implements Runnable {
         try {
             return func.get();
         } catch (Throwable e) {
+            StringWriter sw = new StringWriter();
+            e.printStackTrace(new PrintWriter(sw)); // stack trace as a string
+
             if (e.getCause() == null) {
-                addError(e.getMessage());
+                addError(e.getMessage() + '\n' + sw.toString());
             }
             else {
-                addError(e.getCause().getMessage());
+                addError(e.getCause().getMessage() + '\n' + sw.toString());
             }
+
             return null;
         }
     }
@@ -160,5 +217,11 @@ public class MessageRunnable implements Runnable {
         for (Method m : onProcessStep.get(step)) {
             runLoggingErrors(() -> m.invoke(handler));
         }
+    }
+
+    public static void main(String args[]) throws Exception {
+        URI uri = new URI("queue://duh");
+        System.out.println(uri.getScheme());
+        System.out.println(uri.getHost());
     }
 }

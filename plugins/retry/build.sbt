@@ -13,7 +13,10 @@ initialize := {
 }
 
 libraryDependencies ++= Seq(
-  "com.github.dcshock" % "forklift" % "0.8",
+  "com.github.dcshock" % "forklift" % "0.17",
+
+  "com.fasterxml.jackson.core" % "jackson-databind" % "2.7.3",
+  "com.fasterxml.jackson.datatype" % "jackson-datatype-jsr310" % "2.7.3",
   "io.searchbox" % "jest" % "2.0.0"
 )
 
@@ -63,4 +66,4 @@ pomExtra := (
     </developer>
   </developers>)
 
-useGpg := true
+//useGpg := true
