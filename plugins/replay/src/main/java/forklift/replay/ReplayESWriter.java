@@ -62,9 +62,10 @@ public class ReplayESWriter extends ReplayStoreThread<ReplayESWriterMsg> {
     @Override
     protected void poll(ReplayESWriterMsg t) {
         final String index = "forklift-replay-" + LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE);
+
+        // In order to ensure there is only one replay msg for a given id we have to clean the msg id from
+        // any previously created indexes.
         try {
-            // In order to ensure there is only one replay msg for a given id we have to clean the msg id from
-            // any previously created indexes.
             final String q = String.format(
                 "{\"query\":{\"filtered\":{\"query\":{\"query_string\":{\"query\":\"_id:\\\"%s\\\"\"}}}},\"fields\":[],\"from\":0,\"size\":50,\"explain\":false}", t.id);
             final Search search = new Search.Builder(q).addIndex("forklift-replay*").build();
@@ -79,11 +80,20 @@ public class ReplayESWriter extends ReplayStoreThread<ReplayESWriterMsg> {
                     }
                 });
             }
-
-            // Index the new information.
-            client.execute(new Index.Builder(t.fields).index(index).type("log").id(t.id).build());
         } catch (IOException e) {
-            log.error("Unable to index replay log", e);
+            log.error("Unable to search for old replay logs {}", t.id);
+        }
+
+        // Ignore IOExceptions for the first 3 attempts.
+        for (int i = 0; i < 3; i++) {
+            try {
+                // Index the new information.
+                client.execute(new Index.Builder(t.fields).index(index).type("log").id(t.id).build());
+                break;
+            } catch (IOException e) {
+                if (i == 2)
+                    log.error("Unable to index replay log: {}", t.fields.toString(), e);
+            }
         }
     }
 }
