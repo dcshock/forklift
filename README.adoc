@@ -9,6 +9,10 @@ full documentation.
 link:doc/forklift.adoc[Documentation]
 
 == Releases
+* 0.24
+** Synchronous producers
+
+* 0.23
 * 0.22
 ** Add retries to es indexing code for the retry and replay plugins.
 
