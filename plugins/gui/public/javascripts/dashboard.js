@@ -243,13 +243,11 @@ function addLogToStack(logs) {
                 }
                 logStack.push(logHtml);
                 if (currentService == "retry") {
-
                 }
                 logHistory.push(logHtml);
                 displayLogs();
             } else {
                 $.fn.overlayout();
-                $("#no-logs").removeClass("hidden");
             }
             clearTimeout(overlayTimer);
         });
