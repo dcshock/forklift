@@ -71,7 +71,7 @@ m.processReplayStatusEmail = function () {
 }
 
 var sendReplayStatusEmail = function (message) {
-    request('http://' + ip + ':8500/v1/catalog/semairvice/activemq-broker', function (error, response, body) {
+    request('http://' + ip + ':8500/v1/catalog/service/activemq-broker', function (error, response, body) {
         var json = JSON.parse(body);
         if (!error) {
             activemqHost = json[0].ServiceAddress;
