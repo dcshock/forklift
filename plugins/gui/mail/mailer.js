@@ -47,7 +47,7 @@ m.processReplayStatusEmail = function () {
                 }]
             }
         }).then(function (resp) {
-            var message = "<h2>Forklift Replay - Daily Summary</h2>" +
+            var message = "<h2>+-- Todays Summary --+</h2>" +
                 "<br>" +
                 "There are currently <b>" + resp.hits.hits.length + "</b> items in the forklift replay queue that need attention!" +
                 "<br>";
@@ -82,7 +82,7 @@ var sendReplayStatusEmail = function (message) {
     var mailOptions = {
         to: to,
         from: from,
-        subject: "Forklift - Daily Summary",
+        subject: "Forklift Replay - Daily Summary",
         html: message,
     }
     transporter.sendMail(mailOptions, function(error, info){
