@@ -53,9 +53,6 @@ app.use(bodyParser.urlencoded({extended: false}));
 // Wire route handlers
 app.use(require('./routes'));
 
-// Wire cron jobs
-var cron = require('./schedule/schedule');
-
 // any non routed request is given a 404
 app.get('*', (req, res) => {
     res.status(404);

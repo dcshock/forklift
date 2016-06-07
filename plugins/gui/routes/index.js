@@ -1,6 +1,8 @@
 var ensureAuthenticated = require('../utils/auth').ensureAuthenticated;
 var express = require('express');
+var jwt = require('jsonwebtoken');
 var logger = require('../utils/logger');
+var mailer = require('../mail/mailer');
 var passport = require('passport');
 var router = express.Router();
 
@@ -41,6 +43,8 @@ router.get('/dashboard', ensureAuthenticated,  function (req, res) {
     }
 });
 
+
+
 router.get('/about', ensureAuthenticated, (req, res) => res.render('about'))
 router.get('/auth/google', passport.authenticate('google', {scope: [
       "https://www.googleapis.com/auth/userinfo.profile",
@@ -53,5 +57,20 @@ router.get('/auth/google/callback',
         failureRedirect: process.env.GOOGLE_DOMAIN + 'login'
     })
 );
+
+router.post('/sendDailySummary/', function(req, res) {
+    var token = req.body.token || req.query.token || req.headers['x-access-token'];
+    if (token) {
+        jwt.verify(token, process.env.FG_JWT_SECRET, function (err, decoded) {
+           if (err) {
+               logger.error("Failed to authenticate token.", err);
+               return res.json({sucess: false, message: 'Failed to authenticate token.'});
+           } else {
+               logger.info("processing replay status and sending email");
+               mailer.processReplayStatusEmail();
+           }
+        });
+    }
+});
 
 module.exports = router;
