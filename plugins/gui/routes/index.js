@@ -45,7 +45,9 @@ router.get('/dashboard', ensureAuthenticated,  function (req, res) {
 
 
 
-router.get('/about', ensureAuthenticated, (req, res) => res.render('about'))
+router.get('/about', ensureAuthenticated, (req, res) => res.render('about')
+);
+
 router.get('/auth/google', passport.authenticate('google', {scope: [
       "https://www.googleapis.com/auth/userinfo.profile",
       "https://www.googleapis.com/auth/userinfo.email"
@@ -64,7 +66,7 @@ router.post('/sendDailySummary/', function(req, res) {
         jwt.verify(token, process.env.FG_JWT_SECRET, function (err, decoded) {
            if (err) {
                logger.error("Failed to authenticate token.", err);
-               return res.json({sucess: false, message: 'Failed to authenticate token.'});
+               return res.json({success: false, message: 'Failed to authenticate token.'});
            } else {
                logger.info("processing replay status and sending email");
                mailer.processReplayStatusEmail();
