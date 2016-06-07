@@ -11,6 +11,9 @@ var m = {}
 
 var smtp_host = process.env.FG_SMTP_HOST;
 var smtp_port = process.env.FG_SMTP_PORT;
+var smtp_user = process.env.FG_SMTP_USER;
+var smtp_pass = process.env.FG_SMTP_PASS;
+
 var to = process.env.FG_MAILING_LIST;
 var from = process.env.FG_MAILING_FROM;
 
@@ -22,8 +25,8 @@ var smtp_config = {
     host: smtp_host || 'localhost',
     port: smtp_port || 465,
     auth: {
-        user: null,
-        pass: null
+        user: smtp_user,
+        pass: smtp_pass
     }
 }
 
