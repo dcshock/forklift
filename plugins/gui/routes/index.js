@@ -70,8 +70,11 @@ router.post('/sendDailySummary/', function(req, res) {
            } else {
                logger.info("processing replay status and sending email");
                mailer.processReplayStatusEmail();
+               res.json({success: true, message: 'Send Daily Summary completed'})
            }
         });
+    } else {
+        res.json({success: false, message: 'No token provided'})
     }
 });
 
