@@ -61,18 +61,29 @@ router.get('/auth/google/callback',
 );
 
 router.post('/sendDailySummary/', function(req, res) {
-    var token = req.body.token || req.query.token || req.headers['x-access-token'];
+    var authHeader = req.headers['Authorization'];
+    var token = null;
+    var tokenType = null;
+    if (authHeader) {
+        tokenType = authHeader.split(' ')[0];
+        token = authHeader.split(' ')[1];
+    }
     if (token) {
-        jwt.verify(token, process.env.FG_JWT_SECRET, function (err, decoded) {
-           if (err) {
-               logger.error("Failed to authenticate token.", err);
-               return res.json({success: false, message: 'Failed to authenticate token.'});
-           } else {
-               logger.info("processing replay status and sending email");
-               mailer.processReplayStatusEmail();
-               res.json({success: true, message: 'Send Daily Summary completed'})
-           }
-        });
+        if (tokenType && tokenType == "Bearer") {
+            jwt.verify(token, process.env.FG_JWT_SECRET, function (err, decoded) {
+                if (err) {
+                    logger.error("Failed to authenticate token.", err);
+                    return res.json({success: false, message: 'Failed to authenticate token.'});
+                } else {
+                    logger.info("processing replay status and sending email");
+                    mailer.processReplayStatusEmail();
+                    res.json({success: true, message: 'Send Daily Summary completed'})
+                }
+            });
+        } else {
+            logger.error("invalid token type or token type was not specified");
+            res.json({success: false, message: 'Invalid token type or token was not specified'});
+        }
     } else {
         res.json({success: false, message: 'No token provided'})
     }
