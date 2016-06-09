@@ -60,7 +60,7 @@ router.get('/auth/google/callback',
     })
 );
 
-router.post('/sendDailySummary/', function(req, res) {
+router.get('/sendDailySummary/', function(req, res) {
     var authHeader = req.headers['authorization'];
     var token = null;
     var tokenType = null;
