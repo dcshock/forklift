@@ -156,6 +156,10 @@ h2.double:before {
     border-top: none;
 }
 
+.sweet-alert h2 {
+    border: initial;
+    color: black;
+}
 .optionsHeader {
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-weight: lighter;

@@ -19,10 +19,6 @@ router.post('/retry/', ensureAuthenticated, function (req, res) {
         queue : queue
     };
 
-    console.log("=========RETRY ROUTE=========")
-    console.log("FK_STOMP_HOST: "+process.env.FK_STOMP_HOST)
-    console.log("FK_STOMP_PORT:"+process.env.FK_STOMP_PORT)
-
     var client = new Stomp(process.env.FK_STOMP_HOST || 'localhost', process.env.FK_STOMP_PORT || 61613, null, null);
     client.on('error', function(e) {
         logger.error(e);
