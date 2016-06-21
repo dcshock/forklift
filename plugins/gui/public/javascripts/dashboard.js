@@ -35,6 +35,32 @@ t.preload = function () {
         e.preventDefault();
     });
 
+    $("#console-list-group").on('click', '.fixAllButton', function(e) {
+        selectedId = $(this).attr("id");
+        var matches = findAllIdsWithMatchingQueue(selectedId);
+        swal({
+                title: "Are you sure?",
+                text: "You will not be able to undo this action!!",
+                type: "warning",
+                showCancelButton: true,
+                confirmButtonClass: "btn-danger",
+                confirmButtonText: "Yes, fix all!",
+                cancelButtonText: "Cancel",
+                closeOnConfirm: false,
+                closeOnCancel: false
+            },
+            function(isConfirm) {
+                if (isConfirm) {
+                    fixMultiple(matches);
+                    reset();
+                    clearConsole();
+                    e.preventDefault();
+                    swal("Done!", "All documents of matching queue have been marked as fixed!", "success");
+                }
+            });
+
+    });
+
 
     $("#dashboardMenu li a").on('click', function() {
         reset();
@@ -59,6 +85,22 @@ function findLog(id) {
         }
     }
     return null;
+}
+
+function findAllIdsWithMatchingQueue(id) {
+    var log = findLog(id);
+    var queue = log.queue;
+    var matches = [];
+    for(var i = 0; i < logHistory.length; i++) {
+        if (logHistory[i].queue == queue) {
+            var match = {
+                id: logHistory[i].id,
+                index: logHistory[i].index
+            }
+            matches.push(match);
+        }
+    }
+    return matches;
 }
 
 function reset() {
@@ -166,11 +208,19 @@ function fixed(log) {
             "dashboard/fixed/",
             {
                 id: log.id,
-                date: log.date,
                 index: log.index
             }
         )
     }
+}
+
+function fixMultiple(list) {
+    list.forEach(function(entry) {
+        $.post("dashboard/fixed/",{
+            id: entry.id,
+            index: entry.index
+        });
+    });
 }
 
 function addLogToStack(logs) {
@@ -212,7 +262,8 @@ function addLogToStack(logs) {
                     correlationHtml = '<br><strong>Correlation ID: </strong>' + messageId;
                     correlationId = messageId;
                     buttonHtml = '<button id="' + log._id + '"class="btn btn-warning retryButton"><span class="glyphicon glyphicon-repeat"></span> Retry</button> ' +
-                                '<button id="' + log._id + '" class="btn btn-success fixedButton"><span class="glyphicon glyphicon-ok"></span> Fixed</button>';
+                                '<button id="' + log._id + '" class="btn btn-success fixedButton"><span class="glyphicon glyphicon-ok"></span> Fixed</button> ' +
+                                '<button id="' + log._id + '" class="btn btn-danger fixAllButton"><span class="glyphicon glyphicon-fire"></span> Fix All (of matching queue)</button>';
                 }
 
                 selectedId = log._id;

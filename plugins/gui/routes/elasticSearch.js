@@ -50,7 +50,6 @@ router.post('/poll/', ensureAuthenticated, function (req, res) {
 
 router.post('/fixed/', ensureAuthenticated, function(req, res) {
     var updateId = req.body.id;
-    var docDate = req.body.date;
     var index = req.body.index;
 
     client.update({
