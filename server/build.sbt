@@ -2,7 +2,7 @@ organization := "com.github.dcshock"
 
 name := "forklift-server"
 
-version := "0.24"
+version := "0.25"
 
 enablePlugins(JavaAppPackaging)
 
@@ -15,7 +15,7 @@ initialize := {
 }
 
 libraryDependencies ++= Seq(
-  "com.github.dcshock" % "forklift"           % "0.18",
+  "com.github.dcshock" % "forklift"           % "0.19",
   "com.github.dcshock" % "forklift-activemq"  % "0.9",
   "com.github.dcshock" % "forklift-replay"    % "0.8",
   "com.github.dcshock" % "forklift-retry"     % "0.10",

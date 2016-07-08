@@ -190,7 +190,7 @@ public class Consumer {
                 log.info("Creating thread pool of {}", multiThreaded.value());
                 blockQueue = new ArrayBlockingQueue<Runnable>(multiThreaded.value() * 100 + 100);
                 threadPool = new ThreadPoolExecutor(
-                    Math.min(2, multiThreaded.value()), multiThreaded.value(), 5L, TimeUnit.MINUTES, blockQueue);
+                    multiThreaded.value(), multiThreaded.value(), 5L, TimeUnit.MINUTES, blockQueue);
                 threadPool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
             } else {
                 blockQueue = null;

@@ -9,6 +9,10 @@ full documentation.
 link:doc/forklift.adoc[Documentation]
 
 == Releases
+* 0.25
+** Fix multithreading that didn't scale past two threads.
+** Include bash in the alpine based docker container so work arounds aren't necessary to start the system.
+
 * 0.24
 ** Synchronous producers
 
