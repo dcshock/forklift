@@ -9,6 +9,9 @@ full documentation.
 link:doc/forklift.adoc[Documentation]
 
 == Releases
+* 0.26 - not released
+** Startup deployment scanning order changed to avoid a race condition where a property value may not have been loaded before the start of a consumer.
+
 * 0.25
 ** Fix multithreading that didn't scale past two threads.
 ** Include bash in the alpine based docker container so work arounds aren't necessary to start the system.
