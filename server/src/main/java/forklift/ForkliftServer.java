@@ -178,15 +178,15 @@ public final class ForkliftServer {
             log.debug("Scanning for new deployments...");
 
             try {
-                if (deploymentWatch != null)
-                    deploymentWatch.run();
+                if (propsWatch != null)
+                    propsWatch.run();
             } catch (Throwable e) {
                 log.error("", e);
             }
 
             try {
-                if (propsWatch != null)
-                    propsWatch.run();
+                if (deploymentWatch != null)
+                    deploymentWatch.run();
             } catch (Throwable e) {
                 log.error("", e);
             }
