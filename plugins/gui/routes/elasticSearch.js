@@ -16,7 +16,7 @@ router.post('/poll/', ensureAuthenticated, function (req, res) {
 
     client.search({
         index: index,
-        size: 5000,
+        size: 100,
         body: {
             query: {
                 query_string: {
