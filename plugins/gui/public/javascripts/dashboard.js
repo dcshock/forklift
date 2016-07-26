@@ -81,7 +81,6 @@ t.preload = function () {
             retryWithQueue(findLog(selectedId), inputValue);
             swal.close();
         });
-        retryNewQueue()
     });
 
 
