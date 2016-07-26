@@ -47,7 +47,7 @@ t.preload = function () {
                 confirmButtonText: "Yes, fix all!",
                 cancelButtonText: "Cancel",
                 closeOnConfirm: false,
-                closeOnCancel: false
+                closeOnCancel: true
             },
             function(isConfirm) {
                 if (isConfirm) {
@@ -59,6 +59,29 @@ t.preload = function () {
                 }
             });
 
+    });
+
+    $("#console-list-group").on('click', '.changeQueueButton', function(e) {
+        e.preventDefault();
+        selectedId = $(this).attr("id");
+        $(this).parent().remove();
+        swal({
+            title: "Desired Queue?",
+            text: "please input the queue you'd like this document to be sent",
+            type: "input",
+            showCancelButton: true,
+            closeOnConfirm: false,
+            inputPlaceholder: "desired queue..."
+        }, function(inputValue) {
+            if (inputValue === false) return false;
+            if (inputValue === "") {
+                swal.showInputError("You need to provide a queue");
+                return false;
+            }
+            retryWithQueue(findLog(selectedId), inputValue);
+            swal.close();
+        });
+        retryNewQueue()
     });
 
 
@@ -202,6 +225,18 @@ function retry(log) {
     }
 }
 
+function retryWithQueue(log, queue) {
+    if (log != null) {
+        $.post(
+            "dashboard/retry/", {
+                correlationId: log.correlationId,
+                text: log.text,
+                queue: queue
+            }
+        )
+    }
+}
+
 function fixed(log) {
     if (log != null) {
         $.post(
@@ -262,6 +297,7 @@ function addLogToStack(logs) {
                     correlationHtml = '<br><strong>Correlation ID: </strong>' + messageId;
                     correlationId = messageId;
                     buttonHtml = '<button id="' + log._id + '"class="btn btn-warning retryButton"><span class="glyphicon glyphicon-repeat"></span> Retry</button> ' +
+                                '<button id="' + log._id + '"class="btn btn-warning changeQueueButton"><span class="glyphicon glyphicon-repeat"></span> Change Queue</button> ' +
                                 '<button id="' + log._id + '" class="btn btn-success fixedButton"><span class="glyphicon glyphicon-ok"></span> Fixed</button> ' +
                                 '<button id="' + log._id + '" class="btn btn-danger fixAllButton"><span class="glyphicon glyphicon-fire"></span> Fix All (of matching queue)</button>';
                 }
