@@ -472,12 +472,12 @@ public class MessageRunnableTest {
     public static class TestListener8 {
         @LifeCycle(ProcessStep.Validating)
         public static void invalid(MessageRunnable mr) {
-            TestConsumer7.success.set(false);
+            TestConsumer8.success.set(false);
         }
         @LifeCycle(ProcessStep.Processing)
         public static void process(MessageRunnable mr) {
             log.debug("processing");
-            TestConsumer7.success.set(false);
+            TestConsumer8.success.set(false);
         }
         @LifeCycle(ProcessStep.Error)
         public static void error(MessageRunnable mr) {
