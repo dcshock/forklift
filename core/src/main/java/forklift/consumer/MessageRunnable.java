@@ -70,7 +70,7 @@ public class MessageRunnable implements Runnable {
             LifeCycleMonitors.call(ProcessStep.Validating, this);
             for (Method m : onValidate) {
                 if (m.getReturnType() == List.class) {
-                    runLoggingErrors(() -> (List<String>)m.invoke(handler));
+                    addError(runLoggingErrors(() -> (List<String>)m.invoke(handler)));
                 } else if (m.getReturnType() == boolean.class) {
                     boolean valid = runLoggingErrors(() -> (boolean)m.invoke(handler));
                     if (!valid)
@@ -100,7 +100,7 @@ public class MessageRunnable implements Runnable {
                     runHooks(ProcessStep.Complete);
 
                     // Handle response decoratored methods.
-                    if (msg.getProperties().containsKey(RESPONSE)) {
+                    if (msg.getProperties() != null && msg.getProperties().containsKey(RESPONSE)) {
                         try {
                             final URI uri = new URI(msg.getProperties().get(RESPONSE).toString());
 
@@ -149,7 +149,6 @@ public class MessageRunnable implements Runnable {
             // Always log all non-null errors
             getErrors().stream().filter(e -> e != null).forEach(e -> log.error(e));
             close();
-
         });
     }
 
@@ -204,8 +203,7 @@ public class MessageRunnable implements Runnable {
 
             if (e.getCause() == null) {
                 addError(e.getMessage() + '\n' + sw.toString());
-            }
-            else {
+            } else {
                 addError(e.getCause().getMessage() + '\n' + sw.toString());
             }
 
