@@ -21,7 +21,7 @@ libraryDependencies ++= Seq(
     "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1",
     "org.reflections" % "reflections" % "0.9.10",
     "javax.inject" % "javax.inject" % "1",
-    "com.novocode" % "junit-interface" % "0.10" % "test",
+    "com.novocode" % "junit-interface" % "0.11" % "test",
     "org.mockito" % "mockito-all" % "1.9.5" % "test"
 )
 
