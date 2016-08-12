@@ -11,7 +11,7 @@ import forklift.replay.ReplayES;
 import forklift.replay.ReplayLogger;
 import forklift.retry.RetryES;
 import forklift.retry.RetryHandler;
-import org.apache.activemq.broker.BrokerService;
+//import org.apache.activemq.broker.BrokerService;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 
@@ -32,7 +32,7 @@ public final class ForkliftServer {
     // Consumer deployment interval
     private static int SLEEP_INTERVAL = 10000; // 10 seconds
 
-    private static BrokerService broker = null;
+    //private static BrokerService broker = null;
 
     /**
      * Launch a Forklift server instance.
@@ -96,13 +96,13 @@ public final class ForkliftServer {
             }
         } else if (brokerUrl.startsWith("embed")) {
             brokerUrl = "tcp://0.0.0.0:61616";
-            broker = new BrokerService();
-
-            // configure the broker
-            broker.addConnector(brokerUrl);
-            broker.addConnector("stomp://0.0.0.0:61613");
-
-            broker.start();
+//            broker = new BrokerService();
+//
+//            // configure the broker
+//            broker.addConnector(brokerUrl);
+//            broker.addConnector("stomp://0.0.0.0:61613");
+//
+//            broker.start();
         }
 
         // Start a forklift server w/ specified connector.
@@ -166,10 +166,10 @@ public final class ForkliftServer {
 
                 forklift.shutdown();
 
-                if (broker != null)
-                    try {
-                        broker.stop();
-                    } catch (Exception ignored) { }
+//                if (broker != null)
+//                    try {
+//                        broker.stop();
+//                    } catch (Exception ignored) { }
             }
         });
 
