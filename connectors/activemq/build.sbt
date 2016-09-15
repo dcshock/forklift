@@ -2,7 +2,7 @@ organization := "com.github.dcshock"
 
 name := "forklift-activemq"
 
-version := "0.10"
+version := "0.11"
 
 // target and Xlint cause sbt dist to fail
 javacOptions ++= Seq("-source", "1.8")//, "-target", "1.8", "-Xlint")
@@ -16,8 +16,9 @@ initialize := {
 }
 
 libraryDependencies ++= Seq(
-    "com.github.dcshock" % "forklift" % "0.18",
+    "com.github.dcshock" % "forklift" % "0.19",
     "org.apache.activemq" % "activemq-client" % "5.14.0",
+    "org.apache.activemq" % "activemq-broker" % "5.14.0",
     "com.fasterxml.jackson.core" % "jackson-databind" % "2.7.3",
     "com.fasterxml.jackson.datatype" % "jackson-datatype-jsr310" % "2.7.3",
     "commons-io" % "commons-io" % "2.4" % "test",
