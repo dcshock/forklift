@@ -16,7 +16,8 @@ initialize := {
 
 libraryDependencies ++= Seq(
   "com.github.dcshock" % "forklift"           % "0.19",
-  "com.github.dcshock" % "forklift-activemq"  % "0.9",
+  "com.github.dcshock" % "forklift-activemq"  % "0.10",
+  "org.apache.activemq" % "activemq-broker" % "5.14.0",
   "com.github.dcshock" % "forklift-replay"    % "0.8",
   "com.github.dcshock" % "forklift-retry"     % "0.10",
   "com.github.dcshock" % "consul-rest-client" % "0.10",
