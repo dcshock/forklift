@@ -32,6 +32,7 @@ public class MessageRunnable implements Runnable {
     private Map<ProcessStep, List<Method>> onProcessStep;
     private List<String> errors;
     private List<Closeable> closeMe;
+    private boolean warnOnly = false;
 
     MessageRunnable(Consumer consumer, ForkliftMessage msg, ClassLoader classLoader, Object handler, List<Method> onMessage,
                     List<Method> onValidate, List<Method> onResponse, Map<ProcessStep, List<Method>> onProcessStep,
@@ -147,7 +148,10 @@ public class MessageRunnable implements Runnable {
                 }
             }
             // Always log all non-null errors
-            getErrors().stream().filter(e -> e != null).forEach(e -> log.error(e));
+            if (this.warnOnly)
+                getErrors().stream().filter(e -> e != null).forEach(e -> log.warn(e));
+            else
+                getErrors().stream().filter(e -> e != null).forEach(e -> log.error(e));
             close();
         });
     }
@@ -177,6 +181,14 @@ public class MessageRunnable implements Runnable {
 
     public Consumer getConsumer() {
         return consumer;
+    }
+
+    /**
+     * Set logging to warn only. This allows exceptions that would normally be logged as error to be warnings.
+     * @param b
+     */
+    public void setWarnOnly(boolean b) {
+        this.warnOnly = b;
     }
 
     private void close() {

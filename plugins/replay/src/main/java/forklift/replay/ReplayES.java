@@ -103,9 +103,21 @@ public class ReplayES {
     public void msg(MessageRunnable mr, ProcessStep step) {
         final ForkliftMessage msg = mr.getMsg();
 
-        final Map<String, String> fields = new HashMap<String, String>();
+        // Read props of the message to see what we need to do with retry counts
+        final Map<String, Object> props = msg.getProperties();
+
+        final Map<String, String> fields = new HashMap<>();
         fields.put("text", msg.getMsg());
-        fields.put("step", step.toString());
+
+        // Integrate a little with retries. This will stop things from reporting as an error in replay logging for
+        // messages that can be retried.
+        if (step == ProcessStep.Error &&
+            props.containsKey("forklift-retry-count") && !props.containsKey("forklift-retry-max-retries-exceeded")) {
+            fields.put("step", ProcessStep.Retrying.toString());
+            mr.setWarnOnly(true);
+        } else {
+            fields.put("step", step.toString());
+        }
 
         // Map in headers
         for (Header key : msg.getHeaders().keySet()) {

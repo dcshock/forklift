@@ -2,7 +2,7 @@ organization := "com.github.dcshock"
 
 name := "forklift"
 
-version := "0.19"
+version := "0.20"
 
 // target and Xlint cause sbt dist to fail
 javacOptions ++= Seq("-source", "1.8")//, "-target", "1.8", "-Xlint")
