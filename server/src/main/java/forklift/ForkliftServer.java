@@ -11,6 +11,7 @@ import forklift.replay.ReplayES;
 import forklift.replay.ReplayLogger;
 import forklift.retry.RetryES;
 import forklift.retry.RetryHandler;
+import forklift.stats.StatsCollector;
 import org.apache.activemq.broker.BrokerService;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -144,6 +145,8 @@ public final class ForkliftServer {
             LifeCycleMonitors.register(replayES);
         if (opts.getReplayDir() != null)
             LifeCycleMonitors.register(new ReplayLogger(new File(opts.getReplayDir())));
+
+        LifeCycleMonitors.register(StatsCollector.class);
 
         log.info("Connected to broker on " + brokerUrl);
         log.info("Scanning for Forklift consumers at " + opts.getConsumerDir());
