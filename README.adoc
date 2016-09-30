@@ -9,6 +9,9 @@ full documentation.
 link:doc/forklift.adoc[Documentation]
 
 == Releases
+* 0.27
+** Log errors from messages that will be retried as warnings. 
+
 * 0.26
 ** Startup deployment scanning order changed to avoid a race condition where a property value may not have been loaded before the start of a consumer.
 ** Fix validation issue that caused lists to not be validated correctly. 
