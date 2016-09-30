@@ -18,8 +18,8 @@ public class StatsCollector {
     @LifeCycle(value=ProcessStep.Invalid)
     public void invalid(MessageRunnable mr) {
         setProp(mr, "invalid");
-        mr.getMsg().getProperties().put("forklift.stats.validating.total", "" +
-            (System.currentTimeMillis() - Long.parseLong((String)mr.getMsg().getProperties().get("forklift.stats.validating"))));
+        mr.getMsg().getProperties().put("forklift-stats-validating-total", "" +
+            (System.currentTimeMillis() - Long.parseLong((String)mr.getMsg().getProperties().get("forklift-stats-validating"))));
     }
 
     @LifeCycle(value=ProcessStep.Processing)
@@ -30,15 +30,15 @@ public class StatsCollector {
     @LifeCycle(value=ProcessStep.Complete)
     public void complete(MessageRunnable mr) {
         setProp(mr, "complete");
-        mr.getMsg().getProperties().put("forklift.stats.processing.total", "" +
-            (System.currentTimeMillis() - Long.parseLong((String)mr.getMsg().getProperties().get("forklift.stats.processing"))));
+        mr.getMsg().getProperties().put("forklift-stats-processing-total", "" +
+            (System.currentTimeMillis() - Long.parseLong((String)mr.getMsg().getProperties().get("forklift-stats-processing"))));
     }
 
     @LifeCycle(value=ProcessStep.Error)
     public void error(MessageRunnable mr) {
         setProp(mr, "error");
-        mr.getMsg().getProperties().put("forklift.stats.error.total", "" +
-            (System.currentTimeMillis() - Long.parseLong((String)mr.getMsg().getProperties().get("forklift.stats.processing"))));
+        mr.getMsg().getProperties().put("forklift-stats-processing-total", "" +
+            (System.currentTimeMillis() - Long.parseLong((String)mr.getMsg().getProperties().get("forklift-stats-processing"))));
     }
 
     @LifeCycle(value=ProcessStep.Retrying)
@@ -47,6 +47,6 @@ public class StatsCollector {
     }
 
     private void setProp(MessageRunnable mr, String prop) {
-        mr.getMsg().getProperties().put("forklift.stats" + prop, "" + System.currentTimeMillis());
+        mr.getMsg().getProperties().put("forklift-stats-" + prop, "" + System.currentTimeMillis());
     }
 }

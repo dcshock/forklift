@@ -129,6 +129,8 @@ public final class ForkliftServer {
 
         log.info("Registering LifeCycleMonitors");
 
+        LifeCycleMonitors.register(StatsCollector.class);
+
         // Create the replay ES first if it's needed just in case we are utilizing the startup of the embedded es engine.
         ReplayES replayES = null;
         if (opts.getReplayESHost() != null)
@@ -145,8 +147,6 @@ public final class ForkliftServer {
             LifeCycleMonitors.register(replayES);
         if (opts.getReplayDir() != null)
             LifeCycleMonitors.register(new ReplayLogger(new File(opts.getReplayDir())));
-
-        LifeCycleMonitors.register(StatsCollector.class);
 
         log.info("Connected to broker on " + brokerUrl);
         log.info("Scanning for Forklift consumers at " + opts.getConsumerDir());
