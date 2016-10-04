@@ -4,6 +4,7 @@ import static org.kohsuke.args4j.ExampleMode.ALL;
 
 import consul.Consul;
 import forklift.connectors.ActiveMQConnector;
+import forklift.connectors.ForkliftConnectorI;
 import forklift.consumer.ConsumerDeploymentEvents;
 import forklift.consumer.LifeCycleMonitors;
 import forklift.deployment.DeploymentWatch;
@@ -122,7 +123,8 @@ public final class ForkliftServer {
         else
             propsWatch = null;
 
-        forklift.start(new ActiveMQConnector(brokerUrl));
+        final ForkliftConnectorI connector = new ActiveMQConnector(brokerUrl);
+        forklift.start(connector);
         if (!forklift.isRunning()) {
             throw new RuntimeException("Unable to start Forklift");
         }
@@ -132,9 +134,11 @@ public final class ForkliftServer {
         LifeCycleMonitors.register(StatsCollector.class);
 
         // Create the replay ES first if it's needed just in case we are utilizing the startup of the embedded es engine.
-        ReplayES replayES = null;
-        if (opts.getReplayESHost() != null)
-             replayES = new ReplayES(!opts.isReplayESServer(), opts.isReplayESSsl(), opts.getReplayESHost(), opts.getReplayESPort());
+        final ReplayES replayES;
+        if (opts.getReplayESHost() == null)
+            replayES = null;
+        else
+            replayES = new ReplayES(!opts.isReplayESServer(), opts.isReplayESSsl(), opts.getReplayESHost(), opts.getReplayESPort(), connector);
 
         // Setup retry handling.
         if (opts.getRetryDir() != null)
@@ -155,6 +159,8 @@ public final class ForkliftServer {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
+                replayES.shutdown();
+
                 // End the deployment watcher.
                 running.set(false);
                 synchronized (running) {
