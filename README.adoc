@@ -11,6 +11,7 @@ link:doc/forklift.adoc[Documentation]
 == Releases
 * 0.28
 ** Performance fix for Replay ES. Shouldn't block all threads based on the indexing resp time of elastic search. 
+** Correct shutdown issue that caused a queue to be completely consumed before allowing forklift to shutdown.
 
 * 0.27
 ** Log errors from messages that will be retried as warnings. 
