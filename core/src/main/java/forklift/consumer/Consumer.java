@@ -188,7 +188,7 @@ public class Consumer {
             if (msgHandler.isAnnotationPresent(MultiThreaded.class)) {
                 final MultiThreaded multiThreaded = msgHandler.getAnnotation(MultiThreaded.class);
                 log.info("Creating thread pool of {}", multiThreaded.value());
-                blockQueue = new ArrayBlockingQueue<Runnable>(multiThreaded.value() * 100 + 100);
+                blockQueue = new ArrayBlockingQueue<>(multiThreaded.value() * 100 + 100);
                 threadPool = new ThreadPoolExecutor(
                     multiThreaded.value(), multiThreaded.value(), 5L, TimeUnit.MINUTES, blockQueue);
                 threadPool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
@@ -217,12 +217,12 @@ public class Consumer {
 
             while (running.get()) {
                 Message jmsMsg;
-                while ((jmsMsg = consumer.receive(2500)) != null) {
+                while ((jmsMsg = consumer.receive(2500)) != null && running.get()) {
                     final ForkliftMessage msg = connector.jmsToForklift(jmsMsg);
                     try {
                         final Object handler = msgHandler.newInstance();
 
-                        final List<Closeable> closeMe = new ArrayList<Closeable>();
+                        final List<Closeable> closeMe = new ArrayList<>();
                         RunAsClassLoader.run(classLoader, () -> {
                             closeMe.addAll(inject(msg, handler));
                         });
@@ -279,7 +279,7 @@ public class Consumer {
      */
     public List<Closeable> inject(ForkliftMessage msg, final Object instance) {
         // Keep any closable resources around so the injection utilizer can cleanup.
-        final List<Closeable> closeMe = new ArrayList<Closeable>();
+        final List<Closeable> closeMe = new ArrayList<>();
 
         // Inject the forklift msg
         injectFields.keySet().stream().forEach(decorator -> {
@@ -427,7 +427,7 @@ public class Consumer {
 
     public void addServices(ConsumerService... services) {
         if (this.services == null)
-            this.services = new ArrayList<ConsumerService>();
+            this.services = new ArrayList<>();
 
         for (ConsumerService s : services)
             this.services.add(s);

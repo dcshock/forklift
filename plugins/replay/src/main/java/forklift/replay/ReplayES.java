@@ -1,13 +1,24 @@
 package forklift.replay;
 
+import forklift.connectors.ForkliftConnectorI;
 import forklift.connectors.ForkliftMessage;
+import forklift.consumer.Consumer;
+import forklift.consumer.ConsumerService;
+import forklift.consumer.ConsumerThread;
 import forklift.consumer.MessageRunnable;
 import forklift.consumer.ProcessStep;
+import forklift.decorators.BeanResolver;
 import forklift.decorators.LifeCycle;
+import forklift.decorators.Queue;
+import forklift.decorators.Service;
 import forklift.message.Header;
+import forklift.producers.ForkliftProducerI;
+import forklift.producers.ProducerException;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -17,15 +28,21 @@ import java.util.Optional;
 
 import javax.jms.JMSException;
 
+@Service
 public class ReplayES {
+    private static final Logger log = LoggerFactory.getLogger(ReplayES.class);
+
     private final Node node;
     private final ReplayESWriter writer;
+    private final ForkliftProducerI producer;
+    private final ConsumerThread thread;
+    private final Consumer consumer;
 
-    public ReplayES(boolean clientOnly, boolean ssl, String hostname) {
-        this(clientOnly, ssl, hostname, 9200);
+    public ReplayES(boolean clientOnly, boolean ssl, String hostname, ForkliftConnectorI connector) {
+        this(clientOnly, ssl, hostname, 9200, connector);
     }
 
-    public ReplayES(boolean clientOnly, boolean ssl, String hostname, int port) {
+    public ReplayES(boolean clientOnly, boolean ssl, String hostname, int port, ForkliftConnectorI connector) {
         /*
          * Setup the connection to the server. If we are only a client we'll not setup a node locally to run.
          * This will help developers and smaller setups avoid the pain of setting up elastic search.
@@ -58,6 +75,34 @@ public class ReplayES {
                     node.close();
             }
         });
+
+        this.producer = connector.getQueueProducer(ReplayConsumer.class.getAnnotation(Queue.class).value());
+
+        this.consumer = new Consumer(ReplayConsumer.class, connector,
+            Thread.currentThread().getContextClassLoader(), ReplayConsumer.class.getAnnotation(Queue.class));
+        this.consumer.addServices(new ConsumerService(this));
+        this.thread = new ConsumerThread(this.consumer);
+        this.thread.setName("ReplayES");
+        this.thread.setDaemon(true);
+        this.thread.start();
+    }
+
+    @BeanResolver
+    public Object resolve(Class<?> c, String name) {
+        if (c == ReplayESWriter.class)
+            return this.writer;
+
+        return null;
+    }
+
+    public void shutdown() {
+        this.thread.shutdown();
+        try {
+            this.thread.join(180 * 1000);
+        } catch (InterruptedException ignored) {
+        }
+
+        this.writer.shutdown();
     }
 
     @LifeCycle(value=ProcessStep.Pending, annotation=Replay.class)
@@ -160,7 +205,11 @@ public class ReplayES {
         } catch (JMSException ignored) {
         }
 
-        // Push the message to the writer.
-        writer.put(new ReplayESWriter.ReplayESWriterMsg(id, fields));
+        // Push the message to the consumer
+        try {
+            this.producer.send(new ReplayESWriterMsg(id, fields));
+        } catch (ProducerException e) {
+            log.error("Unable to producer ES msg", e);
+        }
     }
 }
