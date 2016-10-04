@@ -5,7 +5,6 @@ import forklift.consumer.ProcessStep;
 import java.util.List;
 import java.util.Map;
 
-
 public class ReplayMsg {
     String messageId;
     String queue;
