@@ -50,7 +50,7 @@ public class ReplayESWriter extends ReplayStoreThread<ReplayESWriterMsg> {
         }
 
         // Index the new information.
-        client.prepareIndex(index, "log").setId(t.getId()).setSource(t.getFields()).execute();
+        client.prepareIndex(index, "log").setId(t.getId()).setSource(t.getFields()).execute().actionGet();
     }
 
     public void shutdown() {

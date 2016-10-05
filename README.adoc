@@ -9,6 +9,9 @@ full documentation.
 link:doc/forklift.adoc[Documentation]
 
 == Releases
+* 0.30
+** Add ordering of messages. Ensures exclusive consumers process messages based on an abitrary order specified by the consumer.
+
 * 0.29
 ** Improve ES indexing performance by using the transport client rather than REST.
 
