@@ -1,28 +1,19 @@
 package forklift.decorators;
 
-import forklift.message.Header;
-
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
-import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Instructs forklift to process messages in a specified order. Order can be assigned
- * by a key in the message body, a standard header key, or a property key. The default
- * is by {@link Header.CorrelationId}.
+ * Instructs forklift to process messages in a specified order. The annotation is placed
+ * on a method that returns a unique id for messages that cannot be executed simultaneously.
+ * Note that this does not cause the queue to be reordered, but rather insists that messages
+ * with the same identifier cannot be executed in separate threads.
  */
 @Documented
-@Inherited
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE})
+@Target({ElementType.METHOD})
 public @interface Order {
-    /** The key in the message body in which to order */
-    String value() default "";
-    /** The header in which to order */
-    Header header() default Header.CorrelationId;
-    /** The property in which to order */
-    String property() default "";
 }

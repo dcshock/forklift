@@ -173,7 +173,7 @@ by annotating the consumer Java class with annotations:
 * @MultiThread - Forklift will run the specified number of consumers to process
 messages off the queue when needed. Helps when consumers may be longer running
 processes.
-* @Order - TBD
+* @Order - Messages are guaranteed to run in order for an exclusive consumer.
 * @RequireSystem - TBD
 
 While making it easy to consume messages, it is also easy to configure the
