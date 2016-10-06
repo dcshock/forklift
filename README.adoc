@@ -9,6 +9,9 @@ full documentation.
 link:doc/forklift.adoc[Documentation]
 
 == Releases
+* 0.29
+** Improve ES indexing performance by using the transport client rather than REST.
+
 * 0.28
 ** Performance fix for Replay ES. Shouldn't block all threads based on the indexing resp time of elastic search. 
 ** Correct shutdown issue that caused a queue to be completely consumed before allowing forklift to shutdown.

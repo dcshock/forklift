@@ -19,6 +19,8 @@ public class ReplayConsumer {
 
     @OnMessage
     public void onMessage() {
+        long start = System.currentTimeMillis();
         this.writer.poll(msg);
+        System.out.println(System.currentTimeMillis() - start);
     }
 }

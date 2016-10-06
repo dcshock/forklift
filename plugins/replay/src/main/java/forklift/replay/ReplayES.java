@@ -65,7 +65,7 @@ public class ReplayES {
             }
         }
 
-        this.writer = new ReplayESWriter(ssl, hostname);
+        this.writer = new ReplayESWriter(ssl, hostname, port);
         this.writer.start();
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
