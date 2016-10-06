@@ -1,13 +1,16 @@
 package forklift.replay;
 
 import forklift.decorators.Message;
+import forklift.decorators.MultiThreaded;
 import forklift.decorators.OnMessage;
 import forklift.decorators.OnValidate;
+import forklift.decorators.Order;
 import forklift.decorators.Queue;
 
 import javax.inject.Inject;
 
 @Queue("forklift.replay.es?consumer.exclusive=true")
+@MultiThreaded(10)
 public class ReplayConsumer {
     @Inject private ReplayESWriter writer;
     @Message private ReplayESWriterMsg msg;
@@ -19,8 +22,11 @@ public class ReplayConsumer {
 
     @OnMessage
     public void onMessage() {
-        long start = System.currentTimeMillis();
         this.writer.poll(msg);
-        System.out.println(System.currentTimeMillis() - start);
+    }
+
+    @Order
+    public String orderBy() {
+        return msg.getId();
     }
 }
