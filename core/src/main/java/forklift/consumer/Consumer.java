@@ -231,7 +231,7 @@ public class Consumer {
                 while ((jmsMsg = consumer.receive(2500)) != null && running.get()) {
                     final ForkliftMessage msg = connector.jmsToForklift(jmsMsg);
                     try {
-                        final Object handler = msgHandler.newInstance();
+                        final Object handler = createHandler(msgHandler);
 
                         final List<Closeable> closeMe = new ArrayList<>();
                         RunAsClassLoader.run(classLoader, () -> {
@@ -321,6 +321,10 @@ public class Consumer {
                 log.error("Error in message loop shutdown:", e);
             }
         }
+    }
+
+    public Object createHandler(Class msgHandler) throws Exception {
+        return msgHandler.newInstance();
     }
 
     public void shutdown() {
