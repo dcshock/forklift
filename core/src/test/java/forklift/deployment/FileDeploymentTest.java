@@ -15,7 +15,7 @@ import java.util.jar.Attributes;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 
-public class DeploymentTest {
+public class FileDeploymentTest {
     @Test(expected = IOException.class)
     public void testNullDeployment() throws IOException {
         new FileDeployment(null);
