@@ -1,7 +1,7 @@
 package forklift.consumer;
 
 import forklift.ForkliftTest;
-import forklift.deployment.Deployment;
+import forklift.deployment.FileDeployment;
 import forklift.deployment.DeploymentWatch;
 
 import com.google.common.io.Files;
@@ -27,10 +27,10 @@ public class ConsumerDeploymentEventsTest extends ForkliftTest {
 
         Files.copy(ForkliftTest.testJar(), deployFile);
         watch.run();
-        Mockito.verify(events).onDeploy(Mockito.any(Deployment.class));
+        Mockito.verify(events).onDeploy(Mockito.any(FileDeployment.class));
 
         deployFile.delete();
         watch.run();
-        Mockito.verify(events).onUndeploy(Mockito.any(Deployment.class));
+        Mockito.verify(events).onUndeploy(Mockito.any(FileDeployment.class));
     }
 }

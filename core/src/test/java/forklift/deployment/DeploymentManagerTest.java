@@ -18,7 +18,7 @@ public class DeploymentManagerTest {
         DeploymentManager deploymentManager = new DeploymentManager();
 
         final File jar = ForkliftTest.testJar();
-        Deployment deployment = deploymentManager.registerDeployedFile(jar);
+        FileDeployment deployment = deploymentManager.registerDeployedFile(jar);
         assertTrue(deploymentManager.isDeployed(jar));
         assertEquals(1, deployment.getQueues().size());
 
