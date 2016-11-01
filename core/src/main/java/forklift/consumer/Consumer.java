@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -45,6 +46,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -57,7 +59,7 @@ public class Consumer {
 
     private final ClassLoader classLoader;
     private final ForkliftConnectorI connector;
-    private final Map<Class, Map<Class<?>, List<Field>>> injectFields;
+    private final Map<Class<? extends Annotation>, Map<Class<?>, List<Field>>> injectFields;
     private final Class<?> msgHandler;
     private final List<Method> onMessage;
     private final List<Method> onValidate;
@@ -231,7 +233,7 @@ public class Consumer {
                 while ((jmsMsg = consumer.receive(2500)) != null && running.get()) {
                     final ForkliftMessage msg = connector.jmsToForklift(jmsMsg);
                     try {
-                        final Object handler = createHandler(msgHandler);
+                        final Object handler = getHandlerCreator().apply(msgHandler);
 
                         final List<Closeable> closeMe = new ArrayList<>();
                         RunAsClassLoader.run(classLoader, () -> {
@@ -323,8 +325,25 @@ public class Consumer {
         }
     }
 
-    public Object createHandler(Class msgHandler) throws Exception {
-        return msgHandler.newInstance();
+    public Function<Class<?>, Object> getHandlerCreator() throws Exception {
+        return (c) -> {
+            try {
+                return c.newInstance();
+            } catch (InstantiationException | IllegalAccessException e) {
+                log.error("", e);
+            }
+            return null;
+        };
+    }
+
+    public java.util.function.BiConsumer<ProcessStep, MessageRunnable> getOnStepFunc() {
+        return (step, r) -> {
+
+        };
+    }
+
+    public void onStep(ProcessStep step, MessageRunnable r) {
+        getOnStepFunc().accept(step, r);
     }
 
     public void shutdown() {

@@ -227,6 +227,7 @@ public class MessageRunnable implements Runnable {
         for (Method m : onProcessStep.get(step)) {
             runLoggingErrors(() -> m.invoke(handler));
         }
+        consumer.onStep(step, this);
     }
 
     public static void main(String args[]) throws Exception {
