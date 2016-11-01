@@ -38,11 +38,11 @@ public class ReplayES {
     private final ConsumerThread thread;
     private final Consumer consumer;
 
-    public ReplayES(boolean clientOnly, boolean ssl, String hostname, ForkliftConnectorI connector) {
-        this(clientOnly, ssl, hostname, 9200, connector);
+    public ReplayES(boolean clientOnly, String hostname, String clusterName, ForkliftConnectorI connector) {
+        this(clientOnly, hostname, 9200, clusterName, connector);
     }
 
-    public ReplayES(boolean clientOnly, boolean ssl, String hostname, int port, ForkliftConnectorI connector) {
+    public ReplayES(boolean clientOnly, String hostname, int port, String clusterName, ForkliftConnectorI connector) {
         /*
          * Setup the connection to the server. If we are only a client we'll not setup a node locally to run.
          * This will help developers and smaller setups avoid the pain of setting up elastic search.
@@ -65,7 +65,7 @@ public class ReplayES {
             }
         }
 
-        this.writer = new ReplayESWriter(ssl, hostname, port);
+        this.writer = new ReplayESWriter(hostname, port, clusterName);
         this.writer.start();
 
         Runtime.getRuntime().addShutdownHook(new Thread() {

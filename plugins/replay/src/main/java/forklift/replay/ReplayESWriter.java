@@ -2,6 +2,7 @@ package forklift.replay;
 
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
@@ -17,12 +18,17 @@ public class ReplayESWriter extends ReplayStoreThread<ReplayESWriterMsg> {
 
     private final TransportClient client;
 
-    public ReplayESWriter(boolean ssl, String hostname) {
-        this(ssl, hostname, 9200);
+    public ReplayESWriter(String hostname) {
+        this(hostname, 9300, "elasticsearch");
     }
 
-    public ReplayESWriter(boolean ssl, String hostname, int port) {
-        this.client = TransportClient.builder().build()
+    public ReplayESWriter(String hostname, int port, String clusterName) {
+        final Settings settings = Settings.settingsBuilder()
+                        .put("cluster.name", clusterName).build();
+
+        this.client = TransportClient.builder()
+            .settings(settings)
+            .build()
             .addTransportAddress(new InetSocketTransportAddress(new InetSocketAddress(hostname, port)));
     }
 
