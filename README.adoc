@@ -7,8 +7,12 @@ be shared by easily by annotating your code. To see what it can do for you check
 full documentation.
 
 link:doc/forklift.adoc[Documentation]
+= Releases
+* 0.32
+** Improve performance of replay indexing.
 
-== Releases
+* 0.31
+
 * 0.30
 ** Add ordering of messages. Ensures exclusive consumers process messages based on an abitrary order specified by the consumer.
 
