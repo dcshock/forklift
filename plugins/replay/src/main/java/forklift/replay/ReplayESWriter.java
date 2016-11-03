@@ -47,7 +47,8 @@ public class ReplayESWriter extends ReplayStoreThread<ReplayESWriterMsg> {
 
             if (resp != null && resp.getHits() != null && resp.getHits().getHits() != null) {
                 for (SearchHit hit : resp.getHits().getHits()) {
-                    client.prepareDelete(hit.getIndex(), "log", t.getId()).execute().actionGet();
+                    if (!hit.getIndex().equals(index))
+                        client.prepareDelete(hit.getIndex(), "log", t.getId()).execute().actionGet();
                 }
             }
         } catch (Exception e) {
