@@ -1,5 +1,6 @@
 package forklift;
 
+import com.google.common.base.Preconditions;
 import consul.Consul;
 import forklift.connectors.ActiveMQConnector;
 import forklift.connectors.ForkliftConnectorI;
@@ -9,28 +10,39 @@ import forklift.deployment.Deployment;
 import forklift.deployment.DeploymentManager;
 import forklift.deployment.DeploymentWatch;
 import forklift.deployment.ClassDeployment;
+import forklift.exception.StartupException;
 import forklift.replay.ReplayES;
 import forklift.replay.ReplayLogger;
 import forklift.retry.RetryES;
 import forklift.retry.RetryHandler;
 import forklift.stats.StatsCollector;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.http.annotation.GuardedBy;
+import org.apache.http.annotation.ThreadSafe;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.CountDownLatch;
 
-import static org.kohsuke.args4j.ExampleMode.ALL;
 
 /**
  * Start Forklift as a server.
+ *
  * @author zdavep
  */
+@ThreadSafe
 public final class ForkliftServer {
-    // Lock Waits
-    private static final AtomicBoolean running = new AtomicBoolean(false);
+
+    private ExecutorService executor = Executors.newSingleThreadExecutor();
+
+    @GuardedBy("this")
+    private volatile ServerState state = ServerState.LATENT;
 
     // Logging
     private static org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ForkliftServer.class);
@@ -39,81 +51,73 @@ public final class ForkliftServer {
     private static int SLEEP_INTERVAL = 10000; // 10 seconds
 
     private static BrokerService broker = null;
-
     private final ForkliftOpts opts;
+    private DeploymentWatch consumerWatch;
+    private Forklift forklift;
+    private DeploymentWatch propsWatch;
 
-    public ForkliftServer(ForkliftOpts options){
+    public ForkliftServer(ForkliftOpts options) {
         this.opts = options;
     }
 
+    private ReplayES replayES;
     private ConsumerDeploymentEvents deploymentEvents;
-
     private DeploymentManager classDeployments = new DeploymentManager();
+    private CountDownLatch runningLatch = new CountDownLatch(1);
+
 
     /**
-     * Launch a Forklift server instance.
-     */
-    public static void main(String[] args) throws Throwable {
-        final ForkliftOpts opts = new ForkliftOpts();
-        final CmdLineParser argParse = new CmdLineParser(opts);
-        try {
-            argParse.parseArgument(args);
-        } catch (CmdLineException e) {
-            // if there's a problem in the command line,
-            // you'll get this exception. this will report
-            // an error message.
-            System.err.println(e.getMessage());
-            System.err.println("java SampleMain [options...] arguments...");
-            // print the list of available options
-            argParse.printUsage(System.err);
-            System.err.println();
-            // print option sample. This is useful some time
-            System.err.println("  Example: java SampleMain" + argParse.printExample(ALL));
-
-            return;
-        }
-
-        File f = new File(opts.getConsumerDir());
-        if (!f.exists() || !f.isDirectory()) {
-            System.err.println();
-            System.err.println(" -monitor1 is not a valid directory.");
-            System.err.println();
-            argParse.printUsage(System.err);
-            System.err.println();
-            return;
-        }
-        ForkliftServer server = new ForkliftServer(opts);
-        server.launch();
-    }
-
-    /**
-     * Launch a Forklift server instance.
-     */
-    public void launch() throws Throwable {
-        String brokerUrl = startBroker();
-        final Forklift forklift = new Forklift();
-        deploymentEvents = new ConsumerDeploymentEvents(forklift);
-        DeploymentWatch consumerWatch = setupConsumerWatch(deploymentEvents, forklift);
-        DeploymentWatch propsWatch = setupPropertyWatch(deploymentEvents);
-        final ForkliftConnectorI connector = new ActiveMQConnector(brokerUrl);
-        forklift.start(connector);
-        if (!forklift.isRunning()) {
-            throw new RuntimeException("Unable to start Forklift");
-        }
-        ReplayES replayES = setupESReplayHandling(forklift);
-        RetryES retryES = setupESRetryHandling(forklift);
-        setupLifeCycleMonitors(replayES, retryES, forklift);
-        setupShutdownHook(replayES, consumerWatch, forklift);
-        runEventLoop(propsWatch, consumerWatch);
-    }
-
-    /**
+     * Attempts to start the forklift server.  This call is blocking and will not return until either the server starts successfully or the waitTime reaches 0.
+     * A response of false does not mean the server will stop its attempt to startup.  This method may only be called once.
      *
+     * @param waitTime the maximum time to wait
+     * @param timeUnit the time unit of the waitTime
+     * @return the {@link ServerState state} of the server at the time this method returns
+     * @throws InterruptedException if the current thread is interrupted while waiting for the server to start
+     * @throws IllegalStateException if this method has already been called
+     */
+    public ServerState startServer(long waitTime, TimeUnit timeUnit) throws InterruptedException {
+        synchronized (this) {
+            Preconditions.checkState(state == ServerState.LATENT);
+            state = ServerState.STARTING;
+        }
+        executor.execute(() -> launch());
+        try {
+            this.runningLatch.await(waitTime, timeUnit);
+            return state;
+        } catch (InterruptedException e) {
+            log.error("Launch Interrupted", e);
+            throw e;
+        }
+    }
+
+    /**
+     * Stops the ForkliftServer.  This call is blocking and will not return until either the server is shutdown or the waitTime reaches 0.
+     *
+     * @param waitTime the maximum time to wait
+     * @param timeUnit the time unit of the waitTime
+     * @return the {@link ServerState state} of the server at the time this method returns
+     * @throws InterruptedException if the current thread is interrupted before the waitTime has ellapsed
+     */
+    public ServerState stopServer(long waitTime, TimeUnit timeUnit) throws InterruptedException {
+        executor.shutdown();
+        executor.awaitTermination(waitTime, timeUnit);
+        return state;
+    }
+
+    /**
+     * @return the current {@link ServerState state} of the server
+     */
+    public ServerState getServerState() {
+        return state;
+    }
+
+    /**
      * @param deploymentClasses the classes which make up the deployment
      */
-    public synchronized void registerDeployment(Class<?> ...deploymentClasses){
-        if(!running.get()) {
-            throw new IllegalStateException("Forklift Server not running!");
+    public void registerDeployment(Class<?>... deploymentClasses) {
+        synchronized (this) {
+            Preconditions.checkState(state == ServerState.RUNNING);
         }
         Deployment deployment = new ClassDeployment(deploymentClasses);
         if (!classDeployments.isRegistered(deployment)) {
@@ -123,18 +127,51 @@ public final class ForkliftServer {
 
     }
 
-    private void runEventLoop(DeploymentWatch propsWatch, DeploymentWatch consumerWatch) throws InterruptedException {
-        running.set(true);
-        while (running.get()) {
-            log.debug("Scanning for new deployments...");
+    /**
+     * Launch a Forklift server instance.
+     */
+    private void launch() {
+        if (setupBrokerAndForklift()) {
+            deploymentEvents = new ConsumerDeploymentEvents(forklift);
+            consumerWatch = setupConsumerWatch(deploymentEvents);
+            propsWatch = setupPropertyWatch(deploymentEvents);
+            this.replayES = setupESReplayHandling(forklift);
+            RetryES retryES = setupESRetryHandling(forklift);
+            if (setupLifeCycleMonitors(replayES, retryES, forklift)) {
+                try {
+                    runEventLoop(propsWatch, consumerWatch);
+                } catch (InterruptedException e) {
+                    log.info("ForkliftServer event loop interrupted, stopping server", e);
+                    shutdown();
+                }
+            }
+        }
+        if(state != ServerState.STOPPED){
+            state = ServerState.ERROR;
+        }
+    }
 
+    private boolean setupBrokerAndForklift() {
+        try {
+            forklift = new Forklift();
+            final ForkliftConnectorI connector = startAndConnectToBroker();
+            forklift.start(connector);
+        } catch (Exception e) {
+            log.error("Unable to startup broker and forklift", e);
+        }
+        return forklift.isRunning();
+    }
+
+    private void runEventLoop(DeploymentWatch propsWatch, DeploymentWatch consumerWatch) throws InterruptedException {
+        state = ServerState.RUNNING;
+        while (state == ServerState.RUNNING) {
+            log.debug("Scanning for new deployments...");
             try {
                 if (propsWatch != null)
                     propsWatch.run();
             } catch (Throwable e) {
                 log.error("", e);
             }
-
             try {
                 if (consumerWatch != null)
                     consumerWatch.run();
@@ -142,63 +179,60 @@ public final class ForkliftServer {
                 log.error("", e);
             }
 
-            synchronized (running) {
-                running.wait(SLEEP_INTERVAL);
+            synchronized (this) {
+                this.wait(SLEEP_INTERVAL);
             }
         }
     }
 
-    private void setupShutdownHook(ReplayES replayES, DeploymentWatch consumerWatch, Forklift forklift) {
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
+    private void shutdown() {
+        if (replayES != null) {
+            replayES.shutdown();
+        }
+        if (consumerWatch != null) {
+            consumerWatch.shutdown();
+        }
+        if (propsWatch != null) {
+            propsWatch.shutdown();
+        }
+        classDeployments.getAll().forEach(deploy -> deploymentEvents.onUndeploy(deploy));
+        if (consumerWatch != null) {
+            consumerWatch.shutdown();
+        }
+        forklift.shutdown();
 
-                // End the deployment watcher.
-                running.set(false);
-
-                synchronized (running) {
-                    running.notify();
-                }
-
-                if(replayES != null) {
-                    replayES.shutdown();
-                }
-
-                if (consumerWatch != null)
-                    consumerWatch.shutdown();
-
-                classDeployments.getAll().stream().forEach(deploy -> deploymentEvents.onUndeploy(deploy));
-
-                if (consumerWatch != null)
-                    consumerWatch.shutdown();
-
-                forklift.shutdown();
-
-                if (broker != null) {
-                    try {
-                        broker.stop();
-                    } catch (Exception ignored) {
-                    }
-                }
+        if (broker != null) {
+            try {
+                broker.stop();
+            } catch (Exception ignored) {
             }
-        });
+        }
+        state = ServerState.STOPPED;
     }
 
-    private void setupLifeCycleMonitors(ReplayES replayES, RetryES retryES, Forklift forklift) throws FileNotFoundException {
-        LifeCycleMonitors.register(StatsCollector.class);
 
+    private boolean setupLifeCycleMonitors(ReplayES replayES, RetryES retryES, Forklift forklift) {
+        LifeCycleMonitors.register(StatsCollector.class);
+        boolean setup = true;
         // Setup retry handling.
-        if(retryES != null){
+        if (retryES != null) {
             LifeCycleMonitors.register(retryES);
         }
-        if(opts.getRetryDir() != null){
+        if (opts.getRetryDir() != null) {
             LifeCycleMonitors.register(new RetryHandler(forklift.getConnector(), new File(opts.getRetryDir())));
         }
         // Always add replay last so that other plugins can update props.
         if (replayES != null)
             LifeCycleMonitors.register(replayES);
-        if (opts.getReplayDir() != null)
-            LifeCycleMonitors.register(new ReplayLogger(new File(opts.getReplayDir())));
+        if (opts.getReplayDir() != null) {
+            try {
+                LifeCycleMonitors.register(new ReplayLogger(new File(opts.getReplayDir())));
+            } catch (FileNotFoundException e) {
+                log.error("Unable to find file for Replay Logger", e);
+                setup = false;
+            }
+        }
+        return setup;
     }
 
     private ReplayES setupESReplayHandling(Forklift forklift) {
@@ -218,7 +252,7 @@ public final class ForkliftServer {
         return retryES;
     }
 
-    private DeploymentWatch setupConsumerWatch(ConsumerDeploymentEvents deploymentEvents, Forklift forklift) {
+    private DeploymentWatch setupConsumerWatch(ConsumerDeploymentEvents deploymentEvents) {
         final DeploymentWatch deploymentWatch;
         if (opts.getConsumerDir() != null) {
             deploymentWatch = new DeploymentWatch(new java.io.File(opts.getConsumerDir()), deploymentEvents);
@@ -234,14 +268,13 @@ public final class ForkliftServer {
         if (opts.getPropsDir() != null) {
             propsWatch = new DeploymentWatch(new java.io.File(opts.getPropsDir()), deploymentEvents);
             log.info("Scanning for Properties at " + opts.getPropsDir());
-        }
-        else {
+        } else {
             propsWatch = null;
         }
         return propsWatch;
     }
 
-    private String startBroker() throws Exception {
+    private ForkliftConnectorI startAndConnectToBroker() throws Exception {
         String brokerUrl = opts.getBrokerUrl();
         if (brokerUrl.startsWith("consul.") && brokerUrl.length() > "consul.".length()) {
             log.info("Building failover url using consul");
@@ -278,6 +311,14 @@ public final class ForkliftServer {
             broker.start();
         }
         log.info("Connected to broker on " + brokerUrl);
-        return brokerUrl;
+        return new ActiveMQConnector(brokerUrl);
+    }
+
+    public static ForkliftServer newInstance(ForkliftOpts opts){
+        return new ForkliftServer(opts);
+    }
+
+    public static ForkliftServer newInstance(ReplayES replayEs, RetryES retryEs, DeploymentWatch consumerWatch, DeploymentWatch propsWatch, DeploymentManager deploymentManager, ConsumerDeploymentEvents deploymentEvents){
+        return new ForkliftServer(null);
     }
 }
