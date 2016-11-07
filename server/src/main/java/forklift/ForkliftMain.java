@@ -46,13 +46,12 @@ public class ForkliftMain {
             return;
         }
         ForkliftServer server = new ForkliftServer(opts);
-        server.startServer(10000, TimeUnit.SECONDS);
-
+        server.startServer(20, TimeUnit.SECONDS);
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
                 try {
-                    server.stopServer(3000, TimeUnit.SECONDS);
+                    server.stopServer(10, TimeUnit.SECONDS);
                 } catch(InterruptedException e){
                     e.printStackTrace(System.out);
                 }

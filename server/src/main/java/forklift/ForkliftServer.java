@@ -6,28 +6,24 @@ import forklift.connectors.ActiveMQConnector;
 import forklift.connectors.ForkliftConnectorI;
 import forklift.consumer.ConsumerDeploymentEvents;
 import forklift.consumer.LifeCycleMonitors;
+import forklift.decorators.*;
 import forklift.deployment.Deployment;
 import forklift.deployment.DeploymentManager;
 import forklift.deployment.DeploymentWatch;
 import forklift.deployment.ClassDeployment;
-import forklift.exception.StartupException;
 import forklift.replay.ReplayES;
 import forklift.replay.ReplayLogger;
 import forklift.retry.RetryES;
 import forklift.retry.RetryHandler;
 import forklift.stats.StatsCollector;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.http.annotation.GuardedBy;
 import org.apache.http.annotation.ThreadSafe;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.CountDownLatch;
 
 
@@ -41,7 +37,6 @@ public final class ForkliftServer {
 
     private ExecutorService executor = Executors.newSingleThreadExecutor();
 
-    @GuardedBy("this")
     private volatile ServerState state = ServerState.LATENT;
 
     // Logging
@@ -73,15 +68,16 @@ public final class ForkliftServer {
      * @param waitTime the maximum time to wait
      * @param timeUnit the time unit of the waitTime
      * @return the {@link ServerState state} of the server at the time this method returns
-     * @throws InterruptedException if the current thread is interrupted while waiting for the server to start
+     * @throws InterruptedException  if the current thread is interrupted while waiting for the server to start
      * @throws IllegalStateException if this method has already been called
      */
     public ServerState startServer(long waitTime, TimeUnit timeUnit) throws InterruptedException {
         synchronized (this) {
             Preconditions.checkState(state == ServerState.LATENT);
             state = ServerState.STARTING;
+            log.info("Forklift server starting");
         }
-        executor.execute(() -> launch());
+        executor.execute(this::launch);
         try {
             this.runningLatch.await(waitTime, timeUnit);
             return state;
@@ -100,7 +96,7 @@ public final class ForkliftServer {
      * @throws InterruptedException if the current thread is interrupted before the waitTime has ellapsed
      */
     public ServerState stopServer(long waitTime, TimeUnit timeUnit) throws InterruptedException {
-        executor.shutdown();
+        executor.shutdownNow();
         executor.awaitTermination(waitTime, timeUnit);
         return state;
     }
@@ -113,18 +109,18 @@ public final class ForkliftServer {
     }
 
     /**
+     * Registers a collection of classes as new deployment.  Classes are scanned for the {@link Queue}, {@link Topic},
+     * {@link Topics} {@link Service}, {@link CoreService} annotations.
+     *
      * @param deploymentClasses the classes which make up the deployment
      */
-    public void registerDeployment(Class<?>... deploymentClasses) {
-        synchronized (this) {
-            Preconditions.checkState(state == ServerState.RUNNING);
-        }
+    public synchronized void registerDeployment(Class<?>... deploymentClasses) {
+        Preconditions.checkState(state == ServerState.RUNNING);
         Deployment deployment = new ClassDeployment(deploymentClasses);
         if (!classDeployments.isRegistered(deployment)) {
             classDeployments.register(deployment);
             deploymentEvents.onDeploy(deployment);
         }
-
     }
 
     /**
@@ -146,8 +142,9 @@ public final class ForkliftServer {
                 }
             }
         }
-        if(state != ServerState.STOPPED){
+        if (state != ServerState.STOPPED) {
             state = ServerState.ERROR;
+            log.info("Forklift server Error state");
         }
     }
 
@@ -164,6 +161,8 @@ public final class ForkliftServer {
 
     private void runEventLoop(DeploymentWatch propsWatch, DeploymentWatch consumerWatch) throws InterruptedException {
         state = ServerState.RUNNING;
+        log.info("Forklift server Running");
+        runningLatch.countDown();
         while (state == ServerState.RUNNING) {
             log.debug("Scanning for new deployments...");
             try {
@@ -178,7 +177,6 @@ public final class ForkliftServer {
             } catch (Throwable e) {
                 log.error("", e);
             }
-
             synchronized (this) {
                 this.wait(SLEEP_INTERVAL);
             }
@@ -186,6 +184,13 @@ public final class ForkliftServer {
     }
 
     private void shutdown() {
+        synchronized(this){
+            if(state != ServerState.RUNNING && state != ServerState.ERROR){
+                return;
+            }
+            state = ServerState.STOPPING;
+            log.info("Forklift server Stopping");
+        }
         if (replayES != null) {
             replayES.shutdown();
         }
@@ -208,8 +213,8 @@ public final class ForkliftServer {
             }
         }
         state = ServerState.STOPPED;
+        log.info("Forklift server Stopped");
     }
-
 
     private boolean setupLifeCycleMonitors(ReplayES replayES, RetryES retryES, Forklift forklift) {
         LifeCycleMonitors.register(StatsCollector.class);
@@ -303,22 +308,11 @@ public final class ForkliftServer {
         } else if (brokerUrl.startsWith("embed")) {
             brokerUrl = "tcp://0.0.0.0:61616";
             broker = new BrokerService();
-
-            // configure the broker
             broker.addConnector(brokerUrl);
             broker.addConnector("stomp://0.0.0.0:61613");
-
             broker.start();
         }
         log.info("Connected to broker on " + brokerUrl);
         return new ActiveMQConnector(brokerUrl);
-    }
-
-    public static ForkliftServer newInstance(ForkliftOpts opts){
-        return new ForkliftServer(opts);
-    }
-
-    public static ForkliftServer newInstance(ReplayES replayEs, RetryES retryEs, DeploymentWatch consumerWatch, DeploymentWatch propsWatch, DeploymentManager deploymentManager, ConsumerDeploymentEvents deploymentEvents){
-        return new ForkliftServer(null);
     }
 }

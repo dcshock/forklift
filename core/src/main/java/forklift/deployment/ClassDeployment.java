@@ -10,6 +10,9 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 /**
+ *
+ * A deployment composed of classes.  Generally used to specify classes which are part of a deployment at runtime.
+ *
  * Created by afrieze on 10/28/16.
  */
 public class ClassDeployment implements Deployment {
@@ -69,25 +72,26 @@ public class ClassDeployment implements Deployment {
     }
 
     @Override
-    public int hashCode(){
-        int result = 0;
-        for(Class<?> c : Iterables.concat(coreServices,queues,services,topics)){
-            result += c.getName().hashCode();
-        }
-        return result;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ClassDeployment that = (ClassDeployment) o;
+
+        if (!queues.equals(that.queues)) return false;
+        if (!topics.equals(that.topics)) return false;
+        if (!services.equals(that.services)) return false;
+        return coreServices.equals(that.coreServices);
+
     }
 
     @Override
-    public boolean equals(Object other){
-        if(!(other instanceof ClassDeployment)){
-            return false;
-        }
-        ClassDeployment d = (ClassDeployment)other;
-        boolean equals = identicalSets(this.coreServices, d.coreServices);
-        equals = equals ? identicalSets(this.services, d.services):false;
-        equals = equals ? identicalSets(this.queues, d.queues):false;
-        equals = equals ? identicalSets(this.topics, d.topics):false;
-        return equals;
+    public int hashCode() {
+        int result = queues.hashCode();
+        result = 31 * result + topics.hashCode();
+        result = 31 * result + services.hashCode();
+        result = 31 * result + coreServices.hashCode();
+        return result;
     }
 
     private boolean identicalSets(Set<?> set1, Set<?> set2){
