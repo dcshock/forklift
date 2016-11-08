@@ -285,6 +285,11 @@ and used to recreate an event.
 events to a log file with enough data to be able to replay the message. In
 essence making it possible to resend a message that has already been processed.
 
+===== Stats Collector
+The stats collector plugin appends statistical processing data to the properties
+of each message processed. This works really well in conjunction with the replay
+plugin which stores this information in a datastore like elastic search.
+
 ## Quickstart Guide
 
 * Download the https://github.com/dcshock/forklift/releases/download[forklift-server-x.x.zip] release.

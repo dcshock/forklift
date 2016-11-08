@@ -55,7 +55,6 @@ public class Consumer {
     private Logger log;
     private static AtomicInteger id = new AtomicInteger(1);
 
-
     private final ClassLoader classLoader;
     private final ForkliftConnectorI connector;
     private final Map<Class, Map<Class<?>, List<Field>>> injectFields;

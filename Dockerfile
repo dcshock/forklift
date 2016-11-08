@@ -12,6 +12,7 @@ WORKDIR /tmp
 ADD server/target/universal/forklift-server-0.31.zip forklift.zip
 RUN yes | unzip -d /usr/local forklift.zip
 RUN ln -s /usr/local/forklift-server-0.31 /usr/local/forklift
+
 RUN rm forklift.zip
 RUN mkdir -p /usr/local/forklift/consumers
 
