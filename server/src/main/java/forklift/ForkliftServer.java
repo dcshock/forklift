@@ -138,7 +138,7 @@ public final class ForkliftServer {
         if (opts.getReplayESHost() == null)
             replayES = null;
         else
-            replayES = new ReplayES(!opts.isReplayESServer(), opts.isReplayESSsl(), opts.getReplayESHost(), opts.getReplayESPort(), connector);
+            replayES = new ReplayES(!opts.isReplayESServer(), opts.getReplayESHost(), opts.getReplayESPort(), opts.getReplayESCluster(), connector);
 
         // Setup retry handling.
         if (opts.getRetryDir() != null)
