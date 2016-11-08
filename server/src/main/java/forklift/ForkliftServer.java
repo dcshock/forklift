@@ -28,7 +28,17 @@ import java.util.concurrent.CountDownLatch;
 
 
 /**
- * Start Forklift as a server.
+ * Start Forklift as a server.  A running forklift server is responsible for
+ * <pre>
+ *     1.  Watching a directory for new deployments
+ *     2.  Watching a directory for new properties
+ *     3.  Accepting new deployments at runtime via the {@link #registerDeployment(Class[])} method
+ *     4.  Optionally running a Broker
+ *     5.  Connections to the Broker
+ *     6.  Starting and managing the Deployment lifecycles
+ *     7.  Retry Strategy
+ *     8.  Replay Strategy
+ * </pre>
  *
  * @author zdavep
  */
