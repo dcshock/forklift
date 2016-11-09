@@ -6,22 +6,23 @@ import java.io.File;
 import java.io.IOException;
 
 public class DeploymentManager extends Registrar<Deployment> {
-    public synchronized Deployment registerDeployedFile(File f)
+    public synchronized FileDeployment registerDeployedFile(File f)
       throws IOException {
-        final Deployment d = new Deployment(f);
+        final FileDeployment d = new FileDeployment(f);
         register(d);
         return d;
     }
 
     public synchronized Deployment unregisterDeployedFile(File f) {
-        Deployment d = new Deployment();
+        FileDeployment d = new FileDeployment();
         d.setDeployedFile(f);
         return unregister(d);
     }
 
     public synchronized boolean isDeployed(File f) {
-        Deployment d = new Deployment();
+        FileDeployment d = new FileDeployment();
         d.setDeployedFile(f);
         return isRegistered(d);
     }
+
 }

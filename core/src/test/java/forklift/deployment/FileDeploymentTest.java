@@ -15,10 +15,10 @@ import java.util.jar.Attributes;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 
-public class DeploymentTest {
+public class FileDeploymentTest {
     @Test(expected = IOException.class)
     public void testNullDeployment() throws IOException {
-        new Deployment(null);
+        new FileDeployment(null);
     }
 
     // Any kind of bad Jar file should only throw IOExcpetion otherwise we may bring down the system
@@ -27,7 +27,7 @@ public class DeploymentTest {
         File f = File.createTempFile("test", ".txt");
 
         try {
-            new Deployment(f);
+            new FileDeployment(f);
         } finally {
             // Don't leave test files around
             f.delete();
@@ -44,7 +44,7 @@ public class DeploymentTest {
         target.close();
 
         try {
-            Deployment d = new Deployment(f);
+            FileDeployment d = new FileDeployment(f);
             assertEquals(f.getName(), d.getDeployedFile().getName());
             assertTrue(d.isJar());
             assertEquals(0, d.getQueues().size());
@@ -62,7 +62,7 @@ public class DeploymentTest {
     @Test
     public void testDeployJar() throws IOException {
         File f = ForkliftTest.testMultiTQJar();
-        Deployment d = new Deployment(f);
+        FileDeployment d = new FileDeployment(f);
         assertNotNull(d);
         assertTrue(d.isJar());
         assertEquals(2, d.getQueues().size());
@@ -77,7 +77,7 @@ public class DeploymentTest {
     @Test
     public void testDeployJarJar() throws IOException {
         File f = ForkliftTest.testJarJar();
-        Deployment d = new Deployment(f);
+        FileDeployment d = new FileDeployment(f);
         assertNotNull(d);
         assertTrue(d.isJar());
         assertEquals(4, d.getQueues().size());

@@ -24,18 +24,21 @@ public class DeploymentWatchTest {
             final File file = File.createTempFile("test", ".jar", dir);
             Files.copy(ForkliftTest.testJar(), file);
 
+            FileDeployment fileDeployment = new FileDeployment();
+            fileDeployment.setDeployedFile(file);
+
             final AtomicBoolean deploy = new AtomicBoolean(true);
             DeploymentWatch watch = new DeploymentWatch(dir, new DeploymentEvents() {
                 @Override
                 public void onDeploy(Deployment deployment) {
                     assertTrue(deploy.get());
-                    assertEquals(file, deployment.getDeployedFile());
+                    assertEquals(fileDeployment, deployment);
                 }
 
                 @Override
                 public void onUndeploy(Deployment deployment) {
                     assertFalse(deploy.get());
-                    assertEquals(file, deployment.getDeployedFile());
+                    assertEquals(fileDeployment, deployment);
                 }
             });
 
@@ -59,19 +62,21 @@ public class DeploymentWatchTest {
             final String props = "db=prod\ndeploy=prod\nusername=mysql\npassword=mysql\n";
             fos.write(props.getBytes());
             fos.close();
+            FileDeployment fileDeployment = new FileDeployment();
+            fileDeployment.setDeployedFile(file);
 
             final AtomicBoolean deploy = new AtomicBoolean(true);
             DeploymentWatch watch = new DeploymentWatch(dir, new DeploymentEvents() {
                 @Override
                 public void onDeploy(Deployment deployment) {
                     assertTrue(deploy.get());
-                    assertEquals(file, deployment.getDeployedFile());
+                    assertEquals(fileDeployment, deployment);
                 }
 
                 @Override
                 public void onUndeploy(Deployment deployment) {
                     assertFalse(deploy.get());
-                    assertEquals(file, deployment.getDeployedFile());
+                    assertEquals(fileDeployment, deployment);
                 }
             });
 
@@ -95,19 +100,22 @@ public class DeploymentWatchTest {
             final String props = "db=prod\n#Db Creds\n\ndb.username=mysql\ndb.password=mysql\n";
             fos.write(props.getBytes());
             fos.close();
+            FileDeployment fileDeployment = new FileDeployment();
+            fileDeployment.setDeployedFile(file);
+
 
             final AtomicBoolean deploy = new AtomicBoolean(true);
             DeploymentWatch watch = new DeploymentWatch(dir, new DeploymentEvents() {
                 @Override
                 public void onDeploy(Deployment deployment) {
                     assertTrue(deploy.get());
-                    assertEquals(file, deployment.getDeployedFile());
+                    assertEquals(fileDeployment, deployment);
                 }
 
                 @Override
                 public void onUndeploy(Deployment deployment) {
                     assertFalse(deploy.get());
-                    assertEquals(file, deployment.getDeployedFile());
+                    assertEquals(fileDeployment, deployment);
                 }
             });
 
@@ -132,19 +140,21 @@ public class DeploymentWatchTest {
             final String props = "db:prod\n\\u00sx=blah\nusername mysql\npassword=mysql\n";
             fos.write(props.getBytes());
             fos.close();
+            FileDeployment fileDeployment = new FileDeployment();
+            fileDeployment.setDeployedFile(file);
 
             final AtomicBoolean deploy = new AtomicBoolean(true);
             DeploymentWatch watch = new DeploymentWatch(dir, new DeploymentEvents() {
                 @Override
                 public void onDeploy(Deployment deployment) {
                     assertTrue(deploy.get());
-                    assertEquals(file, deployment.getDeployedFile());
+                    assertEquals(fileDeployment, deployment);
                 }
 
                 @Override
                 public void onUndeploy(Deployment deployment) {
                     assertFalse(deploy.get());
-                    assertEquals(file, deployment.getDeployedFile());
+                    assertEquals(fileDeployment, deployment);
                 }
             });
 
