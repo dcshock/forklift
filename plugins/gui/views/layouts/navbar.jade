@@ -9,15 +9,18 @@ nav(class="navbar navbar-default navbar-static-top navbar-inverse")
             a(id="home" class="navbar-brand" href="dashboard#") Forklift GUI
         div(class="collapse navbar-collapse" id="guiNavbar")
             ul(class="nav navbar-nav")
-                li(class="dropdown")
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><span class="glyphicon glyphicon-th-list"></span> Dashboard <span class="caret"></span></a>
-                    ul(id="dashboardMenu" class="dropdown-menu")
-                        li
-                            a(href="#" id="searchRetry" name="retry") Search Retry
-                            a(href="#" id="searchReplay" name="replay") Search Replay
+                li(class=currentUrl === 'retries' ? 'active' : '')
+                    a(href="#" id="searchRetry" name="retry") Search Retry
+                li(class=currentUrl === 'replays' ? 'active' : '')
+                    a(href="#" id="searchReplay" name="replay") Search Replay
+
             ul(class="nav navbar-nav navbar-right")
+                li(class=currentUrl === 'about' ? 'active' : '')
+                    a(href="about")
+                        span(class="glyphicon glyphicon-info-sign")
+                        |  About
                 li
-                    <a href="about"><span class="glyphicon glyphicon-info-sign"></span> About</a>
-                li
-                    <a href="logout"><span class="glyphicon glyphicon-log-out"></span> Logout</a>
+                    a(href="logout")
+                        span(class="glyphicon glyphicon-log-out")
+                        |  Logout
 <!-- End Navbar -->

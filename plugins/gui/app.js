@@ -7,11 +7,12 @@ var flash = require('connect-flash');
 
 // Auth packages
 var passport = require('passport');
-var cookieSession = require('cookie-session');
+var session = require('express-session');
 var GoogleStrategy = require('passport-google-oauth2').Strategy;
 
 var app = express();
 
+app.use(session({ secret: process.env.SESSION_SECRET || "this should really be changed", resave: false, saveUninitialized: false}))
 app.use(flash());
 app.use(function(req, res, next) {
     res.locals.errorMessage = req.flash('error');
@@ -37,9 +38,6 @@ app.set('view engine', 'jade');
 app.set('trust proxy', 1); // trust first proxy
 
 // Authentication
-app.use(cookieSession({
-  secret: process.env.SESSION_SECRET || "this should really be changed"
-}));
 app.use(passport.initialize());
 app.use(passport.session());
 passport.serializeUser((user, done) => done(null, user.email));

@@ -4,11 +4,8 @@ p {
 .red {
     color: red;
 }
-.green {
-    color: greenyellow;
-}
 .blue {
-    color: deepskyblue;
+    color: #000000;
 }
 
 #about {
@@ -22,7 +19,7 @@ p {
 }
 
 h1 {
-    color: deepskyblue;
+    color: #000000;
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-size: 5em;
     font-weight: lighter;
@@ -34,7 +31,7 @@ h1 {
 }
 
 h3 {
-    color: whitesmoke;
+    color: #202020;
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-size: 2.5em;
     font-weight: lighter;
