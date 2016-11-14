@@ -7,6 +7,7 @@
   },
   "dependencies": {
     "body-parser": "~1.12.4",
+    "connect-flash": "^0.1.1",
     "cookie-parser": "~1.3.5",
     "cookie-session": "2.0.0-alpha.1",
     "dateformat": "^1.0.12",

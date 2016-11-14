@@ -3,6 +3,7 @@ var express = require('express');
 var favicon = require('serve-favicon');
 var path = require('path');
 var bodyParser = require('body-parser');
+var flash = require('connect-flash');
 
 // Auth packages
 var passport = require('passport');
@@ -10,6 +11,13 @@ var cookieSession = require('cookie-session');
 var GoogleStrategy = require('passport-google-oauth2').Strategy;
 
 var app = express();
+
+app.use(flash());
+app.use(function(req, res, next) {
+    res.locals.errorMessage = req.flash('error');
+    res.locals.successMessage = req.flash('success');
+    next()
+});
 
 // Static assets
 app.use('/img', express.static(path.join(__dirname, 'public/images')));

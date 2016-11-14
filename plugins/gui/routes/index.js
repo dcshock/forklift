@@ -38,4 +38,6 @@ module.exports = function(express) {
             failureRedirect: process.env.GOOGLE_DOMAIN + 'login'
         })
     );
+
+    return router;
 };

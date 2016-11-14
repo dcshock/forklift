@@ -6,4 +6,6 @@ module.exports = function(express) {
     router.post('/poll/', ensureAuthenticated, elasticController.poll);
     router.post('/fixed/', ensureAuthenticated, elasticController.updateAsFixed);
     router.post('/retry/', ensureAuthenticated, elasticController.retry);
+
+    return router;
 };
