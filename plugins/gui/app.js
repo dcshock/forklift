@@ -26,7 +26,7 @@ app.use(logger.errorMorgan);
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
-app.set('trust proxy', 1) // trust first proxy
+app.set('trust proxy', 1); // trust first proxy
 
 // Authentication
 app.use(cookieSession({
@@ -51,7 +51,8 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 
 // Wire route handlers
-app.use(require('./routes'));
+app.use(require('./routes')(express));
+app.use(require('./routes/elasticSearchRouter')(express));
 
 // any non routed request is given a 404
 app.get('*', (req, res) => {
