@@ -8,6 +8,9 @@ full documentation.
 
 link:doc/forklift.adoc[Documentation]
 = Releases
+* 0.33
+** Added support for embedding Forklift Server and runtime deployments
+
 * 0.32
 ** Improve performance of replay indexing.
 
