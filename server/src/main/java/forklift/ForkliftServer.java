@@ -195,7 +195,7 @@ public final class ForkliftServer {
 
     private void shutdown() {
         synchronized(this){
-            if(state != ServerState.RUNNING || state != ServerState.ERROR){
+            if(state != ServerState.RUNNING && state != ServerState.ERROR){
                 return;
             }
             state = ServerState.STOPPING;
