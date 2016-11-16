@@ -10,7 +10,7 @@ module.exports = function(express) {
 
     // LOGIN //
     router.get('/', function (req, res, next) {
-        res.redirect('login');
+        res.redirect('/login/');
     });
     router.get('/health', function (req, res) {
         //If the app is running fine, then a health check should return 200.
@@ -25,7 +25,7 @@ module.exports = function(express) {
     });
     router.get('/logout', function (req, res) {
         req.logout();
-        res.redirect('login');
+        res.redirect('/login/');
     });
     router.get('/auth/google', passport.authenticate('google', {scope: [
             "https://www.googleapis.com/auth/userinfo.profile",
