@@ -12,6 +12,9 @@ var GoogleStrategy = require('passport-google-oauth2').Strategy;
 
 var app = express();
 
+// Misc packages
+app.locals.moment = require('moment');
+
 app.use(session({ secret: process.env.SESSION_SECRET || "this should really be changed", resave: false, saveUninitialized: false}))
 app.use(flash());
 app.use(function(req, res, next) {

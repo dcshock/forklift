@@ -1,7 +1,7 @@
 a.list-group-item(id=messageId)
     div(data-toggle="collapse" data-target="#listCollapse" + messageId)
         div.list-group-item-heading
-            span.badge.pull-right=Date(timestamp)
+            span.badge.pull-right=moment(timestamp).format('lll')
             h2.queue=val.queue
         hr
         if currentUrl === 'replays'
