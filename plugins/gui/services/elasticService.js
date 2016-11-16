@@ -132,7 +132,7 @@ var getStats = function(index, done) {
             hit = hit._source;
             if (queues.indexOf(hit.queue) > -1) {
                 var index = queues.indexOf(hit.queue);
-                queueTotals[index] = queueTotals[index]++;
+                queueTotals[index] = queueTotals[index] + 1;
             } else  {
                 queues.push(hit.queue);
                 queueTotals.push(1);
