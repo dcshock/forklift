@@ -1,0 +1,40 @@
+a.list-group-item(id=val.messageId)
+    div(data-toggle="collapse" data-target="#listCollapse" + val.messageId)
+        div.list-group-item-heading
+            span.badge.pull-right=Date(val.headers.Timestamp)
+            h2.queue=val.queue
+        hr
+        if currentUrl === 'replays'
+            div.btn-toolbar
+                button.modifyBtns.btn.btn-sm.btn-primary.retryButton(type="button" messageId=val.messageId logId=logId correlationId=val.headers.CorrelationId index=logIndex text=val.text queue=val.queue)
+                    span.glyphicon.glyphicon-repeat
+                    |  Retry
+                button.modifyBtns.btn.btn-sm.btn-primary.fixButton(type="button" messageId=val.messageId logId=logId correlationId=val.headers.CorrelationId index=logIndex text=val.text queue=val.queue)
+                    span.glyphicon.glyphicon-ok
+                    |  Fixed
+                button.modifyBtns.btn.btn-sm.btn-success.changeQueueButton(type="button" messageId=val.messageId logId=logId correlationId=val.headers.CorrelationId index=logIndex text=val.text queue=val.queue)
+                    span.glyphicon.glyphicon-pencil
+                    |  Change Queue
+        img.toggle-arrow.pull-right(src='/img/toggle_arrow.svg', data-toggle='tooltip', title='Arrow')
+    div(id="listCollapse" + val.messageId class="collapse")
+        .row.listing-details
+            span.badge
+                span Correlation ID: #{val.headers.CorrelationId}
+        if val.text || val.errors
+            if val.text
+                .btn-toolbar
+                    div.viewInfoBtn.btn.btn-sm.btn-info(data-toggle="collapse" data-target="#json" + val.messageId) View Json&nbsp;
+                        span.glyphicon.glyphicon-chevron-down
+                div.collapse(id="json" + val.messageId)
+                    pre
+                        code.json=JSON.stringify(JSON.parse(val.text), null, 2)
+            if val.errors
+                .btn-toolbar
+                    div.viewInfoBtn.btn.btn-sm.btn-danger(type="button" data-toggle="collapse" data-target="#error" + val.messageId) View Error&nbsp;
+                        span.glyphicon.glyphicon-chevron-down
+                div.collapse(id="error" + val.messageId)
+                    pre
+                        code.java=val.errors
+        h5.queue
+            b Retry Count •
+            |  #{val.properties['forklift-retry-count']} / #{val.properties['forklift-retry-max-retries']}

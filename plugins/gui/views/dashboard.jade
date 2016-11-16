@@ -1,20 +1,60 @@
 html
     head
         meta(name='viewport', content='width=device-width, initial-scale=1.0')
-        link(href='css/bootstrap.min.css', rel='stylesheet', media='screen')
-        link(href='css/jquery.bootstrap-touchspin.min.css', rel='stylesheet', media='screen')
-        link(href='css/font-awesome.min.css', rel='stylesheet', media='screen')
-        link(href='css/sweetalert.css', rel='stylesheet', media='screen')
+        link(href='/css/bootstrap.min.css', rel='stylesheet', media='screen')
+        link(href='/css/font-awesome.min.css', rel='stylesheet', media='screen')
+        link(href='/css/sweetalert.css', rel='stylesheet', media='screen')
 
         title="Forklift GUI"
 
     include layouts/navbar
 
     body
+        div.container-fluid
+            if errorMessage != ''
+                div.alert.alert-danger(id="slideAlert")
+                    a.close(data-dismiss="alert" aria-label="close") &times;
+                    | #{errorMessage}
+            if successMessage != ''
+                div.alert.alert-info(id="slideAlert")
+                    a.close(data-dismiss="alert" aria-label="close") &times;
+                    | #{successMessage}
+            center
+                h1.text-uppercase Forklift Stats
+                hr
+            .row
+                .col-lg-6
+                    center
+                        h1.text-uppercase Retry Queue
+                        hr
+                        if stats.retry.totalLogs > 0
+                            h3.text-uppercase Total Error Logs - #{stats.retry.totalLogs}
+                            if stats.retry.queues.length > 0
+                                - for (var i = 0; i < stats.retry.queues.length; i++)
+                                    - var queue = stats.retry.queues[i]
+                                    - var queueTotal = stats.retry.queueTotals[i]
+                                    h3.text-uppercase #{queue} - #{queueTotal}
+                            else
+                                div.alert.alert-success
+                                    h1.noListings.text-center NO RETRY LOGS FOUND
+                .col-lg-6
+                    center
+                        h1.text-uppercase Replay Queue
+                        hr
+                        if stats.replay.totalLogs > 0
+                            h3.text-uppercase Total Error Logs - #{stats.replay.totalLogs}
+                            if stats.replay.queues.length > 0
+                                - for (var i = 0; i < stats.replay.queues.length; i++)
+                                - var queue = stats.replay.queues[i]
+                                - var queueTotal = stats.replay.queueTotals[i]
+                                h3.text-uppercase #{queue} - #{queueTotal}
+                        else
+                            div.alert.alert-success
+                                h1.noListings.text-center NO REPLAY LOGS FOUND
 
 
 
-    script(src='js/jquery-1.11.3.min.js')
-    script(src='js/bootstrap.min.js')
-    script(src='js/dashboard.js')
-    script(src='js/sweetalert.min.js')
+
+    script(src='/js/jquery-1.11.3.min.js')
+    script(src='/js/bootstrap.min.js')
+    script(src='/js/sweetalert.min.js')

@@ -7,7 +7,15 @@ module.exports.show = function (req, res) {
     //Get the users email, name, and profile picture
     var domain = req.user.split("@")[1];
     if (domain == 'sofi.org' || domain == 'sofi.com') {
-        res.render('dashboard', {currentUrl: ''});
+        // get forklift gui stats
+        elasticService.stats(function(stats) {
+            if (stats) {
+                res.render('dashboard', {currentUrl: '', stats: stats});
+            } else {
+                req.flash('error', 'unable to load stats');
+                res.render('dashboard', {currentUrl: '', stats: stats});
+            }
+        })
     } else {
         req.logout();
         res.status(401);
@@ -15,23 +23,7 @@ module.exports.show = function (req, res) {
     }
 };
 module.exports.showAbout = function(req, res) {
-    res.render('about', {currentUrl: ''});
-};
-module.exports.showRetries = function(req, res) {
-    elasticService.poll(req.body.service, function(err, logs) {
-        if (logs == null) {
-            req.flash('error', err);
-        }
-        res.render('retries', {currentUrl: 'retries', logs: logs})
-    });
-};
-module.exports.showReplays = function(req, res) {
-    elasticService.poll(req.body.service, function(err, logs) {
-        if (logs == null) {
-            req.flash('error', err);
-        }
-        res.render('replays', {currentUrl: 'replays', logs: logs})
-    });
+    res.render('about', {currentUrl: 'about'});
 };
 module.exports.sendDailySummary = function (req, res) {
     var authHeader = req.headers['authorization'];

@@ -1,9 +1,9 @@
 html
     head
         meta(name='viewport', content='width=device-width, initial-scale=1.0')
-        link(href='css/bootstrap.min.css', rel='stylesheet', media='screen')
-        link(href='css/401.css', rel='stylesheet', media='screen')
-        link(href='css/font-awesome.min.css', rel='stylesheet', media='screen')
+        link(href='/css/bootstrap.min.css', rel='stylesheet', media='screen')
+        link(href='/css/401.css', rel='stylesheet', media='screen')
+        link(href='/css/font-awesome.min.css', rel='stylesheet', media='screen')
 
         <!-- Navbar -->
         nav(class="navbar navbar-default navbar-static-top navbar-inverse")
@@ -13,11 +13,12 @@ html
                         span(class="icon-bar")
                         span(class="icon-bar")
                         span(class="icon-bar")
-                    a(class="navbar-brand" href="dashboard") 404
+                    a(class="navbar-brand" href="/dashboard/") 404
                 div(class="collapse navbar-collapse" id="guiNavbar")
                     ul(class="nav navbar-nav navbar-right")
-                        li
-                            <a href="login"><span class="glyphicon glyphicon-log-out"></span> Login</a>
+                        a(href="/login/")
+                            span(class="glyphicon glyphicon-log-out")
+                            |  Login
         <!-- End Navbar -->
     body
         div(class="dashboard-container")
@@ -27,5 +28,5 @@ html
                         br
                         .red.text-uppercase this page does not exist
 
-    script(src='js/bootstrap.min.js')
+    script(src='/js/bootstrap.min.js')
 

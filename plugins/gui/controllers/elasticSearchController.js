@@ -1,62 +1,78 @@
-var elasticsearch = require('elasticsearch');
 var express = require('express');
-var Stomp = require('stomp-client');
+var elasticService = require('../services/elasticService.js');
 var logger = require('../utils/logger');
 
-var client = new elasticsearch.Client({
-    host: (process.env.FK_ES_HOST || 'localhost') + ":" + (process.env.FK_ES_PORT || 9200)
-});
-
 module.exports.updateAsFixed = function(req, res) {
-    var updateId = req.body.id;
+    var updateId = req.body.updateId;
     var index = req.body.index;
-
-    client.update({
-        index: index,
-        id: updateId,
-        type: 'log',
-        body:  {
-            doc: {
-                step: 'Fixed'
-            }
-        }
-    }, function (err) {
-        if (err) {
-            logger.error(err);
-        }
+    elasticService.update(index, updateId, 'Fixed', function() {
+        res.end();
     });
-    res.end();
+};
+module.exports.updateAllAsFixed = function(req, res) {
+    var queue = req.body.queue;
+    elasticService.poll('replay', queue, function(logs, err) {
+        if (logs === 'undefined' || logs == null) {
+            req.flash('error', err);
+        }
+        var hits = [];
+        console.log(logs.length);
+        for (var i = 0; i < logs.length; i++) {
+            elasticService.update(logs[i]._index, logs[i]._id, 'Fixed', function() {
+            })
+        }
+        res.end();
+    });
+
 };
 
 module.exports.retry = function(req, res) {
     var correlationId = req.body.correlationId;
     var text = req.body.text;
     var queue = req.body.queue;
-    var msg = {
-        // jmsHeaders : { 'correlation-id' : correlationId,
-        //                'forklift-retry-count': 0,
-        //                'forklift-retry-max-retries': 0 },
-        jmsHeaders : { 'correlation-id' : correlationId },
-        body : text,
-        queue : queue
-    };
-
-    var client = new Stomp(process.env.FK_STOMP_HOST || 'localhost', process.env.FK_STOMP_PORT || 61613, null, null);
-    client.on('error', function(e) {
-        logger.error(e);
-    });
-
-    client.connect(function() {
-        logger.info('Sending: ' + msg.jmsHeaders['correlation-id']);
-
-        // messages to the stomp connector should persist through restarts
-        msg.jmsHeaders['persistent'] = 'true';
-
-        // special tag to allow non binary msgs
-        msg.jmsHeaders['suppress-content-length'] = 'true';
-
-        client.publish(msg.queue, msg.body, msg.jmsHeaders);
-        client.disconnect();
+    elasticService.retry(correlationId, text, queue, function() {
+        console.log('done');
         res.end();
+    })
+};
+
+module.exports.showRetries = function(req, res) {
+    elasticService.poll('retry', null, function(logs, err) {
+        if (logs === 'undefined' || logs == null) {
+            req.flash('error', err);
+        }
+        var hits = [];
+        for (var i = 0; i < logs.length; i++) {
+            hits.push(logs[i]);
+        }
+        res.render('log-display', {currentUrl: 'retries', hits: hits})
     });
 };
+module.exports.showReplays = function(req, res) {
+    elasticService.poll('replay', null, function(logs, err) {
+        if (logs === 'undefined' || logs == null) {
+            req.flash('error', err);
+        }
+        var hits = [];
+        for (var i = 0; i < logs.length; i++) {
+            hits.push(logs[i]);
+        }
+        res.render('log-display', {currentUrl: 'replays', hits: hits})
+    });
+};
+module.exports.showFilteredResults = function(req, res) {
+    var service = req.query.service;
+    var queue = req.query.queue;
+
+    var tempService = service == 'retries' ? 'retry' : 'replay';
+    elasticService.poll(tempService, queue, function(logs, err) {
+        if (logs === 'undefined' || logs == null) {
+            req.flash('error', err);
+        }
+        var hits = [];
+        for (var i = 0; i < logs.length; i++) {
+            hits.push(logs[i]);
+        }
+        res.render('log-display', {currentUrl: service, hits: hits});
+    });
+}

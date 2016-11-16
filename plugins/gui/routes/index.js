@@ -4,8 +4,8 @@ var dashboardController = require('../controllers/dashboardController.js');
 
 module.exports = function(express) {
     var router = express.Router();
-    router.get('/dashboard', ensureAuthenticated,  dashboardController.show);
-    router.get('/about', ensureAuthenticated, dashboardController.showAbout);
+    router.get('/dashboard/', ensureAuthenticated,  dashboardController.show);
+    router.get('/about/', ensureAuthenticated, dashboardController.showAbout);
     router.get('/sendDailySummary/', dashboardController.sendDailySummary);
 
     // LOGIN //
