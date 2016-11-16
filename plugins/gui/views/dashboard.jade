@@ -45,9 +45,9 @@ html
                             h3.text-uppercase Total Error Logs - #{stats.replay.totalLogs}
                             if stats.replay.queues.length > 0
                                 - for (var i = 0; i < stats.replay.queues.length; i++)
-                                - var queue = stats.replay.queues[i]
-                                - var queueTotal = stats.replay.queueTotals[i]
-                                h3.text-uppercase #{queue} - #{queueTotal}
+                                    - var queue = stats.replay.queues[i]
+                                    - var queueTotal = stats.replay.queueTotals[i]
+                                    h3.text-uppercase #{queue} - #{queueTotal}
                         else
                             div.alert.alert-success
                                 h1.noListings.text-center NO REPLAY LOGS FOUND
