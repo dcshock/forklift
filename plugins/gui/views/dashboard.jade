@@ -34,9 +34,9 @@ html
                                     - var queue = stats.retry.queues[i]
                                     - var queueTotal = stats.retry.queueTotals[i]
                                     h3.text-uppercase #{queue} - #{queueTotal}
-                            else
-                                div.alert.alert-success
-                                    h1.noListings.text-center NO RETRY LOGS FOUND
+                        else
+                            div.alert.alert-success
+                                h1.noListings.text-center NO RETRY LOGS FOUND
                 .col-lg-6
                     center
                         h1.text-uppercase Replay Queue
