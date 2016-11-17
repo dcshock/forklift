@@ -27,7 +27,7 @@ html
                     center
                         h1.text-uppercase Retry Queue
                         hr
-                        if stats.retry.totalLogs > 0
+                        if stats.retry.totalLogs != null && stats.retry.totalLogs > 0
                             h3.text-uppercase Total Error Logs - #{stats.retry.totalLogs}
                             if stats.retry.queues.length > 0
                                 - for (var i = 0; i < stats.retry.queues.length; i++)
@@ -41,7 +41,7 @@ html
                     center
                         h1.text-uppercase Replay Queue
                         hr
-                        if stats.replay.totalLogs > 0
+                        if stats.replay.totalLogs != null && stats.replay.totalLogs > 0
                             h3.text-uppercase Total Error Logs - #{stats.replay.totalLogs}
                             if stats.replay.queues.length > 0
                                 - for (var i = 0; i < stats.replay.queues.length; i++)
