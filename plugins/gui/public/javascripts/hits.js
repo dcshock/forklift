@@ -60,7 +60,6 @@ $('.fixButton').click(function () {
     var messageId = $(this).attr('messageId');
     var updateId = $(this).attr('logId');
     var index = $(this).attr('index');
-    console.log(index);
     $.post('/fixed/', {
         updateId: updateId,
         index: index
