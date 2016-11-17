@@ -16,7 +16,6 @@ module.exports.updateAllAsFixed = function(req, res) {
             req.flash('error', err);
         }
         var hits = [];
-        console.log(logs.length);
         for (var i = 0; i < logs.length; i++) {
             elasticService.update(logs[i]._index, logs[i]._id, 'Fixed', function() {
             })
@@ -31,7 +30,6 @@ module.exports.retry = function(req, res) {
     var text = req.body.text;
     var queue = req.body.queue;
     elasticService.retry(correlationId, text, queue, function() {
-        console.log('done');
         res.end();
     })
 };
