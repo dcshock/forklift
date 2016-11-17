@@ -39,19 +39,18 @@ html
                                 - var logId = val._id;
                                 - var logIndex = val._index;
                                 - val = val._source;
+                                - var timestamp = val.time;
                                 - var retryCount = val["forklift-retry-count"];
                                 - var maxRetryCount = val["forklift-retry-max-retries"];
                                 if currentUrl == 'replays'
                                     - var display = retryCount == maxRetryCount ? true : false;
                                     - var correlationId = logId
                                     - var messageId = logId;
-                                    - var timestamp = val.Timestamp;
                                     if display == true
                                         include layouts/log
                                 else
                                     - val = JSON.parse(val["forklift-retry-msg"])
                                     - var correlationId = val.headers.CorrelationId;
-                                    - var timestamp = val.headers.Timestamp
                                     - var messageId = val.messageId;
                                     include layouts/log
                         .col-lg-6
@@ -60,19 +59,18 @@ html
                                 - var logId = val._id;
                                 - var logIndex = val._index;
                                 - val = val._source;
+                                - var timestamp = val.time;
                                 - var retryCount = val["forklift-retry-count"];
                                 - var maxRetryCount = val["forklift-retry-max-retries"];
                                 if currentUrl == 'replays'
                                     - var display = retryCount == maxRetryCount ? true : false;
                                     - var correlationId = logId
                                     - var messageId = logId;
-                                    - var timestamp = val.Timestamp
                                     if display == true
                                         include layouts/log
                                 else
                                     - val = JSON.parse(val["forklift-retry-msg"])
                                     - var correlationId = val.headers.CorrelationId;
-                                    - var timestamp = val.headers.Timestamp
                                     - var messageId = val.messageId;
                                     include layouts/log
 
