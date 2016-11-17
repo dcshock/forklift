@@ -27,7 +27,7 @@ a.list-group-item(id=messageId)
                         span.glyphicon.glyphicon-chevron-down
                 div.collapse(id="json" + messageId)
                     pre
-                        code.json=JSON.stringify(JSON.parse(val.text), null, 2)
+                        code.json=JSON.stringify(val.text, null, 2)
             if val.errors
                 .btn-toolbar
                     div.viewInfoBtn.btn.btn-sm.btn-danger(type="button" data-toggle="collapse" data-target="#error" + messageId) View Error&nbsp;
