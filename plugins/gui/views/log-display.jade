@@ -1,0 +1,88 @@
+html
+    head
+        meta(name='viewport', content='width=device-width, initial-scale=1.0')
+        link(href='/css/bootstrap.min.css', rel='stylesheet', media='screen')
+        link(href='/css/font-awesome.min.css', rel='stylesheet', media='screen')
+        link(href='/css/sweetalert.css', rel='stylesheet', media='screen')
+        link(href='/css/styles/monokai-sublime.css', rel='stylesheet', media='screen')
+        link(href='/css/hits.css', rel='stylesheet', media='screen')
+
+        title="Forklift GUI"
+
+    include layouts/navbar
+
+    body
+        div.container-fluid
+            if errorMessage != ''
+                div.alert.alert-danger(id="slideAlert")
+                    a.close(data-dismiss="alert" aria-label="close") &times;
+                    | #{errorMessage}
+            if successMessage != ''
+                div.alert.alert-info(id="slideAlert")
+                    a.close(data-dismiss="alert" aria-label="close") &times;
+                    | #{successMessage}
+            div.btn-toolbar
+                button.btn.btn-primary#filterButton(service=currentUrl) Filter
+                if currentUrl === 'replays'
+                    button.btn.btn-danger#fixAllButton
+                        span.glyphicon.glyphicon-fire
+                        | Fix All
+            br
+            if hits.length > 0
+                - var size = hits.length
+                - hits = hits.reverse()
+                .row
+                    .list-group
+                        .col-lg-6
+                            - for(var i = 0; i < size; i+=2)
+                                - var val = hits[i]
+                                - var logId = val._id;
+                                - var logIndex = val._index;
+                                - val = val._source;
+                                - var timestamp = val.time;
+                                - var retryCount = val["forklift-retry-count"];
+                                - var maxRetryCount = val["forklift-retry-max-retries"];
+                                if currentUrl == 'replays'
+                                    - var display = retryCount == maxRetryCount ? true : false;
+                                    - var correlationId = logId
+                                    - var messageId = logId;
+                                    if display == true
+                                        include layouts/log
+                                else
+                                    - val = JSON.parse(val["forklift-retry-msg"])
+                                    - var correlationId = val.headers.CorrelationId;
+                                    - var messageId = val.messageId;
+                                    include layouts/log
+                        .col-lg-6
+                            - for(var i = 1; i < size; i+=2)
+                                - var val = hits[i]
+                                - var logId = val._id;
+                                - var logIndex = val._index;
+                                - val = val._source;
+                                - var timestamp = val.time;
+                                - var retryCount = val["forklift-retry-count"];
+                                - var maxRetryCount = val["forklift-retry-max-retries"];
+                                if currentUrl == 'replays'
+                                    - var display = retryCount == maxRetryCount ? true : false;
+                                    - var correlationId = logId
+                                    - var messageId = logId;
+                                    if display == true
+                                        include layouts/log
+                                else
+                                    - val = JSON.parse(val["forklift-retry-msg"])
+                                    - var correlationId = val.headers.CorrelationId;
+                                    - var messageId = val.messageId;
+                                    include layouts/log
+
+            else
+                div.alert.alert-success
+                    - var queue = currentUrl === 'replays' ? 'REPLAY' : 'RETRY'
+                    h1.noListings.text-center NO #{queue} LOGS FOUND
+
+    script(src='/js/jquery-1.11.3.min.js')
+    script(src='/js/bootstrap.min.js')
+    script(src='/js/sweetalert.min.js')
+    script(src='/js/highlight.pack.js')
+    script.
+        hljs.initHighlightingOnLoad();
+    script(src='/js/hits.js')

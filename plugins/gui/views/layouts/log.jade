@@ -1,0 +1,40 @@
+a.list-group-item(id=messageId)
+    div(data-toggle="collapse" data-target="#listCollapse" + messageId)
+        div.list-group-item-heading
+            span.badge.pull-right=moment(timestamp).format("lll")
+            h2.queue=val.queue
+        hr
+        if currentUrl === 'replays'
+            div.btn-toolbar
+                button.modifyBtns.btn.btn-sm.btn-primary.retryButton(type="button" messageId=messageId logId=logId correlationId=correlationId index=logIndex text=val.text queue=val.queue)
+                    span.glyphicon.glyphicon-repeat
+                    |  Retry
+                button.modifyBtns.btn.btn-sm.btn-primary.fixButton(type="button" messageId=messageId logId=logId correlationId=correlationId index=logIndex text=val.text queue=val.queue)
+                    span.glyphicon.glyphicon-ok
+                    |  Fixed
+                button.modifyBtns.btn.btn-sm.btn-success.changeQueueButton(type="button" messageId=messageId logId=logId correlationId=correlationId index=logIndex text=val.text queue=val.queue)
+                    span.glyphicon.glyphicon-pencil
+                    |  Change Queue
+        img.toggle-arrow.pull-right(src='/img/toggle_arrow.svg', data-toggle='tooltip', title='Arrow')
+    div(id="listCollapse" + messageId class="collapse")
+        .row.listing-details
+            span.badge
+                span Correlation ID: #{correlationId}
+        if val.text || val.errors
+            if val.text
+                .btn-toolbar
+                    div.viewInfoBtn.btn.btn-sm.btn-info(data-toggle="collapse" data-target="#json" + messageId) View Json&nbsp;
+                        span.glyphicon.glyphicon-chevron-down
+                div.collapse(id="json" + messageId)
+                    pre
+                        code.json=JSON.stringify(val.text, null, 2)
+            if val.errors
+                .btn-toolbar
+                    div.viewInfoBtn.btn.btn-sm.btn-danger(type="button" data-toggle="collapse" data-target="#error" + messageId) View Error&nbsp;
+                        span.glyphicon.glyphicon-chevron-down
+                div.collapse(id="error" + messageId)
+                    pre
+                        code.java=val.errors
+        h5.queue
+            b Retry Count •
+            |  #{retryCount} / #{maxRetryCount}

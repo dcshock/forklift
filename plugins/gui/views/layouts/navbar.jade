@@ -1,0 +1,31 @@
+<!-- Navbar -->
+nav(class="navbar navbar-default navbar-static-top navbar-inverse")
+    div(class="container-fluid")
+        div(class="navbar-header")
+            button(type="button" class="navbar-toggle" data-toggle="collapse" data-target="#guiNavbar")
+                span(class="icon-bar")
+                span(class="icon-bar")
+                span(class="icon-bar")
+            a(id="home" class="navbar-brand" href="/dashboard/") Forklift Gooey
+        div(class="collapse navbar-collapse" id="guiNavbar")
+            ul(class="nav navbar-nav")
+                li(class=currentUrl === 'retries' ? 'active' : '')
+                li(class=currentUrl === 'retries' ? 'active' : '')
+                    a(href="/retries/" id="searchRetry" name="retry")
+                        span.glyphicon.glyphicon-refresh
+                        |  Search Retry
+                li(class=currentUrl === 'replays' ? 'active' : '')
+                    a(href="/replays/" id="searchReplay" name="replay")
+                        span.glyphicon.glyphicon-play
+                        |  Search Replay
+
+            ul(class="nav navbar-nav navbar-right")
+                li(class=currentUrl === 'about' ? 'active' : '')
+                    a(href="/about/")
+                        span(class="glyphicon glyphicon-info-sign")
+                        |  About
+                li
+                    a(href="/logout/")
+                        span(class="glyphicon glyphicon-log-out")
+                        |  Logout
+<!-- End Navbar -->

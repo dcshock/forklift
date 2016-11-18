@@ -1,0 +1,150 @@
+.platformImage {
+    margin-top: 10px;
+}
+@media (min-width:768px) {
+    .listing-details {
+        background: rgba(8,112,158,0.12);
+        background: linear-gradient(to right, rgba(0,0,0,0), rgba(8,112,158,0.12), rgba(0,0,0,0));
+    }
+}
+
+.list-group {
+    max-height: 80%;
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+
+.list-group h2 {
+    font-size: 32px;
+    font-family: "Rubik", Helvetica, Arial, sans-serif;
+    color: #28549E;
+    line-height: 0.656;
+    float: left;
+    font-weight: 400;
+
+}
+
+.list-group hr {
+    border-color: #1d589e;
+}
+
+.list-group-item {
+    border-width: 0px;
+    margin-top: 4px;
+    margin-bottom: 2px;
+    background-color: rgba(221, 234, 255, 0.84);
+    padding: 25px 50px 35px;
+    cursor: pointer;
+}
+.badge-danger {
+    background-color: red;
+}
+
+.badge {
+    background: none;
+    font-family: "Rubik", Helvetica, Arial, sans-serif;
+    font-weight: 300;
+    font-size: 16px;
+    line-height: 4;
+    color: rgb(29, 89, 158);
+    letter-spacing: 1px;
+    float:left;
+    padding: 3px 30px;
+}
+.badge:first-child {
+    padding: 0 0 0 19px;
+}
+.well {
+    /*background: none;*/
+    /*border:none;*/
+    font-size: 16px;
+    font-family: "Rubik", Helvetica, Arial, sans-serif;
+    word-wrap: break-word;
+    max-width: 872px;
+    letter-spacing: 0.5px;
+}
+
+.queue {
+    font-size: 16px;
+    font-family: "Rubik", Helvetica, Arial, sans-serif;
+    letter-spacing: 0.5px;
+}
+
+.list-group-item h5{
+    font-size: 16px;
+    font-family: "Rubik", Helvetica, Arial, sans-serif;
+    letter-spacing: 0.5px;
+}
+
+.list-group-item-heading {
+    margin-bottom: 0;
+    margin-top: 0;
+    display: inline-block;
+    position: relative;
+    width: 100%;
+}
+
+.list-group-item-heading > .span{
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.list-group-item hr {
+    margin: 0 0 1em!important;
+}
+
+a.list-group-item, button.list-group-item p {
+    color: #5e5e5e;
+
+}
+
+img.toggle-arrow.pull-right {
+    margin-top: -10px;
+}
+.toggle-arrow {
+    float: right!important;
+}
+
+@media (max-width:768px) {
+    .list-group h2{
+        line-height: 1;
+    }
+
+
+}
+
+@media (max-width:1024px) {
+
+    .list-group .badge:last-child{
+        padding: 3px 30px!important;
+        float:left!important;
+    }
+    .toggle-arrow {
+        float: left!important;
+    }
+
+}
+
+.btn-toolbar {
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+.btn, .btn-toolbar .btn{
+    font-family: "Rubik", Helvetica, Arial, sans-serif;
+    letter-spacing:1.5px;
+
+}
+@media (max-width: 768px) {
+    .btn-sm, .btn-group-sm > .btn {
+        margin: 0!important;
+    }
+    .btn-toolbar .btn {
+        margin-top: 10px;
+    }
+}
+.viewInfoBtn {
+    width: 125px;
+}
+.modifyBtns {
+    width: 150px;
+}

@@ -1,60 +1,64 @@
 html
     head
         meta(name='viewport', content='width=device-width, initial-scale=1.0')
-        link(href='css/bootstrap.min.css', rel='stylesheet', media='screen')
-        link(href='css/jquery.bootstrap-touchspin.min.css', rel='stylesheet', media='screen')
-        link(href='css/console.css', rel='stylesheet', media='screen')
-        link(href='css/dashboard.css', rel='stylesheet', media='screen')
-        link(href='css/bootstrap-toggle.min.css' rel="stylesheet")
-        link(href='css/font-awesome.min.css', rel='stylesheet', media='screen')
-        link(href='css/awesome-bootstrap-checkbox.css', rel='stylesheet', media='screen')
-        link(href='css/sweetalert.css', rel='stylesheet', media='screen')
+        link(href='/css/bootstrap.min.css', rel='stylesheet', media='screen')
+        link(href='/css/font-awesome.min.css', rel='stylesheet', media='screen')
+        link(href='/css/sweetalert.css', rel='stylesheet', media='screen')
 
         title="Forklift GUI"
 
-        <!-- Navbar -->
-        nav(class="navbar navbar-default navbar-static-top navbar-inverse")
-            div(class="container-fluid")
-                div(class="navbar-header")
-                    button(type="button" class="navbar-toggle" data-toggle="collapse" data-target="#guiNavbar")
-                        span(class="icon-bar")
-                        span(class="icon-bar")
-                        span(class="icon-bar")
-                    a(id="home" class="navbar-brand" href="dashboard#") Forklift GUI
-                div(class="collapse navbar-collapse" id="guiNavbar")
-                    ul(class="nav navbar-nav")
-                        li(class="dropdown")
-                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><span class="glyphicon glyphicon-th-list"></span> Dashboard <span class="caret"></span></a>
-                            ul(id="dashboardMenu" class="dropdown-menu")
-                                li
-                                    a(href="#" id="searchRetry" name="retry") Search Retry
-                                    a(href="#" id="searchReplay" name="replay") Search Replay
-                    ul(class="nav navbar-nav navbar-right")
-                        li
-                            <a href="about"><span class="glyphicon glyphicon-info-sign"></span> About</a>
-                        li
-                            <a href="logout"><span class="glyphicon glyphicon-log-out"></span> Logout</a>
-        <!-- End Navbar -->
+    include layouts/navbar
+
     body
-        div(class="dashboard-container")
-            div(id="console")
-                div(id="no-logs" class="hidden")
-                    img(src="img/smile.png")
-                div(id="welcome")
-                    h4 Welcome to Forklift
-                    img(src="img/forklift.png")
-                    h3 Not sure what it is but it does something
-                div(id="liveLogs" class="hidden")
-                    div(class="list-group" id="console-list-group")
-                div(id="errorPlaceholder" class="hidden")
+        div.container-fluid
+            if errorMessage != ''
+                div.alert.alert-danger(id="slideAlert")
+                    a.close(data-dismiss="alert" aria-label="close") &times;
+                    | #{errorMessage}
+            if successMessage != ''
+                div.alert.alert-info(id="slideAlert")
+                    a.close(data-dismiss="alert" aria-label="close") &times;
+                    | #{successMessage}
+            center
+                h1.text-uppercase Forklift Stats
+                hr
+            .row
+                if stats.retry == null || stats.replay == null
+                    div.alert.alert-danger
+                        h1.noListings.text-center COULD NOT CONNECT TO ELASTIC SEARCH
+                else
+                    .col-lg-6
+                        center
+                            h1.text-uppercase Retry Queue
+                            hr
+                            if stats.retry.totalLogs > 0
+                                h3.text-uppercase Total Error Logs - #{stats.retry.totalLogs}
+                                if stats.retry.queues.length > 0
+                                    - for (var i = 0; i < stats.retry.queues.length; i++)
+                                        - var queue = stats.retry.queues[i]
+                                        - var queueTotal = stats.retry.queueTotals[i]
+                                        h3.text-uppercase #{queue} - #{queueTotal}
+                            else
+                                div.alert.alert-success
+                                    h1.noListings.text-center NO RETRY LOGS FOUND
+                    .col-lg-6
+                        center
+                            h1.text-uppercase Replay Queue
+                            hr
+                            if stats.replay.totalLogs > 0
+                                h3.text-uppercase Total Error Logs - #{stats.replay.totalLogs}
+                                if stats.replay.queues.length > 0
+                                    - for (var i = 0; i < stats.replay.queues.length; i++)
+                                        - var queue = stats.replay.queues[i]
+                                        - var queueTotal = stats.replay.queueTotals[i]
+                                        h3.text-uppercase #{queue} - #{queueTotal}
+                            else
+                                div.alert.alert-success
+                                    h1.noListings.text-center NO REPLAY LOGS FOUND
 
 
 
-    script(src='js/jquery-1.11.3.min.js')
-    script(src='js/bootstrap.min.js')
-    script(src='js/bootstrap-toggle.min.js')
-    script(src='js/jquery.bootstrap-touchspin.min.js')
-    script(src='js/highlight.js')
-    script(src='js/dashboard.js')
-    script(src='js/loading-overlay.js')
-    script(src='js/sweetalert.min.js')
+
+    script(src='/js/jquery-1.11.3.min.js')
+    script(src='/js/bootstrap.min.js')
+    script(src='/js/sweetalert.min.js')
