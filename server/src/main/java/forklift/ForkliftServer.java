@@ -106,6 +106,7 @@ public final class ForkliftServer {
      * @throws InterruptedException if the current thread is interrupted before the waitTime has ellapsed
      */
     public ServerState stopServer(long waitTime, TimeUnit timeUnit) throws InterruptedException {
+        shutdown();
         executor.shutdownNow();
         executor.awaitTermination(waitTime, timeUnit);
         return state;
@@ -146,9 +147,7 @@ public final class ForkliftServer {
             if (setupLifeCycleMonitors(replayES, retryES, forklift)) {
                 try {
                     runEventLoop(propsWatch, consumerWatch);
-                } catch (InterruptedException e) {
-                    log.info("ForkliftServer event loop interrupted, stopping server", e);
-                    shutdown();
+                } catch (InterruptedException ignored) {
                 }
             }
         }
@@ -200,30 +199,33 @@ public final class ForkliftServer {
             }
             state = ServerState.STOPPING;
             log.info("Forklift server Stopping");
-        }
-        if (replayES != null) {
-            replayES.shutdown();
-        }
-        if (consumerWatch != null) {
-            consumerWatch.shutdown();
-        }
-        if (propsWatch != null) {
-            propsWatch.shutdown();
-        }
-        classDeployments.getAll().forEach(deploy -> deploymentEvents.onUndeploy(deploy));
-        if (consumerWatch != null) {
-            consumerWatch.shutdown();
-        }
-        forklift.shutdown();
 
-        if (broker != null) {
-            try {
-                broker.stop();
-            } catch (Exception ignored) {
+            if (replayES != null) {
+                replayES.shutdown();
             }
+            if (consumerWatch != null) {
+                consumerWatch.shutdown();
+            }
+            if (propsWatch != null) {
+                propsWatch.shutdown();
+            }
+            classDeployments.getAll().forEach(deploy -> deploymentEvents.onUndeploy(deploy));
+            if (consumerWatch != null) {
+                consumerWatch.shutdown();
+            }
+            forklift.shutdown();
+
+            if (broker != null) {
+                try {
+                    broker.stop();
+                } catch (Exception ignored) {
+                }
+            }
+            state = ServerState.STOPPED;
+            log.info("Forklift server Stopped");
+
+            this.notifyAll();
         }
-        state = ServerState.STOPPED;
-        log.info("Forklift server Stopped");
     }
 
     private boolean setupLifeCycleMonitors(ReplayES replayES, RetryES retryES, Forklift forklift) {
