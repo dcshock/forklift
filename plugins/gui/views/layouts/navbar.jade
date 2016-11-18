@@ -6,26 +6,26 @@ nav(class="navbar navbar-default navbar-static-top navbar-inverse")
                 span(class="icon-bar")
                 span(class="icon-bar")
                 span(class="icon-bar")
-            a(id="home" class="navbar-brand" href="/dashboard/") Forklift Gooey
+            a(id="home" class="navbar-brand" href="/forklift-gui/dashboard/") Forklift Gooey
         div(class="collapse navbar-collapse" id="guiNavbar")
             ul(class="nav navbar-nav")
                 li(class=currentUrl === 'retries' ? 'active' : '')
                 li(class=currentUrl === 'retries' ? 'active' : '')
-                    a(href="/retries/" id="searchRetry" name="retry")
+                    a(href="/forklift-gui/retries/" id="searchRetry" name="retry")
                         span.glyphicon.glyphicon-refresh
                         |  Search Retry
                 li(class=currentUrl === 'replays' ? 'active' : '')
-                    a(href="/replays/" id="searchReplay" name="replay")
+                    a(href="/forklift-gui/replays/" id="searchReplay" name="replay")
                         span.glyphicon.glyphicon-play
                         |  Search Replay
 
             ul(class="nav navbar-nav navbar-right")
                 li(class=currentUrl === 'about' ? 'active' : '')
-                    a(href="/about/")
+                    a(href="/forklift-gui/about/")
                         span(class="glyphicon glyphicon-info-sign")
                         |  About
                 li
-                    a(href="/logout/")
+                    a(href="/forklift-gui/logout/")
                         span(class="glyphicon glyphicon-log-out")
                         |  Logout
 <!-- End Navbar -->

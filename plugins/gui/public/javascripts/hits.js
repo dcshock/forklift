@@ -16,7 +16,7 @@ $("#filterButton").click(function() {
             swal.showInputError("You need to provide a queue");
             return false;
         }
-        window.location = "/filtered?service="+service+"&queue="+inputValue;
+        window.location = "/forklift-gui/filtered?service="+service+"&queue="+inputValue;
         swal.close();
     });
 });
@@ -34,7 +34,7 @@ $("#fixAllButton").click(function() {
             swal.showInputError("You need to provide a queue");
             return false;
         }
-        $.post('/fixAll/', {
+        $.post('/forklift-gui/fixAll/', {
             queue: inputValue
         }, function() {
             location.reload();
@@ -48,7 +48,7 @@ $('.retryButton').click(function () {
     var correlationId = $(this).attr('correlationId');
     var text = $(this).attr('text');
     var queue = $(this).attr('queue');
-    $.post('/retry/', {
+    $.post('/forklift-gui/retry/', {
         correlationId: correlationId,
         text: text,
         queue: queue
@@ -60,7 +60,7 @@ $('.fixButton').click(function () {
     var messageId = $(this).attr('messageId');
     var updateId = $(this).attr('logId');
     var index = $(this).attr('index');
-    $.post('/fixed/', {
+    $.post('/forklift-gui/fixed/', {
         updateId: updateId,
         index: index
     }, function() {
@@ -84,7 +84,7 @@ $('.changeQueueButton').click(function () {
             swal.showInputError("You need to provide a queue");
             return false;
         }
-        $.post('/retry/', {
+        $.post('/forklift-gui/retry/', {
             correlationId: correlationId,
             text: text,
             queue: inputValue
