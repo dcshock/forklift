@@ -107,12 +107,15 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
         }
 
         // Shutdown each of the services by calling all of their undeployment methods.
-        for (ConsumerService s : serviceDeployments.remove(deployment)) {
-            try {
-                s.onUndeploy();
-            } catch (Exception e) {
-                log.warn("", e);
-            }
+        final List<ConsumerService> services = serviceDeployments.remove(deployment);
+        if (services != null && !services.isEmpty()) {
+            services.forEach(s -> {
+                try {
+                    s.onUndeploy();
+                } catch (Exception e) {
+                    log.warn("", e);
+                }
+            });
         }
 
         CoreClassLoaders.getInstance().unregister(deployment.getClassLoader());
