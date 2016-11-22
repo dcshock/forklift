@@ -16,7 +16,7 @@ $("#filterButton").click(function() {
             swal.showInputError("You need to provide a queue");
             return false;
         }
-        window.location = "/forklift-gui/filtered?service="+service+"&queue="+inputValue;
+        window.location = "filtered?service="+service+"&queue="+inputValue;
         swal.close();
     });
 });
@@ -34,7 +34,7 @@ $("#fixAllButton").click(function() {
             swal.showInputError("You need to provide a queue");
             return false;
         }
-        $.post('/forklift-gui/fixAll/', {
+        $.post('fixAll', {
             queue: inputValue
         }, function() {
             location.reload();
@@ -60,7 +60,7 @@ $('.fixButton').click(function () {
     var messageId = $(this).attr('messageId');
     var updateId = $(this).attr('logId');
     var index = $(this).attr('index');
-    $.post('/forklift-gui/fixed/', {
+    $.post('fixed', {
         updateId: updateId,
         index: index
     }, function() {
@@ -84,7 +84,7 @@ $('.changeQueueButton').click(function () {
             swal.showInputError("You need to provide a queue");
             return false;
         }
-        $.post('/forklift-gui/retry/', {
+        $.post('retry', {
             correlationId: correlationId,
             text: text,
             queue: inputValue
