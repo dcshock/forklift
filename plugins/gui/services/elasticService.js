@@ -25,7 +25,7 @@ service.poll = function(service, queue, done) {
             }
         };
     } else {
-        query = {
+                    query = {
             bool: {
                 must: [
                     {match: {"step": "Error"}},
@@ -36,7 +36,7 @@ service.poll = function(service, queue, done) {
     }
     client.search({
         index: index,
-        size: 500,
+        size: 100,
         body: {
             query: query,
             "sort": [{
@@ -118,8 +118,6 @@ var getStats = function(index, done) {
         }
     }).then(function (resp) {
         var size = resp.hits.hits.length;
-        var current = 0;
-
         var queues = [];
         var queueTotals = [];
         if (size == 0)
@@ -128,7 +126,7 @@ var getStats = function(index, done) {
                 queues: queues,
                 queueTotals: queueTotals
             });
-        resp.hits.hits.forEach(function(hit) {
+        resp.hits.hits.forEach(function(hit, i) {
             hit = hit._source;
             if (queues.indexOf(hit.queue) > -1) {
                 var index = queues.indexOf(hit.queue);
@@ -137,8 +135,7 @@ var getStats = function(index, done) {
                 queues.push(hit.queue);
                 queueTotals.push(1);
             }
-            current++;
-            if (current == size) {
+            if (i == size) {
                 return done({
                     totalLogs: size,
                     queues: queues,
