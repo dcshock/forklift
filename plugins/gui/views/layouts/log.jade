@@ -1,5 +1,5 @@
 a.list-group-item(id=messageId)
-    div(data-toggle="collapse" data-target="#listCollapse" + messageId)
+    div.mouseOver(data-toggle="collapse" data-target="#listCollapse" + messageId)
         div.list-group-item-heading
             span.badge.pull-right=moment(timestamp).format("lll")
             h2.queue=val.queue
@@ -16,7 +16,7 @@ a.list-group-item(id=messageId)
                     span.glyphicon.glyphicon-pencil
                     |  Change Queue
         img.toggle-arrow.pull-right(src='img/toggle_arrow.svg', data-toggle='tooltip', title='Arrow')
-    div.collapse.in(id="listCollapse" + messageId)
+    div.collapse(id="listCollapse" + messageId)
         .row.listing-details
             span.badge
                 span Correlation ID: #{correlationId}
@@ -32,9 +32,11 @@ a.list-group-item(id=messageId)
                 .btn-toolbar
                     div.viewInfoBtn.btn.btn-sm.btn-danger(type="button" data-toggle="collapse" data-target="#error" + messageId) View Error&nbsp;
                         span.glyphicon.glyphicon-chevron-down
-                div.collapse.in(id="error" + messageId)
-                    pre
+                div.collapse(id="error" + messageId)
+                    pre(id="pre-error" + messageId)
                         code.java=val.errors
+    if currentUrl == 'retries'
         h5.queue
             b Retry Count •
             |  #{retryCount} / #{maxRetryCount}
+    .errorHoverDisplay

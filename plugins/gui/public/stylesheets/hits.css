@@ -1,3 +1,16 @@
+.errorHoverDisplay {
+    display:none;
+    margin-top: 50px;
+    font-family: "Rubik", Helvetica, Arial, sans-serif;
+    word-wrap: break-word;
+    /*position:fixed;*/
+    /*top: 25%;*/
+    /*left: 25%;*/
+    /*width:auto;*/
+    /*height:auto;*/
+    /*z-index: 10;*/
+}
+
 .platformImage {
     margin-top: 10px;
 }
@@ -33,7 +46,7 @@
     margin-top: 4px;
     margin-bottom: 2px;
     background-color: rgba(221, 234, 255, 0.84);
-    padding: 25px 50px 35px;
+    padding: 10px 25px 35px;
     cursor: pointer;
 }
 .badge-danger {

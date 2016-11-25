@@ -13,7 +13,6 @@ module.exports = function(express) {
         res.redirect('login');
     });
     router.get('/health', function (req, res) {
-        //If the app is running fine, then a health check should return 200.
         res.sendStatus(200);
     });
     router.get('/login', function (req, res) {

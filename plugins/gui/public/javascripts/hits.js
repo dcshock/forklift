@@ -1,3 +1,16 @@
+if (window.location.pathname == "/replays" ||
+    (window.location.pathname == "/filtered" &&
+     window.location.search.split("&")[0] == "?service=replays")) {
+    $(".mouseOver").mouseover(function () {
+        var messageId = $(this).parent().attr('id');
+        var errorHtml = $("#pre-error" + messageId).html();
+        $(this).parent().find(".errorHoverDisplay").html(errorHtml);
+        $(this).parent().find(".errorHoverDisplay").show();
+    }).mouseout(function () {
+        $(this).parent().find(".errorHoverDisplay").hide();
+    });
+}
+
 $('.modifyBtns').click(function (evt) {
     evt.stopPropagation();
 });
@@ -37,7 +50,9 @@ $("#fixAllButton").click(function() {
         $.post('fixAll', {
             queue: inputValue
         }, function() {
-            location.reload();
+            setTimeout(function() {
+                location.reload();
+            }, 2000);
         });
 
         swal.close();
@@ -48,7 +63,7 @@ $('.retryButton').click(function () {
     var correlationId = $(this).attr('correlationId');
     var text = $(this).attr('text');
     var queue = $(this).attr('queue');
-    $.post('/forklift-gui/retry/', {
+    $.post('retry', {
         correlationId: correlationId,
         text: text,
         queue: queue

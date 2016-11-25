@@ -8,14 +8,21 @@ module.exports.show = function (req, res) {
     var domain = req.user.split("@")[1];
     if (domain == 'sofi.org' || domain == 'sofi.com') {
         // get forklift gui stats
-        elasticService.stats(function(stats) {
-            if (stats) {
-                res.render('dashboard', {currentUrl: '', stats: stats});
+        elasticService.ping(function(alive) {
+            if (alive) {
+                elasticService.stats(function(stats) {
+                    if (stats) {
+                        res.render('dashboard', {currentUrl: '', stats: stats});
+                    } else {
+                        req.flash('error', 'unable to load stats');
+                        res.render('dashboard', {currentUrl: '', stats: stats});
+                    }
+                });
             } else {
-                req.flash('error', 'unable to load stats');
-                res.render('dashboard', {currentUrl: '', stats: stats});
+                req.flash('error', 'elasticsearch timed out');
+                res.render('dashboard', {currentUrl: '', stats: null});
             }
-        })
+        });
     } else {
         req.logout();
         res.status(401);

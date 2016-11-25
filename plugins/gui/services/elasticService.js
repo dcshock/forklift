@@ -12,8 +12,22 @@ stompClient.on('error', function(e) {
 
 var service = {};
 
+service.ping = function(done) {
+    client.ping({
+        // ping usually has a 3000ms timeout
+        requestTimeout: 3000,
+        // undocumented params are appended to the query string
+        hello: "elasticsearch!"
+    }, function (error) {
+        if (error) {
+            done(false);
+        } else {
+            done(true);
+        }
+    });
+};
+
 service.poll = function(service, queue, done) {
-    var logs = [];
     var index = 'forklift-'+service+'*';
 
     var query;
@@ -36,7 +50,7 @@ service.poll = function(service, queue, done) {
     }
     client.search({
         index: index,
-        size: 100,
+        size: 50,
         body: {
             query: query,
             "sort": [{
@@ -71,9 +85,6 @@ service.update = function(index, updateId, step, done) {
 
 service.retry = function(correlationId, text, queue, done) {
     var msg = {
-        // jmsHeaders : { 'correlation-id' : correlationId,
-        //                'forklift-retry-count': 0,
-        //                'forklift-retry-max-retries': 0 },
         jmsHeaders : { 'correlation-id' : correlationId },
         body : text,
         queue : queue
@@ -105,6 +116,7 @@ service.stats = function(done) {
 var getStats = function(index, done) {
     client.search({
         index: index,
+        size: 10000,
         body: {
             query: {
                 query_string: {
@@ -135,7 +147,7 @@ var getStats = function(index, done) {
                 queues.push(hit.queue);
                 queueTotals.push(1);
             }
-            if (i == size) {
+            if (i == (size - 1)) {
                 return done({
                     totalLogs: size,
                     queues: queues,

@@ -20,7 +20,7 @@ module.exports.updateAllAsFixed = function(req, res) {
             elasticService.update(logs[i]._index, logs[i]._id, 'Fixed', function() {
             })
         }
-        res.end();
+        res.send("done");
     });
 
 };
