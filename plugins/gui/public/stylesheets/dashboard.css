@@ -1,0 +1,14 @@
+.queueBtn {
+    width: 60%;
+    margin-bottom: 10px;
+    font-family: "Rubik", Helvetica, Arial, sans-serif;
+    letter-spacing:1.5px;
+}
+.queueModBtn {
+    width: 15%;
+    height: 63px;
+    margin-left: 10px;
+    margin-bottom: 10px;
+    font-family: "Rubik", Helvetica, Arial, sans-serif;
+    letter-spacing:1.5px;
+}

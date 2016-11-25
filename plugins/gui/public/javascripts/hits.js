@@ -1,5 +1,6 @@
-if (window.location.pathname == "/replays" ||
-    (window.location.pathname == "/filtered" &&
+var pathnameSize = window.location.pathname.split('/').length - 1;
+if (window.location.pathname.split('/')[pathnameSize] == "replays" ||
+    (window.location.pathname.split('/')[pathnameSize] == "filtered" &&
      window.location.search.split("&")[0] == "?service=replays")) {
     $(".mouseOver").mouseover(function () {
         var messageId = $(this).parent().attr('id');
