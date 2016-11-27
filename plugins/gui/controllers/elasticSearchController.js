@@ -2,6 +2,15 @@ var express = require('express');
 var elasticService = require('../services/elasticService.js');
 var logger = require('../utils/logger');
 
+module.exports.showLinkedLog = function(req, res) {
+    elasticService.get(req.query.id, function(log) {
+        if (log == null) {
+            req.flash("error", "INVALID LOG ID");
+            res.redirect('/')
+        }
+        res.render('linked-log', {currentUrl: 'replays', log: log})
+    });
+};
 module.exports.updateAsFixed = function(req, res) {
     var updateId = req.body.updateId;
     var index = req.body.index;

@@ -10,6 +10,7 @@ module.exports = function(express) {
     router.get('/retries', ensureAuthenticated, elasticController.showRetries);
     router.get('/replays', ensureAuthenticated, elasticController.showReplays);
     router.get('/filtered', ensureAuthenticated, elasticController.showFilteredResults);
+    router.get('/log', ensureAuthenticated, elasticController.showLinkedLog);
 
     return router;
 };

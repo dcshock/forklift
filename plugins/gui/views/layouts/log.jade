@@ -15,6 +15,9 @@ a.list-group-item(id=messageId)
                 button.modifyBtns.btn.btn-sm.btn-success.changeQueueButton(type="button" messageId=messageId logId=logId correlationId=correlationId index=logIndex text=val.text queue=val.queue)
                     span.glyphicon.glyphicon-pencil
                     |  Change Queue
+                button.modifyBtns.btn.btn-sm.btn-info(onclick="window.location.href='log?id="+messageId+"'")
+                    span.glyphicon.glyphicon-link
+                    | Share Link
         img.toggle-arrow.pull-right(src='img/toggle_arrow.svg', data-toggle='tooltip', title='Arrow')
     div.collapse(id="listCollapse" + messageId)
         .row.listing-details

@@ -27,6 +27,25 @@ service.ping = function(done) {
     });
 };
 
+service.get = function(id, done) {
+    var index = 'forklift-replay*';
+    client.search({
+        index: index,
+        size: 1,
+        body: {
+            query: {
+                query_string: {
+                    query: id,
+                    fields: ["_id"]
+                }
+            }
+        }
+    }).then(function (resp) {
+        done(resp.hits.hits[0]);
+    }, function(err) {
+        done(null);
+    });
+};
 service.poll = function(service, queue, done) {
     var index = 'forklift-'+service+'*';
 
@@ -39,7 +58,7 @@ service.poll = function(service, queue, done) {
             }
         };
     } else {
-                    query = {
+        query = {
             bool: {
                 must: [
                     {match: {"step": "Error"}},
