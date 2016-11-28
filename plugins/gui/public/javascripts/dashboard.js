@@ -1,3 +1,4 @@
+$('[data-toggle="tooltip"]').tooltip();
 $(".fixBtn").click(function() {
     var queue = $(this).attr('queue');
     swal({

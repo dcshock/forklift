@@ -139,12 +139,7 @@ img.toggle-arrow.pull-right {
 .btn, .btn-toolbar .btn{
     font-family: "Rubik", Helvetica, Arial, sans-serif;
     letter-spacing:1.5px;
-
-}
-@media (max-width: 768px) {
-    .btn-toolbar .btn {
-        margin-top: 5px;
-    }
+    margin-top: 5px;
 }
 .viewInfoBtn {
     width: 125px;

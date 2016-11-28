@@ -1,3 +1,4 @@
+$('[data-toggle="tooltip"]').tooltip();
 var pathnameSize = window.location.pathname.split('/').length - 1;
 if (window.location.pathname.split('/')[pathnameSize] == "replays" ||
     (window.location.pathname.split('/')[pathnameSize] == "filtered" &&

@@ -53,9 +53,9 @@ html
                                         - var queue = stats.replay.queues[i]
                                         - var queueTotal = stats.replay.queueTotals[i]
                                         a.queueBtn.btn.btn-info.btn-lg.text-uppercase(href="filtered?service=replays&queue=" + queue) #{queue} - #{queueTotal}
-                                        .btn.queueModBtn.retryBtn.btn-primary.btn-lg.text-uppercase(queue=queue)
+                                        .btn.queueModBtn.retryBtn.btn-primary.btn-lg.text-uppercase(queue=queue data-toggle="tooltip" title="Will retry all logs in queue")
                                             span.glyphicon.glyphicon-retweet
-                                        .btn.queueModBtn.fixBtn.btn-danger.btn-lg.text-uppercase(queue=queue)
+                                        .btn.queueModBtn.fixBtn.btn-danger.btn-lg.text-uppercase(queue=queue data-toggle="tooltip" title="Will mark all logs in queue as fixed")
                                             span.glyphicon.glyphicon-fire
                             else
                                 div.alert.alert-success
