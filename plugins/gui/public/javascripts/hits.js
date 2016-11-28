@@ -5,10 +5,10 @@ if (window.location.pathname.split('/')[pathnameSize] == "replays" ||
     $(".mouseOver").mouseover(function () {
         var messageId = $(this).parent().attr('id');
         var errorHtml = $("#pre-error" + messageId).html();
-        $(this).parent().find(".errorHoverDisplay").html(errorHtml);
-        $(this).parent().find(".errorHoverDisplay").show();
+        $(this).parent().parent().find(".errorHoverDisplay").html(errorHtml);
+        $(this).parent().parent().find(".errorHoverDisplay").show();
     }).mouseout(function () {
-        $(this).parent().find(".errorHoverDisplay").hide();
+        $(this).parent().parent().find(".errorHoverDisplay").hide();
     });
 }
 

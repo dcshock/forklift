@@ -3,12 +3,6 @@
     margin-top: 50px;
     font-family: "Rubik", Helvetica, Arial, sans-serif;
     word-wrap: break-word;
-    /*position:fixed;*/
-    /*top: 25%;*/
-    /*left: 25%;*/
-    /*width:auto;*/
-    /*height:auto;*/
-    /*z-index: 10;*/
 }
 
 .platformImage {
@@ -112,7 +106,7 @@ a.list-group-item, button.list-group-item p {
 }
 
 img.toggle-arrow.pull-right {
-    margin-top: -10px;
+    margin-top: 0px;
 }
 .toggle-arrow {
     float: right!important;
@@ -148,11 +142,8 @@ img.toggle-arrow.pull-right {
 
 }
 @media (max-width: 768px) {
-    .btn-sm, .btn-group-sm > .btn {
-        margin: 0!important;
-    }
     .btn-toolbar .btn {
-        margin-top: 10px;
+        margin-top: 5px;
     }
 }
 .viewInfoBtn {

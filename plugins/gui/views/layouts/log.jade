@@ -1,6 +1,6 @@
-a.list-group-item(id=messageId)
-    div.mouseOver(data-toggle="collapse" data-target="#listCollapse" + messageId)
-        div.list-group-item-heading
+a.list-group-item
+    div(id=messageId data-toggle="collapse" data-target="#listCollapse" + messageId)
+        div.list-group-item-heading.mouseOver
             span.badge.pull-right=moment(timestamp).format("lll")
             h2.queue=val.queue
         hr
