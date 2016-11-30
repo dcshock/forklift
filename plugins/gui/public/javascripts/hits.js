@@ -81,7 +81,7 @@ $('.fixButton').click(function () {
         updateId: updateId,
         index: index
     }, function() {
-        $("#"+messageId).remove();
+        $("#"+messageId).parent().remove();
     });
 });
 $('.changeQueueButton').click(function () {
@@ -106,7 +106,7 @@ $('.changeQueueButton').click(function () {
             text: text,
             queue: inputValue
         }, function() {
-            $("#"+messageId).remove();
+            $("#"+messageId).parent().remove();
         });
         swal.close();
     });
