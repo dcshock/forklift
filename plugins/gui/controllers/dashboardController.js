@@ -20,7 +20,7 @@ module.exports.show = function (req, res) {
                 });
             } else {
                 req.flash('error', 'elasticsearch timed out');
-                res.render('dashboard', {currentUrl: '', stats: null});
+                res.render('dashboard', {currentUrl: '', stats: {retry: null, replay: null}});
             }
         });
     } else {

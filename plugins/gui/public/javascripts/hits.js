@@ -70,7 +70,7 @@ $('.retryButton').click(function () {
         text: text,
         queue: queue
     }, function() {
-        $("#"+messageId).remove();
+        $("#"+messageId).parent().remove();
     });
 });
 $('.fixButton').click(function () {

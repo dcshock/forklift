@@ -5,13 +5,22 @@ var logger = require('../utils/logger');
 var client = new elasticsearch.Client({
     host: (process.env.FK_ES_HOST || 'localhost') + ":" + (process.env.FK_ES_PORT || 9200)
 });
-var stompClient = new Stomp(process.env.FK_STOMP_HOST || 'localhost', process.env.FK_STOMP_PORT || 61613, null, null);
-stompClient.on('error', function(e) {
-    logger.error(e);
-});
 
+var stompClient;
 var service = {};
 
+stompConnect();
+
+function stompConnect() {
+    logger.info("Connecting stomp client...");
+    stompClient = new Stomp(process.env.FK_STOMP_HOST || 'localhost', process.env.FK_STOMP_PORT || 61613, null, null, null, null, {retries: 5, delay: 10000});
+    stompClient.connect(function() {
+        logger.info("Stomp client connected!");
+    });
+    stompClient.on('error', function(err) {
+        logger.error('STOMP: ' + err.message);
+    })
+}
 service.ping = function(done) {
     client.ping({
         // ping usually has a 3000ms timeout
@@ -109,16 +118,13 @@ service.retry = function(correlationId, text, queue, done) {
         queue : queue
     };
 
-    stompClient.connect(function() {
-        logger.info('Sending: ' + msg.jmsHeaders['correlation-id']);
-        // messages to the stomp connector should persist through restarts
-        msg.jmsHeaders['persistent'] = 'true';
-        // special tag to allow non binary msgs
-        msg.jmsHeaders['suppress-content-length'] = 'true';
-        stompClient.publish(msg.queue, msg.body, msg.jmsHeaders);
-        stompClient.disconnect();
-        done();
-    });
+    logger.info('Sending: ' + msg.jmsHeaders['correlation-id']);
+    // messages to the stomp connector should persist through restarts
+    msg.jmsHeaders['persistent'] = 'true';
+    // special tag to allow non binary msgs
+    msg.jmsHeaders['suppress-content-length'] = 'true';
+    stompClient.publish(msg.queue, msg.body, msg.jmsHeaders);
+    done();
 };
 
 service.stats = function(done) {
