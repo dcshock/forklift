@@ -1,0 +1,36 @@
+html
+    head
+        meta(name='viewport', content='width=device-width, initial-scale=1.0')
+        link(href='css/bootstrap.min.css', rel='stylesheet', media='screen')
+        link(href='css/font-awesome.min.css', rel='stylesheet', media='screen')
+        link(href='css/sweetalert.css', rel='stylesheet', media='screen')
+        link(href='css/styles/monokai-sublime.css', rel='stylesheet', media='screen')
+        link(href='css/hits.css', rel='stylesheet', media='screen')
+
+        title="Forklift GUI"
+
+    include layouts/navbar
+
+    body
+        div.container-fluid
+            .row
+                .list-group
+                    - var val = log
+                    - var logId = val._id;
+                    - var logIndex = val._index;
+                    - val = val._source;
+                    - var timestamp = val.time;
+                    - var retryCount = val["forklift-retry-count"];
+                    - var maxRetryCount = val["forklift-retry-max-retries"];
+                    - var display = retryCount == maxRetryCount ? true : false;
+                    - var correlationId = logId
+                    - var messageId = logId;
+                    include layouts/log
+
+    script(src='js/jquery-1.11.3.min.js')
+    script(src='js/bootstrap.min.js')
+    script(src='js/sweetalert.min.js')
+    script(src='js/highlight.pack.js')
+    script.
+        hljs.initHighlightingOnLoad();
+    script(src='js/hits.js')

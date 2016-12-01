@@ -5,15 +5,57 @@ var logger = require('../utils/logger');
 var client = new elasticsearch.Client({
     host: (process.env.FK_ES_HOST || 'localhost') + ":" + (process.env.FK_ES_PORT || 9200)
 });
-var stompClient = new Stomp(process.env.FK_STOMP_HOST || 'localhost', process.env.FK_STOMP_PORT || 61613, null, null);
-stompClient.on('error', function(e) {
-    logger.error(e);
-});
 
+var stompClient;
 var service = {};
 
+stompConnect();
+
+function stompConnect() {
+    logger.info("Connecting stomp client...");
+    stompClient = new Stomp(process.env.FK_STOMP_HOST || 'localhost', process.env.FK_STOMP_PORT || 61613, null, null, null, null, {retries: 5, delay: 10000});
+    stompClient.connect(function() {
+        logger.info("Stomp client connected!");
+    });
+    stompClient.on('error', function(err) {
+        logger.error('STOMP: ' + err.message);
+    })
+}
+service.ping = function(done) {
+    client.ping({
+        // ping usually has a 3000ms timeout
+        requestTimeout: 3000,
+        // undocumented params are appended to the query string
+        hello: "elasticsearch!"
+    }, function (error) {
+        if (error) {
+            done(false);
+        } else {
+            done(true);
+        }
+    });
+};
+
+service.get = function(id, done) {
+    var index = 'forklift-replay*';
+    client.search({
+        index: index,
+        size: 1,
+        body: {
+            query: {
+                query_string: {
+                    query: id,
+                    fields: ["_id"]
+                }
+            }
+        }
+    }).then(function (resp) {
+        done(resp.hits.hits[0]);
+    }, function(err) {
+        done(null);
+    });
+};
 service.poll = function(service, queue, done) {
-    var logs = [];
     var index = 'forklift-'+service+'*';
 
     var query;
@@ -36,7 +78,7 @@ service.poll = function(service, queue, done) {
     }
     client.search({
         index: index,
-        size: 500,
+        size: 50,
         body: {
             query: query,
             "sort": [{
@@ -71,24 +113,18 @@ service.update = function(index, updateId, step, done) {
 
 service.retry = function(correlationId, text, queue, done) {
     var msg = {
-        // jmsHeaders : { 'correlation-id' : correlationId,
-        //                'forklift-retry-count': 0,
-        //                'forklift-retry-max-retries': 0 },
         jmsHeaders : { 'correlation-id' : correlationId },
         body : text,
         queue : queue
     };
 
-    stompClient.connect(function() {
-        logger.info('Sending: ' + msg.jmsHeaders['correlation-id']);
-        // messages to the stomp connector should persist through restarts
-        msg.jmsHeaders['persistent'] = 'true';
-        // special tag to allow non binary msgs
-        msg.jmsHeaders['suppress-content-length'] = 'true';
-        stompClient.publish(msg.queue, msg.body, msg.jmsHeaders);
-        stompClient.disconnect();
-        done();
-    });
+    logger.info('Sending: ' + msg.jmsHeaders['correlation-id']);
+    // messages to the stomp connector should persist through restarts
+    msg.jmsHeaders['persistent'] = 'true';
+    // special tag to allow non binary msgs
+    msg.jmsHeaders['suppress-content-length'] = 'true';
+    stompClient.publish(msg.queue, msg.body, msg.jmsHeaders);
+    done();
 };
 
 service.stats = function(done) {
@@ -105,6 +141,7 @@ service.stats = function(done) {
 var getStats = function(index, done) {
     client.search({
         index: index,
+        size: 10000,
         body: {
             query: {
                 query_string: {
@@ -118,8 +155,6 @@ var getStats = function(index, done) {
         }
     }).then(function (resp) {
         var size = resp.hits.hits.length;
-        var current = 0;
-
         var queues = [];
         var queueTotals = [];
         if (size == 0)
@@ -128,7 +163,7 @@ var getStats = function(index, done) {
                 queues: queues,
                 queueTotals: queueTotals
             });
-        resp.hits.hits.forEach(function(hit) {
+        resp.hits.hits.forEach(function(hit, i) {
             hit = hit._source;
             if (queues.indexOf(hit.queue) > -1) {
                 var index = queues.indexOf(hit.queue);
@@ -137,8 +172,7 @@ var getStats = function(index, done) {
                 queues.push(hit.queue);
                 queueTotals.push(1);
             }
-            current++;
-            if (current == size) {
+            if (i == (size - 1)) {
                 return done({
                     totalLogs: size,
                     queues: queues,

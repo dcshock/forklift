@@ -1,3 +1,18 @@
+$('[data-toggle="tooltip"]').tooltip();
+var pathnameSize = window.location.pathname.split('/').length - 1;
+if (window.location.pathname.split('/')[pathnameSize] == "replays" ||
+    (window.location.pathname.split('/')[pathnameSize] == "filtered" &&
+     window.location.search.split("&")[0] == "?service=replays")) {
+    $(".mouseOver").mouseover(function () {
+        var messageId = $(this).parent().attr('id');
+        var errorHtml = $("#pre-error" + messageId).html();
+        $(this).parent().parent().find(".errorHoverDisplay").html(errorHtml);
+        $(this).parent().parent().find(".errorHoverDisplay").show();
+    }).mouseout(function () {
+        $(this).parent().parent().find(".errorHoverDisplay").hide();
+    });
+}
+
 $('.modifyBtns').click(function (evt) {
     evt.stopPropagation();
 });
@@ -16,7 +31,7 @@ $("#filterButton").click(function() {
             swal.showInputError("You need to provide a queue");
             return false;
         }
-        window.location = "/forklift-gui/filtered?service="+service+"&queue="+inputValue;
+        window.location = "filtered?service="+service+"&queue="+inputValue;
         swal.close();
     });
 });
@@ -34,10 +49,12 @@ $("#fixAllButton").click(function() {
             swal.showInputError("You need to provide a queue");
             return false;
         }
-        $.post('/forklift-gui/fixAll/', {
+        $.post('fixAll', {
             queue: inputValue
         }, function() {
-            location.reload();
+            setTimeout(function() {
+                location.reload();
+            }, 2000);
         });
 
         swal.close();
@@ -48,23 +65,23 @@ $('.retryButton').click(function () {
     var correlationId = $(this).attr('correlationId');
     var text = $(this).attr('text');
     var queue = $(this).attr('queue');
-    $.post('/forklift-gui/retry/', {
+    $.post('retry', {
         correlationId: correlationId,
         text: text,
         queue: queue
     }, function() {
-        $("#"+messageId).remove();
+        $("#"+messageId).parent().remove();
     });
 });
 $('.fixButton').click(function () {
     var messageId = $(this).attr('messageId');
     var updateId = $(this).attr('logId');
     var index = $(this).attr('index');
-    $.post('/forklift-gui/fixed/', {
+    $.post('fixed', {
         updateId: updateId,
         index: index
     }, function() {
-        $("#"+messageId).remove();
+        $("#"+messageId).parent().remove();
     });
 });
 $('.changeQueueButton').click(function () {
@@ -84,12 +101,12 @@ $('.changeQueueButton').click(function () {
             swal.showInputError("You need to provide a queue");
             return false;
         }
-        $.post('/forklift-gui/retry/', {
+        $.post('retry', {
             correlationId: correlationId,
             text: text,
             queue: inputValue
         }, function() {
-            $("#"+messageId).remove();
+            $("#"+messageId).parent().remove();
         });
         swal.close();
     });

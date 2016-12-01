@@ -1,3 +1,10 @@
+.errorHoverDisplay {
+    display:none;
+    margin-top: 50px;
+    font-family: "Rubik", Helvetica, Arial, sans-serif;
+    word-wrap: break-word;
+}
+
 .platformImage {
     margin-top: 10px;
 }
@@ -33,7 +40,7 @@
     margin-top: 4px;
     margin-bottom: 2px;
     background-color: rgba(221, 234, 255, 0.84);
-    padding: 25px 50px 35px;
+    padding: 10px 25px 35px;
     cursor: pointer;
 }
 .badge-danger {
@@ -99,7 +106,7 @@ a.list-group-item, button.list-group-item p {
 }
 
 img.toggle-arrow.pull-right {
-    margin-top: -10px;
+    margin-top: 0px;
 }
 .toggle-arrow {
     float: right!important;
@@ -132,15 +139,7 @@ img.toggle-arrow.pull-right {
 .btn, .btn-toolbar .btn{
     font-family: "Rubik", Helvetica, Arial, sans-serif;
     letter-spacing:1.5px;
-
-}
-@media (max-width: 768px) {
-    .btn-sm, .btn-group-sm > .btn {
-        margin: 0!important;
-    }
-    .btn-toolbar .btn {
-        margin-top: 10px;
-    }
+    margin-top: 5px;
 }
 .viewInfoBtn {
     width: 125px;
