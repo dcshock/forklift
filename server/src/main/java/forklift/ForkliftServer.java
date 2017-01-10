@@ -6,11 +6,15 @@ import forklift.connectors.ActiveMQConnector;
 import forklift.connectors.ForkliftConnectorI;
 import forklift.consumer.ConsumerDeploymentEvents;
 import forklift.consumer.LifeCycleMonitors;
-import forklift.decorators.*;
+import forklift.decorators.CoreService;
+import forklift.decorators.Queue;
+import forklift.decorators.Service;
+import forklift.decorators.Topic;
+import forklift.decorators.Topics;
+import forklift.deployment.ClassDeployment;
 import forklift.deployment.Deployment;
 import forklift.deployment.DeploymentManager;
 import forklift.deployment.DeploymentWatch;
-import forklift.deployment.ClassDeployment;
 import forklift.replay.ReplayES;
 import forklift.replay.ReplayLogger;
 import forklift.retry.RetryES;
@@ -21,10 +25,12 @@ import org.apache.http.annotation.ThreadSafe;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.CountDownLatch;
+import java.util.stream.Collectors;
 
 
 /**
@@ -134,6 +140,10 @@ public final class ForkliftServer {
         }
     }
 
+    public Forklift getForklift() {
+        return this.forklift;
+    }
+
     /**
      * Launch a Forklift server instance.
      */
@@ -163,6 +173,7 @@ public final class ForkliftServer {
             final ForkliftConnectorI connector = startAndConnectToBroker();
             forklift.start(connector);
         } catch (Exception e) {
+            state = ServerState.ERROR;
             log.error("Unable to startup broker and forklift", e);
         }
         return forklift.isRunning();
@@ -297,25 +308,20 @@ public final class ForkliftServer {
             log.info("Building failover url using consul");
 
             final Consul c = new Consul("http://" + opts.getConsulHost(), 8500);
+            try {
+                // Build the connection string.
+                final String serviceName = brokerUrl.split("\\.")[1];
+                final List<String> hosts = c.catalog().service(serviceName).getProviders().stream()
+                    .filter(srvc -> !srvc.isCritical())
+                    .map(srvc -> "tcp://" + srvc.getAddress() + ":" + srvc.getPort())
+                    .collect(Collectors.toList());
+                if (hosts.size() == 0)
+                    throw new RuntimeException("No brokers found");
 
-            // Build the connection string.
-            final String serviceName = brokerUrl.split("\\.")[1];
-
-            brokerUrl = "failover:(" +
-                    c.catalog().service(serviceName).getProviders().stream()
-                            .filter(srvc -> !srvc.isCritical())
-                            .map(srvc -> "tcp://" + srvc.getAddress() + ":" + srvc.getPort())
-                            .reduce("", (a, b) -> a + "," + b) +
-                    ")";
-
-            c.shutdown();
-
-            brokerUrl = brokerUrl.replaceAll("failover:\\(,", "failover:(");
-
-            log.info("url {}", brokerUrl);
-            if (brokerUrl.equals("failover:()")) {
-                log.error("No brokers found");
-                System.exit(-1);
+                brokerUrl = "failover:(" + hosts.stream().reduce("", (a, b) -> a + "," + b) + ")";
+                log.info("url {}", brokerUrl);
+            } finally {
+                c.shutdown();
             }
         } else if (brokerUrl.startsWith("embed")) {
             brokerUrl = "tcp://0.0.0.0:61616";
