@@ -7,18 +7,17 @@ import forklift.concurrent.Executors;
 import forklift.decorators.Queue;
 import forklift.decorators.Topic;
 import forklift.deployment.Deployment;
+import forklift.deployment.FileDeployment;
 import forklift.deployment.DeploymentEvents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.stream.Collectors;
 
 public class ConsumerDeploymentEvents implements DeploymentEvents {
     private static final Logger log = LoggerFactory.getLogger(ConsumerDeploymentEvents.class);
@@ -108,27 +107,17 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
         }
 
         // Shutdown each of the services by calling all of their undeployment methods.
-        for (ConsumerService s : serviceDeployments.remove(deployment)) {
-            try {
-                s.onUndeploy();
-            } catch (Exception e) {
-                log.warn("", e);
-            }
+        final List<ConsumerService> services = serviceDeployments.remove(deployment);
+        if (services != null && !services.isEmpty()) {
+            services.forEach(s -> {
+                try {
+                    s.onUndeploy();
+                } catch (Exception e) {
+                    log.warn("", e);
+                }
+            });
         }
 
         CoreClassLoaders.getInstance().unregister(deployment.getClassLoader());
-    }
-
-    /**
-     * We allow jar/zip files.
-     * @param  deployment
-     * @return
-     */
-    @Override
-    public boolean filter(Deployment deployment) {
-        log.info("Filtering: " + deployment);
-
-        return deployment.getDeployedFile().getName().endsWith(".jar") ||
-               deployment.getDeployedFile().getName().endsWith(".zip");
     }
 }

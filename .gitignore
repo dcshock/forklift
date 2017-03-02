@@ -10,3 +10,6 @@ target
 .cache
 activemq-data
 .settings
+*.DS_Store
+.idea
+*.iml

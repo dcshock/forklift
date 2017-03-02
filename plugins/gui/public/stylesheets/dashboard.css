@@ -1,0 +1,233 @@
+@media screen and (min-width: 768px) {
+
+    #viewLogModal .modal-dialog  {width: 90%;}
+
+}
+
+#optionsModal .modal-dialog {
+    width: 400px;
+}
+
+
+.fa-spinner {
+    color: white;
+}
+
+.red {
+    color: red;
+}
+
+.blue {
+    color: deepskyblue;
+}
+
+.service-error {
+    background-color: red;
+}
+
+.scrollable-menu {
+    height: auto;
+    max-height: 500px;
+    overflow-x: hidden;
+}
+
+h3 {
+    color: whitesmoke;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 2em;
+    font-weight: lighter;
+    animation: fadein 3s;
+    -moz-animation: fadein 3s; /* Firefox */
+    -webkit-animation: fadein 3s; /* Safari and Chrome */
+    -o-animation: fadein 3s; /* Opera */
+}
+
+.error {
+    font-size: 1.5em;
+}
+
+#pinnedLogs h3 {
+    animation: fadein 1s;
+    -moz-animation: fadein 1s; /* Firefox */
+    -webkit-animation: fadein 1s; /* Safari and Chrome */
+    -o-animation: fadein 1s; /* Opera */
+}
+
+#liveLogs h3 {
+    animation: fadein 1s;
+    -moz-animation: fadein 1s; /* Firefox */
+    -webkit-animation: fadein 1s; /* Safari and Chrome */
+    -o-animation: fadein 1s; /* Opera */
+}
+
+#welcome, #no-logs {
+    margin: 175px auto;
+    text-align: center;
+}
+
+#errorPlaceholder {
+    margin: 175px auto;
+    text-align: center;
+    color: whitesmoke;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 2em;
+    font-weight: lighter;
+}
+
+#welcome h4 {
+    color: whitesmoke;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 6em;
+    font-weight: lighter;
+    animation: fadein 3s;
+    -moz-animation: fadein 3s; /* Firefox */
+    -webkit-animation: fadein 3s; /* Safari and Chrome */
+    -o-animation: fadein 3s; /* Opera */
+}
+
+#welcome img, #no-logs img {
+    animation: fadein 5s;
+    -moz-animation: fadein 5s; /* Firefox */
+    -webkit-animation: fadein 5s; /* Safari and Chrome */
+    -o-animation: fadein 5s; /* Opera */
+}
+
+@keyframes fadein {
+    from {
+        opacity:0;
+    }
+    to {
+        opacity:1;
+    }
+}
+@-moz-keyframes fadein { /* Firefox */
+    from {
+        opacity:0;
+    }
+    to {
+        opacity:1;
+    }
+}
+@-webkit-keyframes fadein { /* Safari and Chrome */
+    from {
+        opacity:0;
+    }
+    to {
+        opacity:1;
+    }
+}
+@-o-keyframes fadein { /* Opera */
+    from {
+        opacity:0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+h2 {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-weight: lighter;
+    font-size: 2.5em;
+    color: whitesmoke;
+    position: relative;
+    text-align: center;
+    z-index: 1;
+}
+
+h2:before {
+    border-top: 1px solid whitesmoke;
+    content:"";
+    margin: 0 auto; /* this centers the line to the full width specified */
+    position: absolute; /* positioning must be absolute here, and relative positioning must be applied to the parent */
+    top: 20px; left: 0; right: 0; bottom: 0;
+    width: 99%;
+    z-index: -1;
+}
+
+h2 span {
+    /* to hide the lines from behind the text, you have to set the background color the same as the container */
+    background: #262626;
+    padding: 0 5px;
+}
+
+h2.double:before {
+    /* this is just to undo the :before styling from above */
+    border-top: none;
+}
+
+.sweet-alert h2 {
+    border: initial;
+    color: black;
+}
+.optionsHeader {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-weight: lighter;
+    font-size: 2em;
+    color: black;
+    position: relative;
+    text-align: center;
+    z-index: 1;
+}
+
+.optionsHr {
+    margin-top: 25px;
+    border-bottom: 1px solid lightgray;
+}
+
+.checkboxOptions {
+    margin-left: 10px;
+}
+
+@media screen and (max-width: 768px) {
+    #welcome, #no-logs {
+        margin: 50px auto;
+    }
+    #errorPlaceholder {
+        margin: 50px auto;
+    }
+}
+
+#custom-search-input {
+    margin:0;
+    padding: 0;
+}
+
+#custom-search-input .search-query {
+    margin-bottom: 0;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+}
+
+#custom-search-input button {
+    border: 0;
+    background: none;
+    /** belows styles are working good */
+    padding: 2px 5px;
+    margin-top: 2px;
+    position: relative;
+    left: -28px;
+    /* IE7-8 doesn't have border-radius, so don't indent the padding */
+    margin-bottom: 0;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+    color: dodgerblue;
+}
+
+.search-query:focus + button {
+    z-index: 3;
+}
+
+#searchFailedAlert {
+    text-align: center;
+}
+
+#consoleOptionsButton {
+    margin-left: 13px;
+}
+#toggleDashboardsButton {
+    margin-left: 5px;
+}
+

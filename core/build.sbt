@@ -2,7 +2,7 @@ organization := "com.github.dcshock"
 
 name := "forklift"
 
-version := "0.14"
+version := "0.23"
 
 // target and Xlint cause sbt dist to fail
 javacOptions ++= Seq("-source", "1.8")//, "-target", "1.8", "-Xlint")
@@ -15,12 +15,13 @@ initialize := {
 
 libraryDependencies ++= Seq(
     "com.google.guava" % "guava" % "18.0",
-    "com.fasterxml.jackson.core" % "jackson-databind" % "2.3.3",
+    "com.fasterxml.jackson.core" % "jackson-databind" % "2.7.3",
+    "com.fasterxml.jackson.datatype" % "jackson-datatype-jsr310" % "2.7.3",
     "ch.qos.logback" % "logback-classic" % "1.0.13",
     "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1",
     "org.reflections" % "reflections" % "0.9.10",
     "javax.inject" % "javax.inject" % "1",
-    "com.novocode" % "junit-interface" % "0.10" % "test",
+    "com.novocode" % "junit-interface" % "0.11" % "test",
     "org.mockito" % "mockito-all" % "1.9.5" % "test"
 )
 

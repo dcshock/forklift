@@ -1,8 +1,10 @@
 package forklift.consumer;
 
 import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import forklift.classloader.RunAsClassLoader;
 import forklift.concurrent.Callback;
 import forklift.connectors.ConnectorException;
@@ -12,11 +14,13 @@ import forklift.consumer.parser.KeyValueParser;
 import forklift.decorators.Config;
 import forklift.decorators.Headers;
 import forklift.decorators.MultiThreaded;
+import forklift.decorators.On;
 import forklift.decorators.OnMessage;
 import forklift.decorators.OnValidate;
-import forklift.decorators.On;
 import forklift.decorators.Ons;
+import forklift.decorators.Order;
 import forklift.decorators.Queue;
+import forklift.decorators.Response;
 import forklift.decorators.Topic;
 import forklift.message.Header;
 import forklift.producers.ForkliftProducerI;
@@ -25,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -32,6 +37,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -44,10 +50,10 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 
 public class Consumer {
+    static ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule())
+                                                   .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     private Logger log;
-
     private static AtomicInteger id = new AtomicInteger(1);
-    private static ObjectMapper mapper = new ObjectMapper();
 
     private final ClassLoader classLoader;
     private final ForkliftConnectorI connector;
@@ -55,17 +61,21 @@ public class Consumer {
     private final Class<?> msgHandler;
     private final List<Method> onMessage;
     private final List<Method> onValidate;
+    private final List<Method> onResponse;
+    private final Map<String, List<MessageRunnable>> orderQueue;
     private final Map<ProcessStep, List<Method>> onProcessStep;
     private String name;
     private Queue queue;
     private Topic topic;
     private List<ConsumerService> services;
+    private Method orderMethod;
 
     // If a queue can process multiple messages at a time we
     // use a thread pool to manage how much cpu load the queue can
-    // take.
-    private final BlockingQueue<Runnable> blockQueue;
-    private final ThreadPoolExecutor threadPool;
+    // take. These are reinstantiated anytime the consumer is asked
+    // to listen for messages.
+    private BlockingQueue<Runnable> blockQueue;
+    private ThreadPoolExecutor threadPool;
 
     private Callback<Consumer> outOfMessages;
 
@@ -119,29 +129,15 @@ public class Consumer {
                 this.name = topic.value() + ":" + id.getAndIncrement();
             else
                 throw new IllegalArgumentException("Msg Handler must handle a queue or topic.");
-
         }
 
         log = LoggerFactory.getLogger(Consumer.class);
-
-        // Init the thread pools if the msg handler is multi threaded. If the msg handler is single threaded
-        // it'll just run in the current thread to prevent any message read ahead that would be performed.
-        if (msgHandler.isAnnotationPresent(MultiThreaded.class)) {
-            MultiThreaded multiThreaded = msgHandler.getAnnotation(MultiThreaded.class);
-            log.info("Creating thread pool of {}", multiThreaded.value());
-            blockQueue = new ArrayBlockingQueue<Runnable>(multiThreaded.value() * 100 + 100);
-            threadPool = new ThreadPoolExecutor(
-                Math.min(2, multiThreaded.value()), multiThreaded.value(), 5L, TimeUnit.MINUTES, blockQueue);
-            threadPool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
-        } else {
-            blockQueue = null;
-            threadPool = null;
-        }
 
         // Look for all methods that need to be called when a
         // message is received.
         onMessage = new ArrayList<>();
         onValidate = new ArrayList<>();
+        onResponse = new ArrayList<>();
         onProcessStep = new HashMap<>();
         Arrays.stream(ProcessStep.values()).forEach(step -> onProcessStep.put(step, new ArrayList<>()));
         for (Method m : msgHandler.getDeclaredMethods()) {
@@ -149,9 +145,18 @@ public class Consumer {
                 onMessage.add(m);
             else if (m.isAnnotationPresent(OnValidate.class))
                 onValidate.add(m);
+            else if (m.isAnnotationPresent(Response.class))
+                onResponse.add(m);
+            else if (m.isAnnotationPresent(Order.class))
+                orderMethod = m;
             else if (m.isAnnotationPresent(On.class) || m.isAnnotationPresent(Ons.class))
                 Arrays.stream(m.getAnnotationsByType(On.class)).map(on -> on.value()).distinct().forEach(x -> onProcessStep.get(x).add(m));
         }
+
+        if (orderMethod != null)
+            orderQueue = new HashMap<>();
+        else
+            orderQueue = null;
 
         injectFields = new HashMap<>();
         injectFields.put(Config.class, new HashMap<>());
@@ -189,8 +194,26 @@ public class Consumer {
             else
                 throw new RuntimeException("No queue/topic specified");
 
+            // Init the thread pools if the msg handler is multi threaded. If the msg handler is single threaded
+            // it'll just run in the current thread to prevent any message read ahead that would be performed.
+            if (msgHandler.isAnnotationPresent(MultiThreaded.class)) {
+                final MultiThreaded multiThreaded = msgHandler.getAnnotation(MultiThreaded.class);
+                log.info("Creating thread pool of {}", multiThreaded.value());
+                blockQueue = new ArrayBlockingQueue<>(multiThreaded.value() * 100 + 100);
+                threadPool = new ThreadPoolExecutor(
+                    multiThreaded.value(), multiThreaded.value(), 5L, TimeUnit.MINUTES, blockQueue);
+                threadPool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+            } else {
+                blockQueue = null;
+                threadPool = null;
+            }
+
             messageLoop(consumer);
-        } catch (ConnectorException e) {
+
+            // Always cleanup the consumer.
+            if (consumer != null)
+                consumer.close();
+        } catch (ConnectorException | JMSException e) {
             log.debug("", e);
         }
     }
@@ -205,18 +228,63 @@ public class Consumer {
 
             while (running.get()) {
                 Message jmsMsg;
-                while ((jmsMsg = consumer.receive(2500)) != null) {
+                while ((jmsMsg = consumer.receive(2500)) != null && running.get()) {
                     final ForkliftMessage msg = connector.jmsToForklift(jmsMsg);
                     try {
                         final Object handler = msgHandler.newInstance();
 
-                        final List<Closeable> closeMe = new ArrayList<Closeable>();
+                        final List<Closeable> closeMe = new ArrayList<>();
                         RunAsClassLoader.run(classLoader, () -> {
                             closeMe.addAll(inject(msg, handler));
                         });
 
-                        // Handle the message.
-                        final MessageRunnable runner = new MessageRunnable(this, msg, classLoader, handler, onMessage, onValidate, onProcessStep, closeMe);
+                        // Create the runner that will ultimately run the handler.
+                        final MessageRunnable runner = new MessageRunnable(this, msg, classLoader, handler, onMessage, onValidate, onResponse, onProcessStep, closeMe);
+
+                        // If the message is ordered we need to store messages that cannot currently be processed, and retry them periodically.
+                        if (orderQueue != null) {
+                            final String id = (String)orderMethod.invoke(handler);
+
+                            // Reuse the close functionality to hook the process to trigger the next message execution.
+                            closeMe.add(new Closeable() {
+                                @Override
+                                public void close() throws IOException {
+                                    synchronized (orderQueue) {
+                                        final List<MessageRunnable> msgs = orderQueue.get(id);
+                                        msgs.remove(runner);
+
+                                        final Optional<MessageRunnable> optRunner = msgs.stream().findFirst();
+
+                                        if (optRunner.isPresent()) {
+                                            // Execute the message.
+                                            if (threadPool != null)
+                                                threadPool.execute(optRunner.get());
+                                            else
+                                                optRunner.get().run();
+                                        } else {
+                                            orderQueue.remove(id);
+                                        }
+                                    }
+                                }
+                            });
+
+                            synchronized (orderQueue) {
+                                // If the message is not the first with a given identifier we'll assume that
+                                // another message is currently being processed and we'll be called later.
+                                if (orderQueue.containsKey(id)) {
+                                    orderQueue.get(id).add(runner);
+
+                                    // Let the next message get processed since this one needs to wait.
+                                    continue;
+                                }
+
+                                final List<MessageRunnable> list = new ArrayList<>();
+                                list.add(runner);
+                                orderQueue.put(id, list);
+                            }
+                        }
+
+                        // Execute the message.
                         if (threadPool != null)
                             threadPool.execute(runner);
                         else
@@ -238,10 +306,14 @@ public class Consumer {
             if (threadPool != null) {
                 log.info("Shutting down thread pool - active {}", threadPool.getActiveCount());
                 threadPool.shutdown();
+                threadPool.awaitTermination(60, TimeUnit.SECONDS);
+                blockQueue.clear();
             }
         } catch (JMSException e) {
             running.set(false);
             log.error("JMS Error in message loop: ", e);
+        } catch (InterruptedException ignored) {
+            // thrown by threadpool.awaitterm
         } finally {
             try {
                 consumer.close();
@@ -266,7 +338,7 @@ public class Consumer {
      */
     public List<Closeable> inject(ForkliftMessage msg, final Object instance) {
         // Keep any closable resources around so the injection utilizer can cleanup.
-        final List<Closeable> closeMe = new ArrayList<Closeable>();
+        final List<Closeable> closeMe = new ArrayList<>();
 
         // Inject the forklift msg
         injectFields.keySet().stream().forEach(decorator -> {
@@ -281,7 +353,7 @@ public class Consumer {
                                 f.set(instance, msg);
                             } else if (clazz == String.class) {
                                 f.set(instance, msg.getMsg());
-                            } else if (clazz == Map.class) {
+                            } else if (clazz == Map.class && !msg.getMsg().startsWith("{")) {
                                 // We assume that the map is <String, String>.
                                 f.set(instance, KeyValueParser.parse(msg.getMsg()));
                             } else {
@@ -414,7 +486,7 @@ public class Consumer {
 
     public void addServices(ConsumerService... services) {
         if (this.services == null)
-            this.services = new ArrayList<ConsumerService>();
+            this.services = new ArrayList<>();
 
         for (ConsumerService s : services)
             this.services.add(s);

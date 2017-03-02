@@ -1,0 +1,19 @@
+#!/usr/bin/env node
+
+var forever = require('forever-monitor');
+
+var child = new forever.Monitor('./bin/www', {
+    max: 3,
+    silent: false,
+    options: [],
+    env: {
+        TZ: process.env.TZ || "America/New_York",
+        PORT: process.env.PORT || 3000
+    }
+});
+
+child.on('exit', function () {
+    console.log('webserver has exited after 3 attempted restarts');
+});
+
+child.start();

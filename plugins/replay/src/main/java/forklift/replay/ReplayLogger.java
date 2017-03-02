@@ -1,5 +1,7 @@
 package forklift.replay;
 
+import forklift.connectors.ForkliftMessage;
+import forklift.consumer.Consumer;
 import forklift.consumer.MessageRunnable;
 import forklift.consumer.ProcessStep;
 import forklift.decorators.LifeCycle;
@@ -9,6 +11,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+
+import javax.jms.JMSException;
 
 public class ReplayLogger {
     private final ReplayWriter writer;
@@ -71,6 +75,25 @@ public class ReplayLogger {
     }
 
     public void theRest(MessageRunnable mr, ProcessStep step) {
-        this.writer.write(mr.getConsumer(), mr.getMsg(), step, mr.getErrors());
+        final ForkliftMessage msg = mr.getMsg();
+        final Consumer consumer = mr.getConsumer();
+        final ReplayMsg replayMsg = new ReplayMsg();
+        try {
+            replayMsg.messageId = msg.getJmsMsg().getJMSMessageID();
+        } catch (JMSException ignored) {
+        }
+        replayMsg.text = msg.getMsg();
+        replayMsg.headers = msg.getHeaders();
+        replayMsg.step = step;
+        replayMsg.properties = msg.getProperties();
+        replayMsg.errors = mr.getErrors();
+
+        if (consumer.getQueue() != null)
+            replayMsg.queue = consumer.getQueue().value();
+
+        if (consumer.getTopic() != null)
+            replayMsg.topic = consumer.getTopic().value();
+
+        this.writer.put(replayMsg);
     }
 }

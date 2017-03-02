@@ -1,25 +1,19 @@
-# Forklift server Dockerfile
-# 2015-02-20
-
-# Pull base image
-FROM omriiluz/ubuntu-java8
-
-# Main developer
+FROM gliderlabs/alpine:3.3
 MAINTAINER Matt Conroy <elduderino@mailinator.com>
 
-# Update system
-RUN apt-get update
-RUN apt-get upgrade -y
+# Install java 8
+RUN apk add --no-cache openjdk8
 
-# Install unzip
-RUN apt-get install unzip -y --force-yes --no-install-recommends
+# Install bash so that the server can actually run.
+RUN apk add --no-cache bash
 
 # Add forklift server
 WORKDIR /tmp
-ADD https://github.com/dcshock/forklift/releases/download/0.14/forklift-server-0.14.zip forklift.zip
-#ADD server/target/universal/forklift-server-0.14.zip forklift.zip
+ADD server/target/universal/forklift-server-0.33.zip forklift.zip
 RUN yes | unzip -d /usr/local forklift.zip
-RUN ln -s /usr/local/forklift-server-0.14 /usr/local/forklift
+RUN ln -s /usr/local/forklift-server-0.33 /usr/local/forklift
+
+RUN rm forklift.zip
 RUN mkdir -p /usr/local/forklift/consumers
 
 ENV FORKLIFT_HOME /usr/local/forklift
@@ -31,4 +25,4 @@ ENV PATH $PATH:/usr/local/forklift/bin
 WORKDIR /usr/local/forklift/
 
 # Start a bash shell
-CMD ["bash"]
+CMD ["sh"]

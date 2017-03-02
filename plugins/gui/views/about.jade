@@ -1,0 +1,43 @@
+html
+    head
+        meta(name='viewport', content='width=device-width, initial-scale=1.0')
+        link(href='css/bootstrap.min.css', rel='stylesheet', media='screen')
+        link(href='css/console.css', rel='stylesheet', media='screen')
+        link(href='css/about.css', rel='stylesheet', media='screen')
+        link(href='css/font-awesome.min.css', rel='stylesheet', media='screen')
+
+        <!-- Navbar -->
+        nav(class="navbar navbar-default navbar-static-top navbar-inverse")
+            div(class="container-fluid")
+                div(class="navbar-header")
+                    button(type="button" class="navbar-toggle" data-toggle="collapse" data-target="#guiNavbar")
+                        span(class="icon-bar")
+                        span(class="icon-bar")
+                        span(class="icon-bar")
+                    a(class="navbar-brand" href="dashboard") Forklift
+                div(class="collapse navbar-collapse" id="guiNavbar")
+                    ul(class="nav navbar-nav")
+                        li
+                            <a href="dashboard"><span class="glyphicon glyphicon-th-list"></span> Dashboard</a>
+                    ul(class="nav navbar-nav navbar-right")
+                        li
+                            <a href="about"><span class="glyphicon glyphicon-info-sign"></span> About</a>
+                        li
+                            <a href="logout"><span class="glyphicon glyphicon-log-out"></span> Logout</a>
+        <!-- End Navbar -->
+    body
+        div(class="dashboard-container")
+            div(id="console")
+                div(id="about")
+                    h1 About
+                    h3 Forklift is a thing that does stuff completely unrelated to lifting heavy items
+                    br
+                    br
+                    br
+                    h3(class="large-h3 blue") Written and designed by Shane Israel in Node.js
+
+    script(src='js/jquery-1.11.3.min.js')
+    script(src='js/bootstrap.min.js')
+    script(src='js/highlight.js')
+    script(src='js/about.js')
+

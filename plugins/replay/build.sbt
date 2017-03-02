@@ -2,7 +2,7 @@ organization := "com.github.dcshock"
 
 name := "forklift-replay"
 
-version := "0.5"
+version := "0.14"
 
 javacOptions ++= Seq("-source", "1.8")
 
@@ -13,7 +13,11 @@ initialize := {
 }
 
 libraryDependencies ++= Seq(
-  "com.github.dcshock" % "forklift" % "0.8"
+  "com.github.dcshock" % "forklift" % "0.22",
+  "org.elasticsearch" % "elasticsearch" % "2.4.1",
+  "com.fasterxml.jackson.core" % "jackson-databind" % "2.7.3",
+  "com.fasterxml.jackson.datatype" % "jackson-datatype-jsr310" % "2.7.3",
+  "com.novocode" % "junit-interface" % "0.11" % "test"
 )
 
 crossPaths := false
@@ -62,4 +66,4 @@ pomExtra := (
     </developer>
   </developers>)
 
-useGpg := true
+//useGpg := true

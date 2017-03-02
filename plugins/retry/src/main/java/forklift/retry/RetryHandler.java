@@ -1,8 +1,11 @@
 package forklift.retry;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.io.Files;
+import forklift.concurrent.Callback;
 import forklift.connectors.ForkliftConnectorI;
 import forklift.connectors.ForkliftMessage;
 import forklift.consumer.MessageRunnable;
@@ -37,6 +40,7 @@ public class RetryHandler {
     private ForkliftConnectorI connector;
     private ObjectMapper mapper;
     private ScheduledExecutorService executor;
+    private Callback<RetryMessage> cleanup;
 
     public RetryHandler(ForkliftConnectorI connector) {
         this(connector, new File("."));
@@ -45,9 +49,20 @@ public class RetryHandler {
     public RetryHandler(ForkliftConnectorI connector, File dir) {
         this.dir = dir;
         this.connector = connector;
-        this.mapper = new ObjectMapper();
-        this.mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+        this.mapper = new ObjectMapper().registerModule(new JavaTimeModule())
+                                        .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
         this.executor = Executors.newScheduledThreadPool(1);
+
+        // Cleanup after a retry is completed.
+        cleanup = new Callback<RetryMessage>() {
+            @Override
+            public void handle(RetryMessage msg) {
+                log.info("Cleaning up persistent file {}", msg.getPersistedPath());
+                final File f = new File(msg.getPersistedPath());
+                if (f.exists())
+                    f.delete();
+            }
+        };
 
         // Load up any existing messages.
         new FileScanner(dir).scan().stream()
@@ -55,7 +70,7 @@ public class RetryHandler {
             .forEach(result -> {
                 try {
                     final RetryMessage retryMessage = mapper.readValue(new File(dir, result.getFilename()), RetryMessage.class);
-                    executor.schedule(new RetryRunnable(retryMessage, connector),
+                    executor.schedule(new RetryRunnable(retryMessage, connector, cleanup),
                         Long.parseLong(Integer.toString((int)retryMessage.getProperties().get("forklift-retry-timeout"))), TimeUnit.SECONDS);
                 } catch (Exception e) {
                     log.error("Unable to read file {}", result.getFilename());
@@ -117,7 +132,7 @@ public class RetryHandler {
             }
 
             // Scheule the message to be retried.
-            executor.schedule(new RetryRunnable(retryMessage, connector), retry.timeout(), TimeUnit.SECONDS);
+            executor.schedule(new RetryRunnable(retryMessage, connector, cleanup), retry.timeout(), TimeUnit.SECONDS);
         } catch (JMSException | IOException ignored) {
         }
     }

@@ -1,0 +1,30 @@
+html
+    head
+        meta(name='viewport', content='width=device-width, initial-scale=1.0')
+        link(href='css/bootstrap.min.css', rel='stylesheet', media='screen')
+        link(href='css/console.css', rel='stylesheet', media='screen')
+        link(href='css/401.css', rel='stylesheet', media='screen')
+        link(href='css/font-awesome.min.css', rel='stylesheet', media='screen')
+
+        <!-- Navbar -->
+        nav(class="navbar navbar-default navbar-static-top navbar-inverse")
+            div(class="container-fluid")
+                div(class="navbar-header")
+                    button(type="button" class="navbar-toggle" data-toggle="collapse" data-target="#guiNavbar")
+                        span(class="icon-bar")
+                        span(class="icon-bar")
+                        span(class="icon-bar")
+                    a(class="navbar-brand" href="dashboard") 404
+                div(class="collapse navbar-collapse" id="guiNavbar")
+                    ul(class="nav navbar-nav navbar-right")
+                        li
+                            <a href="login"><span class="glyphicon glyphicon-log-out"></span> Login</a>
+        <!-- End Navbar -->
+    body
+        div(class="dashboard-container")
+            div(id="console")
+                div(id="status")
+                    h3 404 <p class="red">Page not found!</p>
+
+    script(src='js/bootstrap.min.js')
+

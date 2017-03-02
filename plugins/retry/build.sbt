@@ -2,7 +2,7 @@ organization := "com.github.dcshock"
 
 name := "forklift-retry"
 
-version := "0.6"
+version := "0.11"
 
 javacOptions ++= Seq("-source", "1.8")
 
@@ -13,7 +13,10 @@ initialize := {
 }
 
 libraryDependencies ++= Seq(
-  "com.github.dcshock" % "forklift" % "0.8"
+  "com.github.dcshock" % "forklift" % "0.20",
+  "com.fasterxml.jackson.core" % "jackson-databind" % "2.7.3",
+  "com.fasterxml.jackson.datatype" % "jackson-datatype-jsr310" % "2.7.3",
+  "io.searchbox" % "jest" % "2.0.0"
 )
 
 resolvers ++= Seq(
@@ -62,4 +65,4 @@ pomExtra := (
     </developer>
   </developers>)
 
-useGpg := true
+//useGpg := true
