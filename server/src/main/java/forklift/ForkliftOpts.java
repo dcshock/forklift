@@ -3,49 +3,52 @@ package forklift;
 import org.kohsuke.args4j.Option;
 
 public class ForkliftOpts {
-    @Option(name="-monitor1", required=true, usage="consumer deployment directory")
+    @Option(name = "-monitor1", required = true, usage = "consumer deployment directory")
     private String consumerDir;
 
-    @Option(name="-monitor2", usage="consumer deployment directory")
+    @Option(name = "-monitor2", usage = "consumer deployment directory")
     private String propsDir;
 
-    @Option(name="-url", required=true, usage="broker connection url")
+    @Option(name = "-url", required = false, usage = "specify the application name for this instance")
+    private String applicationName;
+
+    @Option(name = "-url", required = true, usage = "broker connection url")
     private String brokerUrl;
 
-    @Option(name="-retryDir", usage="directory for persisted retry messages")
+    @Option(name = "-retryDir", usage = "directory for persisted retry messages")
     private String retryDir;
 
-    @Option(name="-retryESHost", usage="elastic search host name for retry storage")
+    @Option(name = "-retryESHost", usage = "elastic search host name for retry storage")
     private String retryESHost;
 
-    @Option(name="-retryESPort", usage="elastic search port number for retry storage")
+    @Option(name = "-retryESPort", usage = "elastic search port number for retry storage")
     private int retryESPort = 9200;
 
-    @Option(name="-retryESSsl", usage="connect to elastic search via ssl (https://)")
+    @Option(name = "-retryESSsl", usage = "connect to elastic search via ssl (https://)")
     private boolean retryESSsl;
 
-    @Option(name="-runRetries", usage="run retries on this instance")
+    @Option(name = "-runRetries", usage = "run retries on this instance")
     private boolean runRetries;
 
-    @Option(name="-replayDir", usage="replay log directory")
+    @Option(name = "-replayDir", usage = "replay log directory")
     private String replayDir;
 
-    @Option(name="-replayESHost", usage="elastic search host name for replay storage")
+    @Option(name = "-replayESHost", usage = "elastic search host name for replay storage")
     private String replayESHost;
 
-    @Option(name="-replayESPort", usage="elastic search port number for replay storage")
+    @Option(name = "-replayESPort", usage = "elastic search port number for replay storage")
     private int replayESPort = 9200;
 
-    @Option(name="-replayESSsl", usage="connect to elastic search via ssl (https://)")
+    @Option(name = "-replayESSsl", usage = "connect to elastic search via ssl (https://)")
     private boolean replayESSsl;
 
-    @Option(name="-replayESServer", usage="start an embedded elastic search server")
+    @Option(name = "-replayESServer", usage = "start an embedded elastic search server")
     private boolean replayESServer;
 
-    @Option(name="-consulHost", usage="consul host name")
+    @Option(name = "-consulHost", usage = "consul host name")
     private String consulHost = "localhost";
 
-    @Option(name="-replayESCluster", usage="name of the elastic search cluster to use for replay logs.")
+    @Option(name = "-replayESCluster", usage = "name of the elastic search cluster to use for replay logs.")
     private String replayESCluster = "elasticsearch";
 
     public String getConsumerDir() {
@@ -166,5 +169,13 @@ public class ForkliftOpts {
 
     public void setReplayESCluster(String replayESCluster) {
         this.replayESCluster = replayESCluster;
+    }
+
+    public String getApplicationName() {
+        return applicationName;
+    }
+
+    public void setApplicationName(String applicationName) {
+        this.applicationName = applicationName;
     }
 }

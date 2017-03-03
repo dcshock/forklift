@@ -59,14 +59,25 @@ public class MessageRunnable implements Runnable {
         RunAsClassLoader.run(classLoader, () -> {
             // Always ack message to prevent activemq deadlock
             try {
+                log.info("Acknowledging message");
                 msg.getJmsMsg().acknowledge();
             } catch (JMSException e) {
-                log.error("Error while acking message.", e);
+                //Error code specific to a plugin.  Necessary while we are using
+                //the JMS message in order to reduce spamming errors which are actually expected behavior from kafka.
+                if("KAFKA-REBALANCE".equals(e.getErrorCode())){
+                    log.warn("TopicPartition no longer available, not processing message.");
+                }
+                else {
+                    log.error("Error while acking message.", e);
+                }
                 close();
                 return;
+            } catch(Throwable e){
+                log.error("Exception", e);
             }
 
             // { Validating }
+            log.info("Validating method");
             runHooks(ProcessStep.Validating);
             LifeCycleMonitors.call(ProcessStep.Validating, this);
             for (Method m : onValidate) {
@@ -83,10 +94,12 @@ public class MessageRunnable implements Runnable {
 
             if (errors.size() > 0) {
                 // { Invalid }
+                log.info("Invalid message");
                 runHooks(ProcessStep.Invalid);
                 LifeCycleMonitors.call(ProcessStep.Invalid, this);
             } else {
                 // { Processing }
+                log.info("Processing message");
                 runHooks(ProcessStep.Processing);
                 LifeCycleMonitors.call(ProcessStep.Processing, this);
                 for (Method m : onMessage) {
@@ -94,10 +107,12 @@ public class MessageRunnable implements Runnable {
                 }
                 if (errors.size() > 0) {
                     // { Error }
+                    log.info("Error message");
                     runHooks(ProcessStep.Error);
                     LifeCycleMonitors.call(ProcessStep.Error, this);
                 } else {
                     // { Complete }
+                    log.info("Complete message");
                     runHooks(ProcessStep.Complete);
 
                     // Handle response decoratored methods.
