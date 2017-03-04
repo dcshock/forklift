@@ -11,7 +11,9 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 
 /**
- * Created by afrieze on 2/28/17.
+ * A Kafka {@link org.apache.kafka.clients.consumer.ConsumerRecord } wrapped in a JMS {@link javax.jms.Message} functionality.
+ * Please note that many JMS specific properties, such as JMSMessageID and JMSTimestamp, are simply ignored.  Properties are
+ * held to allow the storage of metadata, but are not transmitted across the KafkaBroker.
  */
 public class KafkaMessage implements Message {
     private final KafkaController controller;
@@ -205,13 +207,27 @@ public class KafkaMessage implements Message {
 
     }
 
-    public Map<String, Object> getProperties(){
+    public Map<String, Object> getProperties() {
         return properties;
     }
 
-    @Override public void acknowledge() throws JMSException {
+    /**
+     * {@inheritDoc}
+     * <p>
+     * JMS Messages can typically be acknowledged either synchronously or asynchronously at a message level before processing begins.
+     * This kafka implementation does not allow for that.  In order to adapt to the JMS specification, we send the acknowledgment to the
+     * {@link forklift.connectors.KafkaController#acknowledge(org.apache.kafka.clients.consumer.ConsumerRecord)} method, with the
+     * expectation that false will be returned should we no longer hold onto the partition the message came from.  In that case, a
+     * {@link javax.jms.JMSException} with an {@link javax.jms.JMSException#getErrorCode() errorCode} of "KAFKA-REBALANCE" will be thrown.
+     * As Kafka can be expected to rebalance somewhat frequently as consumers are added and removed, it is up to the consumer of
+     * this message to appropriate handle the error and prevent processing of this message.
+     *
+     * @throws JMSException
+     */
+    @Override
+    public void acknowledge() throws JMSException {
         try {
-            if(!controller.acknowledge(consumerRecord)){
+            if (!controller.acknowledge(consumerRecord)) {
                 throw new JMSException("Unable to acknowledge message, possibly due to kafka partition rebalance", "KAFKA-REBALANCE");
             }
         } catch (InterruptedException e) {

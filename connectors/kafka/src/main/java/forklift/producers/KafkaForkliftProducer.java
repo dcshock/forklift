@@ -136,6 +136,6 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
 
     @Override
     public void close() throws IOException {
-        //do nothing, the passed in KafkaProducer may be used elsewhere
+        //do nothing, the passed in KafkaProducer may be used elsewhere and should be closed by the KafkaController
     }
 }

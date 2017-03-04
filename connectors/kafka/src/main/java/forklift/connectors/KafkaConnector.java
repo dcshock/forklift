@@ -1,6 +1,5 @@
 package forklift.connectors;
 
-import static jdk.nashorn.internal.runtime.regexp.joni.Config.log;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,6 +14,8 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import javax.jms.Connection;
@@ -25,12 +26,13 @@ import javax.jms.Message;
  * is received.  Subscriptions are removed if no consumption is seen for
  */
 public class KafkaConnector implements ForkliftConnectorI {
+    private static final Logger log = LoggerFactory.getLogger(KafkaConnector.class);
     private final String kafkaHosts;
     private final String schemaRegistries;
     private final String groupId;
     private KafkaConsumer<?, ?> kafkaConsumer;
     private KafkaProducer<?, ?> kafkaProducer;
-    private RecordStream recordStream = new RecordStream();
+    private MessageStream messageStream = new MessageStream();
 
     static ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule())
                                                    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -58,7 +60,7 @@ public class KafkaConnector implements ForkliftConnectorI {
         this.controller.start();
     }
 
-    private KafkaController createController(){
+    private KafkaController createController() {
         Properties props = new Properties();
         props.put("bootstrap.servers", kafkaHosts);
         props.put("group.id", groupId);
@@ -70,7 +72,7 @@ public class KafkaConnector implements ForkliftConnectorI {
         props.put("specific.avro.reader", false);
         props.put("auto.offset.reset", "earliest");
         this.kafkaConsumer = new KafkaConsumer(props);
-        this.controller = new KafkaController(kafkaConsumer, recordStream);
+        this.controller = new KafkaController(kafkaConsumer, messageStream);
         return controller;
     }
 
@@ -78,7 +80,7 @@ public class KafkaConnector implements ForkliftConnectorI {
     public void stop() throws ConnectorException {
         try {
             this.controller.stop(2000, TimeUnit.MILLISECONDS);
-        } catch( InterruptedException e){
+        } catch (InterruptedException e) {
             log.error("KafkaConnector interrupted while stopping");
         }
         this.kafkaProducer.close();
@@ -96,13 +98,13 @@ public class KafkaConnector implements ForkliftConnectorI {
 
     @Override
     public ForkliftConsumerI getTopic(String name) throws ConnectorException {
-        synchronized(this){
-            if(this.controller == null || !this.controller.isRunning()){
+        synchronized (this) {
+            if (this.controller == null || !this.controller.isRunning()) {
                 this.controller = createController();
                 this.controller.start();
             }
         }
-        return new KafkaTopicConsumer(name, controller, recordStream);
+        return new KafkaTopicConsumer(name, controller, messageStream);
     }
 
     @Override
@@ -120,18 +122,15 @@ public class KafkaConnector implements ForkliftConnectorI {
         try {
             final ForkliftMessage msg = new ForkliftMessage(m);
             if (m instanceof KafkaMessage) {
-
                 KafkaMessage kafkaMessage = (KafkaMessage)m;
                 msg.setProperties(kafkaMessage.getProperties());
-
                 ConsumerRecord<?, ?> record = kafkaMessage.getConsumerRecord();
                 if (record.value() instanceof GenericRecord) {
                     GenericRecord genericRecord = (GenericRecord)record.value();
-
                     Object value = genericRecord.get("forkliftMapMsg");
                     value = value == null ? genericRecord.get("forkliftMsg") : value;
                     value = value == null ? genericRecord.get("forkliftJsonMsg") : value;
-                    if(value == null) {
+                    if (value == null) {
                         String jsonValue = genericRecord.toString();
                         value = jsonValue != null && jsonValue.startsWith("{") ? jsonValue : value;
                     }

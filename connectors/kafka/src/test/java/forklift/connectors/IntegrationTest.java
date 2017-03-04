@@ -3,6 +3,7 @@ package forklift.connectors;
 import static org.junit.Assert.assertTrue;
 import forklift.producers.ForkliftProducerI;
 import forklift.producers.ProducerException;
+import org.junit.Ignore;
 import org.junit.Test;
 import java.util.HashMap;
 import java.util.Map;
@@ -12,6 +13,7 @@ import java.util.Map;
  */
 public class IntegrationTest {
 
+    @Ignore
     @Test
     public void producerStringTests() throws ProducerException, ConnectorException {
         KafkaConnector connector = new KafkaConnector("localhost:29092", "http://localhost:28081", "app");
@@ -22,6 +24,7 @@ public class IntegrationTest {
         connector.stop();
     }
 
+    @Ignore
     @Test
     public void producerMapTests() throws ProducerException, ConnectorException {
         KafkaConnector connector = new KafkaConnector("localhost:29092", "http://localhost:28081", "app");
@@ -35,6 +38,7 @@ public class IntegrationTest {
         connector.stop();
     }
 
+    @Ignore
     @Test
     public void producerObjectTest() throws ProducerException, ConnectorException {
         com.sofi.avro.schemas.Test value = new com.sofi.avro.schemas.Test();
@@ -47,6 +51,7 @@ public class IntegrationTest {
         connector.stop();
     }
 
+    @Ignore
     @Test
     public void producerPersonTest() throws ProducerException, ConnectorException {
         Person person = new Person("John", "Doe");
