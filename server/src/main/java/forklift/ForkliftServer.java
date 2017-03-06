@@ -4,13 +4,18 @@ import com.google.common.base.Preconditions;
 import consul.Consul;
 import forklift.connectors.ActiveMQConnector;
 import forklift.connectors.ForkliftConnectorI;
+import forklift.connectors.KafkaConnector;
 import forklift.consumer.ConsumerDeploymentEvents;
 import forklift.consumer.LifeCycleMonitors;
-import forklift.decorators.*;
+import forklift.decorators.CoreService;
+import forklift.decorators.Queue;
+import forklift.decorators.Service;
+import forklift.decorators.Topic;
+import forklift.decorators.Topics;
+import forklift.deployment.ClassDeployment;
 import forklift.deployment.Deployment;
 import forklift.deployment.DeploymentManager;
 import forklift.deployment.DeploymentWatch;
-import forklift.deployment.ClassDeployment;
 import forklift.replay.ReplayES;
 import forklift.replay.ReplayLogger;
 import forklift.retry.RetryES;
@@ -18,14 +23,13 @@ import forklift.retry.RetryHandler;
 import forklift.stats.StatsCollector;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.http.annotation.ThreadSafe;
-
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.CountDownLatch;
-
+import java.util.stream.Collectors;
 
 /**
  * Start Forklift as a server.  A running forklift server is responsible for
@@ -69,7 +73,6 @@ public final class ForkliftServer {
     private ConsumerDeploymentEvents deploymentEvents;
     private DeploymentManager classDeployments = new DeploymentManager();
     private CountDownLatch runningLatch = new CountDownLatch(1);
-
 
     /**
      * Attempts to start the forklift server.  This call is blocking and will not return until either the server starts successfully or the waitTime reaches 0.
@@ -193,8 +196,8 @@ public final class ForkliftServer {
     }
 
     private void shutdown() {
-        synchronized(this){
-            if(state != ServerState.RUNNING || state != ServerState.ERROR){
+        synchronized (this) {
+            if (state != ServerState.RUNNING || state != ServerState.ERROR) {
                 return;
             }
             state = ServerState.STOPPING;
@@ -258,14 +261,18 @@ public final class ForkliftServer {
         if (opts.getReplayESHost() == null)
             replayES = null;
         else
-            replayES = new ReplayES(!opts.isReplayESServer(), opts.getReplayESHost(), opts.getReplayESPort(), opts.getReplayESCluster(), forklift.getConnector());
+            replayES =
+                            new ReplayES(!opts.isReplayESServer(), opts.getReplayESHost(), opts.getReplayESPort(),
+                                         opts.getReplayESCluster(), forklift.getConnector());
         return replayES;
     }
 
     private RetryES setupESRetryHandling(Forklift forklift) {
         RetryES retryES = null;
         if (opts.getRetryESHost() != null)
-            retryES = new RetryES(forklift.getConnector(), opts.isRetryESSsl(), opts.getRetryESHost(), opts.getRetryESPort(), opts.isRunRetries());
+            retryES =
+                            new RetryES(forklift.getConnector(), opts.isRetryESSsl(), opts.getRetryESHost(), opts.getRetryESPort(),
+                                        opts.isRunRetries());
         return retryES;
     }
 
@@ -293,29 +300,45 @@ public final class ForkliftServer {
 
     private ForkliftConnectorI startAndConnectToBroker() throws Exception {
         String brokerUrl = opts.getBrokerUrl();
+        ForkliftConnectorI connector = null;
         if (brokerUrl.startsWith("consul.") && brokerUrl.length() > "consul.".length()) {
-            log.info("Building failover url using consul");
 
             final Consul c = new Consul("http://" + opts.getConsulHost(), 8500);
-
             // Build the connection string.
             final String serviceName = brokerUrl.split("\\.")[1];
 
-            brokerUrl = "failover:(" +
-                    c.catalog().service(serviceName).getProviders().stream()
-                            .filter(srvc -> !srvc.isCritical())
-                            .map(srvc -> "tcp://" + srvc.getAddress() + ":" + srvc.getPort())
-                            .reduce("", (a, b) -> a + "," + b) +
-                    ")";
+            if ("kafka".equalsIgnoreCase(serviceName)) {
+                String schemaRegistry = brokerUrl.split("\\.")[2];
+                brokerUrl = c.catalog().service(serviceName).getProviders().stream()
+                             .filter(srvc -> !srvc.isCritical())
+                             .map(srvc -> srvc.getAddress() + ":" + srvc.getPort())
+                             .collect(Collectors.joining(","));
+                String schemaRegistries = c.catalog().service(schemaRegistry).getProviders().stream()
+                                    .filter(srvc -> !srvc.isCritical())
+                                    .map(srvc -> "http://" + srvc.getAddress() + ":" + srvc.getPort())
+                                    .collect(Collectors.joining(","));
 
-            c.shutdown();
+                String applicationName = this.opts.getApplicationName() == null?"forklift":this.opts.getApplicationName();
+                connector = new KafkaConnector(brokerUrl,schemaRegistries, applicationName);
 
-            brokerUrl = brokerUrl.replaceAll("failover:\\(,", "failover:(");
+            } else {
 
-            log.info("url {}", brokerUrl);
-            if (brokerUrl.equals("failover:()")) {
-                log.error("No brokers found");
-                System.exit(-1);
+                log.info("Building failover url using consul");
+                brokerUrl = "failover:(" +
+                            c.catalog().service(serviceName).getProviders().stream()
+                             .filter(srvc -> !srvc.isCritical())
+                             .map(srvc -> "tcp://" + srvc.getAddress() + ":" + srvc.getPort())
+                             .reduce("", (a, b) -> a + "," + b) +
+                            ")";
+
+                brokerUrl = brokerUrl.replaceAll("failover:\\(,", "failover:(");
+
+                log.info("url {}", brokerUrl);
+                if (brokerUrl.equals("failover:()")) {
+                    log.error("No brokers found");
+                    System.exit(-1);
+                }
+                connector = new ActiveMQConnector(brokerUrl);
             }
         } else if (brokerUrl.startsWith("embed")) {
             brokerUrl = "tcp://0.0.0.0:61616";
@@ -323,8 +346,9 @@ public final class ForkliftServer {
             broker.addConnector(brokerUrl);
             broker.addConnector("stomp://0.0.0.0:61613");
             broker.start();
+            connector = new ActiveMQConnector(brokerUrl);
         }
         log.info("Connected to broker on " + brokerUrl);
-        return new ActiveMQConnector(brokerUrl);
+        return connector;
     }
 }
