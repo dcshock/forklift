@@ -12,6 +12,7 @@ public class KafkaTopicConsumer implements ForkliftConsumerI {
     private final String topic;
     private final KafkaController controller;
     private final MessageStream messageStream;
+    private volatile boolean topicAdded = false;
 
     public KafkaTopicConsumer(String topic, KafkaController controller, MessageStream messageStream) {
         this.topic = topic;
@@ -30,12 +31,24 @@ public class KafkaTopicConsumer implements ForkliftConsumerI {
      *
      * @param timeout the time in milliseconds to wait for a record to become available
      * @return a message if one is available, else null
-     * @throws JMSException
+     * @throws JMSException if the process is interrupted or the controller is no longer running
      */
     @Override
     public Message receive(long timeout) throws JMSException {
         try {
-            controller.addTopic(topic);
+            if(!topicAdded) {
+                synchronized(this) {
+                    if(!topicAdded) {
+                        controller.addTopic(topic);
+                        topicAdded = true;
+                    }
+                }
+
+            }
+            //ensure that our controller is still running
+            if(!controller.isRunning()){
+                throw new JMSException("Connection to Kafka Controller lost");
+            }
             return messageStream.nextRecord(this.topic, timeout);
         } catch (InterruptedException e) {
             throw new JMSException("Kafka message receive interrupted");

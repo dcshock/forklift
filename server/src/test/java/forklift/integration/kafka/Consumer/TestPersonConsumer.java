@@ -1,4 +1,4 @@
-package forklift;
+package forklift.integration.kafka.Consumer;
 
 import forklift.decorators.Message;
 import forklift.decorators.OnMessage;

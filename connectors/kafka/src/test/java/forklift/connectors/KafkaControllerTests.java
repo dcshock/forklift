@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
@@ -11,6 +12,7 @@ import static org.mockito.Mockito.when;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.TopicPartition;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -20,6 +22,9 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -104,10 +109,57 @@ public class KafkaControllerTests {
         this.controller.stop(10, TimeUnit.MILLISECONDS);
     }
 
-
+    /**
+     * Tests that a topic can be added and subscribed, then removed and unsubscribed, then added again and the controller
+     * still functions
+     */
     @Test
-    public void stopThenResumeTest(){
+    public void addRemoveAddTest() throws InterruptedException {
+        String topic1 = "topic1";
+        ConsumerRecords records = mock(ConsumerRecords.class);
+        when(kafkaConsumer.poll(anyLong())).thenReturn(records);
+        this.controller.start();
+        this.controller.addTopic(topic1);
+        verify(kafkaConsumer, timeout(200).times(1)).subscribe(subscribeCaptor.capture(), any());
+        //verify that the control loop is polling repeatedly.  Normally there would be a delay but
+        //the kafkaConsumer has been mocked to return immediatly on poll
+        verify(kafkaConsumer, timeout(200).atLeast(5)).poll((anyLong()));
+        assertEquals(1, subscribeCaptor.getValue().size());
+        assertTrue(subscribeCaptor.getValue().contains(topic1));
+        //remove the topic
+        this.controller.removeTopic(topic1);
+        verify(kafkaConsumer, timeout(200).times(1)).subscribe(subscribeCaptor.capture(), any());
+        assertEquals(0, subscribeCaptor.getValue().size());
+        this.controller.stop(10, TimeUnit.MILLISECONDS);
+        //add the topic back
+        this.controller.addTopic(topic1);
+        verify(kafkaConsumer, timeout(200).times(1)).subscribe(subscribeCaptor.capture(), any());
+        verify(kafkaConsumer, timeout(200).atLeast(5)).poll((anyLong()));
+        assertEquals(1, subscribeCaptor.getValue().size());
+        assertTrue(subscribeCaptor.getValue().contains(topic1));
+    }
 
+    /**
+     * Tests that the controller stops running if an error is encountered putting messages on the stream
+     *
+     * @throws InterruptedException
+     */
+    @Test
+    public void shutdownOnMessageStreamError() throws InterruptedException {
+        String topic1 = "topic1";
+        ConsumerRecord record1 = generateRecord(topic1, 1,"value1", 1);
+        Map<TopicPartition, List<ConsumerRecord>> recordMap = new HashMap<>();
+        List<ConsumerRecord> topicRecords = new ArrayList<>();
+        topicRecords.add(record1);
+        recordMap.put(new TopicPartition(topic1, 1), topicRecords);
+        ConsumerRecords records = new ConsumerRecords(recordMap);
+        when(kafkaConsumer.poll(anyLong())).thenReturn(records);
+        doThrow(new IllegalStateException()).when(messageStream).addRecords(any());
+        this.controller.start();
+        this.controller.addTopic(topic1);
+        verify(kafkaConsumer, timeout(200).times(1)).subscribe(subscribeCaptor.capture(), any());
+        Thread.sleep(50);
+        assertEquals(false, controller.isRunning());
     }
 
     private ConsumerRecord<?, ?> generateRecord(String topic, int partition, String value, long offset) {

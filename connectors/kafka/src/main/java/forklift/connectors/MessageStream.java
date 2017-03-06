@@ -24,19 +24,15 @@ public class MessageStream {
      * <p>
      * <strong>Note:</strong> All passed in records must belong to a topic added through a call to {@link #addTopic(String)}.
      *
+     * @throws IllegalStateException if the capacity of a stream has been exceeded.
      * @param records the records to add
      */
     public void addRecords(Map<TopicPartition, List<KafkaMessage>> records) {
-
-        try {
-            log.debug("Adding records to stream");
-            for (TopicPartition partition : records.keySet()) {
-                for (KafkaMessage message : records.get(partition)) {
-                    topicQueue.get(partition.topic()).add(message);
-                }
+        log.debug("Adding records to stream");
+        for (TopicPartition partition : records.keySet()) {
+            for (KafkaMessage message : records.get(partition)) {
+                topicQueue.get(partition.topic()).add(message);
             }
-        } catch (Exception e) {
-            log.error("Error adding to stream", e);
         }
     }
 
@@ -46,7 +42,9 @@ public class MessageStream {
      * @param topic the topic to add
      */
     public void addTopic(String topic) {
-        this.topicQueue.put(topic, new LinkedBlockingQueue<>());
+        //The capacity of the blocking queue is never expected to be hit as the Consumer should close the topic if it crashes.
+        //This is mainly in place as a safeguard against a memory leak and blocking the consumption of messages
+        this.topicQueue.put(topic, new LinkedBlockingQueue<>(100000));
     }
 
     /**

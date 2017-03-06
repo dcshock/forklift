@@ -39,7 +39,7 @@ public class KafkaMessageTests {
 
     @Test
     public void acknowledgeCallsControllerSuccess() throws JMSException, InterruptedException {
-        when(controller.acknowledge(record)).thenReturn(false);
+        when(controller.acknowledge(record)).thenReturn(true);
         message.acknowledge();
         verify(controller).acknowledge(record);
     }

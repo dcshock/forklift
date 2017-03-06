@@ -1,17 +1,28 @@
-package forklift;
+package forklift.integration.kafka;
 
 import static org.junit.Assert.assertTrue;
 import com.mashape.unirest.http.options.Options;
+import forklift.ForkliftOpts;
+import forklift.ForkliftServer;
+import forklift.ServerState;
+import forklift.integration.kafka.Consumer.TestMapConsumer;
+import forklift.integration.kafka.Consumer.TestPersonConsumer;
+import forklift.integration.kafka.Consumer.TestStringConsumer;
+import org.junit.Ignore;
 import org.junit.Test;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by afrieze on 3/1/17.
+ * Kafka integration test.  Tests the embeddable server with a live kafka and confluent schema registry instance. These
+ * tests pair well with the integration tests in the Kafka connector project.
+ * <p>
+ * Note: You will need to adjust the broker url to match your own environment.
  */
-public class TestServer {
+public class ServerIntegrationTests {
 
+    @Ignore
     @Test
-    public void testConsumers() throws InterruptedException{
+    public void testConsumers() throws InterruptedException {
         ForkliftOpts options = new ForkliftOpts();
         String ip = "localhost";
         options.setBrokerUrl("consul.kafka.schema-registry");
@@ -25,9 +36,8 @@ public class TestServer {
         } catch (InterruptedException e) {
         }
         if (server.getServerState() == ServerState.RUNNING) {
-            server.registerDeployment(TestStringConsumer.class, TestObjectConsumer.class, TestMapConsumer.class, TestPersonConsumer.class);
-        }
-        else {
+            server.registerDeployment(TestStringConsumer.class, TestMapConsumer.class, TestPersonConsumer.class);
+        } else {
             try {
                 server.stopServer(5, TimeUnit.SECONDS);
             } catch (InterruptedException e) {

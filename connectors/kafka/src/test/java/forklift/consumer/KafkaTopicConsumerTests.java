@@ -24,6 +24,7 @@ public class KafkaTopicConsumerTests {
     public void setup() {
         this.topic = "testTopic";
         this.controller = mock(KafkaController.class);
+        when(controller.isRunning()).thenReturn(true);
         this.messageStream = mock(MessageStream.class);
         consumer = new KafkaTopicConsumer(topic, controller, messageStream);
     }
@@ -45,15 +46,21 @@ public class KafkaTopicConsumerTests {
         assertEquals(message, result);
     }
 
+    @Test(expected=JMSException.class)
+    public void receiveWithControllerNotRunning() throws JMSException {
+        when(this.controller.isRunning()).thenReturn(false);
+        consumer.receive(100);
+    }
+
     @Test
     public void addTopicTest() throws JMSException {
-        consumer.receive(any());
-        verify(messageStream).addTopic(this.topic);
+        consumer.receive(100);
+        verify(controller).addTopic(this.topic);
     }
 
     @Test
     public void closeAndRemoveTopicTest() throws JMSException {
         consumer.close();
-        verify(controller.removeTopic(this.topic));
+        verify(controller).removeTopic(this.topic);
     }
 }

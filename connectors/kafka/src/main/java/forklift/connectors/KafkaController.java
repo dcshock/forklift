@@ -20,6 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import javax.jms.JMSException;
 
 /**
@@ -29,7 +30,7 @@ import javax.jms.JMSException;
  * <p>
  * <strong>WARNING: </strong>Kafka does not lend itself well to message level commits.  For this reason, the controller sends commits
  * as a batch once every poll cycle.  It should be noted that it is possible for a message to be
- * processed twice should an error occur after the acknowledgement of a message but before the commit takes place.
+ * processed twice should an error occur after the acknowledgement and processing of a message but before the commit takes place.
  */
 public class KafkaController {
 
@@ -49,8 +50,8 @@ public class KafkaController {
     }
 
     /**
-     * Adds a topic which the underlying {@link org.apache.kafka.clients.consumer.KafkaConsumer} will be subscribed and
-     * adds the topic to the messageStream.
+     * Adds a topic which the underlying {@link org.apache.kafka.clients.consumer.KafkaConsumer} will be subscribed to.  Adds
+     * the topic to the messageStream.
      *
      * @param topic the topic to subscribe to
      * @return true if the topic was added, false if already added
@@ -104,7 +105,7 @@ public class KafkaController {
      * @throws JMSException
      */
     public boolean acknowledge(ConsumerRecord<?, ?> record) throws InterruptedException, JMSException {
-        log.info("Acknowledge message");
+        log.debug("Acknowledge message with topic {} partition {} offset {}", record.topic(), record.partition(), record.offset());
         return running && this.acknowlegmentHandler.acknowledgeRecord(record);
     }
 
@@ -138,15 +139,15 @@ public class KafkaController {
             while (running) {
                 boolean updatedAssignment = false;
                 if (topics.size() == 0) {
+                    //check if the last remaining topic was removed
                     if (kafkaConsumer.assignment().size() > 0) {
                         kafkaConsumer.unsubscribe();
-                    } else {
-                        synchronized (topicsMonitor) {
-                            //recheck wait condition inside synchronized block
-                            if (topics.size() == 0) {
-                                //pause the polling thread until a topic comes in
-                                topicsMonitor.wait();
-                            }
+                    }
+                    synchronized (topicsMonitor) {
+                        //recheck wait condition inside synchronized block
+                        if (topics.size() == 0) {
+                            //pause the polling thread until a topic comes in
+                            topicsMonitor.wait();
                         }
                     }
                 }
@@ -160,11 +161,19 @@ public class KafkaController {
                     this.acknowlegmentHandler.addPartitions(kafkaConsumer.assignment());
                 }
                 if (records.count() > 0) {
-                    log.info("Adding: " + records.count() + " to record stream");
+                    log.debug("Adding: " + records.count() + " to record stream");
                     messageStream.addRecords(consumerRecordsToKafkaMessages(records));
                 }
                 Map<TopicPartition, OffsetAndMetadata> offsetData = this.acknowlegmentHandler.flushAcknowledged();
                 if (offsetData.size() > 0) {
+                    String offsetDescription =
+                                    offsetData.entrySet()
+                                              .stream()
+                                              .map(entry -> "topic: " + entry.getKey().topic() + ", " +
+                                                            "partition: " + entry.getKey().partition() + ", " +
+                                                            "offset: " + entry.getValue().offset())
+                                              .collect(Collectors.joining("|"));
+                    log.debug("Commiting offsets {}", offsetDescription);
                     kafkaConsumer.commitSync(offsetData);
                 }
             }
@@ -176,6 +185,7 @@ public class KafkaController {
         } finally {
             running = false;
             //the kafkaConsumer must be closed in the poll thread
+            log.info("KafkaConsumer closing");
             kafkaConsumer.close();
         }
     }

@@ -41,7 +41,6 @@ public class AcknowledgedRecordHandlerTests {
         assertEquals(true, acknowledged);
     }
 
-
     @Test
     public void removePartitionsOffsetTest() throws InterruptedException{
         int partition = 0;

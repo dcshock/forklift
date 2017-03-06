@@ -36,7 +36,7 @@ libraryDependencies ++= Seq(
   "javax.inject" % "javax.inject" % "1",
   "com.novocode" % "junit-interface" % "0.11" % "test",
   "commons-io" % "commons-io" % "2.4" % "test",
-  "com.sofi" % "avro-schemas"             % "1.0-SNAPSHOT"
+  "com.sofi" % "avro-schemas"             % "1.0-SNAPSHOT" exclude("org.slf4j","slf4j-log4j12")
 )
 
 resolvers ++= Seq(

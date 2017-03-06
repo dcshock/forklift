@@ -70,7 +70,7 @@ public class KafkaConnector implements ForkliftConnectorI {
         props.put("value.deserializer", io.confluent.kafka.serializers.KafkaAvroDeserializer.class);
         props.put("schema.registry.url", schemaRegistries);
         props.put("specific.avro.reader", false);
-        props.put("auto.offset.reset", "earliest");
+        //props.put("auto.offset.reset", "earliest");
         this.kafkaConsumer = new KafkaConsumer(props);
         this.controller = new KafkaController(kafkaConsumer, messageStream);
         return controller;

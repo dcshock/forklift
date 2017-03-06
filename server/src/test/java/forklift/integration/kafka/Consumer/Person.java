@@ -1,4 +1,4 @@
-package forklift;
+package forklift.integration.kafka.Consumer;
 
 /**
  * Created by afrieze on 3/2/17.
