@@ -35,8 +35,7 @@ libraryDependencies ++= Seq(
   "ch.qos.logback.contrib" % "logback-jackson"      % "0.1.2",
   "javax.inject" % "javax.inject" % "1",
   "com.novocode" % "junit-interface" % "0.11" % "test",
-  "commons-io" % "commons-io" % "2.4" % "test",
-  "com.sofi" % "avro-schemas"             % "1.0-SNAPSHOT" exclude("org.slf4j","slf4j-log4j12")
+  "commons-io" % "commons-io" % "2.4" % "test"
 )
 
 resolvers ++= Seq(
