@@ -61,9 +61,18 @@ public class MessageRunnable implements Runnable {
             try {
                 msg.getJmsMsg().acknowledge();
             } catch (JMSException e) {
-                log.error("Error while acking message.", e);
+                //Error code specific to a plugin.  Necessary while we are using
+                //the JMS message in order to reduce spamming errors which are actually expected behavior from kafka.
+                if("KAFKA-REBALANCE".equals(e.getErrorCode())){
+                    log.warn("TopicPartition no longer available, not processing message.");
+                }
+                else {
+                    log.error("Error while acking message.", e);
+                }
                 close();
                 return;
+            } catch(Throwable e){
+                log.error("Exception", e);
             }
 
             // { Validating }
