@@ -36,7 +36,8 @@ resolvers ++= Seq(
   "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
   "Maven Central" at "http://repo1.maven.org/maven2",
   "Fuse Snapshots" at "http://repo.fusesource.com/nexus/content/repositories/snapshots",
-  "Fuse" at "http://repo.fusesource.com/nexus/content/groups/public"
+  "Fuse" at "http://repo.fusesource.com/nexus/content/groups/public",
+  "Confluent Maven Repo" at "http://packages.confluent.io/maven/"
 )
 
 // Remove scala dependency for pure Java libraries
