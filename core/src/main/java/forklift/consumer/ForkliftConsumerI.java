@@ -1,9 +1,9 @@
 package forklift.consumer;
 
-import javax.jms.JMSException;
-import javax.jms.Message;
+import forklift.connectors.ConnectorException;
+import forklift.connectors.ForkliftMessage;
 
 public interface ForkliftConsumerI {
-	Message receive(long timeout) throws JMSException;
-	void close() throws JMSException;
+	ForkliftMessage receive(long timeout) throws ConnectorException;
+	void close() throws ConnectorException;
 }
