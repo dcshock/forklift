@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import forklift.classloader.RunAsClassLoader;
-import forklift.concurrent.Callback;
 import forklift.connectors.ConnectorException;
 import forklift.connectors.ForkliftConnectorI;
 import forklift.connectors.ForkliftMessage;
@@ -46,9 +45,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.jms.JMSException;
-import javax.jms.Message;
-
 public class Consumer {
     static ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule())
                                                    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -77,7 +73,7 @@ public class Consumer {
     private BlockingQueue<Runnable> blockQueue;
     private ThreadPoolExecutor threadPool;
 
-    private Callback<Consumer> outOfMessages;
+    private java.util.function.Consumer<Consumer> outOfMessages;
 
     private AtomicBoolean running = new AtomicBoolean(false);
     public Consumer(Class<?> msgHandler, ForkliftConnectorI connector) {
@@ -150,7 +146,10 @@ public class Consumer {
             else if (m.isAnnotationPresent(Order.class))
                 orderMethod = m;
             else if (m.isAnnotationPresent(On.class) || m.isAnnotationPresent(Ons.class))
-                Arrays.stream(m.getAnnotationsByType(On.class)).map(on -> on.value()).distinct().forEach(x -> onProcessStep.get(x).add(m));
+                Arrays.stream(m.getAnnotationsByType(On.class))
+                    .map(on -> on.value())
+                    .distinct()
+                    .forEach(x -> onProcessStep.get(x).add(m));
         }
 
         if (orderMethod != null)
@@ -213,7 +212,7 @@ public class Consumer {
             // Always cleanup the consumer.
             if (consumer != null)
                 consumer.close();
-        } catch (ConnectorException | JMSException e) {
+        } catch (ConnectorException e) {
             log.debug("", e);
         }
     }
@@ -227,9 +226,8 @@ public class Consumer {
             running.set(true);
 
             while (running.get()) {
-                Message jmsMsg;
-                while ((jmsMsg = consumer.receive(2500)) != null && running.get()) {
-                    final ForkliftMessage msg = connector.jmsToForklift(jmsMsg);
+                ForkliftMessage msg;
+                while ((msg = consumer.receive(2500)) != null && running.get()) {
                     try {
                         final Object handler = msgHandler.newInstance();
 
@@ -299,7 +297,7 @@ public class Consumer {
                 }
 
                 if (outOfMessages != null)
-                    outOfMessages.handle(this);
+                    outOfMessages.accept(this);
             }
 
             // Shutdown the pool, but let actively executing work finish.
@@ -309,7 +307,7 @@ public class Consumer {
                 threadPool.awaitTermination(60, TimeUnit.SECONDS);
                 blockQueue.clear();
             }
-        } catch (JMSException e) {
+        } catch (ConnectorException e) {
             running.set(false);
             log.error("JMS Error in message loop: ", e);
         } catch (InterruptedException ignored) {
@@ -324,10 +322,11 @@ public class Consumer {
     }
 
     public void shutdown() {
+        log.info("Consumer shutting down");
         running.set(false);
     }
 
-    public void setOutOfMessages(Callback<Consumer> outOfMessages) {
+    public void setOutOfMessages(java.util.function.Consumer<Consumer> outOfMessages) {
         this.outOfMessages = outOfMessages;
     }
 
@@ -349,7 +348,7 @@ public class Consumer {
                     log.trace("Inject target> Field: ({})  Decorator: ({})", f, decorator);
                     try {
                         if (decorator == forklift.decorators.Message.class) {
-                            if (clazz ==  ForkliftMessage.class) {
+                            if (clazz == ForkliftMessage.class) {
                                 f.set(instance, msg);
                             } else if (clazz == String.class) {
                                 f.set(instance, msg.getMsg());
@@ -421,7 +420,7 @@ public class Consumer {
                             }
                         } else if (decorator == forklift.decorators.Properties.class) {
                             forklift.decorators.Properties annotation = f.getAnnotation(forklift.decorators.Properties.class);
-                            Map<String, Object> properties = msg.getProperties();
+                            Map<String, String> properties = msg.getProperties();
                             if (clazz == Map.class) {
                                 f.set(instance, msg.getProperties());
                             } else if (properties != null) {
