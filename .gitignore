@@ -13,3 +13,4 @@ activemq-data
 *.DS_Store
 .idea
 *.iml
+.vscode
