@@ -109,36 +109,7 @@ public class ActiveMQConnector implements ForkliftConnectorI {
         }
     }
 
-    public ForkliftMessage jmsToForklift(Message m) {
-        try {
-            final ForkliftMessage msg = new ForkliftMessage();
-            if (m instanceof ActiveMQTextMessage) {
-                msg.setMsg(((ActiveMQTextMessage)m).getText());
-            } else {
-                msg.setFlagged(true);
-                msg.setWarning("Unexpected message type: " + m.getClass().getName());
-            }
-
-            Map<Header, Object> headers = new HashMap<>();
-            ActiveMQMessage amq = (ActiveMQMessage) m;
-            // Build headers
-            for (Header h : Header.values()) {
-                headers.put(h, ActiveMQHeaders.getFunctions().get(h).get(amq));
-            }
-            msg.setHeaders(headers);
-
-            // Build properties
-            // try {
-            //     msg.setProperties(amq.getProperties());
-            // } catch (IOException ignored) {
-            //     // Shouldn't happen
-            // }
-
-            return msg;
-        } catch (JMSException e) {
-            return null;
-        }
-    }
+    
 
     @Override
     public ForkliftProducerI getQueueProducer(String name) {
