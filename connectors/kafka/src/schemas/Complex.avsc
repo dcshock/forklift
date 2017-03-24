@@ -1,0 +1,16 @@
+{
+  "namespace": "com.github.dcshock.avro.schemas",
+  "type": "record",
+  "version": 1,
+  "name": "ComplexAvroMessage",
+  "fields": [
+    {"name": "name", "type": "string"},
+    {"name": "address", "type": {
+        "type" : "record",
+        "name" : "Address",
+        "fields" : [
+            { "name" : "city", "type" : "string" }
+        ]
+    }}
+  ]
+}
