@@ -61,7 +61,6 @@ public class ActiveMQConnector implements ForkliftConnectorI {
             }
     }
 
-    @Override
     public synchronized Connection getConnection()
       throws ConnectorException {
         if (conn == null || !conn.isStarted())
@@ -110,10 +109,9 @@ public class ActiveMQConnector implements ForkliftConnectorI {
         }
     }
 
-    @Override
     public ForkliftMessage jmsToForklift(Message m) {
         try {
-            final ForkliftMessage msg = new ForkliftMessage(m);
+            final ForkliftMessage msg = new ForkliftMessage();
             if (m instanceof ActiveMQTextMessage) {
                 msg.setMsg(((ActiveMQTextMessage)m).getText());
             } else {
@@ -130,11 +128,11 @@ public class ActiveMQConnector implements ForkliftConnectorI {
             msg.setHeaders(headers);
 
             // Build properties
-            try {
-                msg.setProperties(amq.getProperties());
-            } catch (IOException ignored) {
-                // Shouldn't happen
-            }
+            // try {
+            //     msg.setProperties(amq.getProperties());
+            // } catch (IOException ignored) {
+            //     // Shouldn't happen
+            // }
 
             return msg;
         } catch (JMSException e) {

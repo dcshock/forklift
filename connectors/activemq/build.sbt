@@ -16,7 +16,7 @@ initialize := {
 }
 
 libraryDependencies ++= Seq(
-    "com.github.dcshock" % "forklift" % "0.19",
+    "com.github.dcshock" % "forklift" % "0.24",
     "org.apache.activemq" % "activemq-client" % "5.14.0",
     "org.apache.activemq" % "activemq-broker" % "5.14.0",
     "com.fasterxml.jackson.core" % "jackson-databind" % "2.7.3",
