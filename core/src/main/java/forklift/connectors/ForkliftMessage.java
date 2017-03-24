@@ -1,5 +1,7 @@
 package forklift.connectors;
 
+import forklift.message.Header;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -9,6 +11,7 @@ public class ForkliftMessage {
     protected boolean flagged;
     protected String warning;
     protected Map<String, String> properties = new HashMap<>();
+    protected Map<Header, Object> headers = new HashMap<>();
 
     public ForkliftMessage() {
     }
@@ -58,5 +61,15 @@ public class ForkliftMessage {
 
     public Map<String, String> getProperties() {
         return this.properties;
+    }
+
+    public void setHeaders(Map<Header, Object> headers) {
+         final Map<Header, Object> newHeaders = new HashMap<>();
+         headers.keySet().stream().forEach(key -> newHeaders.put(key, headers.get(key)));
+         this.headers = newHeaders;   
+    }
+
+    public Map<Header, Object> getHeaders() {
+        return this.headers;
     }
 }

@@ -59,7 +59,14 @@ public class ForkliftSyncProducer<T> implements ForkliftSyncProducerI<T> {
 
     @Override
     public Future<T> send(Map<Header, Object> headers,
-                          Map<String, Object> properties,
+                          Map<String, String> properties,
+                          ForkliftMessage message)
+      throws ProducerException {
+        return resolver.register(new ResultFuture<T>(producer.send(message)));
+    }
+
+    @Override
+    public Future<T> send(Map<String, String> properties,
                           ForkliftMessage message)
       throws ProducerException {
         return resolver.register(new ResultFuture<T>(producer.send(message)));
@@ -78,13 +85,13 @@ public class ForkliftSyncProducer<T> implements ForkliftSyncProducerI<T> {
     }
 
     @Override
-    public Map<String, Object> getProperties()
+    public Map<String, String> getProperties()
       throws ProducerException {
         return producer.getProperties();
     }
 
     @Override
-    public void setProperties(Map<String , Object> properties)
+    public void setProperties(Map<String , String> properties)
       throws ProducerException {
         producer.setProperties(properties);
     }
