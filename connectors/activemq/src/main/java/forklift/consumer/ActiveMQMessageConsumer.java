@@ -1,5 +1,6 @@
 package forklift.consumer;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -69,11 +70,13 @@ public class ActiveMQMessageConsumer implements ForkliftConsumerI {
             msg.setHeaders(headers);
 
             // Build properties
-            // try {
-            //     msg.setProperties(amq.getProperties());
-            // } catch (IOException ignored) {
-            //     // Shouldn't happen
-            // }
+            final Map<String, String> props = new HashMap<>();
+            try {
+                amq.getProperties().forEach((k, v) -> {
+                    props.put(k, v.toString());
+                });
+                msg.setProperties(props);
+            } catch (IOException ignored) {}
 
             return msg;
         } catch (JMSException e) {

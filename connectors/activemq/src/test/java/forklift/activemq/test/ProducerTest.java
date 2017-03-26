@@ -89,7 +89,7 @@ public class ProducerTest {
             }
             isPropOverwritten = m.getProperties().get("Eye").equals("ball") ? false : true;
             isPropsSet = m.getProperties().get("Foo").equals("Bar") ? true : false;
-            // isHeadersSet = m.getProperties().getJMSType().equals("presetHeaderAction") ? true : false;
+            isHeadersSet = m.getHeaders().get(Header.Type).equals("presetHeaderAction") ? true : false;
         } catch (Exception e) {
         }
 

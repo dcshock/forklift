@@ -12,6 +12,7 @@ import forklift.message.Header;
 import org.apache.activemq.command.ActiveMQMessage;
 
 import java.lang.StringBuilder;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -220,26 +221,31 @@ public class ActiveMQProducer implements ForkliftProducerI {
     private void setMessageHeaders(Message msg, Map<Header, Object> headers) throws ProducerException {
         if (msg != null && headers != null) {
             headers.entrySet().stream().filter(entry -> entry.getValue() != null)
-                              .forEach(entry -> {
-                                if(ActiveMQHeaders.getFunctions().get(entry.getKey()).get((ActiveMQMessage)msg) == null) {
-                                   ActiveMQHeaders.getFunctions().get(entry.getKey()).set((ActiveMQMessage)msg,entry.getValue());
-                                }
-                            });
+                .forEach(entry -> {
+                if(ActiveMQHeaders.getFunctions().get(entry.getKey()).get((ActiveMQMessage)msg) == null) {
+                    ActiveMQHeaders.getFunctions().get(entry.getKey()).set((ActiveMQMessage)msg,entry.getValue());
+                }
+            });
         }
     }
 
     private void setMessageProperties(Message msg, Map<String, String> properties) throws ProducerException {
         if (msg != null && properties != null) {
-            properties.entrySet().stream().filter(entry -> entry.getValue() != null)
-                                          .forEach(property -> {
-                                            try {
-                                                if(msg.getObjectProperty(property.getKey()) == null) {
-                                                    msg.setObjectProperty(property.getKey(), property.getValue());
-                                                }
-                                            } catch (Exception e) {
-                                                //Catch it but just move on.
-                                            }
-                                           });
+            final Map<String, String> props = new HashMap<>();
+            if (properties != null)
+                props.putAll(properties);
+            if (this.properties != null)
+                props.putAll(this.properties);
+            props.entrySet().stream().filter(entry -> entry.getValue() != null)
+                .forEach(property -> {
+                    try {
+                        if(msg.getObjectProperty(property.getKey()) == null) {
+                            msg.setObjectProperty(property.getKey(), property.getValue());
+                        }
+                    } catch (Exception e) {
+                        //Catch it but just move on.
+                    }
+                });
         }
     }
 
