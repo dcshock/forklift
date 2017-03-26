@@ -48,10 +48,11 @@ public class ActiveMQMessageConsumer implements ForkliftConsumerI {
 
 	private ForkliftMessage jmsToForklift(Message m) {
         if (m == null) 
-            return new ForkliftMessage();
+            return null;
             
         try {
             final ForkliftMessage msg = new ForkliftMessage();
+            msg.setId(m.getJMSCorrelationID());
             if (m instanceof ActiveMQTextMessage) {
                 msg.setMsg(((ActiveMQTextMessage)m).getText());
             } else {

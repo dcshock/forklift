@@ -6,6 +6,8 @@ import forklift.connectors.ActiveMQConnector;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.commons.io.FileUtils;
 
+import com.google.common.io.Files;
+
 /**
  * Contains all of the necessary connection management code that tests
  * need in order to run against the activemq broker and forklift. This
@@ -29,6 +31,7 @@ public class TestServiceManager {
             try {
                 activemq = new BrokerService();
                 activemq.addConnector("tcp://127.0.0.1:61618");
+                activemq.setDataDirectoryFile(Files.createTempDir());
                 activemq.start();
                 System.out.println("HEY" + activemq.getDataDirectoryFile());
 
