@@ -21,6 +21,7 @@ libraryDependencies ++= Seq(
     "org.apache.activemq" % "activemq-broker" % "5.14.0",
     "com.fasterxml.jackson.core" % "jackson-databind" % "2.7.3",
     "com.fasterxml.jackson.datatype" % "jackson-datatype-jsr310" % "2.7.3",
+    "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1",
     "commons-io" % "commons-io" % "2.4" % "test",
     "com.novocode" % "junit-interface" % "0.11" % "test",
     "org.apache.activemq" % "activemq-all" % "5.14.0" % "test"
