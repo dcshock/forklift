@@ -203,19 +203,17 @@ public class ActiveMQProducer implements ForkliftProducerI {
     private Message forkliftToJms(ForkliftMessage message) throws ProducerException {
 
         try {
-            Message msg = null;
-            if (message.getMsg() != null ) {
-                try {
-                    msg = session.createTextMessage(message.getMsg());
-                } catch (Exception e) {
-                    throw new ProducerException("Error creating new jms TextMessage", e);
-                }
-            }
+            final Message msg = session.createTextMessage(message.getMsg());
+
+            // Set the jms correlation id.
+            if (message.getId() != null && !message.getId().trim().equals(""))
+                msg.setJMSCorrelationID(message.getId());
+
             setMessageHeaders(msg, message.getHeaders());
             setMessageProperties(msg, message.getProperties());
             return msg;
         } catch (Exception e) {
-            throw new ProducerException("Error creating JMS Message, Forklift message was null", e);
+            throw new ProducerException("Error creating JMS Message, or Forklift message was null", e);
         }
     }
 

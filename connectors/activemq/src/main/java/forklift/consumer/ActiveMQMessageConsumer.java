@@ -47,6 +47,9 @@ public class ActiveMQMessageConsumer implements ForkliftConsumerI {
 	}
 
 	private ForkliftMessage jmsToForklift(Message m) {
+        if (m == null) 
+            return new ForkliftMessage();
+            
         try {
             final ForkliftMessage msg = new ForkliftMessage();
             if (m instanceof ActiveMQTextMessage) {

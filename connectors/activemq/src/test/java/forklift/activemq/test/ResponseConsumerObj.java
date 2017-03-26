@@ -21,7 +21,7 @@ public class ResponseConsumerObj {
     @OnMessage
     public void go() throws JMSException {
         if (s.getName() != null && s.getName().equals("Dude") && s.getAge() != null && s.getAge() == 22) {
-            resolver.resolve(m.getJmsMsg().getJMSCorrelationID(), s);
+            resolver.resolve(m.getId(), s);
             throw new RuntimeException("This is expected");
         }
     }

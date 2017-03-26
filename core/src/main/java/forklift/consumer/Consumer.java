@@ -349,7 +349,7 @@ public class Consumer {
                 fields.get(clazz).forEach(f -> {
                     log.trace("Inject target> Field: ({})  Decorator: ({})", f, decorator);
                     try {
-                        if (decorator == forklift.decorators.Message.class) {
+                        if (decorator == forklift.decorators.Message.class && msg.getMsg() != null) {
                             if (clazz == ForkliftMessage.class) {
                                 f.set(instance, msg);
                             } else if (clazz == String.class) {
@@ -460,6 +460,7 @@ public class Consumer {
                         log.warn("Unable to parse json for injection.", e);
                     } catch (Exception e) {
                         log.error("Error injecting data into Msg Handler", e);
+                        e.printStackTrace();
                         throw new RuntimeException("Error injecting data into Msg Handler");
                     }
                 });
