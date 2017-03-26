@@ -5,7 +5,6 @@ package forklift.consumer.decorators;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-import forklift.TestMsg;
 import forklift.connectors.ForkliftMessage;
 import forklift.consumer.Consumer;
 import forklift.decorators.Config;
@@ -40,7 +39,9 @@ public class ConfigTest {
     public void testConfigInjection() {
         Consumer test = new Consumer(TestConsumer.class, null, this.getClass().getClassLoader());
         TestConsumer tc = new TestConsumer();
-        test.inject(new ForkliftMessage(new TestMsg("1")), tc);
+        final ForkliftMessage msg = new ForkliftMessage();
+        msg.setId("1");
+        test.inject(msg, tc);
         assertEquals(tc.all.get("value"), "a");
         assertEquals(tc.configTestProperties.get("value"), "a");
         assertEquals(tc.value, "a");

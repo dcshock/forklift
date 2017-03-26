@@ -2,7 +2,6 @@ package forklift.consumer;
 
 import static org.junit.Assert.fail;
 
-import forklift.TestMsg;
 import forklift.connectors.ForkliftMessage;
 import forklift.decorators.On;
 import forklift.decorators.OnMessage;
@@ -196,7 +195,8 @@ public class OnDecoratorTest {
 
     @SuppressWarnings("unchecked")
     private static <T> void runTest(T c) {
-        final ForkliftMessage msg = new ForkliftMessage(new TestMsg("Message"));
+        final ForkliftMessage msg = new ForkliftMessage("Message");
+        msg.setId("Message");
         final Consumer consumer = new Consumer(c.getClass(), null);
         consumer.inject(msg, c);
         List<Method> onMessage = (List<Method>) fetch(consumer, "onMessage");

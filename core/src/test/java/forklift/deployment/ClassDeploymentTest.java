@@ -10,11 +10,7 @@ import forklift.deployment.deploymentClasses.TestTopic1;
 import org.junit.Test;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.jar.Attributes;
-import java.util.jar.JarOutputStream;
-import java.util.jar.Manifest;
 
 import static org.junit.Assert.*;
 

@@ -5,6 +5,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import forklift.connectors.ConnectorException;
 import forklift.connectors.ForkliftMessage;
 import forklift.consumer.Consumer;
 import forklift.decorators.Headers;
@@ -17,8 +18,6 @@ import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.jms.JMSException;
 
 public class ConsumerTest {
     @Test(expected=IllegalArgumentException.class)
@@ -44,11 +43,11 @@ public class ConsumerTest {
     }
 
     @Test
-    public void inject() throws JMSException {
+    public void inject() throws ConnectorException {
         Consumer test = new Consumer(ExampleConsumer.class, null, this.getClass().getClassLoader());
         ExampleConsumer ec = new ExampleConsumer();
-        javax.jms.Message jmsMsg = new TestMsg("1");
-        ForkliftMessage msg = new ForkliftMessage(jmsMsg);
+        ForkliftMessage msg = new ForkliftMessage();
+        msg.setId("1");
         msg.setMsg("x=y\nname=Scooby Doo\n");
 
         test.inject(msg,ec);
@@ -58,18 +57,18 @@ public class ConsumerTest {
         assertEquals("y", ec.kv.get("x"));
         assertEquals("Scooby Doo", ec.kv.get("name"));
         assertEquals("x=y\nname=Scooby Doo\n", ec.fmsg.getMsg());
-        assertEquals("1", ec.fmsg.getJmsMsg().getJMSCorrelationID());
+        assertEquals("1", ec.fmsg.getId());
         assertEquals("x=y\nname=Scooby Doo\n", ec.str);
     }
 
     // TODO put this back in with a real test.
-    // The system shouldn't hand the bad json to the consumer, and let the consumer mark the message as invalid to avoid redelivery of a bad message.
+    // The system should hand the bad json to the consumer, and let the consumer mark the message as invalid to avoid redelivery of a bad message.
     // @Test(expected=RuntimeException.class)
     public void injectBadJson() {
         Consumer test = new Consumer(ExampleJsonConsumer.class, null, this.getClass().getClassLoader());
         ExampleJsonConsumer ec = new ExampleJsonConsumer();
-        javax.jms.Message jmsMsg = new TestMsg("1");
-        ForkliftMessage msg = new ForkliftMessage(jmsMsg);
+        ForkliftMessage msg = new ForkliftMessage();
+        msg.setId("1");
         msg.setMsg("x=y");
 
         test.inject(msg,ec);
@@ -79,8 +78,8 @@ public class ConsumerTest {
     public void injectEmptyJson() {
         Consumer test = new Consumer(ExampleJsonConsumer.class, null, this.getClass().getClassLoader());
         ExampleJsonConsumer ec = new ExampleJsonConsumer();
-        javax.jms.Message jmsMsg = new TestMsg("1");
-        ForkliftMessage msg = new ForkliftMessage(jmsMsg);
+        ForkliftMessage msg = new ForkliftMessage();
+        msg.setId("1");
         msg.setMsg("{}");
 
         test.inject(msg,ec);
@@ -94,8 +93,8 @@ public class ConsumerTest {
     public void injectJson() {
         Consumer test = new Consumer(ExampleJsonConsumer.class, null, this.getClass().getClassLoader());
         ExampleJsonConsumer ec = new ExampleJsonConsumer();
-        javax.jms.Message jmsMsg = new TestMsg("1");
-        ForkliftMessage msg = new ForkliftMessage(jmsMsg);
+        ForkliftMessage msg = new ForkliftMessage();
+        msg.setId("1");
         msg.setMsg("{\"name\":\"Fred Jones\", \"url\":\"http://forklift\", \"ideas\":[\"scanning\", \"verifying\"]}");
 
         test.inject(msg,ec);
@@ -104,8 +103,10 @@ public class ConsumerTest {
         assertEquals(2, ec.msg.ideas.length);
         assertEquals("Fred Jones", ec.msg.name);
         assertEquals("http://forklift", ec.msg.url);
-        assertNull(ec.headers);
-        assertNull(ec.properties);
+        assertNotNull(ec.headers);
+        assertNotNull(ec.properties);
+        assertEquals(0, ec.headers.size());
+        assertEquals(0, ec.properties.size());
         assertNull(ec.cid);
         assertEquals(ec.producer, "replace");
         assertEquals("default", ec.strval);
@@ -115,8 +116,8 @@ public class ConsumerTest {
     public void testHeadersAndProperties() {
         Consumer test = new Consumer(ExampleJsonConsumer.class, null, this.getClass().getClassLoader());
         ExampleJsonConsumer ec = new ExampleJsonConsumer();
-        javax.jms.Message jmsMsg = new TestMsg("1");
-        ForkliftMessage msg = new ForkliftMessage(jmsMsg);
+        ForkliftMessage msg = new ForkliftMessage();
+        msg.setId("1");
         msg.setMsg("{}");
 
         Map<Header, Object> headers = new HashMap<>();
@@ -126,16 +127,13 @@ public class ConsumerTest {
         headers.put(Header.CorrelationId, "abcd");
         msg.setHeaders(headers);
 
-        Map<String, Object> properties = new HashMap<>();
-        properties.put("my-cool-prop", new Integer(3));
+        Map<String, String> properties = new HashMap<>();
         properties.put("mystrval", "blah");
-        properties.put("my-long-val", new Long(123123));
-        properties.put("my-float-val", new Float(123123));
         msg.setProperties(properties);
 
         test.inject(msg,ec);
         assertEquals(4, ec.headers.size());
-        assertEquals(4, ec.properties.size());
+        assertEquals(1, ec.properties.size());
         assertEquals("blah", ec.mystrval);
         assertEquals("blah", ec.strval);
         assertEquals(ec.cid, "abcd");

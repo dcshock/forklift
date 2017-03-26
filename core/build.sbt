@@ -31,6 +31,22 @@ resolvers ++= Seq(
     "Fuse" at "http://repo.fusesource.com/nexus/content/groups/public"
 )
 
+val genClasspath = taskKey[String]("Generate classpath.txt for use with VS Code.")
+
+genClasspath := {
+  val log = streams.value.log
+  val cp: Seq[File] = (dependencyClasspath in Compile).value.files
+
+  val file = baseDirectory.value / "classpath.txt"
+  log.info("Writing classpath details to: " + file.getAbsolutePath)
+  IO.write(file, cp.map(_.getAbsolutePath).mkString(java.io.File.pathSeparator))
+  file.getAbsolutePath
+}
+
+// Generate classpath.txt every time you compile or run the project
+compile in Compile <<= (compile in Compile).dependsOn(genClasspath)
+run in Compile <<= (run in Compile).dependsOn(genClasspath)
+
 // Remove scala dependency for pure Java libraries
 autoScalaLibrary := false
 

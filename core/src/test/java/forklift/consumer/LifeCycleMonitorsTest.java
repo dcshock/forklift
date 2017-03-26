@@ -2,7 +2,6 @@ package forklift.consumer;
 
 import static org.junit.Assert.assertTrue;
 
-import forklift.TestMsg;
 import forklift.connectors.ForkliftMessage;
 import forklift.consumer.lifecycle.BadAuditor;
 import forklift.consumer.lifecycle.TestAuditor;
@@ -17,8 +16,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-
-import javax.jms.Message;
 
 public class LifeCycleMonitorsTest {
     private static final Logger log = LoggerFactory.getLogger(LifeCycleMonitorsTest.class);
@@ -40,7 +37,6 @@ public class LifeCycleMonitorsTest {
             public void run() {
                 threads.getAndIncrement();
                 for (int i = 0; i < 40; i++) {
-                    Message jmsMsg = new TestMsg("" + i);
                     int next = new Random().nextInt(ProcessStep.values().length);
                     ProcessStep ps = ProcessStep.values()[next];
                     try {
@@ -48,7 +44,7 @@ public class LifeCycleMonitorsTest {
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    LifeCycleMonitors.call(ps, new MessageRunnable(null, new ForkliftMessage(jmsMsg), null, null, null, null, null, null, Collections.emptyList()));
+                    LifeCycleMonitors.call(ps, new MessageRunnable(null, new ForkliftMessage("" + i), null, null, null, null, null, null, Collections.emptyList()));
                 }
                 threads.getAndDecrement();
             }
@@ -110,8 +106,7 @@ public class LifeCycleMonitorsTest {
 
         log.debug("The following generates an exception. This is expected.");
         // Now the validate listener should log out an error but should stop processing from happening.
-        Message jmsMsg = new TestMsg("1");
-        LifeCycleMonitors.call(ProcessStep.Validating, new MessageRunnable(null, new ForkliftMessage(jmsMsg), null, null, null, null, null, null, Collections.emptyList()));
+        LifeCycleMonitors.call(ProcessStep.Validating, new MessageRunnable(null, new ForkliftMessage("1"), null, null, null, null, null, null, Collections.emptyList()));
         assertTrue("Make sure the exception was eaten and just logged.", true);
     }
 }

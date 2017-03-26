@@ -25,7 +25,11 @@ public class ForkliftMessage {
     }
 
     public String getId() {
-        return null;
+        return this.id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getMsg() {

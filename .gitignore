@@ -13,4 +13,8 @@ activemq-data
 *.DS_Store
 .idea
 *.iml
+
+# VS CODE config
 .vscode
+classpath.txt
+javaconfig.json
