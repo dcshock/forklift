@@ -231,9 +231,9 @@ public class ProducerTest {
             listener.shutdown();
             Assert.assertTrue(ordered);
             Assert.assertTrue("called was not == " + msgCount, called.get() == msgCount);
-            Assert.assertTrue("Message properties were overwritten", isPropOverwritten == false);
-            Assert.assertTrue("Message properties were not set", isPropsSet == true);
-            Assert.assertTrue("Message headers were not set", isHeadersSet == true);
+            Assert.assertTrue("Message properties were overwritten", !isPropOverwritten);
+            Assert.assertTrue("Message properties were not set", isPropsSet);
+            Assert.assertTrue("Message headers were not set", isHeadersSet);
         });
 
         // Start the consumer.
