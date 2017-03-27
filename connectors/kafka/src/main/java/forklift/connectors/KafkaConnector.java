@@ -30,9 +30,9 @@ public class KafkaConnector implements ForkliftConnectorI {
     /**
      * Constructs a nw instance of the KafkaConnector
      *
-     * @param kafkaHosts list of kafka servers in host:port,... format
+     * @param kafkaHosts       list of kafka servers in host:port,... format
      * @param schemaRegistries list of schema registry servers in http://host:port,... format
-     * @param groupId the groupId to use when subscribing to topics
+     * @param groupId          the groupId to use when subscribing to topics
      */
     public KafkaConnector(String kafkaHosts, String schemaRegistries, String groupId) {
         this.kafkaHosts = kafkaHosts;
@@ -42,8 +42,7 @@ public class KafkaConnector implements ForkliftConnectorI {
 
     @Override
     public void start() throws ConnectorException {
-        this.controller = createController();
-        this.controller.start();
+        //We do nothing here.  Consumer and producer are created when needed
     }
 
     private KafkaProducer createKafkaProducer() {
@@ -78,16 +77,18 @@ public class KafkaConnector implements ForkliftConnectorI {
     }
 
     @Override
-    public void stop() throws ConnectorException {
+    public synchronized void stop() throws ConnectorException {
         try {
             if (controller != null) {
                 this.controller.stop(2000, TimeUnit.MILLISECONDS);
+                this.controller = null;
             }
         } catch (InterruptedException e) {
             log.error("KafkaConnector interrupted while stopping");
         }
         if (kafkaProducer != null) {
             this.kafkaProducer.close();
+            this.kafkaProducer = null;
         }
     }
 
@@ -97,12 +98,10 @@ public class KafkaConnector implements ForkliftConnectorI {
     }
 
     @Override
-    public ForkliftConsumerI getTopic(String name) throws ConnectorException {
-        synchronized (this) {
-            if (this.controller == null || !this.controller.isRunning()) {
-                this.controller = createController();
-                this.controller.start();
-            }
+    public synchronized ForkliftConsumerI getTopic(String name) throws ConnectorException {
+        if (this.controller == null || !this.controller.isRunning()) {
+            this.controller = createController();
+            this.controller.start();
         }
         return new KafkaTopicConsumer(name, controller);
     }
@@ -113,11 +112,9 @@ public class KafkaConnector implements ForkliftConnectorI {
     }
 
     @Override
-    public ForkliftProducerI getTopicProducer(String name) {
-        synchronized (this) {
-            if (this.kafkaProducer == null) {
-                this.kafkaProducer = createKafkaProducer();
-            }
+    public synchronized ForkliftProducerI getTopicProducer(String name) {
+        if (this.kafkaProducer == null) {
+            this.kafkaProducer = createKafkaProducer();
         }
         return new KafkaForkliftProducer(name, this.kafkaProducer);
     }
