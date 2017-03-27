@@ -2,7 +2,7 @@ organization := "com.github.dcshock"
 
 name := "forklift-server"
 
-version := "0.33"
+version := "1.0"
 
 enablePlugins(JavaAppPackaging)
 
@@ -15,18 +15,17 @@ initialize := {
 }
 
 libraryDependencies ++= Seq(
-  "com.github.dcshock" % "forklift"           % "0.23",
-  "com.github.dcshock" % "forklift-activemq"  % "0.10",
-  "org.apache.activemq" % "activemq-broker" % "5.14.0",
-  "com.github.dcshock" % "forklift-replay"    % "0.14",
-  "com.github.dcshock" % "forklift-retry"     % "0.11",
-  "com.github.dcshock" % "forklift-stats"     % "0.1",
+  "com.github.dcshock" % "forklift"           % "1.0",
+  "com.github.dcshock" % "forklift-activemq"  % "1.0",
+  "com.github.dcshock" % "forklift-replay"    % "1.0",
+  "com.github.dcshock" % "forklift-retry"     % "1.0",
+  "com.github.dcshock" % "forklift-stats"     % "1.0",
   "com.github.dcshock" % "consul-rest-client" % "0.10",
+  "org.apache.activemq" % "activemq-broker" % "5.14.0",
   "io.searchbox" % "jest" % "2.0.0",
   "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1",
   "args4j" % "args4j" % "2.0.31",
   "org.codehaus.janino" % "janino" % "2.6.1",
-  //"ch.qos.logback" % "logback-classic" % "1.1.2",
   "com.fasterxml.jackson.core" % "jackson-databind" % "2.7.3",
   "com.fasterxml.jackson.datatype" % "jackson-datatype-jsr310" % "2.7.3",
   "ch.qos.logback.contrib" % "logback-json-core"    % "0.1.2",

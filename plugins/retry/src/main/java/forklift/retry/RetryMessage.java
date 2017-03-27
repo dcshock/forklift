@@ -11,7 +11,7 @@ public class RetryMessage {
     private ProcessStep step;
     private String text;
     private Map<forklift.message.Header, Object> headers;
-    private Map<String, Object> properties;
+    private Map<String, String> properties;
     private String persistedPath;
 
     public String getMessageId() {
@@ -62,11 +62,11 @@ public class RetryMessage {
         this.headers = headers;
     }
 
-    public Map<String, Object> getProperties() {
+    public Map<String, String> getProperties() {
         return properties;
     }
 
-    public void setProperties(Map<String, Object> properties) {
+    public void setProperties(Map<String, String> properties) {
         this.properties = properties;
     }
 

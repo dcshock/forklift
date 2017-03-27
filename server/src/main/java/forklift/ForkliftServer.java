@@ -229,21 +229,21 @@ public final class ForkliftServer {
     }
 
     private boolean setupLifeCycleMonitors(ReplayES replayES, RetryES retryES, Forklift forklift) {
-        LifeCycleMonitors.register(StatsCollector.class);
+        forklift.getLifeCycle().register(StatsCollector.class);
         boolean setup = true;
         // Setup retry handling.
         if (retryES != null) {
-            LifeCycleMonitors.register(retryES);
+            forklift.getLifeCycle().register(retryES);
         }
         if (opts.getRetryDir() != null) {
-            LifeCycleMonitors.register(new RetryHandler(forklift.getConnector(), new File(opts.getRetryDir())));
+            forklift.getLifeCycle().register(new RetryHandler(forklift, new File(opts.getRetryDir())));
         }
         // Always add replay last so that other plugins can update props.
         if (replayES != null)
-            LifeCycleMonitors.register(replayES);
+            forklift.getLifeCycle().register(replayES);
         if (opts.getReplayDir() != null) {
             try {
-                LifeCycleMonitors.register(new ReplayLogger(new File(opts.getReplayDir())));
+                forklift.getLifeCycle().register(new ReplayLogger(new File(opts.getReplayDir())));
             } catch (FileNotFoundException e) {
                 log.error("Unable to find file for Replay Logger", e);
                 setup = false;
@@ -265,7 +265,7 @@ public final class ForkliftServer {
     private RetryES setupESRetryHandling(Forklift forklift) {
         RetryES retryES = null;
         if (opts.getRetryESHost() != null)
-            retryES = new RetryES(forklift.getConnector(), opts.isRetryESSsl(), opts.getRetryESHost(), opts.getRetryESPort(), opts.isRunRetries());
+            retryES = new RetryES(forklift, opts.isRetryESSsl(), opts.getRetryESHost(), opts.getRetryESPort(), opts.isRunRetries());
         return retryES;
     }
 
