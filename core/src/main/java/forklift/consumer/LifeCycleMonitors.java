@@ -17,16 +17,17 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class LifeCycleMonitors {
     private static final Logger log = LoggerFactory.getLogger(LifeCycleMonitors.class);
 
-    private static class Monitor {
+    private class Monitor {
         Class<?> clazz;
         Method method;
         Object instance;
         Class<? extends Annotation> annotation;
     }
 
-    private static AtomicInteger calls;
-    private static final Map<ProcessStep, List<Monitor>> monitors;
-    static {
+    private AtomicInteger calls;
+    private final Map<ProcessStep, List<Monitor>> monitors;
+
+    public LifeCycleMonitors() {
         calls = new AtomicInteger(0);
 
         // Let's make sure we don't have to initialize anything at the root level later.
@@ -41,15 +42,15 @@ public class LifeCycleMonitors {
         monitors.put(ProcessStep.Complete, new ArrayList<Monitor>());
     }
 
-    public static void register(Class<?> clazz) {
+    public void register(Class<?> clazz) {
         register(clazz, null);
     }
 
-    public static void register(Object existingInstance) {
+    public void register(Object existingInstance) {
         register(existingInstance.getClass(), existingInstance);
     }
 
-    private static void register(Class<?> clazz, Object existingInstance) {
+    private void register(Class<?> clazz, Object existingInstance) {
         synchronized (monitors) {
             while (calls.get() > 0) {
                 try {
@@ -97,7 +98,7 @@ public class LifeCycleMonitors {
         }
     }
 
-    public static void deregister(final Class<?> clazz) {
+    public void deregister(final Class<?> clazz) {
         synchronized (monitors) {
             while (calls.get() > 0) {
                 try {
@@ -123,7 +124,7 @@ public class LifeCycleMonitors {
         }
     }
 
-    public static void call(ProcessStep step, MessageRunnable mr) {
+    public void call(ProcessStep step, MessageRunnable mr) {
         if (calls.get() == 0) {
             synchronized (monitors) {
                 calls.incrementAndGet();
@@ -158,7 +159,7 @@ public class LifeCycleMonitors {
         }
     }
 
-    public static Integer getCalls() {
+    public Integer getCalls() {
         return calls.get();
     }
 }

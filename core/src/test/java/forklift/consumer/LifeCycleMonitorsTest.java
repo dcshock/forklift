@@ -30,7 +30,8 @@ public class LifeCycleMonitorsTest {
     // test.
     @Test
     public void test() throws InterruptedException {
-        LifeCycleMonitors.register(TestAuditor.class);
+        final LifeCycleMonitors lifeCycle = new LifeCycleMonitors();
+        lifeCycle.register(TestAuditor.class);
 
         final Runnable calls = new Runnable() {
             @Override
@@ -44,7 +45,7 @@ public class LifeCycleMonitorsTest {
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    LifeCycleMonitors.call(ps, new MessageRunnable(null, new ForkliftMessage("" + i), null, null, null, null, null, null, Collections.emptyList()));
+                    lifeCycle.call(ps, new MessageRunnable(null, new ForkliftMessage("" + i), null, null, null, null, null, null, Collections.emptyList()));
                 }
                 threads.getAndDecrement();
             }
@@ -63,8 +64,8 @@ public class LifeCycleMonitorsTest {
                 lock.lock();
                 threads.getAndIncrement();
                 if (! registered.getAndSet(true)) {
-                    LifeCycleMonitors.register(TestAuditor2.class);
-                    LifeCycleMonitors.deregister(TestAuditor2.class);
+                    lifeCycle.register(TestAuditor2.class);
+                    lifeCycle.deregister(TestAuditor2.class);
                     registered.getAndSet(false);
                 }
                 threads.getAndDecrement();
@@ -84,7 +85,7 @@ public class LifeCycleMonitorsTest {
             @Override
             public void run() {
                 threads.getAndIncrement();
-                LifeCycleMonitors.deregister(TestAuditor.class);
+                lifeCycle.deregister(TestAuditor.class);
                 threads.getAndDecrement();
             }
         };
@@ -102,11 +103,12 @@ public class LifeCycleMonitorsTest {
     // the system.
     @Test
     public void badListener() {
-        LifeCycleMonitors.register(BadAuditor.class);
+        final LifeCycleMonitors lifeCycle = new LifeCycleMonitors();
+        lifeCycle.register(BadAuditor.class);
 
         log.debug("The following generates an exception. This is expected.");
         // Now the validate listener should log out an error but should stop processing from happening.
-        LifeCycleMonitors.call(ProcessStep.Validating, new MessageRunnable(null, new ForkliftMessage("1"), null, null, null, null, null, null, Collections.emptyList()));
+        lifeCycle.call(ProcessStep.Validating, new MessageRunnable(null, new ForkliftMessage("1"), null, null, null, null, null, null, Collections.emptyList()));
         assertTrue("Make sure the exception was eaten and just logged.", true);
     }
 }

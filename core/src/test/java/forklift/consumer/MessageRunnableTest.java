@@ -2,10 +2,12 @@ package forklift.consumer;
 
 import static org.junit.Assert.assertTrue;
 
+import forklift.Forklift;
 import forklift.connectors.ForkliftMessage;
 import forklift.decorators.LifeCycle;
 import forklift.decorators.OnMessage;
 import forklift.decorators.OnValidate;
+import forklift.decorators.Queue;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,14 +21,27 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+@Queue("X")
 public class MessageRunnableTest {
     private static Logger log = LoggerFactory.getLogger(MessageRunnableTest.class);
+
+    /**
+     * Mock consumer that can give the lifeCycle to the message runnables below.
+     */
+    public class BaseTestConsumer extends Consumer {
+        public BaseTestConsumer(Forklift forklift) {
+            super(MessageRunnableTest.class, forklift);
+        }
+    }
 
     // Given a message runner, make sure that the invalid is called when the OnValidate signature
     // is incorrect.
     @Test
     public void invalidOnValidate() {
-        LifeCycleMonitors.register(TestListener1.class);
+        final Forklift forklift = new Forklift();
+        final BaseTestConsumer consumer = new BaseTestConsumer(forklift);
+
+        forklift.getLifeCycle().register(TestListener1.class);
 
         List<Method> onMessage = new ArrayList<>();
         List<Method> onValidate = new ArrayList<>();
@@ -40,10 +55,10 @@ public class MessageRunnableTest {
 
         TestConsumer1 tc = new TestConsumer1();
 
-        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage("1"), null, tc, onMessage, onValidate, null, createOnProcessStepMap(), Collections.emptyList());
+        MessageRunnable mr = new MessageRunnable(consumer, new ForkliftMessage("1"), null, tc, onMessage, onValidate, null, createOnProcessStepMap(), Collections.emptyList());
         mr.run();
         assertTrue(TestConsumer1.success.get());
-        LifeCycleMonitors.deregister(TestListener1.class);
+        forklift.getLifeCycle().deregister(TestListener1.class);
     }
 
 
@@ -78,7 +93,10 @@ public class MessageRunnableTest {
     // when a message doesn't validate with a boolean return of false.
     @Test
     public void invalidMessage() {
-        LifeCycleMonitors.register(TestListener2.class);
+        final Forklift forklift = new Forklift();
+        final BaseTestConsumer consumer = new BaseTestConsumer(forklift);
+
+        forklift.getLifeCycle().register(TestListener2.class);
 
         List<Method> onMessage = new ArrayList<>();
         List<Method> onValidate = new ArrayList<>();
@@ -92,10 +110,10 @@ public class MessageRunnableTest {
 
         TestConsumer2 tc = new TestConsumer2();
 
-        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage("2"), null, tc, onMessage, onValidate, null, createOnProcessStepMap(), Collections.emptyList());
+        MessageRunnable mr = new MessageRunnable(consumer, new ForkliftMessage("2"), null, tc, onMessage, onValidate, null, createOnProcessStepMap(), Collections.emptyList());
         mr.run();
         assertTrue(TestConsumer2.success.get());
-        LifeCycleMonitors.deregister(TestListener2.class);
+        forklift.getLifeCycle().deregister(TestListener2.class);
     }
 
     // Supportive classes for invalidMessage
@@ -134,7 +152,10 @@ public class MessageRunnableTest {
     // For a message runner make sure that if boolean validation succeeds that processing is called.
     @Test
     public void validMessage() {
-        LifeCycleMonitors.register(TestListener3.class);
+        final Forklift forklift = new Forklift();
+        final BaseTestConsumer consumer = new BaseTestConsumer(forklift);
+
+        forklift.getLifeCycle().register(TestListener3.class);
 
         List<Method> onMessage = new ArrayList<>();
         List<Method> onValidate = new ArrayList<>();
@@ -148,10 +169,10 @@ public class MessageRunnableTest {
 
         TestConsumer3 tc = new TestConsumer3();
 
-        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage("3"), tc.getClass().getClassLoader(), tc, onMessage, onValidate, null, createOnProcessStepMap(), Collections.emptyList());
+        MessageRunnable mr = new MessageRunnable(consumer, new ForkliftMessage("3"), tc.getClass().getClassLoader(), tc, onMessage, onValidate, null, createOnProcessStepMap(), Collections.emptyList());
         mr.run();
         assertTrue(TestConsumer3.success.get());
-        LifeCycleMonitors.deregister(TestListener3.class);
+        forklift.getLifeCycle().deregister(TestListener3.class);
     }
 
     // Supportive classes for validMessage
@@ -189,7 +210,10 @@ public class MessageRunnableTest {
     // For a message runner make sure that if an empty List of errors in validation does call processing and completes.
     @Test
     public void emptyListRet() {
-        LifeCycleMonitors.register(TestListener4.class);
+        final Forklift forklift = new Forklift();
+        final BaseTestConsumer consumer = new BaseTestConsumer(forklift);
+
+        forklift.getLifeCycle().register(TestListener4.class);
 
         List<Method> onMessage = new ArrayList<>();
         List<Method> onValidate = new ArrayList<>();
@@ -203,10 +227,10 @@ public class MessageRunnableTest {
 
         TestConsumer4 tc = new TestConsumer4();
 
-        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage("4"), tc.getClass().getClassLoader(), tc, onMessage, onValidate, null, createOnProcessStepMap(), Collections.emptyList());
+        MessageRunnable mr = new MessageRunnable(consumer, new ForkliftMessage("4"), tc.getClass().getClassLoader(), tc, onMessage, onValidate, null, createOnProcessStepMap(), Collections.emptyList());
         mr.run();
         assertTrue(TestConsumer4.success.get());
-        LifeCycleMonitors.deregister(TestListener4.class);
+        forklift.getLifeCycle().deregister(TestListener4.class);
     }
 
     // Supportive classes for emptyListRet
@@ -249,7 +273,10 @@ public class MessageRunnableTest {
     // For a message runner make sure that if the List of errors contains a string that it does not process and errors out.
     @Test
     public void errorInRetList() {
-        LifeCycleMonitors.register(TestListener5.class);
+        final Forklift forklift = new Forklift();
+        final BaseTestConsumer consumer = new BaseTestConsumer(forklift);
+
+        forklift.getLifeCycle().register(TestListener5.class);
 
         List<Method> onMessage = new ArrayList<>();
         List<Method> onValidate = new ArrayList<>();
@@ -263,10 +290,10 @@ public class MessageRunnableTest {
 
         TestConsumer5 tc = new TestConsumer5();
 
-        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage("5"), tc.getClass().getClassLoader(), tc, onMessage, onValidate, null, createOnProcessStepMap(), Collections.emptyList());
+        MessageRunnable mr = new MessageRunnable(consumer, new ForkliftMessage("5"), tc.getClass().getClassLoader(), tc, onMessage, onValidate, null, createOnProcessStepMap(), Collections.emptyList());
         mr.run();
         assertTrue(TestConsumer5.success.get());
-        LifeCycleMonitors.deregister(TestListener5.class);
+        forklift.getLifeCycle().deregister(TestListener5.class);
     }
 
     // Supportive classes for errorInRetList
@@ -308,7 +335,10 @@ public class MessageRunnableTest {
     // that it calls processing.
     @Test
     public void invalidListNull() {
-        LifeCycleMonitors.register(TestListener6.class);
+        final Forklift forklift = new Forklift();
+        final BaseTestConsumer consumer = new BaseTestConsumer(forklift);
+
+        forklift.getLifeCycle().register(TestListener6.class);
 
         List<Method> onMessage = new ArrayList<>();
         List<Method> onValidate = new ArrayList<>();
@@ -322,10 +352,10 @@ public class MessageRunnableTest {
 
         TestConsumer6 tc = new TestConsumer6();
 
-        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage("6"), tc.getClass().getClassLoader(), tc, onMessage, onValidate, null, createOnProcessStepMap(), Collections.emptyList());
+        MessageRunnable mr = new MessageRunnable(consumer, new ForkliftMessage("6"), tc.getClass().getClassLoader(), tc, onMessage, onValidate, null, createOnProcessStepMap(), Collections.emptyList());
         mr.run();
         assertTrue(TestConsumer6.success.get());
-        LifeCycleMonitors.deregister(TestListener6.class);
+        forklift.getLifeCycle().deregister(TestListener6.class);
     }
 
     // Supportive classes for invalidListNull
@@ -364,7 +394,10 @@ public class MessageRunnableTest {
     // What happens when validation throws an exception? Should throw error with reason of Exception.
     @Test
     public void validationException() {
-        LifeCycleMonitors.register(TestListener7.class);
+        final Forklift forklift = new Forklift();
+        final BaseTestConsumer consumer = new BaseTestConsumer(forklift);
+
+        forklift.getLifeCycle().register(TestListener7.class);
 
         List<Method> onMessage = new ArrayList<>();
         List<Method> onValidate = new ArrayList<>();
@@ -378,10 +411,10 @@ public class MessageRunnableTest {
 
         TestConsumer7 tc = new TestConsumer7();
 
-        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage("7"), tc.getClass().getClassLoader(), tc, onMessage, onValidate, null, createOnProcessStepMap(), Collections.emptyList());
+        MessageRunnable mr = new MessageRunnable(consumer, new ForkliftMessage("7"), tc.getClass().getClassLoader(), tc, onMessage, onValidate, null, createOnProcessStepMap(), Collections.emptyList());
         mr.run();
         assertTrue(TestConsumer7.success.get());
-        LifeCycleMonitors.deregister(TestListener7.class);
+        forklift.getLifeCycle().deregister(TestListener7.class);
     }
 
     // Supportive classes for validationException
@@ -422,7 +455,10 @@ public class MessageRunnableTest {
     // What happens when processing throws an exception? Should process with Error.
     @Test
     public void processException() {
-        LifeCycleMonitors.register(TestListener8.class);
+        final Forklift forklift = new Forklift();
+        final BaseTestConsumer consumer = new BaseTestConsumer(forklift);
+
+        forklift.getLifeCycle().register(TestListener8.class);
 
         List<Method> onMessage = new ArrayList<>();
         List<Method> onValidate = new ArrayList<>();
@@ -436,10 +472,10 @@ public class MessageRunnableTest {
 
         TestConsumer8 tc = new TestConsumer8();
 
-        MessageRunnable mr = new MessageRunnable(null, new ForkliftMessage("8"), tc.getClass().getClassLoader(), tc, onMessage, onValidate, null, createOnProcessStepMap(), Collections.emptyList());
+        MessageRunnable mr = new MessageRunnable(consumer, new ForkliftMessage("8"), tc.getClass().getClassLoader(), tc, onMessage, onValidate, null, createOnProcessStepMap(), Collections.emptyList());
         mr.run();
         assertTrue(TestConsumer8.success.get());
-        LifeCycleMonitors.deregister(TestListener8.class);
+        forklift.getLifeCycle().deregister(TestListener8.class);
     }
 
     // Supportive classes for processException

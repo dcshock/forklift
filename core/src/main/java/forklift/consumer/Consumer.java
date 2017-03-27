@@ -5,9 +5,9 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import forklift.Forklift;
 import forklift.classloader.RunAsClassLoader;
 import forklift.connectors.ConnectorException;
-import forklift.connectors.ForkliftConnectorI;
 import forklift.connectors.ForkliftMessage;
 import forklift.consumer.parser.KeyValueParser;
 import forklift.decorators.Config;
@@ -52,7 +52,7 @@ public class Consumer {
     private static AtomicInteger id = new AtomicInteger(1);
 
     private final ClassLoader classLoader;
-    private final ForkliftConnectorI connector;
+    private final Forklift forklift;
     private final Map<Class, Map<Class<?>, List<Field>>> injectFields;
     private final Class<?> msgHandler;
     private final List<Method> onMessage;
@@ -76,16 +76,17 @@ public class Consumer {
     private java.util.function.Consumer<Consumer> outOfMessages;
 
     private AtomicBoolean running = new AtomicBoolean(false);
-    public Consumer(Class<?> msgHandler, ForkliftConnectorI connector) {
-        this(msgHandler, connector, null);
+
+    public Consumer(Class<?> msgHandler, Forklift forklift) {
+        this(msgHandler, forklift, null);
     }
 
-    public Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader) {
-        this(msgHandler, connector, classLoader, false);
+    public Consumer(Class<?> msgHandler, Forklift forklift, ClassLoader classLoader) {
+        this(msgHandler, forklift, classLoader, false);
     }
 
-    public Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader, Queue q) {
-        this(msgHandler, connector, classLoader, true);
+    public Consumer(Class<?> msgHandler, Forklift forklift, ClassLoader classLoader, Queue q) {
+        this(msgHandler, forklift, classLoader, true);
         this.queue = q;
 
         if (this.queue == null)
@@ -95,8 +96,8 @@ public class Consumer {
         log = LoggerFactory.getLogger(this.name);
     }
 
-    public Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader, Topic t) {
-        this(msgHandler, connector, classLoader, true);
+    public Consumer(Class<?> msgHandler, Forklift forklift, ClassLoader classLoader, Topic t) {
+        this(msgHandler, forklift, classLoader, true);
         this.topic = t;
 
         if (this.topic == null)
@@ -107,9 +108,9 @@ public class Consumer {
     }
 
     @SuppressWarnings("unchecked")
-    private Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader, boolean preinit) {
+    private Consumer(Class<?> msgHandler, Forklift forklift, ClassLoader classLoader, boolean preinit) {
         this.classLoader = classLoader;
-        this.connector = connector;
+        this.forklift = forklift;
         this.msgHandler = msgHandler;
 
         if (!preinit && queue == null && topic == null) {
@@ -187,9 +188,9 @@ public class Consumer {
         final ForkliftConsumerI consumer;
         try {
             if (topic != null)
-                consumer = connector.getTopic(topic.value());
+                consumer = forklift.getConnector().getTopic(topic.value());
             else if (queue != null)
-                consumer = connector.getQueue(queue.value());
+                consumer = forklift.getConnector().getQueue(queue.value());
             else
                 throw new RuntimeException("No queue/topic specified");
 
@@ -445,9 +446,9 @@ public class Consumer {
 
                                 final ForkliftProducerI p;
                                 if (producer.queue().length() > 0)
-                                    p = connector.getQueueProducer(producer.queue());
+                                    p = forklift.getConnector().getQueueProducer(producer.queue());
                                 else if (producer.topic().length() > 0)
-                                    p = connector.getTopicProducer(producer.topic());
+                                    p = forklift.getConnector().getTopicProducer(producer.topic());
                                 else
                                     p = null;
 
@@ -482,8 +483,8 @@ public class Consumer {
         return topic;
     }
 
-    public ForkliftConnectorI getConnector() {
-        return connector;
+    public Forklift getForklift() {
+        return forklift;
     }
 
     public void addServices(ConsumerService... services) {
