@@ -207,7 +207,7 @@ public class KafkaController {
                         //to retry our commit as the first attempt will throw a WakeupException
                         kafkaConsumer.commitSync(offsetData);
                     } catch (WakeupException wakeup) {
-                        log.error("controlLoop wakeup on closing commitSync, retrying");
+                        log.info("controlLoop wakeup on closing commitSync, retrying");
                         kafkaConsumer.commitSync(offsetData);
                     }
                 } catch (Throwable e) {
