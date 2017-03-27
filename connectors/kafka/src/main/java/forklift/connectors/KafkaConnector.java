@@ -15,8 +15,7 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Manages a {@link org.apache.kafka.clients.consumer.KafkaConsumer}.  A subscription is made whenever  a call to getQueue or get Topic
- * is received.  Subscriptions are removed if no consumption is seen for
+ * Manages both consuming and producing events on the kafka message broker.
  */
 public class KafkaConnector implements ForkliftConnectorI {
     private static final Logger log = LoggerFactory.getLogger(KafkaConnector.class);
