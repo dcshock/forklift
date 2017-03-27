@@ -214,7 +214,6 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
     }
 
     private String formatMap(Map<String, ? extends Object> map) {
-        StringBuilder builder = new StringBuilder();
         String
                         flattened =
                         map.entrySet()
