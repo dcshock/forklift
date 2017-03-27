@@ -105,7 +105,7 @@ public class ProducerTest {
             producer.send(msg);
         }
 
-        final Consumer c = new Consumer(getClass(), TestServiceManager.getConnector());
+        final Consumer c = new Consumer(getClass(), TestServiceManager.getForklift());
         // Shutdown the consumer after all the messages have been processed.
         c.setOutOfMessages((listener) -> {
             listener.shutdown();
@@ -127,7 +127,7 @@ public class ProducerTest {
             producer.send(m);
         }
         
-        final Consumer c = new Consumer(getClass(), TestServiceManager.getConnector());
+        final Consumer c = new Consumer(getClass(), TestServiceManager.getForklift());
         // Shutdown the consumer after all the messages have been processed.
         c.setOutOfMessages((listener) -> {
             listener.shutdown();
@@ -150,7 +150,7 @@ public class ProducerTest {
             producer.send(m);
         }
         
-        final Consumer c = new Consumer(getClass(), TestServiceManager.getConnector());
+        final Consumer c = new Consumer(getClass(), TestServiceManager.getForklift());
         // Shutdown the consumer after all the messages have been processed.
         c.setOutOfMessages((listener) -> {
             listener.shutdown();
@@ -181,7 +181,7 @@ public class ProducerTest {
             producer.send(headers, props, m);
         }
         
-        final Consumer c = new Consumer(getClass(), TestServiceManager.getConnector());
+        final Consumer c = new Consumer(getClass(), TestServiceManager.getForklift());
         // Shutdown the consumer after all the messages have been processed.
         c.setOutOfMessages((listener) -> {
             listener.shutdown();
@@ -225,7 +225,7 @@ public class ProducerTest {
             producer.send(m);
         }
         
-        final Consumer c = new Consumer(getClass(), TestServiceManager.getConnector());
+        final Consumer c = new Consumer(getClass(), TestServiceManager.getForklift());
         // Shutdown the consumer after all the messages have been processed.
         c.setOutOfMessages((listener) -> {
             listener.shutdown();

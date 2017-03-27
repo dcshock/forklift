@@ -97,8 +97,8 @@ public class MessagingTest {
     @Test
     public void test() throws JMSException, ConnectorException, ProducerException {
         int msgCount = 100;
-        LifeCycleMonitors.register(this.getClass());
-        ForkliftProducerI producer = TestServiceManager.getConnector().getQueueProducer("q1");
+        TestServiceManager.getForklift().getLifeCycle().register(this.getClass());
+        ForkliftProducerI producer = TestServiceManager.getForklift().getConnector().getQueueProducer("q1");
         for (int i = 0; i < msgCount; i++) {
             final ForkliftMessage m = new ForkliftMessage();
             m.setId("" + i);
@@ -106,7 +106,7 @@ public class MessagingTest {
             producer.send(m);
         }
 
-        final Consumer c = new Consumer(getClass(), TestServiceManager.getConnector());
+        final Consumer c = new Consumer(getClass(), TestServiceManager.getForklift());
         // Shutdown the consumer after all the messages have been processed.
         c.setOutOfMessages((listener) -> {
             listener.shutdown();

@@ -46,7 +46,7 @@ public class ResponseTest {
 
         // Consumer messages until they are all gone.
         ResponseConsumerString.resolver = resolver;
-        final Consumer c = new Consumer(ResponseConsumerString.class, connector);
+        final Consumer c = new Consumer(ResponseConsumerString.class, TestServiceManager.getForklift());
         c.setOutOfMessages((listener) -> {
             listener.shutdown();
         });
@@ -82,7 +82,7 @@ public class ResponseTest {
 
         // Consumer messages until they are all gone.
         ResponseConsumerMap.resolver = resolver;
-        final Consumer c = new Consumer(ResponseConsumerMap.class, connector);
+        final Consumer c = new Consumer(ResponseConsumerMap.class, TestServiceManager.getForklift());
         c.setOutOfMessages((listener) -> {
             listener.shutdown();
         });
@@ -120,7 +120,7 @@ public class ResponseTest {
 
         // Consumer messages until they are all gone.
         ResponseConsumerObj.resolver = resolver;
-        final Consumer c = new Consumer(ResponseConsumerObj.class, connector);
+        final Consumer c = new Consumer(ResponseConsumerObj.class, TestServiceManager.getForklift());
         c.setOutOfMessages((listener) -> {
             listener.shutdown();
         });
