@@ -52,7 +52,7 @@ public class KafkaMessage extends ForkliftMessage {
             value = value == null ? genericRecord.get("forkliftJsonMsg") : value;
             if (value == null) {
                 String jsonValue = genericRecord.toString();
-                value = jsonValue != null && jsonValue.startsWith("{") ? jsonValue : value;
+                value = jsonValue != null && jsonValue.startsWith("{") ? jsonValue : null;
             }
             if (value == null) {
                 this.setFlagged(true);
