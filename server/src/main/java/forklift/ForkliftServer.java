@@ -5,7 +5,6 @@ import consul.Consul;
 import forklift.connectors.ActiveMQConnector;
 import forklift.connectors.ForkliftConnectorI;
 import forklift.consumer.ConsumerDeploymentEvents;
-import forklift.consumer.LifeCycleMonitors;
 import forklift.decorators.*;
 import forklift.deployment.Deployment;
 import forklift.deployment.DeploymentManager;
@@ -132,6 +131,10 @@ public final class ForkliftServer {
             classDeployments.register(deployment);
             deploymentEvents.onDeploy(deployment);
         }
+    }
+
+    public Forklift getForklift() {
+        return this.forklift;
     }
 
     /**
