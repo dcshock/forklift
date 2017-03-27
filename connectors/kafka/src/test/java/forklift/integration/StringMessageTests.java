@@ -1,8 +1,8 @@
 package forklift.integration;
 
 import static org.junit.Assert.assertTrue;
+import forklift.Forklift;
 import forklift.connectors.ConnectorException;
-import forklift.connectors.ForkliftConnectorI;
 import forklift.consumer.Consumer;
 import forklift.decorators.MultiThreaded;
 import forklift.decorators.OnMessage;
@@ -45,11 +45,11 @@ public class StringMessageTests {
 
     @Test
     public void testStringMessage() throws ProducerException, ConnectorException, InterruptedException, StartupException {
-        ForkliftConnectorI connector = serviceManager.newManagedForkliftInstance().getConnector();
+        Forklift forklift = serviceManager.newManagedForkliftInstance();
         int msgCount = 10;
         ForkliftProducerI
                         producer =
-                        connector.getQueueProducer("forklift-string-topic");
+                        forklift.getConnector().getQueueProducer("forklift-string-topic");
         HashMap<String, Object> properties = new HashMap<>();
         for (int i = 0; i < msgCount; i++) {
             String msg = new String("sending all the text, producer test");
@@ -58,7 +58,7 @@ public class StringMessageTests {
             props.put("Eye", "" + i);
             producer.send(msg);
         }
-        final Consumer c = new Consumer(StringConsumer.class, connector);
+        final Consumer c = new Consumer(StringConsumer.class, forklift);
         // Shutdown the consumer after all the messages have been processed.
         c.setOutOfMessages((listener) -> {
             listener.shutdown();
@@ -71,11 +71,11 @@ public class StringMessageTests {
 
     @Test
     public void testMultiThreadedStringMessage() throws ProducerException, ConnectorException, InterruptedException, StartupException {
-        ForkliftConnectorI connector = serviceManager.newManagedForkliftInstance().getConnector();
+        Forklift forklift = serviceManager.newManagedForkliftInstance();
         int msgCount = 100;
         ForkliftProducerI
                         producer =
-                        connector.getQueueProducer("forklift-string-topic");
+                        forklift.getConnector().getQueueProducer("forklift-string-topic");
         for (int i = 0; i < msgCount; i++) {
             String msg = new String("sending all the text, producer test");
             producer.send(msg);
@@ -83,7 +83,7 @@ public class StringMessageTests {
         final Consumer
                         c =
                         new Consumer(MultiThreadedStringConsumer.class,
-                                     connector);
+                                     forklift);
         // Shutdown the consumer after all the messages have been processed.
         c.setOutOfMessages((listener) -> {
             listener.shutdown();

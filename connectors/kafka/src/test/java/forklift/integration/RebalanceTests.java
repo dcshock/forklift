@@ -81,7 +81,7 @@ public class RebalanceTests {
         public void startConsumers(){
             log.info("Starting Consumers for server: " + name);
             for (Class<?> c : consumerClasses) {
-                Consumer consumer = new Consumer(c, forklift.getConnector());
+                Consumer consumer = new Consumer(c, forklift);
                 consumers.add(consumer);
                 executor.submit(() -> consumer.listen());
             }
@@ -242,10 +242,10 @@ public class RebalanceTests {
         assertTrue(messagesSent.get() > 0);
     }
 
-    private List<Consumer> setupConsumers(ForkliftConnectorI connector, Class<?>... consumersClasses) {
+    private List<Consumer> setupConsumers(Forklift forklift, Class<?>... consumersClasses) {
         List<Consumer> consumers = new ArrayList<>();
         for (Class<?> c : consumersClasses) {
-            Consumer consumer = new Consumer(c, connector);
+            Consumer consumer = new Consumer(c, forklift);
             consumers.add(consumer);
         }
         return consumers;

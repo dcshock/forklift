@@ -1,8 +1,8 @@
 package forklift.integration;
 
 import static org.junit.Assert.assertTrue;
+import forklift.Forklift;
 import forklift.connectors.ConnectorException;
-import forklift.connectors.ForkliftConnectorI;
 import forklift.consumer.Consumer;
 import forklift.decorators.OnMessage;
 import forklift.decorators.Producer;
@@ -45,18 +45,18 @@ public class MapMessageTests {
 
     @Test
     public void testSendMapValueMessage() throws ConnectorException, ProducerException, StartupException {
-        ForkliftConnectorI connector = serviceManager.newManagedForkliftInstance().getConnector();
+        Forklift forklift = serviceManager.newManagedForkliftInstance();
         int msgCount = 10;
         ForkliftProducerI
                         producer =
-                        connector.getQueueProducer("forklift-map-topic");
+                        forklift.getConnector().getQueueProducer("forklift-map-topic");
         for (int i = 0; i < msgCount; i++) {
             final Map<String, String> m = new HashMap<>();
             m.put("x", "producer key value send test");
             producer.send(m);
         }
 
-        final Consumer c = new Consumer(ForkliftMapConsumer.class, connector);
+        final Consumer c = new Consumer(ForkliftMapConsumer.class, forklift);
         // Shutdown the consumer after all the messages have been processed.
         c.setOutOfMessages((listener) -> {
             listener.shutdown();

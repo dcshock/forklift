@@ -1,8 +1,8 @@
 package forklift.integration;
 
 import static org.junit.Assert.assertTrue;
+import forklift.Forklift;
 import forklift.connectors.ConnectorException;
-import forklift.connectors.ForkliftConnectorI;
 import forklift.connectors.ForkliftMessage;
 import forklift.consumer.Consumer;
 import forklift.decorators.OnMessage;
@@ -52,11 +52,11 @@ public class ForkliftMessageTests {
 
     @Test
     public void testForkliftMessage() throws ProducerException, ConnectorException, InterruptedException, StartupException {
-        ForkliftConnectorI connector = serviceManager.newManagedForkliftInstance().getConnector();
+        Forklift forklift = serviceManager.newManagedForkliftInstance();
         int msgCount = 10;
         ForkliftProducerI
                         producer =
-                        connector.getQueueProducer("forklift-string-topic");
+                        forklift.getConnector().getQueueProducer("forklift-string-topic");
         HashMap<String, String> properties = new HashMap<>();
         Map<String, String> producerProps = new HashMap<>();
         producerProps.put("Eye", "overwriteme");
@@ -70,7 +70,7 @@ public class ForkliftMessageTests {
             forkliftMessage.setProperties(props);
             producer.send(forkliftMessage);
         }
-        final Consumer c = new Consumer(ForkliftMessageConsumer.class, connector);
+        final Consumer c = new Consumer(ForkliftMessageConsumer.class, forklift);
         // Shutdown the consumer after all the messages have been processed.
         c.setOutOfMessages((listener) -> {
             listener.shutdown();

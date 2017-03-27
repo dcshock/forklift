@@ -3,8 +3,8 @@ package forklift.integration;
 import static org.junit.Assert.assertTrue;
 import com.github.dcshock.avro.schemas.Address;
 import com.github.dcshock.avro.schemas.ComplexAvroMessage;
+import forklift.Forklift;
 import forklift.connectors.ConnectorException;
-import forklift.connectors.ForkliftConnectorI;
 import forklift.consumer.Consumer;
 import forklift.decorators.OnMessage;
 import forklift.decorators.Producer;
@@ -49,11 +49,11 @@ public class AvroMessageTests {
 
     @Test
     public void testAvroMessage() throws ProducerException, ConnectorException, InterruptedException, StartupException {
-        ForkliftConnectorI connector = serviceManager.newManagedForkliftInstance("").getConnector();
+        Forklift forklift = serviceManager.newManagedForkliftInstance("");
         int msgCount = 10;
         ForkliftProducerI
                         producer =
-                        connector.getQueueProducer("forklift-avro-topic");
+                        forklift.getConnector().getQueueProducer("forklift-avro-topic");
         Map<String, String> producerProps = new HashMap<>();
         producerProps.put("Eye", "producerProperty");
         producer.setProperties(producerProps);
@@ -64,7 +64,7 @@ public class AvroMessageTests {
             avroMessage.setName("Forklift");
             producer.send(avroMessage);
         }
-        final Consumer c = new Consumer(ForkliftAvroConsumer.class, connector);
+        final Consumer c = new Consumer(ForkliftAvroConsumer.class, forklift);
         // Shutdown the consumer after all the messages have been processed.
         c.setOutOfMessages((listener) -> {
             listener.shutdown();
