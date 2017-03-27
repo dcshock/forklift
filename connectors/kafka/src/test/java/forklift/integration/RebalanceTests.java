@@ -5,7 +5,6 @@ import static org.junit.Assert.assertTrue;
 import com.github.dcshock.avro.schemas.AvroMessage;
 import forklift.Forklift;
 import forklift.connectors.ConnectorException;
-import forklift.connectors.ForkliftConnectorI;
 import forklift.consumer.Consumer;
 import forklift.decorators.MultiThreaded;
 import forklift.decorators.OnMessage;
@@ -36,7 +35,6 @@ public class RebalanceTests {
     private static boolean isInjectNull = true;
     TestServiceManager serviceManager;
 
-
     @After
     public void after() {
         serviceManager.stop();
@@ -51,10 +49,7 @@ public class RebalanceTests {
         isInjectNull = true;
     }
 
-
-
-
-    private class ForkliftServer{
+    private class ForkliftServer {
 
         private ExecutorService executor;
         private Class[] consumerClasses;
@@ -63,22 +58,22 @@ public class RebalanceTests {
         private String name;
         private volatile boolean running = false;
 
-        public ForkliftServer(String name, ExecutorService executor, Class<?>... consumerClasses){
+        public ForkliftServer(String name, ExecutorService executor, Class<?>... consumerClasses) {
             this.name = name;
             this.executor = executor;
             this.consumerClasses = consumerClasses;
             try {
                 this.forklift = serviceManager.newManagedForkliftInstance(name);
             } catch (StartupException e) {
-               log.error("Error constructing forklift server");
+                log.error("Error constructing forklift server");
             }
         }
 
-        public ForkliftProducerI getProducer(String topicName){
+        public ForkliftProducerI getProducer(String topicName) {
             return forklift.getConnector().getTopicProducer(topicName);
         }
 
-        public void startConsumers(){
+        public void startConsumers() {
             log.info("Starting Consumers for server: " + name);
             for (Class<?> c : consumerClasses) {
                 Consumer consumer = new Consumer(c, forklift);
@@ -87,7 +82,7 @@ public class RebalanceTests {
             }
         }
 
-        public void startProducers(){
+        public void startProducers() {
 
             ForkliftProducerI producer1 = getProducer("forklift-string-topic");
             ForkliftProducerI producer2 = getProducer("forklift-map-topic");
@@ -132,30 +127,49 @@ public class RebalanceTests {
             });
         }
 
-        public void stopProducers(){
+        public void stopProducers() {
             running = false;
         }
 
-        public void shutdown(){
+        public void shutdown() {
             stopProducers();
             log.info("Stopping Consumers for server: " + name);
             consumers.forEach(consumer -> consumer.shutdown());
             forklift.shutdown();
         }
     }
-    
-
 
     @Test
     public void testRebalanceUnderLoad() throws InterruptedException {
         ExecutorService executor = Executors.newFixedThreadPool(35);
-        ForkliftServer server1 = new ForkliftServer("Server1", executor, StringConsumer.class, ForkliftMapConsumer.class, ForkliftObjectConsumer.class);
-        ForkliftServer server2 = new ForkliftServer("Server2", executor, StringConsumer.class, ForkliftMapConsumer.class, ForkliftObjectConsumer.class);
-        ForkliftServer server3 = new ForkliftServer("Server3", executor, StringConsumer.class, ForkliftMapConsumer.class, ForkliftObjectConsumer.class);
-        ForkliftServer server4 = new ForkliftServer("Server4", executor, StringConsumer.class, ForkliftMapConsumer.class, ForkliftObjectConsumer.class);
-        ForkliftServer server5 = new ForkliftServer("Server5", executor, StringConsumer.class, ForkliftMapConsumer.class, ForkliftObjectConsumer.class);
-        ForkliftServer server6 = new ForkliftServer("Server6", executor, StringConsumer.class, ForkliftMapConsumer.class, ForkliftObjectConsumer.class);
-        ForkliftServer server7 = new ForkliftServer("Server7", executor, StringConsumer.class, ForkliftMapConsumer.class, ForkliftObjectConsumer.class);
+        ForkliftServer
+                        server1 =
+                        new ForkliftServer("Server1", executor, StringConsumer.class, ForkliftMapConsumer.class,
+                                           ForkliftObjectConsumer.class);
+        ForkliftServer
+                        server2 =
+                        new ForkliftServer("Server2", executor, StringConsumer.class, ForkliftMapConsumer.class,
+                                           ForkliftObjectConsumer.class);
+        ForkliftServer
+                        server3 =
+                        new ForkliftServer("Server3", executor, StringConsumer.class, ForkliftMapConsumer.class,
+                                           ForkliftObjectConsumer.class);
+        ForkliftServer
+                        server4 =
+                        new ForkliftServer("Server4", executor, StringConsumer.class, ForkliftMapConsumer.class,
+                                           ForkliftObjectConsumer.class);
+        ForkliftServer
+                        server5 =
+                        new ForkliftServer("Server5", executor, StringConsumer.class, ForkliftMapConsumer.class,
+                                           ForkliftObjectConsumer.class);
+        ForkliftServer
+                        server6 =
+                        new ForkliftServer("Server6", executor, StringConsumer.class, ForkliftMapConsumer.class,
+                                           ForkliftObjectConsumer.class);
+        ForkliftServer
+                        server7 =
+                        new ForkliftServer("Server7", executor, StringConsumer.class, ForkliftMapConsumer.class,
+                                           ForkliftObjectConsumer.class);
 
         server4.startProducers();
         server5.startProducers();
@@ -177,7 +191,7 @@ public class RebalanceTests {
         server7.stopProducers();
         log.info("Messages sent: " + messagesSent.get());
         //wait to finish any processing
-        for(int i = 0; i < 60 && called.get() != messagesSent.get(); i++){
+        for (int i = 0; i < 60 && called.get() != messagesSent.get(); i++) {
             log.info("Waiting: " + i);
             Thread.sleep(1000);
         }
@@ -192,16 +206,46 @@ public class RebalanceTests {
 
         ExecutorService executor = Executors.newFixedThreadPool(35);
 
-        ForkliftServer server1 = new ForkliftServer("Server1", executor, StringConsumer.class, ForkliftMapConsumer.class, ForkliftObjectConsumer.class);
-        ForkliftServer server2 = new ForkliftServer("Server2", executor, StringConsumer.class, ForkliftMapConsumer.class, ForkliftObjectConsumer.class);
-        ForkliftServer server3 = new ForkliftServer("Server3", executor, StringConsumer.class, ForkliftMapConsumer.class, ForkliftObjectConsumer.class);
-        ForkliftServer server4 = new ForkliftServer("Server4", executor, StringConsumer.class, ForkliftMapConsumer.class, ForkliftObjectConsumer.class);
-        ForkliftServer server5 = new ForkliftServer("Server5", executor, StringConsumer.class, ForkliftMapConsumer.class, ForkliftObjectConsumer.class);
-        ForkliftServer server6 = new ForkliftServer("Server6", executor, StringConsumer.class, ForkliftMapConsumer.class, ForkliftObjectConsumer.class);
-        ForkliftServer server7 = new ForkliftServer("Server7", executor, StringConsumer.class, ForkliftMapConsumer.class, ForkliftObjectConsumer.class);
-        ForkliftServer server8 = new ForkliftServer("Server8", executor, StringConsumer.class, ForkliftMapConsumer.class, ForkliftObjectConsumer.class);
-        ForkliftServer server9 = new ForkliftServer("Server9", executor, StringConsumer.class, ForkliftMapConsumer.class, ForkliftObjectConsumer.class);
-        ForkliftServer server10 = new ForkliftServer("Server10", executor, StringConsumer.class, ForkliftMapConsumer.class, ForkliftObjectConsumer.class);
+        ForkliftServer
+                        server1 =
+                        new ForkliftServer("Server1", executor, StringConsumer.class, ForkliftMapConsumer.class,
+                                           ForkliftObjectConsumer.class);
+        ForkliftServer
+                        server2 =
+                        new ForkliftServer("Server2", executor, StringConsumer.class, ForkliftMapConsumer.class,
+                                           ForkliftObjectConsumer.class);
+        ForkliftServer
+                        server3 =
+                        new ForkliftServer("Server3", executor, StringConsumer.class, ForkliftMapConsumer.class,
+                                           ForkliftObjectConsumer.class);
+        ForkliftServer
+                        server4 =
+                        new ForkliftServer("Server4", executor, StringConsumer.class, ForkliftMapConsumer.class,
+                                           ForkliftObjectConsumer.class);
+        ForkliftServer
+                        server5 =
+                        new ForkliftServer("Server5", executor, StringConsumer.class, ForkliftMapConsumer.class,
+                                           ForkliftObjectConsumer.class);
+        ForkliftServer
+                        server6 =
+                        new ForkliftServer("Server6", executor, StringConsumer.class, ForkliftMapConsumer.class,
+                                           ForkliftObjectConsumer.class);
+        ForkliftServer
+                        server7 =
+                        new ForkliftServer("Server7", executor, StringConsumer.class, ForkliftMapConsumer.class,
+                                           ForkliftObjectConsumer.class);
+        ForkliftServer
+                        server8 =
+                        new ForkliftServer("Server8", executor, StringConsumer.class, ForkliftMapConsumer.class,
+                                           ForkliftObjectConsumer.class);
+        ForkliftServer
+                        server9 =
+                        new ForkliftServer("Server9", executor, StringConsumer.class, ForkliftMapConsumer.class,
+                                           ForkliftObjectConsumer.class);
+        ForkliftServer
+                        server10 =
+                        new ForkliftServer("Server10", executor, StringConsumer.class, ForkliftMapConsumer.class,
+                                           ForkliftObjectConsumer.class);
 
         server10.startProducers();
         Thread.sleep(500);
@@ -229,10 +273,9 @@ public class RebalanceTests {
         server8.shutdown();
         server9.shutdown();
 
-
         server10.stopProducers();
         //wait to finish any processing
-        for(int i = 0; i < 60 && called.get() != messagesSent.get(); i++){
+        for (int i = 0; i < 60 && called.get() != messagesSent.get(); i++) {
             log.info("Waiting: " + i);
             Thread.sleep(1000);
         }
@@ -327,7 +370,6 @@ public class RebalanceTests {
             isInjectNull = injectedProducer != null ? false : true;
         }
     }
-
 
     @Queue("forklift-object-topic")
     public static class ForkliftObjectConsumer {
