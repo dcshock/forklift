@@ -79,10 +79,10 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
         avroRecord.put("forkliftMsg", message.getMsg());
 
         Map<String, String> messageProperties = message.getProperties();
-        for (String key : this.properties.keySet()) {
-            if (!messageProperties.containsKey(key)) {
-                Object value = properties.get(key);
-                messageProperties.put(key, value == null ? null : value.toString());
+        for (Map.Entry<String, String> entry : this.properties.entrySet()) {
+            if (!messageProperties.containsKey(entry.getKey())) {
+                Object value = entry.getValue();
+                messageProperties.put(entry.getKey(), value == null ? null : value.toString());
             }
         }
         message.setProperties(messageProperties);
@@ -163,9 +163,7 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
     @Override
     public String send(Map<String, String> message) throws ProducerException {
         GenericRecord avroRecord = new GenericData.Record(parsedMapSchema);
-
-        String formattedMap = this.formatMap(message);
-        avroRecord.put("forkliftMapMsg", formattedMap);
+        avroRecord.put("forkliftMapMsg", this.formatMap(message));
         avroRecord.put(FIELD_PROPERTIES, this.formatMap(this.properties));
         ProducerRecord record = new ProducerRecord<>(topic, null, avroRecord);
         try {
