@@ -28,9 +28,9 @@ public class MessageStream implements ReadableMessageStream {
      */
     public void addRecords(Map<TopicPartition, List<KafkaMessage>> records) {
         log.debug("Adding records to stream");
-        for (TopicPartition partition : records.keySet()) {
-            for (KafkaMessage message : records.get(partition)) {
-                BlockingQueue<KafkaMessage> queue = topicQueue.get(partition.topic());
+        for (Map.Entry<TopicPartition, List<KafkaMessage>> entry : records.entrySet()) {
+            for (KafkaMessage message : entry.getValue()) {
+                BlockingQueue<KafkaMessage> queue = topicQueue.get(entry.getKey().topic());
                 if (queue != null) {
                     queue.add(message);
                 }
