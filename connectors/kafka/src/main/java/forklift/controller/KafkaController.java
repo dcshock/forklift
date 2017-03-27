@@ -188,8 +188,8 @@ public class KafkaController {
                 try {
                     if (failedOffset != null) {
                         log.debug("failedOffset of size: " + failedOffset.size());
-                        for (TopicPartition partition : failedOffset.keySet()) {
-                            offsetData.merge(partition, failedOffset.get(partition), (oldO, newO) -> {
+                        for (Map.Entry<TopicPartition, OffsetAndMetadata> entry : failedOffset.entrySet()) {
+                            offsetData.merge(entry.getKey(), entry.getValue(), (oldO, newO) -> {
                                 if (oldO == null) {
                                     return newO;
                                 }
@@ -258,7 +258,7 @@ public class KafkaController {
         commitOffsets(offsetData);
     }
 
-    private ConsumerRecords<?,?> flowControlledPoll() throws InterruptedException {
+    private ConsumerRecords<?, ?> flowControlledPoll() throws InterruptedException {
         //pause partitions that haven't fully been processed yet and unpause those that have
         Set<TopicPartition> paused = new HashSet<>();
         Set<TopicPartition> unpaused = new HashSet<>();
@@ -277,8 +277,7 @@ public class KafkaController {
             }
             //let the control loop continue so we can unpause partitions or send heartbeats
             return null;
-        }
-        else {
+        } else {
             return kafkaConsumer.poll(100);
         }
     }
