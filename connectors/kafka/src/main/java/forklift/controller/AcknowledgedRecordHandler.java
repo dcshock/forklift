@@ -36,7 +36,6 @@ public class AcknowledgedRecordHandler {
         lock.readLock().lock();
         try {
             boolean acknowledged;
-
             TopicPartition topicPartition = new TopicPartition(record.topic(), record.partition());
             if (!assignment.contains(topicPartition)) {
                 acknowledged = false;
