@@ -1,0 +1,31 @@
+{
+  "type" : "record",
+  "name" : "UserRegistered",
+  "namespace" : "com.sofi.avro.schemas",
+  "doc" : "This event records when registration is completed (e.g. via borrower)",
+  "fields" : [ {
+    "name" : "firstName",
+    "type" : "string",
+    "doc" : "Customer's first name"
+  }, {
+    "name" : "lastName",
+    "type" : "string",
+    "doc" : "Customer's last name"
+  }, {
+    "name" : "email",
+    "type" : "string",
+    "doc" : "Customer's email"
+  }, {
+    "name" : "state",
+    "type" : [ "null", {
+      "type" : "enum",
+      "name" : "StateCode",
+      "doc" : "This event records when registration is completed (e.g. via borrower)",
+      "symbols" : [ "AL", "AK", "AS", "AZ", "AR", "CA", "CO", "CT", "DE", "DC", "FM", "FL", "GA", "GU", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MH", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "MP", "OH", "OK", "OR", "PW", "PA", "PR", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VI", "VA", "WA", "WV", "WI", "WY", "AE", "AP", "AA" ],
+      "version" : 1
+    } ],
+    "doc" : "State code of customer's residence (e.g. MT)",
+    "default" : null
+  } ],
+  "version" : 1
+}

@@ -11,15 +11,28 @@ import forklift.connectors.ForkliftMessage;
 import forklift.message.Header;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.DatumWriter;
+import org.apache.avro.io.Decoder;
+import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.io.Encoder;
+import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.specific.SpecificRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.common.errors.SerializationException;
+import org.apache.kafka.clients.producer.RecordMetadata;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 /**
@@ -73,20 +86,18 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
 
     @Override
     public String send(String message) throws ProducerException {
-        sendForkliftWrappedMessage(message, null);
-        return null;
+        return sendForkliftWrappedMessage(message, null);
     }
 
     @Override
     public String send(ForkliftMessage message) throws ProducerException {
-        sendForkliftWrappedMessage(message.getMsg(), message.getProperties());
-        return null;
+        return sendForkliftWrappedMessage(message.getMsg(), message.getProperties());
     }
 
     @Override
     public String send(Object message) throws ProducerException {
         if (message instanceof SpecificRecord) {
-            sendAvroMessage((SpecificRecord)message);
+            return sendAvroMessage((SpecificRecord)message);
         } else {
             String json;
             try {
@@ -94,15 +105,13 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
             } catch (JsonProcessingException e) {
                 throw new ProducerException("Error creating Kafka Message", e);
             }
-            sendForkliftWrappedMessage(json, null);
+            return sendForkliftWrappedMessage(json, null);
         }
-        return null;
     }
 
     @Override
     public String send(Map<String, String> message) throws ProducerException {
-        sendForkliftWrappedMessage(this.formatMap(message), null);
-        return null;
+        return sendForkliftWrappedMessage(this.formatMap(message), null);
     }
 
     @Override
@@ -114,8 +123,7 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
     @Override
     public String send(Map<String, String> properties, ForkliftMessage message)
                     throws ProducerException {
-        this.sendForkliftWrappedMessage(message.getMsg(), properties);
-        return null;
+        return this.sendForkliftWrappedMessage(message.getMsg(), properties);
     }
 
     @Override
@@ -143,7 +151,7 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
         //do nothing, the passed in KafkaProducer may be used elsewhere and should be closed by the KafkaController
     }
 
-    private void sendForkliftWrappedMessage(String message, Map<String, String> messageProperties) throws ProducerException {
+    private String sendForkliftWrappedMessage(String message, Map<String, String> messageProperties) throws ProducerException {
         GenericRecord avroRecord = new GenericData.Record(forkliftSchema);
         avroRecord.put(SCHEMA_FIELD_NAME_VALUE, message);
         messageProperties = messageProperties == null ? new HashMap<>() : new HashMap<>(messageProperties);
@@ -154,24 +162,14 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
         avroRecord.put(SCHEMA_FIELD_NAME_PROPERTIES, this.formatMap(messageProperties));
         ProducerRecord record = new ProducerRecord<>(topic, null, avroRecord);
         try {
-            kafkaProducer.send(record);
+            RecordMetadata result = (RecordMetadata)kafkaProducer.send(record).get();
+            return result.topic() + "-" + result.partition() + "-" + result.offset();
 
-        } catch (SerializationException e) {
-            throw new ProducerException("Error creating Kafka Message", e);
-        }
-    }
-
-    private void populatAvroMessage(JsonNode values, GenericRecord record, Schema schema) {
-        for (Schema.Field field : schema.getFields()) {
-            String fieldName = field.name();
-            Schema fieldSchema = schema.getField(fieldName).schema();
-            if (fieldSchema.getType() == Schema.Type.RECORD) {
-                GenericRecord subRecord = new GenericData.Record(fieldSchema);
-                populatAvroMessage(values.get(fieldName), subRecord, fieldSchema);
-                record.put(fieldName, subRecord);
-            } else {
-                record.put(fieldName, values.get(fieldName).textValue());
-            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new ProducerException("Error sending Kafka Message", e);
+        } catch (ExecutionException e) {
+            throw new ProducerException("Error sending Kafka Message", e);
         }
     }
 
@@ -186,22 +184,45 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
         return parser.parse(mapper.writeValueAsString(schemaNode));
     }
 
-    private void sendAvroMessage(SpecificRecord message) throws ProducerException {
+    private GenericRecord addForkliftPropertiesToAvroObject(SpecificRecord message) throws IOException {
+        //Write message to json
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        Encoder encoder = EncoderFactory.get().jsonEncoder(message.getSchema(), outputStream);
+        DatumWriter<SpecificRecord> writer = new SpecificDatumWriter<>(message.getSchema());
+        writer.write(message, encoder);
+        encoder.flush();
+        String json = new String(outputStream.toByteArray());
+
+        //modify schema to include forklift properties
+        Schema modifiedSchema = avroSchemaCache.get(message.getClass());
+        if (modifiedSchema == null) {
+            modifiedSchema = addForkliftPropertiesToSchema(message.getSchema());
+            avroSchemaCache.put(message.getClass(), modifiedSchema);
+        }
+
+        //add forklift properties to json
+        ObjectNode messageNode = (ObjectNode)mapper.readTree(json);
+        messageNode.put(SCHEMA_FIELD_NAME_PROPERTIES, this.formatMap(this.properties));
+
+        //read modified json to avro object with modified schema
+        InputStream input = new ByteArrayInputStream(messageNode.toString().getBytes());
+        DataInputStream din = new DataInputStream(input);
+        Decoder decoder = DecoderFactory.get().jsonDecoder(modifiedSchema, din);
+        DatumReader<GenericRecord> reader = new GenericDatumReader<>(modifiedSchema);
+        return reader.read(null, decoder);
+    }
+
+    private String sendAvroMessage(SpecificRecord message) throws ProducerException {
         try {
-            Schema modifiedSchema = avroSchemaCache.get(message.getClass());
-            if (modifiedSchema == null) {
-                modifiedSchema = addForkliftPropertiesToSchema(message.getSchema());
-                avroSchemaCache.put(message.getClass(), modifiedSchema);
-            }
-            GenericRecord avroRecord = new GenericData.Record(modifiedSchema);
-            ObjectNode messageNode = (ObjectNode)mapper.readTree(message.toString());
-            messageNode.put(SCHEMA_FIELD_NAME_PROPERTIES, this.formatMap(this.properties));
-            //move messageNode into avroRecord
-            populatAvroMessage(messageNode, avroRecord, modifiedSchema);
+            GenericRecord avroRecord = addForkliftPropertiesToAvroObject(message);
             ProducerRecord record = new ProducerRecord<String, GenericRecord>(topic, null, avroRecord);
             try {
-                kafkaProducer.send(record);
-            } catch (SerializationException e) {
+                RecordMetadata result = (RecordMetadata)kafkaProducer.send(record).get();
+                return result.topic() + "-" + result.partition() + "-" + result.offset();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new ProducerException("Error sending Kafka Message", e);
+            } catch (ExecutionException e) {
                 throw new ProducerException("Error creating Kafka Message", e);
             }
         } catch (IOException e) {
