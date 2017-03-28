@@ -169,7 +169,7 @@ public class KafkaController {
                     updateAssignment();
                 }
                 addRecordsToStream(records);
-                Map<TopicPartition, OffsetAndMetadata> offsetData = this.acknowlegmentHandler.flushAcknowledged();
+                Map<TopicPartition, OffsetAndMetadata> offsetData = this.acknowlegmentHandler.getAcknowledged();
                 commitOffsets(offsetData);
             }
         } catch (WakeupException e) {
