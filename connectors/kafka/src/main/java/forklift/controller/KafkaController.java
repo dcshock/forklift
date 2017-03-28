@@ -159,12 +159,12 @@ public class KafkaController {
                     commitPendingAndWaitForTopics();
                 }
                 if (topicsChanged) {
-                    commitAnyPendingOffsetsForRemovedTopics();
+                    commitPendingOffsetsForRemovedTopics();
                     kafkaConsumer.subscribe(topics, new RebalanceListener());
                     updatedAssignment = true;
                 }
                 ConsumerRecords<?, ?> records = flowControlledPoll();
-                //Must be done before we send records to the acknowledgmentHandler
+                //Update the assignment before adding records to stream
                 if (updatedAssignment) {
                     updateAssignment();
                 }
@@ -242,9 +242,9 @@ public class KafkaController {
         }
     }
 
-    private void commitAnyPendingOffsetsForRemovedTopics() throws InterruptedException {
+    private void commitPendingOffsetsForRemovedTopics() throws InterruptedException {
         Set<TopicPartition> removed = new HashSet<>();
-        //syncrhonized to avoid letting the topics set change
+        //synchronized to avoid letting the topic set change
         synchronized (this) {
             for (TopicPartition partition : kafkaConsumer.assignment()) {
                 if (!topics.contains(partition.topic())) {
@@ -273,9 +273,9 @@ public class KafkaController {
         kafkaConsumer.resume(unpaused);
         if (unpaused.size() == 0 && paused.size() > 0) {
             synchronized (this) {
+                //wait for flowControl to notify us, resume after a short pause to allow for heartbeats
                 this.wait(100);
             }
-            //let the control loop continue so we can unpause partitions or send heartbeats
             return null;
         } else {
             return kafkaConsumer.poll(100);
