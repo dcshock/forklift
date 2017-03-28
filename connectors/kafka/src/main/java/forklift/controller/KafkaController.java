@@ -228,7 +228,6 @@ public class KafkaController {
             Map<TopicPartition, OffsetAndMetadata>
                             offsetData =
                             this.acknowlegmentHandler.removePartitions(kafkaConsumer.assignment());
-            failedOffset = offsetData;
             commitOffsets(offsetData);
             kafkaConsumer.unsubscribe();
         }
