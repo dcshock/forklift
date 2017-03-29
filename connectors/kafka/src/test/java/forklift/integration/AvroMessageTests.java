@@ -1,13 +1,12 @@
 package forklift.integration;
 
-import static org.junit.Assert.assertTrue;
-import com.github.dcshock.avro.schemas.Address;
-import com.github.dcshock.avro.schemas.ComplexAvroMessage;
+import com.sofi.avro.schemas.StateCode;
+import com.sofi.avro.schemas.UserRegistered;
 import forklift.Forklift;
 import forklift.connectors.ConnectorException;
+import forklift.connectors.ForkliftMessage;
 import forklift.consumer.Consumer;
 import forklift.decorators.OnMessage;
-import forklift.decorators.Producer;
 import forklift.decorators.Queue;
 import forklift.exception.StartupException;
 import forklift.integration.server.TestServiceManager;
@@ -20,19 +19,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by afrieze on 3/13/17.
  */
-public class AvroMessageTests {
+public class AvroMessageTests extends BaseIntegrationTest {
 
     private static final Logger log = LoggerFactory.getLogger(AvroMessageTests.class);
-    private static AtomicInteger called = new AtomicInteger(0);
-    private static boolean isInjectNull = true;
-    TestServiceManager serviceManager;
-    //    private static boolean ordered = true;
-    private static boolean isPropsSet = false;
 
     @After
     public void after() {
@@ -43,12 +36,10 @@ public class AvroMessageTests {
     public void setup() {
         serviceManager = new TestServiceManager();
         serviceManager.start();
-        called.set(0);
-        isInjectNull = true;
     }
 
     @Test
-    public void testAvroMessage() throws ProducerException, ConnectorException, InterruptedException, StartupException {
+    public void testComplexAvroMessage() throws ProducerException, ConnectorException, InterruptedException, StartupException {
         Forklift forklift = serviceManager.newManagedForkliftInstance("");
         int msgCount = 10;
         ForkliftProducerI
@@ -58,45 +49,39 @@ public class AvroMessageTests {
         producerProps.put("Eye", "producerProperty");
         producer.setProperties(producerProps);
         for (int i = 0; i < msgCount; i++) {
-            ComplexAvroMessage avroMessage = new ComplexAvroMessage();
-            avroMessage.setAddress(new Address());
-            avroMessage.getAddress().setCity("Helena");
-            avroMessage.setName("Forklift");
-            producer.send(avroMessage);
+            UserRegistered registered = new UserRegistered();
+            registered.setFirstName("John");
+            registered.setLastName("Doe");
+            registered.setEmail("test@sofi.com");
+            registered.setState(StateCode.MT);
+            sentMessageIds.add(producer.send(registered));
         }
-        final Consumer c = new Consumer(ForkliftAvroConsumer.class, forklift);
+        final Consumer c = new Consumer(AvroMessageTests.RegisteredAvroConsumer.class, forklift);
         // Shutdown the consumer after all the messages have been processed.
         c.setOutOfMessages((listener) -> {
             listener.shutdown();
-            assertTrue("called was not == " + msgCount, called.get() == msgCount);
-            assertTrue("producer property missing on message", isPropsSet);
         });
         // Start the consumer.
         c.listen();
-        assertTrue(called.get() == msgCount);
+        messageAsserts();
     }
 
     @Queue("forklift-avro-topic")
-    public static class ForkliftAvroConsumer {
+    public static class RegisteredAvroConsumer {
 
         @forklift.decorators.Message
-        private ComplexAvroMessage value;
+        private ForkliftMessage forkliftMessage;
 
-        @forklift.decorators.Properties
-        private Map<String, String> properties;
-
-        @Producer(queue = "forklift-avro-topic")
-        private ForkliftProducerI injectedProducer;
+        @forklift.decorators.Message
+        private UserRegistered value;
 
         @OnMessage
         public void onMessage() {
             if (value == null) {
                 return;
             }
-            int i = called.getAndIncrement();
-            System.out.println(Thread.currentThread().getName() + value.getName() + value.getAddress().getCity());
-            isInjectNull = injectedProducer != null ? false : true;
-            isPropsSet = properties.get("Eye").equals("producerProperty");
+            System.out.println(Thread.currentThread().getName() + value.getState());
+            consumedMessageIds.add(forkliftMessage.getId());
         }
     }
 }

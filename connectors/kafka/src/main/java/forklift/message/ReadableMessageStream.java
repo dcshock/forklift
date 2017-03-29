@@ -1,7 +1,7 @@
 package forklift.message;
 
 /**
- * Created by afrieze on 3/17/17.
+ * A stream of {@link forklift.message.KafkaMessage} which can be read from.
  */
 public interface ReadableMessageStream {
     /**

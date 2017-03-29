@@ -159,17 +159,17 @@ public class KafkaController {
                     commitPendingAndWaitForTopics();
                 }
                 if (topicsChanged) {
-                    commitAnyPendingOffsetsForRemovedTopics();
+                    commitPendingOffsetsForRemovedTopics();
                     kafkaConsumer.subscribe(topics, new RebalanceListener());
                     updatedAssignment = true;
                 }
                 ConsumerRecords<?, ?> records = flowControlledPoll();
-                //Must be done before we send records to the acknowledgmentHandler
+                //Update the assignment before adding records to stream
                 if (updatedAssignment) {
                     updateAssignment();
                 }
                 addRecordsToStream(records);
-                Map<TopicPartition, OffsetAndMetadata> offsetData = this.acknowlegmentHandler.flushAcknowledged();
+                Map<TopicPartition, OffsetAndMetadata> offsetData = this.acknowlegmentHandler.getAcknowledged();
                 commitOffsets(offsetData);
             }
         } catch (WakeupException e) {
@@ -188,8 +188,8 @@ public class KafkaController {
                 try {
                     if (failedOffset != null) {
                         log.debug("failedOffset of size: " + failedOffset.size());
-                        for (TopicPartition partition : failedOffset.keySet()) {
-                            offsetData.merge(partition, failedOffset.get(partition), (oldO, newO) -> {
+                        for (Map.Entry<TopicPartition, OffsetAndMetadata> entry : failedOffset.entrySet()) {
+                            offsetData.merge(entry.getKey(), entry.getValue(), (oldO, newO) -> {
                                 if (oldO == null) {
                                     return newO;
                                 }
@@ -207,7 +207,7 @@ public class KafkaController {
                         //to retry our commit as the first attempt will throw a WakeupException
                         kafkaConsumer.commitSync(offsetData);
                     } catch (WakeupException wakeup) {
-                        log.error("controlLoop wakeup on closing commitSync, retrying");
+                        log.info("controlLoop wakeup on closing commitSync, retrying");
                         kafkaConsumer.commitSync(offsetData);
                     }
                 } catch (Throwable e) {
@@ -228,7 +228,6 @@ public class KafkaController {
             Map<TopicPartition, OffsetAndMetadata>
                             offsetData =
                             this.acknowlegmentHandler.removePartitions(kafkaConsumer.assignment());
-            failedOffset = offsetData;
             commitOffsets(offsetData);
             kafkaConsumer.unsubscribe();
         }
@@ -242,9 +241,9 @@ public class KafkaController {
         }
     }
 
-    private void commitAnyPendingOffsetsForRemovedTopics() throws InterruptedException {
+    private void commitPendingOffsetsForRemovedTopics() throws InterruptedException {
         Set<TopicPartition> removed = new HashSet<>();
-        //syncrhonized to avoid letting the topics set change
+        //synchronized to avoid letting the topic set change
         synchronized (this) {
             for (TopicPartition partition : kafkaConsumer.assignment()) {
                 if (!topics.contains(partition.topic())) {
@@ -258,7 +257,7 @@ public class KafkaController {
         commitOffsets(offsetData);
     }
 
-    private ConsumerRecords<?,?> flowControlledPoll() throws InterruptedException {
+    private ConsumerRecords<?, ?> flowControlledPoll() throws InterruptedException {
         //pause partitions that haven't fully been processed yet and unpause those that have
         Set<TopicPartition> paused = new HashSet<>();
         Set<TopicPartition> unpaused = new HashSet<>();
@@ -273,12 +272,11 @@ public class KafkaController {
         kafkaConsumer.resume(unpaused);
         if (unpaused.size() == 0 && paused.size() > 0) {
             synchronized (this) {
+                //wait for flowControl to notify us, resume after a short pause to allow for heartbeats
                 this.wait(100);
             }
-            //let the control loop continue so we can unpause partitions or send heartbeats
             return null;
-        }
-        else {
+        } else {
             return kafkaConsumer.poll(100);
         }
     }

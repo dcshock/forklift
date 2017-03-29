@@ -10,7 +10,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Maintains a batch of acknowledged records and provides management for adding and removing {@link org.apache.kafka.common.TopicPartition partitions}.
@@ -18,12 +19,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class AcknowledgedRecordHandler {
     private static final Logger log = LoggerFactory.getLogger(AcknowledgedRecordHandler.class);
-    private final Object pausedLock = new Object();
-    private final Object unpausedLock = new Object();
-    private final AtomicInteger acknowledgeEntryCount = new AtomicInteger(0);
     private ConcurrentHashMap<TopicPartition, OffsetAndMetadata> pendingOffsets = new ConcurrentHashMap<>();
-    private volatile boolean acknowledgementsPaused = false;
     private Set<TopicPartition> assignment = ConcurrentHashMap.newKeySet();
+    private ReadWriteLock lock = new ReentrantReadWriteLock();
 
     /**
      * Acknowledges that a record has been received before processing begins.  True is returned if processing should occur else false.
@@ -35,29 +33,22 @@ public class AcknowledgedRecordHandler {
      * @throws InterruptedException if interrupted
      */
     public boolean acknowledgeRecord(ConsumerRecord<?, ?> record) throws InterruptedException {
-        boolean acknowledged;
-        synchronized (unpausedLock) {
-            while (acknowledgementsPaused) {
-                unpausedLock.wait();
+        lock.readLock().lock();
+        try {
+            boolean acknowledged;
+            TopicPartition topicPartition = new TopicPartition(record.topic(), record.partition());
+            if (!assignment.contains(topicPartition)) {
+                acknowledged = false;
+            } else {
+                long commitOffset = record.offset() + 1;
+                OffsetAndMetadata offsetAndMetadata = new OffsetAndMetadata(commitOffset, "Commit From Forklift Server");
+                pendingOffsets.merge(topicPartition, offsetAndMetadata, this::greaterOffset);
+                acknowledged = true;
             }
-            acknowledgeEntryCount.incrementAndGet();
+            return acknowledged;
+        } finally {
+            lock.readLock().unlock();
         }
-        TopicPartition topicPartition = new TopicPartition(record.topic(), record.partition());
-        if (!assignment.contains(topicPartition)) {
-            acknowledged = false;
-        } else {
-            long commitOffset = record.offset() + 1;
-            OffsetAndMetadata offsetAndMetadata = new OffsetAndMetadata(commitOffset, "Commit From Forklift Server");
-            pendingOffsets.merge(topicPartition, offsetAndMetadata, this::greaterOffset);
-            acknowledged = true;
-        }
-        synchronized (pausedLock) {
-            int count = acknowledgeEntryCount.decrementAndGet();
-            if (acknowledgementsPaused && count == 0) {
-                pausedLock.notifyAll();
-            }
-        }
-        return acknowledged;
     }
 
     private OffsetAndMetadata greaterOffset(OffsetAndMetadata a, OffsetAndMetadata b) {
@@ -70,21 +61,21 @@ public class AcknowledgedRecordHandler {
     }
 
     /**
-     * Removes and returns the highest offsets of any acknowledged records.
+     * Returns the highest offsets of any acknowledged records.
      * This is a blocking method as a short delay may occur while any threads which are currently acknowledging records are allowed to
      * complete and any incoming threads are paused.
      *
      * @return a Map of the highest offset data for any acknowledged records
      * @throws InterruptedException if interrupted
      */
-    public Map<TopicPartition, OffsetAndMetadata> flushAcknowledged() throws InterruptedException {
+    public Map<TopicPartition, OffsetAndMetadata> getAcknowledged() throws InterruptedException {
+        lock.writeLock().lock();
         try {
-            this.pauseAcknowledgments();
-            Map<TopicPartition, OffsetAndMetadata> flushed = pendingOffsets;
-            pendingOffsets = new ConcurrentHashMap<>();
-            return flushed;
+            Map<TopicPartition, OffsetAndMetadata> currentOffsets = new HashMap<>(pendingOffsets.size());
+            currentOffsets.putAll(pendingOffsets);
+            return currentOffsets;
         } finally {
-            this.unpauseAcknowledgements();
+            lock.writeLock().unlock();
         }
     }
 
@@ -110,7 +101,7 @@ public class AcknowledgedRecordHandler {
      */
     public Map<TopicPartition, OffsetAndMetadata> removePartitions(Collection<TopicPartition> removedPartitions)
                     throws InterruptedException {
-        pauseAcknowledgments();
+        lock.writeLock().lock();
         try {
             Map<TopicPartition, OffsetAndMetadata> removedOffsets = new HashMap<>();
             for (TopicPartition topicPartition : removedPartitions) {
@@ -124,23 +115,7 @@ public class AcknowledgedRecordHandler {
             log.info("Error in removePartitions", e);
             throw e;
         } finally {
-            unpauseAcknowledgements();
-        }
-    }
-
-    private void pauseAcknowledgments() throws InterruptedException {
-        synchronized (pausedLock) {
-            acknowledgementsPaused = true;
-            while (acknowledgeEntryCount.get() != 0) {
-                pausedLock.wait();
-            }
-        }
-    }
-
-    private void unpauseAcknowledgements() {
-        synchronized (unpausedLock) {
-            acknowledgementsPaused = false;
-            unpausedLock.notifyAll();
+            lock.writeLock().unlock();
         }
     }
 }
