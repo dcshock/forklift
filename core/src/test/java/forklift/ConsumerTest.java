@@ -4,8 +4,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import forklift.connectors.ConnectorException;
+import forklift.connectors.ForkliftConnectorI;
 import forklift.connectors.ForkliftMessage;
 import forklift.consumer.Consumer;
 import forklift.decorators.Headers;
@@ -14,43 +16,56 @@ import forklift.decorators.Properties;
 import forklift.decorators.Queue;
 import forklift.decorators.Topic;
 import forklift.message.Header;
+import org.junit.Before;
 import org.junit.Test;
-
 import java.util.HashMap;
 import java.util.Map;
 
 public class ConsumerTest {
-    @Test(expected=IllegalArgumentException.class)
-    public void createBadConsumer() {
-        new Consumer(BadConsumer.class, null, this.getClass().getClassLoader());
+
+    private Forklift forklift;
+    private ForkliftConnectorI connector;
+
+    @Before
+    public void setup() {
+        forklift = mock(Forklift.class);
+        connector = mock(ForkliftConnectorI.class);
+        when(connector.supportsQueue()).thenReturn(true);
+        when(connector.supportsTopic()).thenReturn(true);
+        when(forklift.getConnector()).thenReturn(connector);
     }
 
-    @Test(expected=IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
+    public void createBadConsumer() {
+        new Consumer(BadConsumer.class, forklift, this.getClass().getClassLoader());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
     public void createDoubleConsumer() {
-        new Consumer(DoubleConsumer.class, null, this.getClass().getClassLoader());
+        new Consumer(DoubleConsumer.class, forklift, this.getClass().getClassLoader());
     }
 
     @Test
     public void createQueueConsumer() {
-        Consumer c = new Consumer(QueueConsumer.class, null, this.getClass().getClassLoader());
+        Consumer c = new Consumer(QueueConsumer.class, forklift, this.getClass().getClassLoader());
         assertTrue(c.getName().matches("abc:\\d"));
     }
 
     @Test
     public void createTopicConsumer() {
-        Consumer c = new Consumer(TopicConsumer.class, null, this.getClass().getClassLoader());
+        Consumer c = new Consumer(TopicConsumer.class, forklift, this.getClass().getClassLoader());
         assertTrue(c.getName().matches("xyz:\\d"));
     }
 
     @Test
     public void inject() throws ConnectorException {
-        Consumer test = new Consumer(ExampleConsumer.class, null, this.getClass().getClassLoader());
+        Consumer test = new Consumer(ExampleConsumer.class, forklift, this.getClass().getClassLoader());
         ExampleConsumer ec = new ExampleConsumer();
         ForkliftMessage msg = new ForkliftMessage();
         msg.setId("1");
         msg.setMsg("x=y\nname=Scooby Doo\n");
 
-        test.inject(msg,ec);
+        test.inject(msg, ec);
 
         // Now assert ec properties and make sure they are correct.
         assertEquals(2, ec.kv.size());
@@ -71,18 +86,18 @@ public class ConsumerTest {
         msg.setId("1");
         msg.setMsg("x=y");
 
-        test.inject(msg,ec);
+        test.inject(msg, ec);
     }
 
     @Test
     public void injectEmptyJson() {
-        Consumer test = new Consumer(ExampleJsonConsumer.class, null, this.getClass().getClassLoader());
+        Consumer test = new Consumer(ExampleJsonConsumer.class, forklift, this.getClass().getClassLoader());
         ExampleJsonConsumer ec = new ExampleJsonConsumer();
         ForkliftMessage msg = new ForkliftMessage();
         msg.setId("1");
         msg.setMsg("{}");
 
-        test.inject(msg,ec);
+        test.inject(msg, ec);
         assertNotNull(ec.msg);
         assertNull(ec.msg.ideas);
         assertNull(ec.msg.name);
@@ -91,13 +106,13 @@ public class ConsumerTest {
 
     @Test
     public void injectJson() {
-        Consumer test = new Consumer(ExampleJsonConsumer.class, null, this.getClass().getClassLoader());
+        Consumer test = new Consumer(ExampleJsonConsumer.class, forklift, this.getClass().getClassLoader());
         ExampleJsonConsumer ec = new ExampleJsonConsumer();
         ForkliftMessage msg = new ForkliftMessage();
         msg.setId("1");
         msg.setMsg("{\"name\":\"Fred Jones\", \"url\":\"http://forklift\", \"ideas\":[\"scanning\", \"verifying\"]}");
 
-        test.inject(msg,ec);
+        test.inject(msg, ec);
         assertNotNull(ec.msg);
         assertTrue("scanning".equals(ec.msg.ideas[0]));
         assertEquals(2, ec.msg.ideas.length);
@@ -114,7 +129,8 @@ public class ConsumerTest {
 
     @Test
     public void testHeadersAndProperties() {
-        Consumer test = new Consumer(ExampleJsonConsumer.class, null, this.getClass().getClassLoader());
+
+        Consumer test = new Consumer(ExampleJsonConsumer.class, forklift, this.getClass().getClassLoader());
         ExampleJsonConsumer ec = new ExampleJsonConsumer();
         ForkliftMessage msg = new ForkliftMessage();
         msg.setId("1");
@@ -131,7 +147,7 @@ public class ConsumerTest {
         properties.put("mystrval", "blah");
         msg.setProperties(properties);
 
-        test.inject(msg,ec);
+        test.inject(msg, ec);
         assertEquals(4, ec.headers.size());
         assertEquals(1, ec.properties.size());
         assertEquals("blah", ec.mystrval);
@@ -210,7 +226,8 @@ public class ConsumerTest {
         public String url;
         public String[] ideas;
 
-        public ExpectedMsg() {}
+        public ExpectedMsg() {
+        }
     }
 
 }
