@@ -41,7 +41,8 @@ import java.util.stream.Collectors;
  * an avro object is sent, the schema will be evolved to include the {@link #SCHEMA_FIELD_NAME_PROPERTIES} field as
  * follows:
  * <pre>
- * {"name":"forkliftProperties","type":"string","default":""}
+ * {"name":"forkliftProperties","type":"string","default":"",
+ *  "doc":"Properties added to support forklift interfaces. Format is key,value entries delimited with new lines"}
  * </pre>
  * <p>
  * The value of the forkliftProperties will be key,value entries delimited with a newline
@@ -54,8 +55,18 @@ import java.util.stream.Collectors;
  * <p>
  * Non-avro messages are sent with the following schema
  * <pre>
- *   {"type":"record","name":"ForkliftMessage","fields":[{"name":"forkliftValue","type":"string", "default":""},
- *                                                       {"name":"forkliftProperties","type":"string","default":""}]}
+ *   {"type":"record",
+ *    "name":"ForkliftMessage",
+ *    "doc":"Non-Avro messages sent through forklift use this schema."
+ *    "fields":[{"name":"forkliftValue",
+ *               "type":"string",
+ *               "default":"",
+ *               "doc":"The forklift message.  3 formats are supported.  1: string value, 2: Json object,
+ *                      3: Map represented by key,value entries delimited with newline"},
+ *              {"name":"forkliftProperties",
+ *               "type":"string",
+ *               "default":"",
+ *               "doc":"Properties added to support forklift interfaces. Format is key,value entries delimited with new lines"}]}
  * </pre>
  * <p>
  * Headers are not supported and calls to the {@link #send(java.util.Map, java.util.Map, forklift.connectors.ForkliftMessage)}
@@ -79,9 +90,13 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
         this.topic = topic;
         Schema.Parser parser = new Schema.Parser();
         this.forkliftSchema = parser.parse(
-                        "{\"type\":\"record\",\"name\":\"ForkliftMessage\",\"fields\":" +
-                        "[{\"name\":\"forkliftValue\",\"type\":\"string\",\"default\":\"\"}," +
-                        "{\"name\":\"forkliftProperties\",\"type\":\"string\",\"default\":\"\"}]}");
+                        "{\"type\":\"record\",\"name\":\"ForkliftMessage\"," +
+                        " \"doc\":\"Non-Avro messages sent through forklift use this schema.\",\"fields\":" +
+                        "[{\"name\":\"forkliftValue\",\"type\":\"string\",\"default\":\"\", \"doc\":\"The forklift message.  " +
+                        "3 formats are supported.  1: string value, 2: Json object," +
+                        "3: Map represented by key,value entries delimited with newline\"}," +
+                        "{\"name\":\"forkliftProperties\",\"type\":\"string\",\"default\":\"\"," +
+                        "\"doc\":\"Properties added to support forklift interfaces. Format is key,value entries delimited with new lines\"}]}");
     }
 
     @Override
@@ -175,7 +190,8 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
 
     private Schema addForkliftPropertiesToSchema(Schema schema) throws IOException {
         String originalJson = schema.toString(false);
-        JsonNode propertiesField = mapper.readTree("{\"name\":\"forkliftProperties\",\"type\":\"string\",\"default\":\"\"}");
+        JsonNode propertiesField = mapper.readTree("{\"name\":\"forkliftProperties\",\"type\":\"string\",\"default\":\"\"," +
+                                                   "\"doc\":\"Properties added to support forklift interfaces. Format is key,value entries delimited with new lines\"}");
         ObjectNode schemaNode = (ObjectNode)mapper.readTree(originalJson);
         ArrayNode fieldsNode = (ArrayNode)schemaNode.get("fields");
         fieldsNode.add(propertiesField);
