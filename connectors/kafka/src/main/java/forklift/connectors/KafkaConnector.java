@@ -121,4 +121,19 @@ public class KafkaConnector implements ForkliftConnectorI {
         }
         return new KafkaForkliftProducer(name, this.kafkaProducer);
     }
+
+    @Override
+    public boolean supportsResponse() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsTopic() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsQueue() {
+        return true;
+    }
 }

@@ -10,4 +10,20 @@ public interface ForkliftConnectorI {
     ForkliftConsumerI getTopic(String name) throws ConnectorException;
     ForkliftProducerI getQueueProducer(String name);
     ForkliftProducerI getTopicProducer(String name);
+
+    default boolean supportsOrder() {
+        return false;
+    }
+
+    default boolean supportsResponse() {
+        return false;
+    }
+
+    default boolean supportsQueue() {
+        return false;
+    }
+
+    default boolean supportsTopic() {
+        return false;
+    }
 }

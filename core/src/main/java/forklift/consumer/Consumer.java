@@ -120,6 +120,12 @@ public class Consumer {
             if (this.queue != null && this.topic != null)
                 throw new IllegalArgumentException("Msg Handler cannot consume a queue and topic");
 
+            if (this.queue != null && !forklift.getConnector().supportsQueue())
+                throw new RuntimeException("@Queue is not supported by the current connector");
+
+            if (this.topic != null && !forklift.getConnector().supportsTopic())
+                throw new RuntimeException("@Topic is not supported by the current connector");
+
             if (this.queue != null)
                 this.name = queue.value() + ":" + id.getAndIncrement();
             else if (this.topic != null)
@@ -142,11 +148,17 @@ public class Consumer {
                 onMessage.add(m);
             else if (m.isAnnotationPresent(OnValidate.class))
                 onValidate.add(m);
-            else if (m.isAnnotationPresent(Response.class))
+            else if (m.isAnnotationPresent(Response.class)) {
+                if (!forklift.getConnector().supportsResponse()) 
+                    throw new RuntimeException("@Response is not supported by the current connector");
+
                 onResponse.add(m);
-            else if (m.isAnnotationPresent(Order.class))
+            } else if (m.isAnnotationPresent(Order.class)) {
+                if (!forklift.getConnector().supportsOrder()) 
+                    throw new RuntimeException("@Order is not supported by the current connector");
+
                 orderMethod = m;
-            else if (m.isAnnotationPresent(On.class) || m.isAnnotationPresent(Ons.class))
+            } else if (m.isAnnotationPresent(On.class) || m.isAnnotationPresent(Ons.class))
                 Arrays.stream(m.getAnnotationsByType(On.class))
                     .map(on -> on.value())
                     .distinct()
