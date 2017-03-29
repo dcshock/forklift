@@ -29,6 +29,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -207,7 +208,7 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
         DatumWriter<SpecificRecord> writer = new SpecificDatumWriter<>(message.getSchema());
         writer.write(message, encoder);
         encoder.flush();
-        String json = new String(outputStream.toByteArray());
+        String json = new String(outputStream.toByteArray(), Charset.forName("UTF-8"));
 
         //modify schema to include forklift properties
         Schema modifiedSchema = avroSchemaCache.get(message.getClass());
@@ -221,7 +222,7 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
         messageNode.put(SCHEMA_FIELD_NAME_PROPERTIES, this.formatMap(this.properties));
 
         //read modified json to avro object with modified schema
-        InputStream input = new ByteArrayInputStream(messageNode.toString().getBytes());
+        InputStream input = new ByteArrayInputStream(messageNode.toString().getBytes(Charset.forName("UTF-8")));
         DataInputStream din = new DataInputStream(input);
         Decoder decoder = DecoderFactory.get().jsonDecoder(modifiedSchema, din);
         DatumReader<GenericRecord> reader = new GenericDatumReader<>(modifiedSchema);
