@@ -1,7 +1,10 @@
 package forklift.consumer;
 
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import forklift.Forklift;
 import forklift.connectors.ForkliftMessage;
 import forklift.consumer.lifecycle.BadAuditor;
 import forklift.consumer.lifecycle.TestAuditor;
@@ -32,6 +35,10 @@ public class LifeCycleMonitorsTest {
     public void test() throws InterruptedException {
         final LifeCycleMonitors lifeCycle = new LifeCycleMonitors();
         lifeCycle.register(TestAuditor.class);
+        Consumer consumer  = mock(Consumer.class);
+        Forklift forklift = mock(Forklift.class);
+        when(forklift.getLifeCycle()).thenReturn(lifeCycle);
+        when(consumer.getForklift()).thenReturn(forklift);
 
         final Runnable calls = new Runnable() {
             @Override
@@ -45,7 +52,7 @@ public class LifeCycleMonitorsTest {
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    lifeCycle.call(ps, new MessageRunnable(null, new ForkliftMessage("" + i), null, null, null, null, null, null, Collections.emptyList()));
+                    lifeCycle.call(ps, new MessageRunnable(consumer, new ForkliftMessage("" + i), null, null, null, null, null, null, Collections.emptyList()));
                 }
                 threads.getAndDecrement();
             }
@@ -105,10 +112,13 @@ public class LifeCycleMonitorsTest {
     public void badListener() {
         final LifeCycleMonitors lifeCycle = new LifeCycleMonitors();
         lifeCycle.register(BadAuditor.class);
-
+        Consumer consumer = mock(Consumer.class);
+        Forklift forklift = mock(Forklift.class);
+        when(forklift.getLifeCycle()).thenReturn(lifeCycle);
+        when(consumer.getForklift()).thenReturn(forklift);
         log.debug("The following generates an exception. This is expected.");
         // Now the validate listener should log out an error but should stop processing from happening.
-        lifeCycle.call(ProcessStep.Validating, new MessageRunnable(null, new ForkliftMessage("1"), null, null, null, null, null, null, Collections.emptyList()));
+        lifeCycle.call(ProcessStep.Validating, new MessageRunnable(consumer, new ForkliftMessage("1"), null, null, null, null, null, null, Collections.emptyList()));
         assertTrue("Make sure the exception was eaten and just logged.", true);
     }
 }

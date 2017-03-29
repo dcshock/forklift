@@ -32,10 +32,10 @@ object ForkliftBuild extends Build {
         base = file("connectors/activemq")
     ).dependsOn(core)
 
-//    lazy val kafka = Project(
- //       id = "kafka",
-  //      base = file("connectors/kafka")
-   // ).dependsOn(core)
+    lazy val kafka = Project(
+        id = "kafka",
+        base = file("connectors/kafka")
+    ).dependsOn(core)
 
     lazy val server = Project(
         id = "server",
