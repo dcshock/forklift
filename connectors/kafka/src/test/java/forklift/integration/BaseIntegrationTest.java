@@ -33,8 +33,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public abstract class BaseIntegrationTest {
     protected static final Logger log = LoggerFactory.getLogger(BaseIntegrationTest.class);
-
-    protected static boolean isInjectNull = true;
     protected static Set<String> sentMessageIds = ConcurrentHashMap.newKeySet();
     protected static Set<String> consumedMessageIds = ConcurrentHashMap.newKeySet();
     protected TestServiceManager serviceManager;
@@ -77,7 +75,6 @@ public abstract class BaseIntegrationTest {
                 return;
             }
             consumedMessageIds.add(forkliftMessage.getId());
-            isInjectNull = injectedProducer != null ? false : true;
         }
     }
 
@@ -100,7 +97,6 @@ public abstract class BaseIntegrationTest {
                 return;
             }
             consumedMessageIds.add(forkliftMessage.getId());
-            isInjectNull = injectedProducer != null ? false : true;
         }
     }
 
@@ -122,7 +118,6 @@ public abstract class BaseIntegrationTest {
                 return;
             }
             consumedMessageIds.add(forkliftMessage.getId());
-            isInjectNull = injectedProducer != null ? false : true;
         }
     }
 
@@ -144,7 +139,6 @@ public abstract class BaseIntegrationTest {
                 return;
             }
             consumedMessageIds.add(forkliftMessage.getId());
-            isInjectNull = injectedProducer != null ? false : true;
         }
     }
 
@@ -166,7 +160,6 @@ public abstract class BaseIntegrationTest {
                 return;
             }
             consumedMessageIds.add(forkliftMessage.getId());
-            isInjectNull = injectedProducer != null ? false : true;
         }
     }
 }

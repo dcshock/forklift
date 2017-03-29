@@ -7,7 +7,6 @@ import forklift.connectors.ConnectorException;
 import forklift.connectors.ForkliftMessage;
 import forklift.consumer.Consumer;
 import forklift.decorators.OnMessage;
-import forklift.decorators.Producer;
 import forklift.decorators.Queue;
 import forklift.exception.StartupException;
 import forklift.integration.server.TestServiceManager;
@@ -27,10 +26,6 @@ import java.util.Map;
 public class AvroMessageTests extends BaseIntegrationTest {
 
     private static final Logger log = LoggerFactory.getLogger(AvroMessageTests.class);
-    private static boolean isInjectNull = true;
-    TestServiceManager serviceManager;
-    //    private static boolean ordered = true;
-    private static boolean isPropsSet = false;
 
     @After
     public void after() {
@@ -41,7 +36,6 @@ public class AvroMessageTests extends BaseIntegrationTest {
     public void setup() {
         serviceManager = new TestServiceManager();
         serviceManager.start();
-        isInjectNull = true;
     }
 
     @Test
@@ -81,12 +75,6 @@ public class AvroMessageTests extends BaseIntegrationTest {
         @forklift.decorators.Message
         private UserRegistered value;
 
-        @forklift.decorators.Properties
-        private Map<String, String> properties;
-
-        @Producer(queue = "forklift-avro-topic")
-        private ForkliftProducerI injectedProducer;
-
         @OnMessage
         public void onMessage() {
             if (value == null) {
@@ -94,7 +82,6 @@ public class AvroMessageTests extends BaseIntegrationTest {
             }
             System.out.println(Thread.currentThread().getName() + value.getState());
             consumedMessageIds.add(forkliftMessage.getId());
-            isInjectNull = injectedProducer != null ? false : true;
         }
     }
 }

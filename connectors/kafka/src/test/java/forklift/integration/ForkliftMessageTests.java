@@ -15,21 +15,16 @@ import forklift.producers.ProducerException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by afrieze on 3/13/17.
  */
 public class ForkliftMessageTests extends BaseIntegrationTest {
 
-
     private static boolean isPropsSet = false;
     private static boolean isPropOverwritten = true;
-
 
     @After
     public void after() {
@@ -40,12 +35,11 @@ public class ForkliftMessageTests extends BaseIntegrationTest {
     public void setup() {
         serviceManager = new TestServiceManager();
         serviceManager.start();
-        isInjectNull = true;
     }
 
-
     @Test
-    public void testForkliftMessage() throws ProducerException, ConnectorException, InterruptedException, StartupException {
+    public void testForkliftMessageWithProperties()
+                    throws ProducerException, ConnectorException, InterruptedException, StartupException {
         Forklift forklift = serviceManager.newManagedForkliftInstance();
         int msgCount = 10;
         ForkliftProducerI
@@ -92,7 +86,6 @@ public class ForkliftMessageTests extends BaseIntegrationTest {
             }
             consumedMessageIds.add(message.getId());
             System.out.println(Thread.currentThread().getName() + message.getMsg());
-            isInjectNull = injectedProducer != null ? false : true;
             //make sure the message property is not overwritten by the producer property
             isPropOverwritten = message.getProperties().get("Eye").equals("overwriteme") ? true : false;
             isPropsSet = message.getProperties().get("Foo").equals("Bar") ? true : false;
