@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Properties;
 
 /**
- * Created by afrieze on 3/7/17.
+ * Embedded SchemaRegistry server
  */
 public class SchemaRegistryService implements Runnable {
 

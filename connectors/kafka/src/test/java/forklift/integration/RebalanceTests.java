@@ -14,94 +14,12 @@ import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * Tests which focus on causing partitions to be rebalanced.
+ */
 public class RebalanceTests extends BaseIntegrationTest {
 
-    private class ForkliftServer {
 
-        private ExecutorService executor;
-        private Class[] consumerClasses;
-        private Forklift forklift;
-        private List<Consumer> consumers = new ArrayList<Consumer>();
-        private String name;
-        private volatile boolean running = false;
-
-        public ForkliftServer(String name, ExecutorService executor, Class<?>... consumerClasses) {
-            this.name = name;
-            this.executor = executor;
-            this.consumerClasses = consumerClasses;
-            try {
-                this.forklift = serviceManager.newManagedForkliftInstance(name);
-            } catch (StartupException e) {
-                log.error("Error constructing forklift server");
-            }
-        }
-
-        public ForkliftProducerI getProducer(String topicName) {
-            return forklift.getConnector().getTopicProducer(topicName);
-        }
-
-        public void startConsumers() {
-            log.info("Starting Consumers for server: " + name);
-            for (Class<?> c : consumerClasses) {
-                Consumer consumer = new Consumer(c, forklift);
-                consumers.add(consumer);
-                executor.submit(() -> consumer.listen());
-            }
-        }
-
-        public void startProducers() {
-
-            ForkliftProducerI producer1 = getProducer("forklift-string-topic");
-            ForkliftProducerI producer2 = getProducer("forklift-map-topic");
-            ForkliftProducerI producer3 = getProducer("forklift-object-topic");
-            Random random = new Random();
-            running = true;
-            executor.execute(() -> {
-                while (running) {
-                    long jitter = random.nextLong() % 50;
-                    try {
-                        sentMessageIds.add(producer1.send("String message"));
-                        Thread.currentThread().sleep(jitter);
-                    } catch (Exception e) {
-                    }
-                }
-            });
-            executor.execute(() -> {
-                while (running) {
-                    long jitter = random.nextLong() % 50;
-                    try {
-                        final Map<String, String> m = new HashMap<>();
-                        m.put("x", "producer key value send test");
-                        sentMessageIds.add(producer2.send(m));
-                        Thread.currentThread().sleep(jitter);
-                    } catch (Exception e) {
-                    }
-                }
-            });
-            executor.execute(() -> {
-                while (running) {
-                    long jitter = random.nextLong() % 50;
-                    try {
-                        final TestMessage m = new TestMessage(new String("x=producer object send test"), 1);
-                        sentMessageIds.add(producer3.send(m));
-                        Thread.currentThread().sleep(jitter);
-                    } catch (Exception e) {
-                    }
-                }
-            });
-        }
-
-        public void stopProducers() {
-            running = false;
-        }
-
-        public void shutdown() {
-            stopProducers();
-            log.info("Stopping Consumers for server: " + name);
-            consumers.forEach(consumer -> consumer.shutdown());
-            forklift.shutdown();
-        }
-    }
 
     @Test
     public void testRebalanceUnderLoad() throws InterruptedException {
@@ -251,6 +169,97 @@ public class RebalanceTests extends BaseIntegrationTest {
             consumers.add(consumer);
         }
         return consumers;
+    }
+
+    /**
+     * Encapsulates a forklift instance with consumers and producers.  Used for testing multiple
+     * connections to kafka concurrently.
+     */
+    private class ForkliftServer {
+
+        private ExecutorService executor;
+        private Class[] consumerClasses;
+        private Forklift forklift;
+        private List<Consumer> consumers = new ArrayList<Consumer>();
+        private String name;
+        private volatile boolean running = false;
+
+        public ForkliftServer(String name, ExecutorService executor, Class<?>... consumerClasses) {
+            this.name = name;
+            this.executor = executor;
+            this.consumerClasses = consumerClasses;
+            try {
+                this.forklift = serviceManager.newManagedForkliftInstance(name);
+            } catch (StartupException e) {
+                log.error("Error constructing forklift server");
+            }
+        }
+
+        public ForkliftProducerI getProducer(String topicName) {
+            return forklift.getConnector().getTopicProducer(topicName);
+        }
+
+        public void startConsumers() {
+            log.info("Starting Consumers for server: " + name);
+            for (Class<?> c : consumerClasses) {
+                Consumer consumer = new Consumer(c, forklift);
+                consumers.add(consumer);
+                executor.submit(() -> consumer.listen());
+            }
+        }
+
+        public void startProducers() {
+
+            ForkliftProducerI producer1 = getProducer("forklift-string-topic");
+            ForkliftProducerI producer2 = getProducer("forklift-map-topic");
+            ForkliftProducerI producer3 = getProducer("forklift-object-topic");
+            Random random = new Random();
+            running = true;
+            executor.execute(() -> {
+                while (running) {
+                    long jitter = random.nextLong() % 50;
+                    try {
+                        sentMessageIds.add(producer1.send("String message"));
+                        Thread.currentThread().sleep(jitter);
+                    } catch (Exception e) {
+                    }
+                }
+            });
+            executor.execute(() -> {
+                while (running) {
+                    long jitter = random.nextLong() % 50;
+                    try {
+                        final Map<String, String> m = new HashMap<>();
+                        m.put("x", "producer key value send test");
+                        sentMessageIds.add(producer2.send(m));
+                        Thread.currentThread().sleep(jitter);
+                    } catch (Exception e) {
+                    }
+                }
+            });
+            executor.execute(() -> {
+                while (running) {
+                    long jitter = random.nextLong() % 50;
+                    try {
+                        final TestMessage m = new TestMessage(new String("x=producer object send test"), 1);
+                        sentMessageIds.add(producer3.send(m));
+                        Thread.currentThread().sleep(jitter);
+                    } catch (Exception e) {
+                    }
+                }
+            });
+        }
+
+        public void stopProducers() {
+            running = false;
+        }
+
+        public void shutdown() {
+            stopProducers();
+            log.info("Stopping Consumers for server: " + name);
+            consumers.forEach(consumer -> consumer.shutdown());
+            forklift.shutdown();
+        }
     }
 
 }

@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 /**
- * Created by afrieze on 3/7/17.
+ * Embedded Kafka server
  */
 public class KafkaService implements Runnable {
 

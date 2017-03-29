@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 /**
- * Created by afrieze on 3/7/17.
+ * Embedded Zookeeper server
  */
 public class ZookeeperService implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(ZookeeperService.class);

@@ -19,7 +19,17 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Created by afrieze on 3/28/17.
+ * Abstract class which provides support for some common integration testing scenarios.
+ * <pre>
+ *     1.  Starts up and exposes a TestService Manager at the start of every test.
+ *         The testServiceManager starts up embedded Zookeeper, Kafka, and Schema-Registry servers
+ *     2.  Various Consumer classes
+ *     3.  sentMessageIds and consumedMessageIds.  Implementing classes should ensure that they
+ *         populate the sentMessageIds set.
+ *     4.  The messageAsserts function which provides some useful output and asserts that the sentMessageIds set
+ *         and consumedMessageIds set are equal.
+ * </pre>
+ *
  */
 public abstract class BaseIntegrationTest {
     protected static final Logger log = LoggerFactory.getLogger(BaseIntegrationTest.class);
@@ -44,7 +54,7 @@ public abstract class BaseIntegrationTest {
 
     protected void messageAsserts(){
         log.info("SentIds: " + sentMessageIds.size() + " consumedIds: " + consumedMessageIds.size());
-        assertTrue(sentMessageIds.containsAll(consumedMessageIds) && consumedMessageIds.containsAll(sentMessageIds));
+        assertTrue(sentMessageIds.equals(consumedMessageIds));
         assertTrue(sentMessageIds.size() > 0);
     }
 
