@@ -35,6 +35,6 @@ object ForkliftBuild extends Build {
     lazy val server = Project(
         id = "server",
         base = file("server")
-    ).dependsOn(core, activemq, replay, retry)
+    ).dependsOn(core, activemq, replay, retry, stats)
 
 }
