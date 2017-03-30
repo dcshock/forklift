@@ -8,6 +8,7 @@ import org.junit.Before;
 import org.mockito.Mockito;
 
 import java.io.File;
+import java.net.URL;
 
 public class ForkliftTest {
     protected Forklift forklift;
@@ -25,32 +26,32 @@ public class ForkliftTest {
     }
 
     public static File testJar() {
-        File a = new File("src/test/resources/forklift-test-consumer-0.1.jar");
-        if (a.exists())
-            return a;
-        File b = new File("core/src/test/resources/forklift-test-consumer-0.1.jar");
-        if(b.exists())
-            return b;
-        return null;
+        return findResourceFile("forklift-test-consumer-0.1.jar");
     }
 
     public static File testJarJar() {
-        File a = new File("src/test/resources/forklift-jarjar-consumer-0.1-binks.jar");
-        if (a.exists())
-            return a;
-        File b = new File("core/src/test/resources/forklift-jarjar-consumer-0.1-binks.jar");
-        if(b.exists())
-            return b;
-        return null;
+        return findResourceFile("forklift-jarjar-consumer-0.1-binks.jar");
     }
 
     public static File testMultiTQJar() {
-        File a = new File("src/test/resources/forklift-multitq-consumer-0.1.jar");
+        return findResourceFile("forklift-multitq-consumer-0.1.jar");
+    }
+
+    private static File findResourceFile(String fileName){
+        File a = new File(fileName);
         if (a.exists())
             return a;
-        File b = new File("core/src/test/resources/forklift-multitq-consumer-0.1.jar");
+        File b = new File(fileName);
         if(b.exists())
             return b;
+        URL url = Thread.currentThread().getContextClassLoader().getResource(fileName);
+        if(url != null) {
+            File c = new File(url.getPath());
+            if(c.exists()){
+                return c;
+            }
+        }
         return null;
     }
+
 }
