@@ -36,6 +36,9 @@ lazy val testDependencies = Seq(
   "org.mockito"       % "mockito-core"            % "1.9.5"
 )
 
+// Integration tests use embedded servers.  We can only allow one instance at a time
+// so disable parallel test execution
+parallelExecution in Test := false
 
 // avro settings
 (javaSource in avroConfig) := baseDirectory(_/"target/generated-sources/").value
