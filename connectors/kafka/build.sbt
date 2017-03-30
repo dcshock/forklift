@@ -35,6 +35,8 @@ lazy val testDependencies = Seq(
   "org.mockito"       % "mockito-core"            % "1.9.5"
 )
 
+libraryDependencies ++= testDependencies.map(_ % "test")
+
 // Integration tests use embedded servers.  We can only allow one instance at a time
 // so disable parallel test execution
 parallelExecution in Test := false
@@ -45,7 +47,6 @@ parallelExecution in Test := false
 
 (compile in Compile) := ((compile in Compile) dependsOn (clean in Compile)).value
 
-libraryDependencies ++= testDependencies.map(_ % "test")
 
 resolvers ++= Seq(
   "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
