@@ -48,13 +48,13 @@ public class ConsumerTest {
     @Test
     public void createQueueConsumer() {
         Consumer c = new Consumer(QueueConsumer.class, forklift, this.getClass().getClassLoader());
-        assertTrue(c.getName().matches("abc:\\d"));
+        assertTrue(c.getName().matches("abc:\\d+"));
     }
 
     @Test
     public void createTopicConsumer() {
         Consumer c = new Consumer(TopicConsumer.class, forklift, this.getClass().getClassLoader());
-        assertTrue(c.getName().matches("xyz:\\d"));
+        assertTrue(c.getName().matches("xyz:\\d+"));
     }
 
     @Test
