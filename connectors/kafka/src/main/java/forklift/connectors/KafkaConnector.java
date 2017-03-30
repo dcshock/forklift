@@ -6,6 +6,7 @@ import forklift.controller.KafkaController;
 import forklift.message.MessageStream;
 import forklift.producers.ForkliftProducerI;
 import forklift.producers.KafkaForkliftProducer;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -60,15 +61,15 @@ public class KafkaConnector implements ForkliftConnectorI {
 
     private KafkaController createController() {
         Properties props = new Properties();
-        props.put("bootstrap.servers", kafkaHosts);
-        props.put("group.id", groupId);
-        props.put("enable.auto.commit", false);
-        props.put("key.deserializer", io.confluent.kafka.serializers.KafkaAvroDeserializer.class);
-        props.put("value.deserializer", io.confluent.kafka.serializers.KafkaAvroDeserializer.class);
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaHosts);
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, io.confluent.kafka.serializers.KafkaAvroDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, io.confluent.kafka.serializers.KafkaAvroDeserializer.class);
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "200");
         props.put("schema.registry.url", schemaRegistries);
         props.put("specific.avro.reader", false);
-        props.put("auto.offset.reset", "earliest");
-        props.put("max.poll.records", "200");
         KafkaConsumer<?, ?> kafkaConsumer;
         kafkaConsumer = new KafkaConsumer(props);
         this.controller = new KafkaController(kafkaConsumer, messageStream);
