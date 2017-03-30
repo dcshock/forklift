@@ -70,8 +70,7 @@ public class KafkaConnector implements ForkliftConnectorI {
         props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 200);
         props.put("schema.registry.url", schemaRegistries);
         props.put("specific.avro.reader", false);
-        KafkaConsumer<?, ?> kafkaConsumer;
-        kafkaConsumer = new KafkaConsumer(props);
+        KafkaConsumer<?, ?> kafkaConsumer = new KafkaConsumer(props);
         this.controller = new KafkaController(kafkaConsumer, messageStream);
         return controller;
     }
