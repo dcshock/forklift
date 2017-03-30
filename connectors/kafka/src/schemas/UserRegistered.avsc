@@ -1,7 +1,7 @@
 {
   "type" : "record",
   "name" : "UserRegistered",
-  "namespace" : "com.sofi.avro.schemas",
+  "namespace" : "com.github.dcshock.avro.schemas",
   "doc" : "This event records when registration is completed (e.g. via borrower)",
   "fields" : [ {
     "name" : "firstName",

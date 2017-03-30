@@ -1,7 +1,7 @@
 package forklift.integration;
 
-import com.sofi.avro.schemas.StateCode;
-import com.sofi.avro.schemas.UserRegistered;
+import com.github.dcshock.avro.schemas.StateCode;
+import com.github.dcshock.avro.schemas.UserRegistered;
 import forklift.Forklift;
 import forklift.connectors.ConnectorException;
 import forklift.connectors.ForkliftMessage;
@@ -52,7 +52,7 @@ public class AvroMessageTests extends BaseIntegrationTest {
             UserRegistered registered = new UserRegistered();
             registered.setFirstName("John");
             registered.setLastName("Doe");
-            registered.setEmail("test@sofi.com");
+            registered.setEmail("test@test.com");
             registered.setState(StateCode.MT);
             sentMessageIds.add(producer.send(registered));
         }
