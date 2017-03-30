@@ -26,7 +26,6 @@ libraryDependencies ++= Seq(
   "io.confluent" % "kafka-schema-registry" % "3.1.1" exclude("org.slf4j","slf4j-log4j12"),
   "org.apache.avro" % "avro" % "1.8.1",
   "org.apache.zookeeper" % "zookeeper" % "3.4.9" exclude("org.slf4j","slf4j-log4j12")
-
 )
 
 lazy val testDependencies = Seq(
