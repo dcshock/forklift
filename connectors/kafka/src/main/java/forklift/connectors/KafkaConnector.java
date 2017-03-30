@@ -55,8 +55,7 @@ public class KafkaConnector implements ForkliftConnectorI {
                                io.confluent.kafka.serializers.KafkaAvroSerializer.class);
         //schema.registry.url is a comma separated list of urls
         producerProperties.put("schema.registry.url", schemaRegistries);
-        kafkaProducer = new KafkaProducer(producerProperties);
-        return kafkaProducer;
+        return new KafkaProducer(producerProperties);
     }
 
     private KafkaController createController() {
@@ -71,8 +70,7 @@ public class KafkaConnector implements ForkliftConnectorI {
         props.put("schema.registry.url", schemaRegistries);
         props.put("specific.avro.reader", false);
         KafkaConsumer<?, ?> kafkaConsumer = new KafkaConsumer(props);
-        this.controller = new KafkaController(kafkaConsumer, messageStream);
-        return controller;
+        return new KafkaController(kafkaConsumer, messageStream);
     }
 
     @Override
