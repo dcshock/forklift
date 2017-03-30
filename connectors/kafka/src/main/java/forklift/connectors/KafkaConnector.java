@@ -67,7 +67,7 @@ public class KafkaConnector implements ForkliftConnectorI {
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, io.confluent.kafka.serializers.KafkaAvroDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, io.confluent.kafka.serializers.KafkaAvroDeserializer.class);
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-        props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "200");
+        props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 200);
         props.put("schema.registry.url", schemaRegistries);
         props.put("specific.avro.reader", false);
         KafkaConsumer<?, ?> kafkaConsumer;
