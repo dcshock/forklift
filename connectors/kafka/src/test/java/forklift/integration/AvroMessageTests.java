@@ -20,9 +20,6 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by afrieze on 3/13/17.
- */
 public class AvroMessageTests extends BaseIntegrationTest {
 
     private static final Logger log = LoggerFactory.getLogger(AvroMessageTests.class);

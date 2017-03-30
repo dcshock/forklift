@@ -18,9 +18,6 @@ import org.junit.Test;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by afrieze on 3/13/17.
- */
 public class ForkliftMessageTests extends BaseIntegrationTest {
 
     private static boolean isPropsSet = false;
