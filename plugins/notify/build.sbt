@@ -2,7 +2,7 @@ organization := "com.github.dcshock"
 
 name := "forklift-notify"
 
-version := "0.3"
+version := "1.0"
 
 javacOptions ++= Seq("-source", "1.8")
 
@@ -13,7 +13,7 @@ initialize := {
 }
 
 libraryDependencies ++= Seq(
-  "com.github.dcshock" % "forklift" % "0.3"
+  "com.github.dcshock" % "forklift" % "1.0"
 )
 
 resolvers ++= Seq(
