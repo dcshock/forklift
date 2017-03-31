@@ -35,8 +35,7 @@ public class SchemaRegistryService implements Runnable {
         properties.setProperty("listeners", "http://localhost:" + listenPort);
         properties.setProperty("kafkastore.connection.url", "localhost:" + localZookeeperPort);
         properties.setProperty("host.name", "localhost");
-        //properties.setProperty("kafkastore.topic", "_schemas");
-        //properties.setProperty("debug", "false");
+        properties.setProperty("avro.compatibility.level", "full");
         try {
             SchemaRegistryConfig config = new SchemaRegistryConfig(properties);
             SchemaRegistryRestApplication app = new SchemaRegistryRestApplication(config);
