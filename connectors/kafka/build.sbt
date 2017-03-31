@@ -34,7 +34,7 @@ lazy val testDependencies = Seq(
   "org.apache.zookeeper" % "zookeeper" % "3.4.9" exclude("org.slf4j","slf4j-log4j12"),
   "io.confluent" % "kafka-schema-registry" % "3.1.1" exclude("org.slf4j","slf4j-log4j12"),
   //Added as it looks like the schema registry has a hard coded dependency on a log4j class that the bridge does not help with
-  "log4j" % "log4j" % "1.2.14"
+  "log4j" % "log4j" % "1.2.14" exclude("javax.jms", "jms") exclude("com.sun.jdmk", "jmxtools") exclude("com.sun.jmx", "jmxri")
 )
 
 libraryDependencies ++= testDependencies.map(_ % "test")
