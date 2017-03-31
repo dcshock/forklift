@@ -21,18 +21,18 @@ libraryDependencies ++= Seq(
   "com.github.dcshock" % "forklift" % "1.0" ,
   "com.fasterxml.jackson.core" % "jackson-databind" % "2.7.3",
   "com.fasterxml.jackson.datatype" % "jackson-datatype-jsr310" % "2.7.3",
-  "org.apache.kafka" % "kafka_2.11" % "0.10.1.0" exclude("org.slf4j","slf4j-log4j12"),
-  "io.confluent" % "kafka-avro-serializer" % "3.2.0" exclude("org.slf4j","slf4j-log4j12"),
-  "org.apache.avro" % "avro" % "1.8.1" exclude("org.slf4j","slf4j-log4j12")
+  "org.apache.kafka" % "kafka-clients" % "0.10.1.1-cp1" exclude("org.slf4j","slf4j-log4j12"),
+  "io.confluent" % "kafka-avro-serializer" % "3.1.1" exclude("org.slf4j","slf4j-log4j12"),
+  "io.confluent" % "kafka-schema-registry" % "3.1.1" exclude("org.slf4j","slf4j-log4j12"),
+  "org.apache.avro" % "avro" % "1.8.1",
+  "org.apache.zookeeper" % "zookeeper" % "3.4.9" exclude("org.slf4j","slf4j-log4j12")
 )
 
 lazy val testDependencies = Seq(
   "commons-io" % "commons-io" % "2.4" ,
   "com.novocode" % "junit-interface" % "0.11",
   "commons-net" % "commons-net" % "3.6",
-  "org.mockito"       % "mockito-core"            % "1.9.5",
-  "org.apache.zookeeper" % "zookeeper" % "3.4.9" exclude("org.slf4j","slf4j-log4j12"),
-  "io.confluent" % "kafka-schema-registry" % "3.1.1" exclude("org.slf4j","slf4j-log4j12")
+  "org.mockito"       % "mockito-core"            % "1.9.5"
 )
 
 libraryDependencies ++= testDependencies.map(_ % "test")
@@ -76,31 +76,31 @@ pomIncludeRepository := { _ => false }
 
 pomExtra := (
   <url>https://github.com/dcshock/forklift-kafka</url>
-  <licenses>
-    <license>
-      <name>BSD-style</name>
-      <url>http://www.opensource.org/licenses/bsd-license.php</url>
-      <distribution>repo</distribution>
-    </license>
-  </licenses>
-  <scm>
-    <url>git@github.com:dcshock/forklift-kafka.git</url>
-    <connection>scm:git:git@github.com:dcshock/forklift-kafka.git</connection>
-  </scm>
-  <developers>
-    <developer>
-      <id>dcshock</id>
-      <name>Matt Conroy</name>
-      <url>http://www.mattconroy.com</url>
-    </developer>
-    <developer>
-      <id>afrieze</id>
-      <name>Andrew Frieze</name>
-    </developer>
-    <developer>
-      <id>kuroshii</id>
-      <name>Bridger Howell</name>
-    </developer>
-  </developers>)
+    <licenses>
+      <license>
+        <name>BSD-style</name>
+        <url>http://www.opensource.org/licenses/bsd-license.php</url>
+        <distribution>repo</distribution>
+      </license>
+    </licenses>
+    <scm>
+      <url>git@github.com:dcshock/forklift-kafka.git</url>
+      <connection>scm:git:git@github.com:dcshock/forklift-kafka.git</connection>
+    </scm>
+    <developers>
+      <developer>
+        <id>dcshock</id>
+        <name>Matt Conroy</name>
+        <url>http://www.mattconroy.com</url>
+      </developer>
+      <developer>
+        <id>afrieze</id>
+        <name>Andrew Frieze</name>
+      </developer>
+      <developer>
+        <id>kuroshii</id>
+        <name>Bridger Howell</name>
+      </developer>
+    </developers>)
 
 useGpg := true
