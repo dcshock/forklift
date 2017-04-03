@@ -26,10 +26,13 @@ import org.apache.avro.specific.SpecificRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -77,6 +80,7 @@ import java.util.stream.Collectors;
  * or {@link #setHeaders(java.util.Map)} will result in an {@link java.lang.UnsupportedOperationException}.
  */
 public class KafkaForkliftProducer implements ForkliftProducerI {
+    private static final Logger log = LoggerFactory.getLogger(KafkaForkliftProducer.class);
 
     public final static String SCHEMA_FIELD_NAME_VALUE = "forkliftValue";
     public final static String SCHEMA_FIELD_NAME_PROPERTIES = "forkliftProperties";
@@ -85,22 +89,23 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
     private static final ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule())
                                                                  .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-    private Schema forkliftSchema = null;
+    private static final Schema forkliftSchema = readSchemaFromClasspath("schemas/ForkliftMessage.avsc");
     private Map<Class<?>, Schema> avroSchemaCache = new ConcurrentHashMap<>();
     private Map<String, String> properties = new HashMap<>();
+
+    private static Schema readSchemaFromClasspath(String path) {
+        Schema.Parser parser = new Schema.Parser();
+        try {
+            return parser.parse(new File(Thread.currentThread().getContextClassLoader().getResource(path).getFile()));
+        } catch (Exception e) {
+            log.error("Couldn't parse forklift schema", e);
+        }
+        return null;
+    }
 
     public KafkaForkliftProducer(String topic, KafkaProducer<?, ?> kafkaProducer) {
         this.kafkaProducer = kafkaProducer;
         this.topic = topic;
-        Schema.Parser parser = new Schema.Parser();
-        this.forkliftSchema = parser.parse(
-                        "{\"type\":\"record\",\"name\":\"ForkliftMessage\"," +
-                        " \"doc\":\"Non-Avro messages sent through forklift use this schema.\",\"fields\":" +
-                        "[{\"name\":\"forkliftValue\",\"type\":\"string\",\"default\":\"\", \"doc\":\"The forklift message.  " +
-                        "3 formats are supported.  1: string value, 2: Json object," +
-                        "3: Map represented by key,value entries delimited with newline\"}," +
-                        "{\"name\":\"forkliftProperties\",\"type\":\"string\",\"default\":\"\"," +
-                        "\"doc\":\"Properties added to support forklift interfaces. Format is key,value entries delimited with new lines\"}]}");
     }
 
     @Override
@@ -136,7 +141,7 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
     @Override
     public String send(Map<Header, Object> headers, Map<String, String> properties, ForkliftMessage message)
                     throws ProducerException {
-        throw new UnsupportedOperationException("Kafka Producer does not support headers or properties");
+        throw new UnsupportedOperationException("Kafka Producer does not support headers");
     }
 
     @Override
@@ -157,12 +162,12 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
 
     @Override
     public void setHeaders(Map<Header, Object> haeders) {
-        throw new UnsupportedOperationException("Kafka Producer does not support headers or properties");
+        throw new UnsupportedOperationException("Kafka Producer does not support headers");
     }
 
     @Override
     public Map<Header, Object> getHeaders() {
-        throw new UnsupportedOperationException("Kafka Producer does not support headers or properties");
+        throw new UnsupportedOperationException("Kafka Producer does not support headers");
     }
 
     @Override
