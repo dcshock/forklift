@@ -103,14 +103,11 @@ public class RetryES {
         client = factory.getObject();
 
         // Cleanup after a retry is completed.
-        cleanup = new Consumer<RetryMessage>() {
-            @Override
-            public void accept(RetryMessage msg) {
-                try {
-                    client.execute(new Delete.Builder(msg.getMessageId()).index("forklift-retry").type("msg").build());
-                } catch (IOException e) {
-                    log.error("Unable to cleanup retry: {}", msg.getMessageId(), e);
-                }
+        cleanup = (msg) -> {
+            try {
+                client.execute(new Delete.Builder(msg.getMessageId()).index("forklift-retry").type("msg").build());
+            } catch (IOException e) {
+                log.error("Unable to cleanup retry: {}", msg.getMessageId(), e);
             }
         };
 

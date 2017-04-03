@@ -1,5 +1,5 @@
 {
-  "namespace": "com.github.dcshock.avro.schemas",
+  "namespace": "forklift.schemas",
   "type": "record",
   "version": 1,
   "name": "AvroMessage",

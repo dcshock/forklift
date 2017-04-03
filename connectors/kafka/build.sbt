@@ -17,6 +17,14 @@ initialize := {
     sys.error("Java 8 is required for this project.")
 }
 
+resolvers ++= Seq(
+  "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
+  "Maven Central" at "http://repo1.maven.org/maven2",
+  "Fuse Snapshots" at "http://repo.fusesource.com/nexus/content/repositories/snapshots",
+  "Fuse" at "http://repo.fusesource.com/nexus/content/groups/public",
+  "Confluent Maven Repo" at "http://packages.confluent.io/maven/"
+)
+
 libraryDependencies ++= Seq(
   "com.github.dcshock" % "forklift" % "1.0" ,
   "com.fasterxml.jackson.core" % "jackson-databind" % "2.7.3",
@@ -44,19 +52,8 @@ libraryDependencies ++= testDependencies.map(_ % "test")
 parallelExecution in Test := false
 
 // avro settings
-(javaSource in avroConfig) := baseDirectory(_/"target/generated-sources/").value
-(sourceDirectory in avroConfig) := baseDirectory(_/"src/schemas").value
-
-(compile in Compile) := ((compile in Compile) dependsOn (clean in Compile)).value
-
-
-resolvers ++= Seq(
-  "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
-  "Maven Central" at "http://repo1.maven.org/maven2",
-  "Fuse Snapshots" at "http://repo.fusesource.com/nexus/content/repositories/snapshots",
-  "Fuse" at "http://repo.fusesource.com/nexus/content/groups/public",
-  "Confluent Maven Repo" at "http://packages.confluent.io/maven/"
-)
+(javaSource in avroConfig) := baseDirectory(_/"src/test/java").value
+(sourceDirectory in avroConfig) := baseDirectory(_/"src/test/resources/schemas").value
 
 // Remove scala dependency for pure Java libraries
 autoScalaLibrary := false

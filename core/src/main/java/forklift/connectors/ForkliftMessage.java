@@ -70,7 +70,7 @@ public class ForkliftMessage {
     public void setHeaders(Map<Header, Object> headers) {
          final Map<Header, Object> newHeaders = new HashMap<>();
          headers.keySet().stream().forEach(key -> newHeaders.put(key, headers.get(key)));
-         this.headers = newHeaders;   
+         this.headers = newHeaders;
     }
 
     public Map<Header, Object> getHeaders() {

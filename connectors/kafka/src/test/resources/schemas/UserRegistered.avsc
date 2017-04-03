@@ -1,7 +1,7 @@
 {
   "type" : "record",
   "name" : "UserRegistered",
-  "namespace" : "com.github.dcshock.avro.schemas",
+  "namespace" : "forklift.schemas",
   "doc" : "This event records when registration is completed (e.g. via borrower)",
   "fields" : [ {
     "name" : "firstName",

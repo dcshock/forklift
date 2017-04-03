@@ -239,12 +239,12 @@ public class Consumer {
             running.set(true);
 
             while (running.get()) {
-                ForkliftMessage consumedMsg;
-                while ((consumedMsg = consumer.receive(2500)) != null && running.get()) {
+                ForkliftMessage consumerMsg;
+                while ((consumerMsg = consumer.receive(2500)) != null && running.get()) {
                     try {
                         final Object handler = msgHandler.newInstance();
 
-                        final ForkliftMessage msg = consumedMsg;
+                        final ForkliftMessage msg = consumerMsg;
 
                         final List<Closeable> closeMe = new ArrayList<>();
                         RunAsClassLoader.run(classLoader, () -> {

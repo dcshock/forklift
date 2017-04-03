@@ -91,7 +91,7 @@ public class ForkliftSyncProducer<T> implements ForkliftSyncProducerI<T> {
     }
 
     @Override
-    public void setProperties(Map<String , String> properties)
+    public void setProperties(Map<String, String> properties)
       throws ProducerException {
         producer.setProperties(properties);
     }
