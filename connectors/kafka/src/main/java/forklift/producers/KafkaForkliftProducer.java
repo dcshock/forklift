@@ -36,6 +36,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -52,12 +53,12 @@ import java.util.stream.Collectors;
  *  "doc":"Properties added to support forklift interfaces. Format is key,value entries delimited with new lines"}
  * </pre>
  * <p>
- * The value of the forkliftProperties will be key,value entries delimited with a newline
+ * The value of the forkliftProperties will be key=value entries delimited with a newline
  * <p>
  * <strong>Example: </strong>
  * <pre>
- *     key1,value1
- *     key2,value2
+ *     key1=value1
+ *     key2=value2
  * </pre>
  * <p>
  * Non-avro messages are sent with the following schema
@@ -69,11 +70,11 @@ import java.util.stream.Collectors;
  *               "type":"string",
  *               "default":"",
  *               "doc":"The forklift message.  3 formats are supported.  1: string value, 2: Json object,
- *                      3: Map represented by key,value entries delimited with newline"},
+ *                      3: Map represented by key=value entries delimited with newline"},
  *              {"name":"forkliftProperties",
  *               "type":"string",
  *               "default":"",
- *               "doc":"Properties added to support forklift interfaces. Format is key,value entries delimited with new lines"}]}
+ *               "doc":"Properties added to support forklift interfaces. Format is key=value entries delimited with new lines"}]}
  * </pre>
  * <p>
  * Headers are not supported and calls to the {@link #send(java.util.Map, java.util.Map, forklift.connectors.ForkliftMessage)}
@@ -84,13 +85,17 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
 
     public final static String SCHEMA_FIELD_NAME_VALUE = "forkliftValue";
     public final static String SCHEMA_FIELD_NAME_PROPERTIES = "forkliftProperties";
+
+    private final static String SCHEMA_FIELD_VALUE_PROPERTIES =
+                    "{\"name\":\"forkliftProperties\",\"type\":\"string\",\"default\":\"\"," +
+                    "\"doc\":\"Properties added to support forklift interfaces. Format is key,value entries delimited with new lines\"}";
+
     private final String topic;
     private final KafkaProducer<?, ?> kafkaProducer;
     private static final ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule())
                                                                  .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
     private static final Schema forkliftSchema = readSchemaFromClasspath("schemas/ForkliftMessage.avsc");
-    private Map<Class<?>, Schema> avroSchemaCache = new ConcurrentHashMap<>();
+    private static final Map<Class<?>, Schema> avroSchemaCache = new ConcurrentHashMap<>();
     private Map<String, String> properties = new HashMap<>();
 
     private static Schema readSchemaFromClasspath(String path) {
@@ -178,17 +183,17 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
     private String sendForkliftWrappedMessage(String message, Map<String, String> messageProperties) throws ProducerException {
         GenericRecord avroRecord = new GenericData.Record(forkliftSchema);
         avroRecord.put(SCHEMA_FIELD_NAME_VALUE, message);
-        messageProperties = messageProperties == null ? new HashMap<>() : new HashMap<>(messageProperties);
-        //add the producer level properties but do not overwrite message level properties
-        for (Map.Entry<String, String> entry : this.properties.entrySet()) {
-            messageProperties.putIfAbsent(entry.getKey(), entry.getValue());
+        //message level properties take precedence over producer level properties
+        Map<String, String> appliedProperties = new HashMap<>(properties);
+        if (messageProperties == null) {
+            messageProperties = Collections.emptyMap();
         }
-        avroRecord.put(SCHEMA_FIELD_NAME_PROPERTIES, this.formatMap(messageProperties));
+        appliedProperties.putAll(messageProperties);
+        avroRecord.put(SCHEMA_FIELD_NAME_PROPERTIES, this.formatMap(appliedProperties));
         ProducerRecord record = new ProducerRecord<>(topic, null, avroRecord);
         try {
             RecordMetadata result = (RecordMetadata)kafkaProducer.send(record).get();
             return result.topic() + "-" + result.partition() + "-" + result.offset();
-
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new ProducerException("Error sending Kafka Message", e);
@@ -199,8 +204,7 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
 
     private Schema addForkliftPropertiesToSchema(Schema schema) throws IOException {
         String originalJson = schema.toString(false);
-        JsonNode propertiesField = mapper.readTree("{\"name\":\"forkliftProperties\",\"type\":\"string\",\"default\":\"\"," +
-                                                   "\"doc\":\"Properties added to support forklift interfaces. Format is key,value entries delimited with new lines\"}");
+        JsonNode propertiesField = mapper.readTree(SCHEMA_FIELD_VALUE_PROPERTIES);
         ObjectNode schemaNode = (ObjectNode)mapper.readTree(originalJson);
         ArrayNode fieldsNode = (ArrayNode)schemaNode.get("fields");
         fieldsNode.add(propertiesField);
@@ -239,8 +243,14 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
 
     private String sendAvroMessage(SpecificRecord message) throws ProducerException {
         try {
-            GenericRecord avroRecord = addForkliftPropertiesToAvroObject(message);
-            ProducerRecord record = new ProducerRecord<String, GenericRecord>(topic, null, avroRecord);
+            ProducerRecord record = null;
+            if(this.properties.size() > 0){
+                GenericRecord avroRecord = addForkliftPropertiesToAvroObject(message);
+                record = new ProducerRecord<String, GenericRecord>(topic, null, avroRecord);
+            }
+            else{
+                record = new ProducerRecord<String, SpecificRecord>(topic, null, message);
+            }
             try {
                 RecordMetadata result = (RecordMetadata)kafkaProducer.send(record).get();
                 return result.topic() + "-" + result.partition() + "-" + result.offset();
@@ -248,7 +258,7 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
                 Thread.currentThread().interrupt();
                 throw new ProducerException("Error sending Kafka Message", e);
             } catch (ExecutionException e) {
-                throw new ProducerException("Error creating Kafka Message", e);
+                throw new ProducerException("Error sending Kafka Message", e);
             }
         } catch (IOException e) {
             throw new ProducerException("Error creating Kafka Message", e);

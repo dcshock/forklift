@@ -326,9 +326,7 @@ public class KafkaController {
         @Override public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
             log.debug("controlLoop partitions revoked");
             try {
-                Map<TopicPartition, OffsetAndMetadata>
-                                removedOffsetData =
-                                acknowledgmentHandler.removePartitions(partitions);
+                Map<TopicPartition, OffsetAndMetadata> removedOffsetData = acknowledgmentHandler.removePartitions(partitions);
                 for (TopicPartition partition : partitions) {
                     flowControl.remove(partition);
                 }

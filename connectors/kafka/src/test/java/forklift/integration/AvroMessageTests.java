@@ -36,7 +36,7 @@ public class AvroMessageTests extends BaseIntegrationTest {
     }
 
     @Test
-    public void testComplexAvroMessage() throws ProducerException, ConnectorException, InterruptedException, StartupException {
+    public void testComplexAvroMessageWithProperty() throws ProducerException, ConnectorException, InterruptedException, StartupException {
         Forklift forklift = serviceManager.newManagedForkliftInstance("");
         int msgCount = 10;
         ForkliftProducerI
@@ -45,6 +45,31 @@ public class AvroMessageTests extends BaseIntegrationTest {
         Map<String, String> producerProps = new HashMap<>();
         producerProps.put("Eye", "producerProperty");
         producer.setProperties(producerProps);
+        for (int i = 0; i < msgCount; i++) {
+            UserRegistered registered = new UserRegistered();
+            registered.setFirstName("John");
+            registered.setLastName("Doe");
+            registered.setEmail("test@test.com");
+            registered.setState(StateCode.MT);
+            sentMessageIds.add(producer.send(registered));
+        }
+        final Consumer c = new Consumer(AvroMessageTests.RegisteredAvroConsumer.class, forklift);
+        // Shutdown the consumer after all the messages have been processed.
+        c.setOutOfMessages((listener) -> {
+            listener.shutdown();
+        });
+        // Start the consumer.
+        c.listen();
+        messageAsserts();
+    }
+
+    @Test
+    public void testComplexAvroMessageWithoutProperty() throws ProducerException, ConnectorException, InterruptedException, StartupException {
+        Forklift forklift = serviceManager.newManagedForkliftInstance("");
+        int msgCount = 10;
+        ForkliftProducerI
+                        producer =
+                        forklift.getConnector().getQueueProducer("forklift-avro-topic");
         for (int i = 0; i < msgCount; i++) {
             UserRegistered registered = new UserRegistered();
             registered.setFirstName("John");
