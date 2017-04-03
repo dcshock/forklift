@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class MessageStream implements ReadableMessageStream {
     private static final Logger log = LoggerFactory.getLogger(MessageStream.class);
-    Map<String, BlockingQueue<KafkaMessage>> topicQueue = new ConcurrentHashMap<>();
+    private final Map<String, BlockingQueue<KafkaMessage>> topicQueue = new ConcurrentHashMap<>();
 
     /**
      * Adds the passed in records to the stream.  After being added, a record is available to be retreived through a

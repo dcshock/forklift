@@ -7,6 +7,9 @@ import forklift.message.MessageStream;
 import forklift.producers.ForkliftProducerI;
 import forklift.producers.KafkaForkliftProducer;
 
+import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
+import io.confluent.kafka.serializers.KafkaAvroSerializerConfig;
+
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -28,11 +31,10 @@ public class KafkaConnector implements ForkliftConnectorI {
     private final String groupId;
 
     private KafkaProducer<?, ?> kafkaProducer;
-    private MessageStream messageStream = new MessageStream();
     private KafkaController controller;
 
     /**
-     * Constructs a nw instance of the KafkaConnector
+     * Constructs a new instance of the KafkaConnector
      *
      * @param kafkaHosts       list of kafka servers in host:port,... format
      * @param schemaRegistries list of schema registry servers in http://host:port,... format
@@ -50,15 +52,14 @@ public class KafkaConnector implements ForkliftConnectorI {
     }
 
     private KafkaProducer createKafkaProducer() {
-
         Properties producerProperties = new Properties();
         producerProperties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaHosts);
         producerProperties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
                                io.confluent.kafka.serializers.KafkaAvroSerializer.class);
         producerProperties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
                                io.confluent.kafka.serializers.KafkaAvroSerializer.class);
-        //schema.registry.url is a comma separated list of urls
-        producerProperties.put("schema.registry.url", schemaRegistries);
+        producerProperties.put(KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistries);
+
         return new KafkaProducer(producerProperties);
     }
 
@@ -71,10 +72,11 @@ public class KafkaConnector implements ForkliftConnectorI {
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, io.confluent.kafka.serializers.KafkaAvroDeserializer.class);
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 200);
-        props.put("schema.registry.url", schemaRegistries);
-        props.put("specific.avro.reader", false);
-        KafkaConsumer<?, ?> kafkaConsumer = new KafkaConsumer(props);
-        return new KafkaController(kafkaConsumer, messageStream);
+        props.put(KafkaAvroDeserializerConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistries);
+        props.put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, false);
+
+        final KafkaConsumer<?, ?> kafkaConsumer = new KafkaConsumer(props);
+        return new KafkaController(kafkaConsumer, new MessageStream());
     }
 
     @Override
