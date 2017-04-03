@@ -1,8 +1,5 @@
 package forklift.producers;
 
-import forklift.connectors.ForkliftMessage;
-import forklift.message.Header;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -10,7 +7,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-
+import forklift.connectors.ForkliftMessage;
+import forklift.message.Header;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
@@ -26,7 +24,6 @@ import org.apache.avro.specific.SpecificRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -80,6 +77,11 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
 
     public final static String SCHEMA_FIELD_NAME_VALUE = "forkliftValue";
     public final static String SCHEMA_FIELD_NAME_PROPERTIES = "forkliftProperties";
+
+    private final static String SCHEMA_FIELD_VALUE_PROPERTIES =
+                    "{\"name\":\"forkliftProperties\",\"type\":\"string\",\"default\":\"\"," +
+                    "\"doc\":\"Properties added to support forklift interfaces. Format is key,value entries delimited with new lines\"}";
+
     private final String topic;
     private final KafkaProducer<?, ?> kafkaProducer;
     private static final ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule())
@@ -194,8 +196,7 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
 
     private Schema addForkliftPropertiesToSchema(Schema schema) throws IOException {
         String originalJson = schema.toString(false);
-        JsonNode propertiesField = mapper.readTree("{\"name\":\"forkliftProperties\",\"type\":\"string\",\"default\":\"\"," +
-                                                   "\"doc\":\"Properties added to support forklift interfaces. Format is key,value entries delimited with new lines\"}");
+        JsonNode propertiesField = mapper.readTree(SCHEMA_FIELD_VALUE_PROPERTIES);
         ObjectNode schemaNode = (ObjectNode)mapper.readTree(originalJson);
         ArrayNode fieldsNode = (ArrayNode)schemaNode.get("fields");
         fieldsNode.add(propertiesField);
