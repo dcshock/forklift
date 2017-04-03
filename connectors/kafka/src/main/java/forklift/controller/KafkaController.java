@@ -3,7 +3,6 @@ package forklift.controller;
 import forklift.message.KafkaMessage;
 import forklift.message.MessageStream;
 import forklift.message.ReadableMessageStream;
-
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -13,7 +12,6 @@ import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.WakeupException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -174,8 +172,8 @@ public class KafkaController {
                     updateAssignment();
                 }
                 addRecordsToStream(records);
-                Map<TopicPartition, OffsetAndMetadata> offsetData = acknowledgmentHandler.getAcknowledged();
-                commitOffsets(offsetData);
+                Map<TopicPartition, OffsetAndMetadata> offsets = acknowledgmentHandler.getAcknowledged();
+                commitOffsets(offsets);
             }
         } catch (WakeupException e) {
             log.info("Wakeup, controlLoop exiting");
@@ -188,7 +186,7 @@ public class KafkaController {
             running = false;
             try {
                 Map<TopicPartition, OffsetAndMetadata> finalOffsets = new HashMap<>();
-                if(failedOffset != null){
+                if (failedOffset != null) {
                     finalOffsets.putAll(failedOffset);
                 }
                 finalOffsets.putAll(acknowledgmentHandler.removePartitions(kafkaConsumer.assignment()));
@@ -218,9 +216,9 @@ public class KafkaController {
         //check if the last remaining topic was removed
         if (kafkaConsumer.assignment().size() > 0) {
             Map<TopicPartition, OffsetAndMetadata>
-                            offsetData =
+                            offsets =
                             acknowledgmentHandler.removePartitions(kafkaConsumer.assignment());
-            commitOffsets(offsetData);
+            commitOffsets(offsets);
             kafkaConsumer.unsubscribe();
         }
         synchronized (this) {
@@ -245,8 +243,8 @@ public class KafkaController {
             topicsChanged = false;
         }
         //commit any removed partitions before we unsubscribe them
-        Map<TopicPartition, OffsetAndMetadata> offsetData = acknowledgmentHandler.removePartitions(removed);
-        commitOffsets(offsetData);
+        Map<TopicPartition, OffsetAndMetadata> offsets = acknowledgmentHandler.removePartitions(removed);
+        commitOffsets(offsets);
     }
 
     private ConsumerRecords<?, ?> flowControlledPoll() throws InterruptedException {
@@ -313,12 +311,12 @@ public class KafkaController {
         @Override public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
             log.debug("controlLoop partitions revoked");
             try {
-                Map<TopicPartition, OffsetAndMetadata> removedOffsetData = acknowledgmentHandler.removePartitions(partitions);
+                Map<TopicPartition, OffsetAndMetadata> removedOffsets = acknowledgmentHandler.removePartitions(partitions);
                 for (TopicPartition partition : partitions) {
                     flowControl.remove(partition);
                 }
 
-                kafkaConsumer.commitSync(removedOffsetData);
+                kafkaConsumer.commitSync(removedOffsets);
             } catch (InterruptedException e) {
                 log.debug("controlLoop partition rebalance interrupted", e);
                 Thread.currentThread().interrupt();
