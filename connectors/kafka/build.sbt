@@ -4,10 +4,7 @@ name := "forklift-kafka"
 
 version := "1.0"
 
-scalaVersion := "2.11.7"
-
-// target and Xlint cause sbt dist to fail
-javacOptions ++= Seq("-source", "1.8")//, "-target", "1.8", "-Xlint")
+javacOptions ++= Seq("-source", "1.8")
 
 javacOptions in compile ++= Seq("-g:lines,vars,source")
 
@@ -87,11 +84,6 @@ pomExtra := (
       <connection>scm:git:git@github.com:dcshock/forklift-kafka.git</connection>
     </scm>
     <developers>
-      <developer>
-        <id>dcshock</id>
-        <name>Matt Conroy</name>
-        <url>http://www.mattconroy.com</url>
-      </developer>
       <developer>
         <id>afrieze</id>
         <name>Andrew Frieze</name>
