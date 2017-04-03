@@ -214,7 +214,7 @@ public class ActiveMQProducer implements ForkliftProducerI {
             setMessageProperties(msg, message.getProperties());
             return msg;
         } catch (Exception e) {
-            throw new ProducerException("Error creating JMS Message, or Forklift message was null", e);
+            throw new ProducerException("Error creating JMS Message", e);
         }
     }
 
