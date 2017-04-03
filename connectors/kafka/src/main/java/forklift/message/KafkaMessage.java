@@ -5,7 +5,6 @@ import forklift.connectors.ForkliftMessage;
 import forklift.consumer.parser.KeyValueParser;
 import forklift.controller.KafkaController;
 import forklift.producers.KafkaForkliftProducer;
-
 import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
@@ -16,7 +15,7 @@ public class KafkaMessage extends ForkliftMessage {
     public KafkaMessage(KafkaController controller, ConsumerRecord<?, ?> consumerRecord) {
         this.controller = controller;
         this.consumerRecord = consumerRecord;
-        parseRecord();
+        createMessage();
     }
 
     public ConsumerRecord<?, ?> getConsumerRecord() {
@@ -40,7 +39,18 @@ public class KafkaMessage extends ForkliftMessage {
     /**
      * <strong>WARNING:</strong> Called from constructor
      */
-    private final void parseRecord() {
+    private final void createMessage() {
+        String message = parseRecord();
+        if (message != null) {
+            setMsg(message);
+        }
+        else{
+            this.setFlagged(true);
+            this.setWarning("Unable to parse message for topic: " + consumerRecord.topic() + " with value: " + consumerRecord.value());
+        }
+    }
+
+    private final String parseRecord(){
         Object value = null;
         if (consumerRecord.value() instanceof GenericRecord) {
             GenericRecord genericRecord = (GenericRecord)consumerRecord.value();
@@ -55,14 +65,6 @@ public class KafkaMessage extends ForkliftMessage {
                 value = jsonValue != null && jsonValue.startsWith("{") ? jsonValue : null;
             }
         }
-        if (value == null) {
-            this.setFlagged(true);
-            this.setWarning("Unable to parse message for topic: " +
-                            consumerRecord.topic() +
-                            " with value: " +
-                            consumerRecord.value());
-        } else {
-            this.setMsg(value.toString());
-        }
+        return value == null?null:value.toString();
     }
 }
