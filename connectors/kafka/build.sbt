@@ -52,7 +52,7 @@ libraryDependencies ++= testDependencies.map(_ % "test")
 parallelExecution in Test := false
 
 // avro settings
-(javaSource in avroConfig) := baseDirectory(_/"src/test/java").value
+(javaSource in avroConfig) := baseDirectory(_/"target/generated-sources").value
 (sourceDirectory in avroConfig) := baseDirectory(_/"src/test/resources/schemas").value
 
 // Remove scala dependency for pure Java libraries
