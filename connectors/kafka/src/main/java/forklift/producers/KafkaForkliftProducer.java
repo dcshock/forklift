@@ -30,6 +30,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -175,12 +176,13 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
     private String sendForkliftWrappedMessage(String message, Map<String, String> messageProperties) throws ProducerException {
         GenericRecord avroRecord = new GenericData.Record(forkliftSchema);
         avroRecord.put(SCHEMA_FIELD_NAME_VALUE, message);
-        messageProperties = messageProperties == null ? new HashMap<>() : new HashMap<>(messageProperties);
-        //add the producer level properties but do not overwrite message level properties
-        for (Map.Entry<String, String> entry : this.properties.entrySet()) {
-            messageProperties.putIfAbsent(entry.getKey(), entry.getValue());
+        //message level properties take precedence over producer level properties
+        Map<String, String> appliedProperties = new HashMap<>(properties);
+        if (messageProperties == null) {
+            messageProperties = Collections.emptyMap();
         }
-        avroRecord.put(SCHEMA_FIELD_NAME_PROPERTIES, this.formatMap(messageProperties));
+        appliedProperties.putAll(messageProperties);
+        avroRecord.put(SCHEMA_FIELD_NAME_PROPERTIES, this.formatMap(appliedProperties));
         ProducerRecord record = new ProducerRecord<>(topic, null, avroRecord);
         try {
             RecordMetadata result = (RecordMetadata)kafkaProducer.send(record).get();
