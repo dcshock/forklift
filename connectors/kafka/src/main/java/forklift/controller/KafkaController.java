@@ -308,7 +308,8 @@ public class KafkaController {
     }
 
     private class RebalanceListener implements ConsumerRebalanceListener {
-        @Override public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
+        @Override
+        public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
             log.debug("controlLoop partitions revoked");
             try {
                 Map<TopicPartition, OffsetAndMetadata> removedOffsets = acknowledgmentHandler.removePartitions(partitions);
