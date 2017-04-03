@@ -1,7 +1,5 @@
 package forklift.integration;
 
-import com.github.dcshock.avro.schemas.StateCode;
-import com.github.dcshock.avro.schemas.UserRegistered;
 import forklift.Forklift;
 import forklift.connectors.ConnectorException;
 import forklift.connectors.ForkliftMessage;
@@ -12,11 +10,15 @@ import forklift.exception.StartupException;
 import forklift.integration.server.TestServiceManager;
 import forklift.producers.ForkliftProducerI;
 import forklift.producers.ProducerException;
+import forklift.schemas.StateCode;
+import forklift.schemas.UserRegistered;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.util.HashMap;
 import java.util.Map;
 

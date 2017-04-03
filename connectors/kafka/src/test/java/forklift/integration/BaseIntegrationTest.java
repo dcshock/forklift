@@ -1,7 +1,7 @@
 package forklift.integration;
 
 import static org.junit.Assert.assertTrue;
-import com.github.dcshock.avro.schemas.AvroMessage;
+
 import forklift.connectors.ForkliftMessage;
 import forklift.decorators.MultiThreaded;
 import forklift.decorators.OnMessage;
@@ -9,10 +9,13 @@ import forklift.decorators.Producer;
 import forklift.decorators.Queue;
 import forklift.integration.server.TestServiceManager;
 import forklift.producers.ForkliftProducerI;
+import forklift.schemas.AvroMessage;
+
 import org.junit.After;
 import org.junit.Before;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
