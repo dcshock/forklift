@@ -20,7 +20,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public class AcknowledgedRecordHandler {
     private static final Logger log = LoggerFactory.getLogger(AcknowledgedRecordHandler.class);
-    private ConcurrentHashMap<TopicPartition, OffsetAndMetadata> pendingOffsets = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<TopicPartition, OffsetAndMetadata> offsets = new ConcurrentHashMap<>();
     private Set<TopicPartition> assignment = ConcurrentHashMap.newKeySet();
     private ReadWriteLock lock = new ReentrantReadWriteLock();
 
@@ -43,7 +43,7 @@ public class AcknowledgedRecordHandler {
 
             long commitOffset = record.offset() + 1;
             OffsetAndMetadata offsetAndMetadata = new OffsetAndMetadata(commitOffset, "Commit From Forklift Server");
-            pendingOffsets.merge(topicPartition, offsetAndMetadata, this::greaterOffset);
+            offsets.merge(topicPartition, offsetAndMetadata, this::greaterOffset);
             return true;
         } finally {
             lock.readLock().unlock();
@@ -70,8 +70,8 @@ public class AcknowledgedRecordHandler {
     public Map<TopicPartition, OffsetAndMetadata> getAcknowledged() throws InterruptedException {
         lock.writeLock().lock();
         try {
-            Map<TopicPartition, OffsetAndMetadata> currentOffsets = new HashMap<>(pendingOffsets.size());
-            currentOffsets.putAll(pendingOffsets);
+            Map<TopicPartition, OffsetAndMetadata> currentOffsets = new HashMap<>(offsets.size());
+            currentOffsets.putAll(offsets);
             return currentOffsets;
         } finally {
             lock.writeLock().unlock();
@@ -104,8 +104,8 @@ public class AcknowledgedRecordHandler {
         try {
             Map<TopicPartition, OffsetAndMetadata> removedOffsets = new HashMap<>();
             for (TopicPartition topicPartition : removedPartitions) {
-                if (pendingOffsets.containsKey(topicPartition)) {
-                    removedOffsets.put(topicPartition, pendingOffsets.remove(topicPartition));
+                if (offsets.containsKey(topicPartition)) {
+                    removedOffsets.put(topicPartition, offsets.remove(topicPartition));
                 }
             }
             assignment.removeAll(removedPartitions);
