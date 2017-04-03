@@ -12,18 +12,18 @@ initialize := {
     sys.error("Java 8 is required for this project.")
 }
 
-libraryDependencies ++= Seq(
-  "com.github.dcshock" % "forklift" % "1.0",
-  "com.fasterxml.jackson.core" % "jackson-databind" % "2.7.3",
-  "com.fasterxml.jackson.datatype" % "jackson-datatype-jsr310" % "2.7.3",
-  "io.searchbox" % "jest" % "2.0.0"
-)
-
 resolvers ++= Seq(
     "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
     "Maven Central" at "http://repo1.maven.org/maven2",
     "Fuse Snapshots" at "http://repo.fusesource.com/nexus/content/repositories/snapshots",
     "Fuse" at "http://repo.fusesource.com/nexus/content/groups/public"
+)
+
+libraryDependencies ++= Seq(
+  "com.github.dcshock" % "forklift" % "1.0",
+  "com.fasterxml.jackson.core" % "jackson-databind" % "2.7.3",
+  "com.fasterxml.jackson.datatype" % "jackson-datatype-jsr310" % "2.7.3",
+  "io.searchbox" % "jest" % "2.0.0"
 )
 
 // Remove scala dependency for pure Java libraries
@@ -64,5 +64,3 @@ pomExtra := (
       <url>http://www.mattconroy.com</url>
     </developer>
   </developers>)
-
-//useGpg := true

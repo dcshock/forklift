@@ -12,15 +12,15 @@ initialize := {
     sys.error("Java 8 is required for this project.")
 }
 
-libraryDependencies ++= Seq(
-  "com.github.dcshock" % "forklift" % "1.0"
-)
-
 resolvers ++= Seq(
     "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
     "Maven Central" at "http://repo1.maven.org/maven2",
     "Fuse Snapshots" at "http://repo.fusesource.com/nexus/content/repositories/snapshots",
     "Fuse" at "http://repo.fusesource.com/nexus/content/groups/public"
+)
+
+libraryDependencies ++= Seq(
+  "com.github.dcshock" % "forklift" % "1.0"
 )
 
 // Remove scala dependency for pure Java libraries
@@ -61,5 +61,3 @@ pomExtra := (
       <url>http://www.mattconroy.com</url>
     </developer>
   </developers>)
-
-//useGpg := true
