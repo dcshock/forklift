@@ -5,7 +5,6 @@ import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -58,20 +57,12 @@ public class AcknowledgedRecordHandler {
 
     /**
      * Returns the highest offsets of any acknowledged records.
-     * This is a blocking method as a short delay may occur while any threads which are currently acknowledging records are allowed to
-     * complete and any incoming threads are paused.
      *
      * @return a Map of the highest offset data for any acknowledged records
-     * @throws InterruptedException if interrupted
      */
-    public Map<TopicPartition, OffsetAndMetadata> getAcknowledged() throws InterruptedException {
-        lock.writeLock().lock();
-        try {
-            Map<TopicPartition, OffsetAndMetadata> currentOffsets = new HashMap<>(offsets);
-            return currentOffsets;
-        } finally {
-            lock.writeLock().unlock();
-        }
+    public Map<TopicPartition, OffsetAndMetadata> getAcknowledged() {
+        Map<TopicPartition, OffsetAndMetadata> currentOffsets = new HashMap<>(offsets);
+        return currentOffsets;
     }
 
     /**
