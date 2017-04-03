@@ -51,11 +51,6 @@ public class AcknowledgedRecordHandler {
     }
 
     private OffsetAndMetadata greaterOffset(OffsetAndMetadata a, OffsetAndMetadata b) {
-        if (a == null) {
-            return b;
-        } else if (b == null) {
-            return a;
-        }
         return a.offset() > b.offset() ? a : b;
     }
 
