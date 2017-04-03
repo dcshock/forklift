@@ -12,10 +12,10 @@ Kafka only provides one form of topic which is analogous to ActiveMQ's Virtual T
 each subscribed group will receive a message.  Requests for a queue or topic will return the 
 same producer type.
 
-### At Most Once Delivery ###
-The kafka connector does not guarantee at most once delivery although it makes a best effort. 
+### At Least Once Delivery ###
 In order to adapt to the JMS spec, messages are acknowledged and added to a pending commit batch, 
 which are committed to kafka every poll cycle.  It is therefore possible for the server to crash 
-before the acknowledgment batch has been committed, and after the message has processed.
+before the acknowledgment batch has been committed, and after the message has processed.  In this case
+the message could be sent to another consumer and processed twice.
 
 

@@ -5,7 +5,6 @@ import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,8 +19,10 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public class AcknowledgedRecordHandler {
     private static final Logger log = LoggerFactory.getLogger(AcknowledgedRecordHandler.class);
-    private ConcurrentHashMap<TopicPartition, OffsetAndMetadata> pendingOffsets = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<TopicPartition, OffsetAndMetadata> offsets = new ConcurrentHashMap<>();
     private Set<TopicPartition> assignment = ConcurrentHashMap.newKeySet();
+    //A ReentrantReadWriteLock is used here to allow for multiple threads to access the acknowledgeRecord method
+    //concurrently with the read lock, but then pause all entry with the write lock
     private ReadWriteLock lock = new ReentrantReadWriteLock();
 
     /**
@@ -43,7 +44,7 @@ public class AcknowledgedRecordHandler {
 
             long commitOffset = record.offset() + 1;
             OffsetAndMetadata offsetAndMetadata = new OffsetAndMetadata(commitOffset, "Commit From Forklift Server");
-            pendingOffsets.merge(topicPartition, offsetAndMetadata, this::greaterOffset);
+            offsets.merge(topicPartition, offsetAndMetadata, this::greaterOffset);
             return true;
         } finally {
             lock.readLock().unlock();
@@ -51,31 +52,17 @@ public class AcknowledgedRecordHandler {
     }
 
     private OffsetAndMetadata greaterOffset(OffsetAndMetadata a, OffsetAndMetadata b) {
-        if (a == null) {
-            return b;
-        } else if (b == null) {
-            return a;
-        }
         return a.offset() > b.offset() ? a : b;
     }
 
     /**
      * Returns the highest offsets of any acknowledged records.
-     * This is a blocking method as a short delay may occur while any threads which are currently acknowledging records are allowed to
-     * complete and any incoming threads are paused.
      *
      * @return a Map of the highest offset data for any acknowledged records
-     * @throws InterruptedException if interrupted
      */
-    public Map<TopicPartition, OffsetAndMetadata> getAcknowledged() throws InterruptedException {
-        lock.writeLock().lock();
-        try {
-            Map<TopicPartition, OffsetAndMetadata> currentOffsets = new HashMap<>(pendingOffsets.size());
-            currentOffsets.putAll(pendingOffsets);
-            return currentOffsets;
-        } finally {
-            lock.writeLock().unlock();
-        }
+    public Map<TopicPartition, OffsetAndMetadata> getAcknowledged() {
+        Map<TopicPartition, OffsetAndMetadata> currentOffsets = new HashMap<>(offsets);
+        return currentOffsets;
     }
 
     /**
@@ -104,8 +91,8 @@ public class AcknowledgedRecordHandler {
         try {
             Map<TopicPartition, OffsetAndMetadata> removedOffsets = new HashMap<>();
             for (TopicPartition topicPartition : removedPartitions) {
-                if (pendingOffsets.containsKey(topicPartition)) {
-                    removedOffsets.put(topicPartition, pendingOffsets.remove(topicPartition));
+                if (offsets.containsKey(topicPartition)) {
+                    removedOffsets.put(topicPartition, offsets.remove(topicPartition));
                 }
             }
             assignment.removeAll(removedPartitions);
