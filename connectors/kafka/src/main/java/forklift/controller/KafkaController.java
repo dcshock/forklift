@@ -187,33 +187,20 @@ public class KafkaController {
         } finally {
             running = false;
             try {
-                Map<TopicPartition, OffsetAndMetadata>
-                                offsetData =
-                                acknowledgmentHandler.removePartitions(kafkaConsumer.assignment());
+                Map<TopicPartition, OffsetAndMetadata> finalOffsets = new HashMap<>();
+                if(failedOffset != null){
+                    finalOffsets.putAll(failedOffset);
+                }
+                finalOffsets.putAll(acknowledgmentHandler.removePartitions(kafkaConsumer.assignment()));
                 try {
-                    if (failedOffset != null) {
-                        log.debug("failedOffset of size: " + failedOffset.size());
-                        for (Map.Entry<TopicPartition, OffsetAndMetadata> entry : failedOffset.entrySet()) {
-                            offsetData.merge(entry.getKey(), entry.getValue(), (oldO, newO) -> {
-                                if (oldO == null) {
-                                    return newO;
-                                }
-                                if (newO == null) {
-                                    return oldO;
-                                }
-                                return newO.offset() > oldO.offset() ? newO : oldO;
-                            });
-                        }
-                    }
-
-                    log.info("closing offset size committed: " + offsetData.size());
+                    log.info("closing offset size committed: " + finalOffsets.size());
                     try {
                         //if we got here through running = false or interrupt instead of a wakeup, we need
                         //to retry our commit as the first attempt will throw a WakeupException
-                        kafkaConsumer.commitSync(offsetData);
+                        kafkaConsumer.commitSync(finalOffsets);
                     } catch (WakeupException expected) {
                         log.info("controlLoop wakeup on closing commitSync, retrying");
-                        kafkaConsumer.commitSync(offsetData);
+                        kafkaConsumer.commitSync(finalOffsets);
                     }
                 } catch (Throwable e) {
                     log.error("controlLoop error commiting sync", e);
