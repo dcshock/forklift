@@ -207,7 +207,7 @@ public class ActiveMQProducer implements ForkliftProducerI {
             final Message msg = session.createTextMessage(message.getMsg());
 
             // Set the jms correlation id.
-            if (message.getId() != null && !message.getId().trim().equals(""))
+            if (message.getId() != null && !message.getId().trim().isEmpty())
                 msg.setJMSCorrelationID(message.getId());
 
             setMessageHeaders(msg, message.getHeaders());
@@ -222,9 +222,9 @@ public class ActiveMQProducer implements ForkliftProducerI {
         if (msg != null && headers != null) {
             headers.entrySet().stream().filter(entry -> entry.getValue() != null)
                 .forEach(entry -> {
-                if(ActiveMQHeaders.getFunctions().get(entry.getKey()).get((ActiveMQMessage)msg) == null) {
-                    ActiveMQHeaders.getFunctions().get(entry.getKey()).set((ActiveMQMessage)msg,entry.getValue());
-                }
+                    if (ActiveMQHeaders.getFunctions().get(entry.getKey()).get((ActiveMQMessage)msg) == null) {
+                        ActiveMQHeaders.getFunctions().get(entry.getKey()).set((ActiveMQMessage)msg,entry.getValue());
+                    }
             });
         }
     }
@@ -232,14 +232,15 @@ public class ActiveMQProducer implements ForkliftProducerI {
     private void setMessageProperties(Message msg, Map<String, String> properties) throws ProducerException {
         if (msg != null && properties != null) {
             final Map<String, String> props = new HashMap<>();
-            if (properties != null)
-                props.putAll(properties);
             if (this.properties != null)
                 props.putAll(this.properties);
+            if (properties != null)
+                props.putAll(properties);
+
             props.entrySet().stream().filter(entry -> entry.getValue() != null)
                 .forEach(property -> {
                     try {
-                        if(msg.getObjectProperty(property.getKey()) == null) {
+                        if (msg.getObjectProperty(property.getKey()) == null) {
                             msg.setObjectProperty(property.getKey(), property.getValue());
                         }
                     } catch (Exception e) {

@@ -30,10 +30,19 @@ public class MessageStream implements ReadableMessageStream {
     public void addRecords(Map<TopicPartition, List<KafkaMessage>> records) {
         log.debug("Adding records to stream");
         for (Map.Entry<TopicPartition, List<KafkaMessage>> entry : records.entrySet()) {
-            for (KafkaMessage message : entry.getValue()) {
-                BlockingQueue<KafkaMessage> queue = topicQueue.get(entry.getKey().topic());
-                if (queue != null) {
+            final String topic = entry.getKey().topic();
+            final BlockingQueue<KafkaMessage> queue = topicQueue.get(topic);
+
+            if (queue != null) {
+                for (KafkaMessage message : entry.getValue()) {
                     queue.add(message);
+                }
+            } else {
+                // shouldn't let this happen, but if it does we want to be verbose
+                log.error("Tried to add records to non-existant topic '{}'; listing records...", topic);
+
+                for (KafkaMessage message : entry.getValue()) {
+                    log.error("Missed adding message on topic '{}': {}", topic, message.getMsg());
                 }
             }
         }
@@ -65,6 +74,8 @@ public class MessageStream implements ReadableMessageStream {
         BlockingQueue<KafkaMessage> queue = topicQueue.get(topic);
         if (queue != null) {
             message = queue.poll(timeout, TimeUnit.MILLISECONDS);
+        } else {
+            log.warn("Tried to take record from non-existant topic queue: {}", topic);
         }
         return message;
     }

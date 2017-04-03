@@ -52,14 +52,11 @@ public class RetryHandler {
         this.executor = Executors.newScheduledThreadPool(1);
 
         // Cleanup after a retry is completed.
-        cleanup = new Consumer<RetryMessage>() {
-            @Override
-            public void accept(RetryMessage msg) {
-                log.info("Cleaning up persistent file {}", msg.getPersistedPath());
-                final File f = new File(msg.getPersistedPath());
-                if (f.exists())
-                    f.delete();
-            }
+        cleanup = (msg) -> {
+            log.info("Cleaning up persistent file {}", msg.getPersistedPath());
+            final File f = new File(msg.getPersistedPath());
+            if (f.exists())
+                f.delete();
         };
 
         // Load up any existing messages.

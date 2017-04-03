@@ -147,10 +147,13 @@ public class KafkaController {
      * @throws InterruptedException if the thread is interrupted
      */
     public void stop(long timeout, TimeUnit timeUnit) throws InterruptedException {
-        executor.shutdownNow();
         kafkaConsumer.wakeup();
+        executor.shutdownNow();
+
         running = false;
-        executor.awaitTermination(timeout, timeUnit);
+        if (!executor.awaitTermination(timeout, timeUnit)) {
+            log.error("Failed to stop KafkaController in {} {}", timeout, timeUnit);
+        }
     }
 
     private void controlLoop() {

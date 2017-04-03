@@ -25,7 +25,7 @@ public class AcknowledgedRecordHandler {
     private ReadWriteLock lock = new ReentrantReadWriteLock();
 
     /**
-     * Acknowledges that a record has been received before processing begins.  True is returned if processing should occur else false.
+     * Acknowledges that a record has been received before processing begins.
      * Only records belonging to {@link #addPartitions(java.util.Collection) added partitions} may be processed. Note that this is a
      * blocking method and a short delay may occur should the available topic paritions be changing.
      *
@@ -36,17 +36,15 @@ public class AcknowledgedRecordHandler {
     public boolean acknowledgeRecord(ConsumerRecord<?, ?> record) throws InterruptedException {
         lock.readLock().lock();
         try {
-            boolean acknowledged;
             TopicPartition topicPartition = new TopicPartition(record.topic(), record.partition());
             if (!assignment.contains(topicPartition)) {
-                acknowledged = false;
-            } else {
-                long commitOffset = record.offset() + 1;
-                OffsetAndMetadata offsetAndMetadata = new OffsetAndMetadata(commitOffset, "Commit From Forklift Server");
-                pendingOffsets.merge(topicPartition, offsetAndMetadata, this::greaterOffset);
-                acknowledged = true;
+                return false;
             }
-            return acknowledged;
+
+            long commitOffset = record.offset() + 1;
+            OffsetAndMetadata offsetAndMetadata = new OffsetAndMetadata(commitOffset, "Commit From Forklift Server");
+            pendingOffsets.merge(topicPartition, offsetAndMetadata, this::greaterOffset);
+            return true;
         } finally {
             lock.readLock().unlock();
         }
