@@ -87,8 +87,8 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
     private static final ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule())
                                                                  .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
+    private static final Map<Class<?>, Schema> avroSchemaCache = new ConcurrentHashMap<>();
     private Schema forkliftSchema = null;
-    private Map<Class<?>, Schema> avroSchemaCache = new ConcurrentHashMap<>();
     private Map<String, String> properties = new HashMap<>();
 
     public KafkaForkliftProducer(String topic, KafkaProducer<?, ?> kafkaProducer) {
