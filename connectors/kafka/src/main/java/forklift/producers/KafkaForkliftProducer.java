@@ -46,7 +46,7 @@ import java.util.stream.Collectors;
  *  "doc":"Properties added to support forklift interfaces. Format is key,value entries delimited with new lines"}
  * </pre>
  * <p>
- * The value of the forkliftProperties will be key,value entries delimited with a newline
+ * The value of the forkliftProperties will be key=value entries delimited with a newline
  * <p>
  * <strong>Example: </strong>
  * <pre>
@@ -67,7 +67,7 @@ import java.util.stream.Collectors;
  *              {"name":"forkliftProperties",
  *               "type":"string",
  *               "default":"",
- *               "doc":"Properties added to support forklift interfaces. Format is key,value entries delimited with new lines"}]}
+ *               "doc":"Properties added to support forklift interfaces. Format is key=value entries delimited with new lines"}]}
  * </pre>
  * <p>
  * Headers are not supported and calls to the {@link #send(java.util.Map, java.util.Map, forklift.connectors.ForkliftMessage)}
