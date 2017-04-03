@@ -22,6 +22,8 @@ public class AcknowledgedRecordHandler {
     private static final Logger log = LoggerFactory.getLogger(AcknowledgedRecordHandler.class);
     private ConcurrentHashMap<TopicPartition, OffsetAndMetadata> offsets = new ConcurrentHashMap<>();
     private Set<TopicPartition> assignment = ConcurrentHashMap.newKeySet();
+    //A ReentrantReadWriteLock is used here to allow for multiple threads to access the acknowledgeRecord method
+    //concurrently with the read lock, but then pause all entry with the write lock
     private ReadWriteLock lock = new ReentrantReadWriteLock();
 
     /**
@@ -65,8 +67,7 @@ public class AcknowledgedRecordHandler {
     public Map<TopicPartition, OffsetAndMetadata> getAcknowledged() throws InterruptedException {
         lock.writeLock().lock();
         try {
-            Map<TopicPartition, OffsetAndMetadata> currentOffsets = new HashMap<>(offsets.size());
-            currentOffsets.putAll(offsets);
+            Map<TopicPartition, OffsetAndMetadata> currentOffsets = new HashMap<>(offsets);
             return currentOffsets;
         } finally {
             lock.writeLock().unlock();
