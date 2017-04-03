@@ -4,25 +4,17 @@ name := "forklift"
 
 version := "1.0"
 
-// target and Xlint cause sbt dist to fail
-javacOptions ++= Seq("-source", "1.8")//, "-target", "1.8", "-Xlint")
+javacOptions ++= Seq("-source", "1.8")
+
+javacOptions in compile ++= Seq("-g:lines,vars,source", "-deprecation")
+
+javacOptions in doc += "-Xdoclint:none"
 
 initialize := {
   val _ = initialize.value
   if (sys.props("java.specification.version") != "1.8")
     sys.error("Java 8 is required for this project.")
 }
-
-libraryDependencies ++= Seq(
-    "com.google.guava" % "guava" % "18.0",
-    "com.fasterxml.jackson.core" % "jackson-databind" % "2.7.3",
-    "com.fasterxml.jackson.datatype" % "jackson-datatype-jsr310" % "2.7.3",
-    "ch.qos.logback" % "logback-classic" % "1.0.13",
-    "org.reflections" % "reflections" % "0.9.10",
-    "javax.inject" % "javax.inject" % "1",
-    "com.novocode" % "junit-interface" % "0.11" % "test",
-    "org.mockito" % "mockito-all" % "1.9.5" % "test"
-)
 
 resolvers ++= Seq(
     "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
@@ -31,21 +23,21 @@ resolvers ++= Seq(
     "Fuse" at "http://repo.fusesource.com/nexus/content/groups/public"
 )
 
-val genClasspath = taskKey[String]("Generate classpath.txt for use with VS Code.")
+libraryDependencies ++= Seq(
+    "com.google.guava" % "guava" % "18.0",
+    "com.fasterxml.jackson.core" % "jackson-databind" % "2.7.3",
+    "com.fasterxml.jackson.datatype" % "jackson-datatype-jsr310" % "2.7.3",
+    "ch.qos.logback" % "logback-classic" % "1.0.13",
+    "org.reflections" % "reflections" % "0.9.10",
+    "javax.inject" % "javax.inject" % "1"
+)
 
-genClasspath := {
-  val log = streams.value.log
-  val cp: Seq[File] = (dependencyClasspath in Compile).value.files
+lazy val testDependencies = Seq(
+    "com.novocode" % "junit-interface" % "0.11",
+    "org.mockito" % "mockito-all" % "1.9.5"
+)
 
-  val file = baseDirectory.value / "classpath.txt"
-  log.info("Writing classpath details to: " + file.getAbsolutePath)
-  IO.write(file, cp.map(_.getAbsolutePath).mkString(java.io.File.pathSeparator))
-  file.getAbsolutePath
-}
-
-// Generate classpath.txt every time you compile or run the project
-compile in Compile <<= (compile in Compile).dependsOn(genClasspath)
-run in Compile <<= (run in Compile).dependsOn(genClasspath)
+libraryDependencies ++= testDependencies.map(_ % "test")
 
 // Remove scala dependency for pure Java libraries
 autoScalaLibrary := false
@@ -84,10 +76,14 @@ pomExtra := (
       <name>Matt Conroy</name>
       <url>http://www.mattconroy.com</url>
     </developer>
+    <developer>
+      <id>afrieze</id>
+      <name>Andrew Frieze</name>
+    </developer>
+    <developer>
+      <id>kuroshii</id>
+      <name>Bridger Howell</name>
+    </developer>
   </developers>)
-
-javacOptions in compile ++= Seq("-g:lines,vars,source", "-deprecation")
-
-javacOptions in doc += "-Xdoclint:none"
 
 useGpg := true
