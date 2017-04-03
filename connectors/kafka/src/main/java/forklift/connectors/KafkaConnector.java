@@ -22,9 +22,11 @@ import java.util.concurrent.TimeUnit;
  */
 public class KafkaConnector implements ForkliftConnectorI {
     private static final Logger log = LoggerFactory.getLogger(KafkaConnector.class);
+
     private final String kafkaHosts;
     private final String schemaRegistries;
     private final String groupId;
+
     private KafkaProducer<?, ?> kafkaProducer;
     private MessageStream messageStream = new MessageStream();
     private KafkaController controller;
@@ -79,43 +81,43 @@ public class KafkaConnector implements ForkliftConnectorI {
     public synchronized void stop() throws ConnectorException {
         try {
             if (controller != null) {
-                this.controller.stop(2000, TimeUnit.MILLISECONDS);
-                this.controller = null;
+                controller.stop(2000, TimeUnit.MILLISECONDS);
+                controller = null;
             }
         } catch (InterruptedException e) {
             log.error("KafkaConnector interrupted while stopping");
         }
         if (kafkaProducer != null) {
-            this.kafkaProducer.close();
-            this.kafkaProducer = null;
+            kafkaProducer.close();
+            kafkaProducer = null;
         }
     }
 
     @Override
     public ForkliftConsumerI getQueue(String name) throws ConnectorException {
-        return this.getTopic(name);
+        return getTopic(name);
     }
 
     @Override
     public synchronized ForkliftConsumerI getTopic(String name) throws ConnectorException {
-        if (this.controller == null || !this.controller.isRunning()) {
-            this.controller = createController();
-            this.controller.start();
+        if (controller == null || !controller.isRunning()) {
+            controller = createController();
+            controller.start();
         }
         return new KafkaTopicConsumer(name, controller);
     }
 
     @Override
     public ForkliftProducerI getQueueProducer(String name) {
-        return this.getTopicProducer(name);
+        return getTopicProducer(name);
     }
 
     @Override
     public synchronized ForkliftProducerI getTopicProducer(String name) {
-        if (this.kafkaProducer == null) {
-            this.kafkaProducer = createKafkaProducer();
+        if (kafkaProducer == null) {
+            kafkaProducer = createKafkaProducer();
         }
-        return new KafkaForkliftProducer(name, this.kafkaProducer);
+        return new KafkaForkliftProducer(name, kafkaProducer);
     }
 
     @Override

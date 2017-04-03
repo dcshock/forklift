@@ -19,38 +19,38 @@ import javax.jms.MessageConsumer;
 import javax.jms.Session;
 
 public class ActiveMQMessageConsumer implements ForkliftConsumerI {
-	private MessageConsumer consumer;
-	private Session s;
+    private MessageConsumer consumer;
+    private Session s;
 
-	public ActiveMQMessageConsumer(MessageConsumer consumer, Session s) {
-		this.consumer = consumer;
-		this.s = s;
-	}
+    public ActiveMQMessageConsumer(MessageConsumer consumer, Session s) {
+        this.consumer = consumer;
+        this.s = s;
+    }
 
-	public ForkliftMessage receive(long timeout) throws ConnectorException {
-		try {
-			return jmsToForklift(consumer.receive(timeout));
-		} catch (JMSException e) {
-			throw new ConnectorException(e.getMessage());
-		}
-	}
+    public ForkliftMessage receive(long timeout) throws ConnectorException {
+        try {
+            return jmsToForklift(consumer.receive(timeout));
+        } catch (JMSException e) {
+            throw new ConnectorException(e.getMessage());
+        }
+    }
 
-	public void close() throws ConnectorException {
-		try {
-			if (consumer != null)
-				consumer.close();
+    public void close() throws ConnectorException {
+        try {
+            if (consumer != null)
+                consumer.close();
 
-			if (s != null)
-				s.close();
-		} catch (JMSException e) {
-			throw new ConnectorException(e.getMessage());
-		}
-	}
+            if (s != null)
+                s.close();
+        } catch (JMSException e) {
+            throw new ConnectorException(e.getMessage());
+        }
+    }
 
-	private ForkliftMessage jmsToForklift(Message m) {
+    private ForkliftMessage jmsToForklift(Message m) {
         if (m == null) 
             return null;
-            
+
         try {
             final ForkliftMessage msg = new ForkliftMessage();
             msg.setId(m.getJMSCorrelationID());

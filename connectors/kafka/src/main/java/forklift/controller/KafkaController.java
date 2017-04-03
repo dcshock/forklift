@@ -44,7 +44,7 @@ public class KafkaController {
     private final KafkaConsumer<?, ?> kafkaConsumer;
     private final MessageStream messageStream;
     private volatile boolean topicsChanged = false;
-    private AcknowledgedRecordHandler acknowlegmentHandler = new AcknowledgedRecordHandler();
+    private AcknowledgedRecordHandler acknowledgmentHandler = new AcknowledgedRecordHandler();
     private Map<TopicPartition, OffsetAndMetadata> failedOffset = null;
     private Map<TopicPartition, AtomicInteger> flowControl = new ConcurrentHashMap<>();
 
@@ -125,7 +125,7 @@ public class KafkaController {
             }
         }
         log.debug("Acknowledge message with topic {} partition {} offset {}", record.topic(), record.partition(), record.offset());
-        return running && this.acknowlegmentHandler.acknowledgeRecord(record);
+        return running && acknowledgmentHandler.acknowledgeRecord(record);
     }
 
     /**
@@ -171,7 +171,7 @@ public class KafkaController {
                     updateAssignment();
                 }
                 addRecordsToStream(records);
-                Map<TopicPartition, OffsetAndMetadata> offsetData = this.acknowlegmentHandler.getAcknowledged();
+                Map<TopicPartition, OffsetAndMetadata> offsetData = acknowledgmentHandler.getAcknowledged();
                 commitOffsets(offsetData);
             }
         } catch (WakeupException e) {
@@ -186,7 +186,7 @@ public class KafkaController {
             try {
                 Map<TopicPartition, OffsetAndMetadata>
                                 offsetData =
-                                this.acknowlegmentHandler.removePartitions(kafkaConsumer.assignment());
+                                acknowledgmentHandler.removePartitions(kafkaConsumer.assignment());
                 try {
                     if (failedOffset != null) {
                         log.debug("failedOffset of size: " + failedOffset.size());
@@ -229,7 +229,7 @@ public class KafkaController {
         if (kafkaConsumer.assignment().size() > 0) {
             Map<TopicPartition, OffsetAndMetadata>
                             offsetData =
-                            this.acknowlegmentHandler.removePartitions(kafkaConsumer.assignment());
+                            acknowledgmentHandler.removePartitions(kafkaConsumer.assignment());
             commitOffsets(offsetData);
             kafkaConsumer.unsubscribe();
         }
@@ -255,7 +255,7 @@ public class KafkaController {
             topicsChanged = false;
         }
         //commit any removed partitions before we unsubscribe them
-        Map<TopicPartition, OffsetAndMetadata> offsetData = this.acknowlegmentHandler.removePartitions(removed);
+        Map<TopicPartition, OffsetAndMetadata> offsetData = acknowledgmentHandler.removePartitions(removed);
         commitOffsets(offsetData);
     }
 
@@ -284,7 +284,7 @@ public class KafkaController {
     }
 
     private void updateAssignment() {
-        this.acknowlegmentHandler.addPartitions(kafkaConsumer.assignment());
+        acknowledgmentHandler.addPartitions(kafkaConsumer.assignment());
         for (TopicPartition partition : kafkaConsumer.assignment()) {
             this.flowControl.merge(partition, new AtomicInteger(),
                                    (oldValue, newValue) -> oldValue == null ? newValue : oldValue);
@@ -325,7 +325,7 @@ public class KafkaController {
             try {
                 Map<TopicPartition, OffsetAndMetadata>
                                 removedOffsetData =
-                                acknowlegmentHandler.removePartitions(partitions);
+                                acknowledgmentHandler.removePartitions(partitions);
                 for (TopicPartition partition : partitions) {
                     flowControl.remove(partition);
                 }
@@ -340,7 +340,7 @@ public class KafkaController {
         @Override
         public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
             log.debug("controlLoop partitions assigned");
-            acknowlegmentHandler.addPartitions(partitions);
+            acknowledgmentHandler.addPartitions(partitions);
             for (TopicPartition partition : partitions) {
                 flowControl.merge(partition, new AtomicInteger(),
                                   (oldValue, newValue) -> oldValue == null ? newValue : oldValue);

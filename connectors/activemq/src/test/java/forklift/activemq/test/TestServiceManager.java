@@ -33,7 +33,6 @@ public class TestServiceManager {
                 activemq.addConnector("tcp://127.0.0.1:61618");
                 activemq.setDataDirectoryFile(Files.createTempDir());
                 activemq.start();
-                System.out.println("HEY" + activemq.getDataDirectoryFile());
 
                 // Verify that we can get an activemq connection to the broker.
                 connector = new ActiveMQConnector(brokerUrl);
