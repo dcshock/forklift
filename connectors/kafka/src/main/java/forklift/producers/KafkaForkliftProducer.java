@@ -244,7 +244,7 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
                 Thread.currentThread().interrupt();
                 throw new ProducerException("Error sending Kafka Message", e);
             } catch (ExecutionException e) {
-                throw new ProducerException("Error creating Kafka Message", e);
+                throw new ProducerException("Error sending Kafka Message", e);
             }
         } catch (IOException e) {
             throw new ProducerException("Error creating Kafka Message", e);
