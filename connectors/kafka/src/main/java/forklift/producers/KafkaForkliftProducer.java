@@ -234,8 +234,14 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
 
     private String sendAvroMessage(SpecificRecord message) throws ProducerException {
         try {
-            GenericRecord avroRecord = addForkliftPropertiesToAvroObject(message);
-            ProducerRecord record = new ProducerRecord<String, GenericRecord>(topic, null, avroRecord);
+            ProducerRecord record = null;
+            if(this.properties.size() > 0){
+                GenericRecord avroRecord = addForkliftPropertiesToAvroObject(message);
+                record = new ProducerRecord<String, GenericRecord>(topic, null, avroRecord);
+            }
+            else{
+                record = new ProducerRecord<String, SpecificRecord>(topic, null, message);
+            }
             try {
                 RecordMetadata result = (RecordMetadata)kafkaProducer.send(record).get();
                 return result.topic() + "-" + result.partition() + "-" + result.offset();
