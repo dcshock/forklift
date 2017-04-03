@@ -185,7 +185,6 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
         try {
             RecordMetadata result = (RecordMetadata)kafkaProducer.send(record).get();
             return result.topic() + "-" + result.partition() + "-" + result.offset();
-
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new ProducerException("Error sending Kafka Message", e);
