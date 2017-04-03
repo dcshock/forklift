@@ -5,6 +5,7 @@ import forklift.connectors.ForkliftMessage;
 import forklift.consumer.parser.KeyValueParser;
 import forklift.controller.KafkaController;
 import forklift.producers.KafkaForkliftProducer;
+
 import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
