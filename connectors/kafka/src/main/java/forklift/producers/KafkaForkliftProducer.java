@@ -50,8 +50,8 @@ import java.util.stream.Collectors;
  * <p>
  * <strong>Example: </strong>
  * <pre>
- *     key1,value1
- *     key2,value2
+ *     key1=value1
+ *     key2=value2
  * </pre>
  * <p>
  * Non-avro messages are sent with the following schema
@@ -63,7 +63,7 @@ import java.util.stream.Collectors;
  *               "type":"string",
  *               "default":"",
  *               "doc":"The forklift message.  3 formats are supported.  1: string value, 2: Json object,
- *                      3: Map represented by key,value entries delimited with newline"},
+ *                      3: Map represented by key=value entries delimited with newline"},
  *              {"name":"forkliftProperties",
  *               "type":"string",
  *               "default":"",
