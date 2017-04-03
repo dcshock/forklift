@@ -211,7 +211,7 @@ public class KafkaController {
                         //if we got here through running = false or interrupt instead of a wakeup, we need
                         //to retry our commit as the first attempt will throw a WakeupException
                         kafkaConsumer.commitSync(offsetData);
-                    } catch (WakeupException wakeup) {
+                    } catch (WakeupException expected) {
                         log.info("controlLoop wakeup on closing commitSync, retrying");
                         kafkaConsumer.commitSync(offsetData);
                     }
