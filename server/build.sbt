@@ -14,6 +14,13 @@ initialize := {
     sys.error("Java 8 is required for this project.")
 }
 
+resolvers ++= Seq(
+    "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
+    "Maven Central" at "http://repo1.maven.org/maven2",
+    "Fuse Snapshots" at "http://repo.fusesource.com/nexus/content/repositories/snapshots",
+    "Fuse" at "http://repo.fusesource.com/nexus/content/groups/public"
+)
+
 libraryDependencies ++= Seq(
   "com.github.dcshock" % "forklift"           % "1.0",
   "com.github.dcshock" % "forklift-activemq"  % "1.0",
@@ -33,13 +40,6 @@ libraryDependencies ++= Seq(
   "javax.inject" % "javax.inject" % "1",
   "com.novocode" % "junit-interface" % "0.11" % "test",
   "commons-io" % "commons-io" % "2.4" % "test"
-)
-
-resolvers ++= Seq(
-    "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
-    "Maven Central" at "http://repo1.maven.org/maven2",
-    "Fuse Snapshots" at "http://repo.fusesource.com/nexus/content/repositories/snapshots",
-    "Fuse" at "http://repo.fusesource.com/nexus/content/groups/public"
 )
 
 // Remove scala dependency for pure Java libraries

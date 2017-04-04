@@ -7,11 +7,6 @@ object ForkliftBuild extends Build {
         base = file("core")
     )
 
-    lazy val pluginNotify = Project(
-        id = "notify",
-        base = file("plugins/notify")
-    ).dependsOn(core)
-
     lazy val replay = Project(
         id = "replay",
         base = file("plugins/replay")

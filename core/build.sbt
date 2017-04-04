@@ -85,5 +85,3 @@ pomExtra := (
       <name>Bridger Howell</name>
     </developer>
   </developers>)
-
-useGpg := true
