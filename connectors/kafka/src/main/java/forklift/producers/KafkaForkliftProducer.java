@@ -101,7 +101,7 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
     private static Schema readSchemaFromClasspath(String path) {
         Schema.Parser parser = new Schema.Parser();
         try {
-            return parser.parse(new File(Thread.currentThread().getContextClassLoader().getResource(path).getFile()));
+            return parser.parse(Thread.currentThread().getContextClassLoader().getResourceAsStream(path));
         } catch (Exception e) {
             log.error("Couldn't parse forklift schema", e);
         }
