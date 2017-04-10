@@ -10,14 +10,14 @@ link:doc/forklift.adoc[Documentation]
 == Releases
 link:doc/prev_releases.adoc[Previous Releases]
 
-* *April 4th 2017* - v1.0 
+* *April 10th 2017* - v1.1
 ** Kafka Connector
 ** Core no longer depends on the JMS spec libraries
 
 == Current Release Dependencies
 === SBT
 ----
-libraryDependencies += "com.github.dcshock" % "forklift-server" % "1.0"
+libraryDependencies += "com.github.dcshock" % "forklift-server" % "1.1"
 ----
 
 === Maven
@@ -33,7 +33,7 @@ libraryDependencies += "com.github.dcshock" % "forklift-server" % "1.0"
 
 ==== Dockerfile
 ----
-FROM dcshock/forklift:1.0
+FROM dcshock/forklift:1.1
 
 # Add jar'd binks projects to the deployment directory
 ADD my.jar $FORKLIFT_CONSUMER_HOME/my.jar
