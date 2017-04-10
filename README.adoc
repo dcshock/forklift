@@ -29,6 +29,39 @@ libraryDependencies += "com.github.dcshock" % "forklift-server" % "1.0"
 </dependency>
 ----
 
+=== link:https://hub.docker.com/r/dcshock/forklift/[Docker]
+
+==== Dockerfile
+----
+FROM dcshock/forklift:1.0
+
+# Add jar'd binks projects to the deployment directory
+ADD my.jar $FORKLIFT_CONSUMER_HOME/my.jar
+
+# See boot.sh file below
+ADD boot.sh /opt/boot.sh
+CMD ["/opt/boot.sh"]
+----
+
+==== Docker boot.sh
+A boot script that will start forklift based on several environment variables.
+----
+#!/bin/sh
+# startup forklift
+
+forklift-server 
+ -consulHost $NODE_IP 
+ -url consul.activemq-broker 
+ -monitor1 /usr/local/forklift/consumers 
+ -monitor2 /config 
+ -retryESHost $FORKLIFT_ES_HOST 
+ -retryESPort $FORKLIFT_ES_PORT 
+ -replayESHost $FORKLIFT_ES_HOST 
+ -replayESPort $FORKLIFT_ES_TRANSPORT_PORT 
+ -replayESCluster $FORKLIFT_ES_CLUSTER 
+ $FORKLIFT_RETRIES
+----
+
 == Components
 Forklift is separated into individual libraries that make up the framework. forklift-server will bring
 in all the necessary dependencies and plugins to use Forklift with ActiveMQ.
