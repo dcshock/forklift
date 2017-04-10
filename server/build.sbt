@@ -23,7 +23,7 @@ resolvers ++= Seq(
 
 libraryDependencies ++= Seq(
   "com.github.dcshock" % "forklift"           % "1.0",
-  "com.github.dcshock" % "forklift-activemq"  % "1.0",
+  "com.github.dcshock" % "forklift-activemq"  % "1.1",
   "com.github.dcshock" % "forklift-replay"    % "1.0",
   "com.github.dcshock" % "forklift-retry"     % "1.0",
   "com.github.dcshock" % "forklift-stats"     % "1.0",
