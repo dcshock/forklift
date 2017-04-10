@@ -10,6 +10,45 @@ link:doc/forklift.adoc[Documentation]
 == Releases
 link:doc/prev_releases.adoc[Previous Releases]
 
-* v1.0
+* *April 4th 2017* - v1.0 
 ** Kafka Connector
 ** Core no longer depends on the JMS spec libraries
+
+== Current Release Dependencies
+=== SBT
+----
+libraryDependencies += "com.github.dcshock" % "forklift-server" % "1.0"
+----
+
+=== Maven
+----
+<dependency>
+    <groupId>com.github.dcshock</groupId>
+    <artifactId>forklift-server</artifactId>
+    <version>1.0</version>
+</dependency>
+----
+
+== Components
+Forklift is separated into individual libraries that make up the framework. forklift-server will bring
+in all the necessary dependencies and plugins to use Forklift with ActiveMQ.
+
+Forklift-Server::
+Forklift packaged as a set of server based components that can be executed at runtime.
+
+Forklift-Activemq::
+A connector for ActiveMQ.
+
+Forklift-Kafka::
+A connector for Kafka.
+
+Forklift-Stats::
+A plugin for Forklift that collects stats for each message and places them
+in properties for storage by other plugins.
+
+Forklift-Retry::
+A broker agnostic implementation of retries. Uses elastic search for storage.
+
+Forklift-Replay::
+A broker agnostic implementation of message replay logging. Uses elastic search for storage.
+Kibana makes a great tool to view Forklift replay logs.
