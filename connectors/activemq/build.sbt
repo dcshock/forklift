@@ -2,7 +2,7 @@ organization := "com.github.dcshock"
 
 name := "forklift-activemq"
 
-version := "1.0"
+version := "1.1"
 
 javacOptions ++= Seq("-source", "1.8")
 
