@@ -12,8 +12,6 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
-import javax.jms.JMSException;
-
 public class ReplayLogger {
     private final ReplayWriter writer;
 
@@ -78,10 +76,7 @@ public class ReplayLogger {
         final ForkliftMessage msg = mr.getMsg();
         final Consumer consumer = mr.getConsumer();
         final ReplayMsg replayMsg = new ReplayMsg();
-        try {
-            replayMsg.messageId = msg.getJmsMsg().getJMSMessageID();
-        } catch (JMSException ignored) {
-        }
+        replayMsg.messageId = msg.getId();
         replayMsg.text = msg.getMsg();
         replayMsg.headers = msg.getHeaders();
         replayMsg.step = step;

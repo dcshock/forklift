@@ -1,6 +1,5 @@
 package forklift.retry;
 
-import forklift.concurrent.Callback;
 import forklift.connectors.ForkliftConnectorI;
 import forklift.connectors.ForkliftMessage;
 import forklift.message.Header;
@@ -8,14 +7,16 @@ import forklift.producers.ForkliftProducerI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.function.Consumer;
+
 public class RetryRunnable implements Runnable {
     public static final Logger log = LoggerFactory.getLogger(RetryRunnable.class);
 
     private RetryMessage msg;
     private ForkliftConnectorI connector;
-    private Callback<RetryMessage> complete;
+    private Consumer<RetryMessage> complete;
 
-    public RetryRunnable(RetryMessage msg, ForkliftConnectorI connector, Callback<RetryMessage> complete) {
+    public RetryRunnable(RetryMessage msg, ForkliftConnectorI connector, Consumer<RetryMessage> complete) {
         this.msg = msg;
         this.connector = connector;
         this.complete = complete;
@@ -44,7 +45,7 @@ public class RetryRunnable implements Runnable {
             return;
         }
 
-        complete.handle(msg);
+        complete.accept(msg);
     }
 
     private ForkliftMessage toForkliftMessage(RetryMessage msg) {

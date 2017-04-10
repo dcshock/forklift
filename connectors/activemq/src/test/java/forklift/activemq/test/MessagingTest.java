@@ -32,7 +32,6 @@ import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.JMSException;
-import javax.jms.MessageProducer;
 
 @Queue("q1")
 public class MessagingTest {
@@ -88,34 +87,31 @@ public class MessagingTest {
 
         int i = called.getAndIncrement();
         System.out.println(Thread.currentThread().getName() + m);
-        try {
-            if (!m.getJmsMsg().getJMSCorrelationID().equals("" + i)) {
-                ordered = false;
-                System.out.println(m.getJmsMsg().getJMSCorrelationID() + ":" + i);
-            }
-            System.out.println(m.getJmsMsg().getJMSCorrelationID());
-        } catch (JMSException e) {
+        if (!m.getId().equals("" + i)) {
+            ordered = false;
+            System.out.println(m.getId() + ":" + i);
         }
+        System.out.println(m.getId());
     }
 
     @Test
     public void test() throws JMSException, ConnectorException, ProducerException {
         int msgCount = 100;
-        LifeCycleMonitors.register(this.getClass());
-        ForkliftProducerI producer = TestServiceManager.getConnector().getQueueProducer("q1");
+        TestServiceManager.getForklift().getLifeCycle().register(this.getClass());
+        ForkliftProducerI producer = TestServiceManager.getForklift().getConnector().getQueueProducer("q1");
         for (int i = 0; i < msgCount; i++) {
-            final ActiveMQTextMessage m = new ActiveMQTextMessage();
-            m.setJMSCorrelationID("" + i);
-            m.setText("x=Hello, message test");
-            producer.send(new ForkliftMessage(m));
+            final ForkliftMessage m = new ForkliftMessage();
+            m.setId("" + i);
+            m.setMsg("x=Hello, message test");
+            producer.send(m);
         }
 
-        final Consumer c = new Consumer(getClass(), TestServiceManager.getConnector());
+        final Consumer c = new Consumer(getClass(), TestServiceManager.getForklift());
         // Shutdown the consumer after all the messages have been processed.
         c.setOutOfMessages((listener) -> {
             listener.shutdown();
             Assert.assertTrue(ordered);
-            Assert.assertTrue("called was not == " + msgCount, called.get() == msgCount);
+            Assert.assertTrue("called was not == " + msgCount + "  --  " + called.get(), called.get() == msgCount);
         });
 
         // Start the consumer.

@@ -12,6 +12,7 @@ import forklift.message.Header;
 import org.apache.activemq.command.ActiveMQMessage;
 
 import java.lang.StringBuilder;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -27,7 +28,7 @@ public class ActiveMQProducer implements ForkliftProducerI {
     private MessageProducer producer;
     private Destination destination;
     private Map<Header, Object> headers;
-    private Map<String, Object> properties;
+    private Map<String, String> properties;
     private Session session;
 
     public ActiveMQProducer(MessageProducer producer, Session session) {
@@ -98,13 +99,31 @@ public class ActiveMQProducer implements ForkliftProducerI {
     @Override
     /**
     * Send in an object and the producer will marshall it into a ForkliftMessage
+    * @param properties - message properties
+    * @param message - ForkliftMessage
+    * @return String - JMSCorrelationID
+    **/
+    public String send(Map<String, String> properties,
+                       ForkliftMessage message) throws ProducerException {
+        Message msg = prepAndValidate(message, null, properties);
+        try {
+            producer.send(msg);
+            return msg.getJMSCorrelationID();
+        } catch (Exception e) {
+            throw new ProducerException("Failed to send message", e);
+        }
+    }
+
+    @Override
+    /**
+    * Send in an object and the producer will marshall it into a ForkliftMessage
     * @param headers - message headers
     * @param properties - message properties
     * @param message - ForkliftMessage
     * @return String - JMSCorrelationID
     **/
     public String send(Map<Header, Object> headers, 
-                       Map<String, Object> properties,
+                       Map<String, String> properties,
                        ForkliftMessage message) throws ProducerException {
         Message msg = prepAndValidate(message, headers, properties);
         try {
@@ -154,7 +173,7 @@ public class ActiveMQProducer implements ForkliftProducerI {
     **/
     private Message prepAndValidate(ForkliftMessage message,
                                     Map<Header, Object> headers,
-                                    Map<String, Object> properties) throws ProducerException {
+                                    Map<String, String> properties) throws ProducerException {
         Message msg = forkliftToJms(message);
         try {
             if (Strings.isNullOrEmpty(msg.getJMSCorrelationID())) {
@@ -185,51 +204,49 @@ public class ActiveMQProducer implements ForkliftProducerI {
     private Message forkliftToJms(ForkliftMessage message) throws ProducerException {
 
         try {
-            Message msg = null;
-            if (message.getJmsMsg() != null ) {
-                try {
-                    msg = message.getJmsMsg();
-                } catch (Exception e) {
-                    throw new ProducerException("Error assigning Forklift JMS message to new MSG", e);
-                }
-            } else if (message.getMsg() != null ) {
-                try {
-                    msg = session.createTextMessage(message.getMsg());
-                } catch (Exception e) {
-                    throw new ProducerException("Error creating new jms TextMessage", e);
-                }
-            }
+            final Message msg = session.createTextMessage(message.getMsg());
+
+            // Set the jms correlation id.
+            if (message.getId() != null && !message.getId().trim().isEmpty())
+                msg.setJMSCorrelationID(message.getId());
+
             setMessageHeaders(msg, message.getHeaders());
             setMessageProperties(msg, message.getProperties());
             return msg;
         } catch (Exception e) {
-            throw new ProducerException("Error creating JMS Message, Forklift message was null", e);
+            throw new ProducerException("Error creating JMS Message", e);
         }
     }
 
     private void setMessageHeaders(Message msg, Map<Header, Object> headers) throws ProducerException {
         if (msg != null && headers != null) {
             headers.entrySet().stream().filter(entry -> entry.getValue() != null)
-                              .forEach(entry -> {
-                                if(ActiveMQHeaders.getFunctions().get(entry.getKey()).get((ActiveMQMessage)msg) == null) {
-                                   ActiveMQHeaders.getFunctions().get(entry.getKey()).set((ActiveMQMessage)msg,entry.getValue());
-                                }
-                            });
+                .forEach(entry -> {
+                    if (ActiveMQHeaders.getFunctions().get(entry.getKey()).get((ActiveMQMessage)msg) == null) {
+                        ActiveMQHeaders.getFunctions().get(entry.getKey()).set((ActiveMQMessage)msg,entry.getValue());
+                    }
+            });
         }
     }
 
-    private void setMessageProperties(Message msg, Map<String, Object> properties) throws ProducerException {
+    private void setMessageProperties(Message msg, Map<String, String> properties) throws ProducerException {
         if (msg != null && properties != null) {
-            properties.entrySet().stream().filter(entry -> entry.getValue() != null)
-                                          .forEach(property -> {
-                                            try {
-                                                if(msg.getObjectProperty(property.getKey()) == null) {
-                                                    msg.setObjectProperty(property.getKey(), property.getValue());
-                                                }
-                                            } catch (Exception e) {
-                                                //Catch it but just move on.
-                                            }
-                                           });
+            final Map<String, String> props = new HashMap<>();
+            if (this.properties != null)
+                props.putAll(this.properties);
+            if (properties != null)
+                props.putAll(properties);
+
+            props.entrySet().stream().filter(entry -> entry.getValue() != null)
+                .forEach(property -> {
+                    try {
+                        if (msg.getObjectProperty(property.getKey()) == null) {
+                            msg.setObjectProperty(property.getKey(), property.getValue());
+                        }
+                    } catch (Exception e) {
+                        //Catch it but just move on.
+                    }
+                });
         }
     }
 
@@ -285,7 +302,7 @@ public class ActiveMQProducer implements ForkliftProducerI {
     }
 
     @Override
-    public Map<String, Object> getProperties() throws ProducerException {
+    public Map<String, String> getProperties() throws ProducerException {
         try {
             return this.properties;
         } catch (Exception e) {
@@ -294,7 +311,7 @@ public class ActiveMQProducer implements ForkliftProducerI {
     }
 
     @Override
-    public void setProperties(Map<String , Object> properties) throws ProducerException {
+    public void setProperties(Map<String , String> properties) throws ProducerException {
         try {
             this.properties = properties;
         } catch (Exception e) {

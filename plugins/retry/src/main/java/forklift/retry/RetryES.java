@@ -5,8 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.gson.JsonObject;
-import forklift.concurrent.Callback;
-import forklift.connectors.ForkliftConnectorI;
+import forklift.Forklift;
 import forklift.connectors.ForkliftMessage;
 import forklift.consumer.MessageRunnable;
 import forklift.consumer.ProcessStep;
@@ -23,6 +22,7 @@ import io.searchbox.core.SearchResult.Hit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.function.Consumer;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -32,8 +32,6 @@ import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
-import javax.jms.JMSException;
 
 /**
  * Handles retries for consumers that have been annotated with Retry
@@ -46,11 +44,11 @@ import javax.jms.JMSException;
 public class RetryES {
     private static final Logger log = LoggerFactory.getLogger(RetryES.class);
 
-    private final ForkliftConnectorI connector;
+    private final Forklift forklift;
     private final ScheduledExecutorService executor;
     private final JestClient client;
     private final ObjectMapper mapper;
-    private final Callback<RetryMessage> cleanup;
+    private final Consumer<RetryMessage> cleanup;
 
     /*
      * Just a test case.
@@ -84,8 +82,8 @@ public class RetryES {
 //        }
 //    }
 
-    public RetryES(ForkliftConnectorI connector, boolean ssl, String hostname, int port, boolean runRetries) {
-        this.connector = connector;
+    public RetryES(Forklift forklift, boolean ssl, String hostname, int port, boolean runRetries) {
+        this.forklift = forklift;
         this.executor = Executors.newScheduledThreadPool(1);
         this.mapper = new ObjectMapper().registerModule(new JavaTimeModule())
                                         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
@@ -105,14 +103,11 @@ public class RetryES {
         client = factory.getObject();
 
         // Cleanup after a retry is completed.
-        cleanup = new Callback<RetryMessage>() {
-            @Override
-            public void handle(RetryMessage msg) {
-                try {
-                    client.execute(new Delete.Builder(msg.getMessageId()).index("forklift-retry").type("msg").build());
-                } catch (IOException e) {
-                    log.error("Unable to cleanup retry: {}", msg.getMessageId(), e);
-                }
+        cleanup = (msg) -> {
+            try {
+                client.execute(new Delete.Builder(msg.getMessageId()).index("forklift-retry").type("msg").build());
+            } catch (IOException e) {
+                log.error("Unable to cleanup retry: {}", msg.getMessageId(), e);
             }
         };
 
@@ -134,8 +129,8 @@ public class RetryES {
                                                 retryMessage =
                                                 mapper.readValue(msg.source.get("forklift-retry-msg").getAsString(), RetryMessage.class);
                                 log.info("Retrying: {}", retryMessage);
-                                executor.schedule(new RetryRunnable(retryMessage, connector, cleanup),
-                                                  Long.parseLong(Integer.toString((int)retryMessage.getProperties().get("forklift-retry-timeout"))), TimeUnit.SECONDS);
+                                executor.schedule(new RetryRunnable(retryMessage, forklift.getConnector(), cleanup),
+                                                  Long.parseLong(retryMessage.getProperties().get("forklift-retry-timeout")), TimeUnit.SECONDS);
                             } catch (Exception e) {
                                 log.error("Unable to read result {}", msg.source);
                             }
@@ -175,7 +170,7 @@ public class RetryES {
          */
         {
             // Read props of the message to see what we need to do with retry counts
-            final Map<String, Object> props = msg.getProperties();
+            final Map<String, String> props = msg.getProperties();
 
             // Determine the current retry count. We have to handle string or integer input types
             // since stomp doesn't differentiate the two.
@@ -194,12 +189,12 @@ public class RetryES {
             else
                 retryCount++;
             if (retryCount > retry.maxRetries()) {
-                props.put("forklift-retry-max-retries-exceeded", Boolean.TRUE);
+                props.put("forklift-retry-max-retries-exceeded", "true");
                 return;
             } else {
-                props.put("forklift-retry-max-retries", retry.maxRetries());
-                props.put("forklift-retry-count", retryCount);
-                props.put("forklift-retry-timeout", retry.timeout());
+                props.put("forklift-retry-max-retries", "" + retry.maxRetries());
+                props.put("forklift-retry-count", "" + retryCount);
+                props.put("forklift-retry-timeout", "" + retry.timeout());
             }
 
             // Map in properties
@@ -224,14 +219,10 @@ public class RetryES {
         if (mr.getConsumer().getTopic() != null)
             fields.put("topic", mr.getConsumer().getTopic().value());
 
-        // Generate the id from the correlation id first followed by the generated amq id.
-        String id = null;
-        try {
-            id = msg.getJmsMsg().getJMSCorrelationID();
-            if (id == null || "".equals(id))
-                id = msg.getJmsMsg().getJMSMessageID();
-        } catch (JMSException ignored) {
-        }
+        // Get the message id. If there is no id we ignore the retry...
+        final String id = msg.getId();
+        if (id == null)
+            return;
 
         try {
             final RetryMessage retryMsg = buildRetry(mr, retry, id);
@@ -249,7 +240,7 @@ public class RetryES {
             }
 
             // Scheule the message to be retried.
-            executor.schedule(new RetryRunnable(retryMsg, connector, cleanup), retry.timeout(), TimeUnit.SECONDS);
+            executor.schedule(new RetryRunnable(retryMsg, forklift.getConnector(), cleanup), retry.timeout(), TimeUnit.SECONDS);
         } catch (IOException e) {
             log.error("Unable to index retry: {}", fields.toString(), e);
         }

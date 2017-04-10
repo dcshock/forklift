@@ -66,7 +66,7 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
         deployment.getQueues().forEach(c -> {
             for (Annotation a : c.getAnnotationsByType(Queue.class)) {
                 log.info("Found annotation {} on {}", a, c);
-                final Consumer consumer = new Consumer(c, forklift.getConnector(), deployment.getClassLoader(), (Queue)a); 
+                final Consumer consumer = new Consumer(c, forklift, deployment.getClassLoader(), (Queue)a); 
                 consumer.setServices(services);
                 
                 final ConsumerThread thread = new ConsumerThread(consumer);
@@ -78,7 +78,7 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
         deployment.getTopics().forEach(c -> {
             for (Annotation a : c.getAnnotationsByType(Topic.class)) {
                 log.info("Found annotation {} on {}", a, c);
-                final Consumer consumer = new Consumer(c, forklift.getConnector(), deployment.getClassLoader(), (Topic)a); 
+                final Consumer consumer = new Consumer(c, forklift, deployment.getClassLoader(), (Topic)a); 
                 consumer.setServices(services);
 
                 final ConsumerThread thread = new ConsumerThread(consumer);

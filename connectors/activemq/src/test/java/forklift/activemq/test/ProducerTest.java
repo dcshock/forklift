@@ -77,19 +77,19 @@ public class ProducerTest {
         int i = called.getAndIncrement();
         System.out.println(Thread.currentThread().getName() + m);
         try {
-            if (!m.getJmsMsg().getJMSCorrelationID().equals("" + i)) {
+            if (!m.getId().equals("" + i)) {
                 ordered = false;
-                System.out.println(m.getJmsMsg().getJMSCorrelationID() + " -:- " + i);
+                System.out.println(m.getId() + " -:- " + i);
             }
             if(ordered) {
-                System.out.println(m.getJmsMsg().getStringProperty("Eye")+ " -:- " + i + " || " + m.getJmsMsg().getStringProperty("Eye").equals("ball"));
-                System.out.println(m.getJmsMsg().getStringProperty("Foo")+ " -:- FOO");
-                System.out.println(m.getJmsMsg().getJMSType()+ " -:- Type");
-                System.out.println("JMSCorrelationsID -:- "+ m.getJmsMsg().getJMSCorrelationID());
+                System.out.println(m.getProperties().get("Eye")+ " -:- " + i + " || " + m.getProperties().get("Eye").equals("ball"));
+                System.out.println(m.getProperties().get("Foo")+ " -:- FOO");
+                // System.out.println(m.getJmsMsg().getJMSType()+ " -:- Type");
+                System.out.println("JMSCorrelationsID -:- "+ m.getId());
             }
-            isPropOverwritten = m.getJmsMsg().getObjectProperty("Eye").equals("ball") ? false : true;
-            isPropsSet = m.getJmsMsg().getStringProperty("Foo").equals("Bar") ? true : false;
-            isHeadersSet = m.getJmsMsg().getJMSType().equals("presetHeaderAction") ? true : false;
+            isPropOverwritten = m.getProperties().get("Eye").equals("ball") ? false : true;
+            isPropsSet = m.getProperties().get("Foo").equals("Bar") ? true : false;
+            isHeadersSet = m.getHeaders().get(Header.Type).equals("presetHeaderAction") ? true : false;
         } catch (Exception e) {
         }
 
@@ -105,7 +105,7 @@ public class ProducerTest {
             producer.send(msg);
         }
 
-        final Consumer c = new Consumer(getClass(), TestServiceManager.getConnector());
+        final Consumer c = new Consumer(getClass(), TestServiceManager.getForklift());
         // Shutdown the consumer after all the messages have been processed.
         c.setOutOfMessages((listener) -> {
             listener.shutdown();
@@ -127,7 +127,7 @@ public class ProducerTest {
             producer.send(m);
         }
         
-        final Consumer c = new Consumer(getClass(), TestServiceManager.getConnector());
+        final Consumer c = new Consumer(getClass(), TestServiceManager.getForklift());
         // Shutdown the consumer after all the messages have been processed.
         c.setOutOfMessages((listener) -> {
             listener.shutdown();
@@ -150,7 +150,7 @@ public class ProducerTest {
             producer.send(m);
         }
         
-        final Consumer c = new Consumer(getClass(), TestServiceManager.getConnector());
+        final Consumer c = new Consumer(getClass(), TestServiceManager.getForklift());
         // Shutdown the consumer after all the messages have been processed.
         c.setOutOfMessages((listener) -> {
             listener.shutdown();
@@ -164,22 +164,24 @@ public class ProducerTest {
     }
 
     @Test
-    public void testSendTripleThreat() throws JMSException, ConnectorException, ProducerException {
+    public void testSendTripleThreat() throws ConnectorException, ProducerException {
         int msgCount = 10;
         ForkliftProducerI producer = TestServiceManager.getConnector().getQueueProducer("q2");
         for (int i = 0; i < msgCount; i++) {
-            final ActiveMQTextMessage m = new ActiveMQTextMessage();
-            m.setJMSCorrelationID("" + i);
-            m.setText("x=producer overload test");
+            final ForkliftMessage m = new ForkliftMessage();
+            m.setId("" + i);
+            // final ActiveMQTextMessage m = new ActiveMQTextMessage();
+            // m.setJMSCorrelationID("" + i);
+            m.setMsg("x=producer overload test");
             Map<Header, Object> headers = new HashMap<>();
             headers.put(Header.Type, "SeriousBusiness");
-            Map<String, Object> props = new HashMap<>();
+            Map<String, String> props = new HashMap<>();
             props.put("Foo", "bar");
             props.put("Eye", "" + i);     
-            producer.send(headers, props, new ForkliftMessage(m));
+            producer.send(headers, props, m);
         }
         
-        final Consumer c = new Consumer(getClass(), TestServiceManager.getConnector());
+        final Consumer c = new Consumer(getClass(), TestServiceManager.getForklift());
         // Shutdown the consumer after all the messages have been processed.
         c.setOutOfMessages((listener) -> {
             listener.shutdown();
@@ -208,30 +210,30 @@ public class ProducerTest {
         headers.put(Header.Type, "presetHeaderAction");
         producer.setHeaders(headers);
         
-        Map<String, Object> props = new HashMap<>();
+        Map<String, String> props = new HashMap<>();
         props.put("Foo", "Bar");
         producer.setProperties(props);
 
         for (int i = 0; i < msgCount; i++) {
-            final ActiveMQTextMessage m = new ActiveMQTextMessage();
+            final ForkliftMessage m = new ForkliftMessage();
             try {
-                m.setJMSCorrelationID("" + i);
-                m.setText("x=producer preset test");
-                m.setProperty("Eye", "ball");
+                m.setId("" + i);
+                m.setMsg("x=producer preset test");
+                m.getProperties().put("Eye", "ball");
             } catch (Exception ignored) {
             }
-            producer.send(new ForkliftMessage(m));
+            producer.send(m);
         }
         
-        final Consumer c = new Consumer(getClass(), TestServiceManager.getConnector());
+        final Consumer c = new Consumer(getClass(), TestServiceManager.getForklift());
         // Shutdown the consumer after all the messages have been processed.
         c.setOutOfMessages((listener) -> {
             listener.shutdown();
             Assert.assertTrue(ordered);
             Assert.assertTrue("called was not == " + msgCount, called.get() == msgCount);
-            Assert.assertTrue("Message properties were overwritten", isPropOverwritten == false);
-            Assert.assertTrue("Message properties were not set", isPropsSet == true);
-            Assert.assertTrue("Message headers were not set", isHeadersSet == true);
+            Assert.assertTrue("Message properties were overwritten", !isPropOverwritten);
+            Assert.assertTrue("Message properties were not set", isPropsSet);
+            Assert.assertTrue("Message headers were not set", isHeadersSet);
         });
 
         // Start the consumer.

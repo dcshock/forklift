@@ -1,0 +1,10 @@
+{
+  "namespace": "forklift.schemas",
+  "type": "record",
+  "version": 1,
+  "name": "AvroMessage",
+  "fields": [
+    {"name": "name", "type": "string"}
+  ]
+}
+

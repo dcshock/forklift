@@ -1,14 +1,18 @@
 package forklift.consumer;
 
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-import forklift.TestMsg;
+import forklift.Forklift;
+import forklift.connectors.ForkliftConnectorI;
 import forklift.connectors.ForkliftMessage;
 import forklift.decorators.On;
 import forklift.decorators.OnMessage;
 import forklift.decorators.OnValidate;
 import forklift.decorators.Queue;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.lang.reflect.Field;
@@ -19,6 +23,20 @@ import java.util.List;
 import java.util.Map;
 
 public class OnDecoratorTest {
+
+    private Forklift forklift;
+    private ForkliftConnectorI connector;
+
+    @Before
+    public void setup() {
+        LifeCycleMonitors lifeCycle = new LifeCycleMonitors();
+        forklift = mock(Forklift.class);
+        connector = mock(ForkliftConnectorI.class);
+        when(connector.supportsQueue()).thenReturn(true);
+        when(connector.supportsTopic()).thenReturn(true);
+        when(forklift.getLifeCycle()).thenReturn(lifeCycle);
+        when(forklift.getConnector()).thenReturn(connector);
+    }
 
     @Test
     public void onProcessStepHappyPath() {
@@ -195,9 +213,10 @@ public class OnDecoratorTest {
     }
 
     @SuppressWarnings("unchecked")
-    private static <T> void runTest(T c) {
-        final ForkliftMessage msg = new ForkliftMessage(new TestMsg("Message"));
-        final Consumer consumer = new Consumer(c.getClass(), null);
+    private <T> void runTest(T c) {
+        final ForkliftMessage msg = new ForkliftMessage("Message");
+        msg.setId("Message");
+        final Consumer consumer = new Consumer(c.getClass(), forklift);
         consumer.inject(msg, c);
         List<Method> onMessage = (List<Method>) fetch(consumer, "onMessage");
         List<Method> onValidate = (List<Method>) fetch(consumer, "onValidate");

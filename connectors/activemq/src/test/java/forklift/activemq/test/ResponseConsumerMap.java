@@ -24,7 +24,7 @@ public class ResponseConsumerMap {
     @OnMessage
     public void go() throws JMSException {
         if (s.containsKey("x")) {
-            resolver.resolve(m.getJmsMsg().getJMSCorrelationID(), s);
+            resolver.resolve(m.getId(), s);
             throw new RuntimeException("This is expected");
         }
     }

@@ -5,10 +5,9 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import forklift.Forklift;
 import forklift.classloader.RunAsClassLoader;
-import forklift.concurrent.Callback;
 import forklift.connectors.ConnectorException;
-import forklift.connectors.ForkliftConnectorI;
 import forklift.connectors.ForkliftMessage;
 import forklift.consumer.parser.KeyValueParser;
 import forklift.decorators.Config;
@@ -46,9 +45,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.jms.JMSException;
-import javax.jms.Message;
-
 public class Consumer {
     static ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule())
                                                    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -56,7 +52,7 @@ public class Consumer {
     private static AtomicInteger id = new AtomicInteger(1);
 
     private final ClassLoader classLoader;
-    private final ForkliftConnectorI connector;
+    private final Forklift forklift;
     private final Map<Class, Map<Class<?>, List<Field>>> injectFields;
     private final Class<?> msgHandler;
     private final List<Method> onMessage;
@@ -77,19 +73,20 @@ public class Consumer {
     private BlockingQueue<Runnable> blockQueue;
     private ThreadPoolExecutor threadPool;
 
-    private Callback<Consumer> outOfMessages;
+    private java.util.function.Consumer<Consumer> outOfMessages;
 
     private AtomicBoolean running = new AtomicBoolean(false);
-    public Consumer(Class<?> msgHandler, ForkliftConnectorI connector) {
-        this(msgHandler, connector, null);
+
+    public Consumer(Class<?> msgHandler, Forklift forklift) {
+        this(msgHandler, forklift, null);
     }
 
-    public Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader) {
-        this(msgHandler, connector, classLoader, false);
+    public Consumer(Class<?> msgHandler, Forklift forklift, ClassLoader classLoader) {
+        this(msgHandler, forklift, classLoader, false);
     }
 
-    public Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader, Queue q) {
-        this(msgHandler, connector, classLoader, true);
+    public Consumer(Class<?> msgHandler, Forklift forklift, ClassLoader classLoader, Queue q) {
+        this(msgHandler, forklift, classLoader, true);
         this.queue = q;
 
         if (this.queue == null)
@@ -99,8 +96,8 @@ public class Consumer {
         log = LoggerFactory.getLogger(this.name);
     }
 
-    public Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader, Topic t) {
-        this(msgHandler, connector, classLoader, true);
+    public Consumer(Class<?> msgHandler, Forklift forklift, ClassLoader classLoader, Topic t) {
+        this(msgHandler, forklift, classLoader, true);
         this.topic = t;
 
         if (this.topic == null)
@@ -111,9 +108,9 @@ public class Consumer {
     }
 
     @SuppressWarnings("unchecked")
-    private Consumer(Class<?> msgHandler, ForkliftConnectorI connector, ClassLoader classLoader, boolean preinit) {
+    private Consumer(Class<?> msgHandler, Forklift forklift, ClassLoader classLoader, boolean preinit) {
         this.classLoader = classLoader;
-        this.connector = connector;
+        this.forklift = forklift;
         this.msgHandler = msgHandler;
 
         if (!preinit && queue == null && topic == null) {
@@ -122,6 +119,12 @@ public class Consumer {
 
             if (this.queue != null && this.topic != null)
                 throw new IllegalArgumentException("Msg Handler cannot consume a queue and topic");
+
+            if (this.queue != null && !forklift.getConnector().supportsQueue())
+                throw new RuntimeException("@Queue is not supported by the current connector");
+
+            if (this.topic != null && !forklift.getConnector().supportsTopic())
+                throw new RuntimeException("@Topic is not supported by the current connector");
 
             if (this.queue != null)
                 this.name = queue.value() + ":" + id.getAndIncrement();
@@ -145,12 +148,21 @@ public class Consumer {
                 onMessage.add(m);
             else if (m.isAnnotationPresent(OnValidate.class))
                 onValidate.add(m);
-            else if (m.isAnnotationPresent(Response.class))
+            else if (m.isAnnotationPresent(Response.class)) {
+                if (!forklift.getConnector().supportsResponse()) 
+                    throw new RuntimeException("@Response is not supported by the current connector");
+
                 onResponse.add(m);
-            else if (m.isAnnotationPresent(Order.class))
+            } else if (m.isAnnotationPresent(Order.class)) {
+                if (!forklift.getConnector().supportsOrder()) 
+                    throw new RuntimeException("@Order is not supported by the current connector");
+
                 orderMethod = m;
-            else if (m.isAnnotationPresent(On.class) || m.isAnnotationPresent(Ons.class))
-                Arrays.stream(m.getAnnotationsByType(On.class)).map(on -> on.value()).distinct().forEach(x -> onProcessStep.get(x).add(m));
+            } else if (m.isAnnotationPresent(On.class) || m.isAnnotationPresent(Ons.class))
+                Arrays.stream(m.getAnnotationsByType(On.class))
+                    .map(on -> on.value())
+                    .distinct()
+                    .forEach(x -> onProcessStep.get(x).add(m));
         }
 
         if (orderMethod != null)
@@ -188,9 +200,9 @@ public class Consumer {
         final ForkliftConsumerI consumer;
         try {
             if (topic != null)
-                consumer = connector.getTopic(topic.value());
+                consumer = forklift.getConnector().getTopic(topic.value());
             else if (queue != null)
-                consumer = connector.getQueue(queue.value());
+                consumer = forklift.getConnector().getQueue(queue.value());
             else
                 throw new RuntimeException("No queue/topic specified");
 
@@ -213,7 +225,7 @@ public class Consumer {
             // Always cleanup the consumer.
             if (consumer != null)
                 consumer.close();
-        } catch (ConnectorException | JMSException e) {
+        } catch (ConnectorException e) {
             log.debug("", e);
         }
     }
@@ -227,11 +239,12 @@ public class Consumer {
             running.set(true);
 
             while (running.get()) {
-                Message jmsMsg;
-                while ((jmsMsg = consumer.receive(2500)) != null && running.get()) {
-                    final ForkliftMessage msg = connector.jmsToForklift(jmsMsg);
+                ForkliftMessage consumerMsg;
+                while ((consumerMsg = consumer.receive(2500)) != null && running.get()) {
                     try {
                         final Object handler = msgHandler.newInstance();
+
+                        final ForkliftMessage msg = consumerMsg;
 
                         final List<Closeable> closeMe = new ArrayList<>();
                         RunAsClassLoader.run(classLoader, () -> {
@@ -299,7 +312,7 @@ public class Consumer {
                 }
 
                 if (outOfMessages != null)
-                    outOfMessages.handle(this);
+                    outOfMessages.accept(this);
             }
 
             // Shutdown the pool, but let actively executing work finish.
@@ -309,7 +322,7 @@ public class Consumer {
                 threadPool.awaitTermination(60, TimeUnit.SECONDS);
                 blockQueue.clear();
             }
-        } catch (JMSException e) {
+        } catch (ConnectorException e) {
             running.set(false);
             log.error("JMS Error in message loop: ", e);
         } catch (InterruptedException ignored) {
@@ -324,10 +337,11 @@ public class Consumer {
     }
 
     public void shutdown() {
+        log.info("Consumer shutting down");
         running.set(false);
     }
 
-    public void setOutOfMessages(Callback<Consumer> outOfMessages) {
+    public void setOutOfMessages(java.util.function.Consumer<Consumer> outOfMessages) {
         this.outOfMessages = outOfMessages;
     }
 
@@ -348,8 +362,8 @@ public class Consumer {
                 fields.get(clazz).forEach(f -> {
                     log.trace("Inject target> Field: ({})  Decorator: ({})", f, decorator);
                     try {
-                        if (decorator == forklift.decorators.Message.class) {
-                            if (clazz ==  ForkliftMessage.class) {
+                        if (decorator == forklift.decorators.Message.class && msg.getMsg() != null) {
+                            if (clazz == ForkliftMessage.class) {
                                 f.set(instance, msg);
                             } else if (clazz == String.class) {
                                 f.set(instance, msg.getMsg());
@@ -421,7 +435,7 @@ public class Consumer {
                             }
                         } else if (decorator == forklift.decorators.Properties.class) {
                             forklift.decorators.Properties annotation = f.getAnnotation(forklift.decorators.Properties.class);
-                            Map<String, Object> properties = msg.getProperties();
+                            Map<String, String> properties = msg.getProperties();
                             if (clazz == Map.class) {
                                 f.set(instance, msg.getProperties());
                             } else if (properties != null) {
@@ -444,9 +458,9 @@ public class Consumer {
 
                                 final ForkliftProducerI p;
                                 if (producer.queue().length() > 0)
-                                    p = connector.getQueueProducer(producer.queue());
+                                    p = forklift.getConnector().getQueueProducer(producer.queue());
                                 else if (producer.topic().length() > 0)
-                                    p = connector.getTopicProducer(producer.topic());
+                                    p = forklift.getConnector().getTopicProducer(producer.topic());
                                 else
                                     p = null;
 
@@ -459,6 +473,7 @@ public class Consumer {
                         log.warn("Unable to parse json for injection.", e);
                     } catch (Exception e) {
                         log.error("Error injecting data into Msg Handler", e);
+                        e.printStackTrace();
                         throw new RuntimeException("Error injecting data into Msg Handler");
                     }
                 });
@@ -480,8 +495,8 @@ public class Consumer {
         return topic;
     }
 
-    public ForkliftConnectorI getConnector() {
-        return connector;
+    public Forklift getForklift() {
+        return forklift;
     }
 
     public void addServices(ConsumerService... services) {
