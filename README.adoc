@@ -12,4 +12,4 @@ link:doc/prev_releases.adoc[Previous Releases]
 
 * v1.0
 ** Kafka Connector
-** Core no longer depends on the JMS specific
+** Core no longer depends on the JMS spec libraries
