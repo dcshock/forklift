@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import forklift.message.ActiveMQHeaders;
+import forklift.connectors.ActiveMQForkliftMessage;
 import forklift.connectors.ConnectorException;
 import forklift.connectors.ForkliftMessage;
 import forklift.consumer.ForkliftConsumerI;
@@ -52,7 +53,7 @@ public class ActiveMQMessageConsumer implements ForkliftConsumerI {
             return null;
 
         try {
-            final ForkliftMessage msg = new ForkliftMessage();
+            final ActiveMQForkliftMessage msg = new ActiveMQForkliftMessage(m);
             msg.setId(m.getJMSCorrelationID());
             if (m instanceof ActiveMQTextMessage) {
                 msg.setMsg(((ActiveMQTextMessage)m).getText());
@@ -62,7 +63,7 @@ public class ActiveMQMessageConsumer implements ForkliftConsumerI {
             }
 
             Map<Header, Object> headers = new HashMap<>();
-            ActiveMQMessage amq = (ActiveMQMessage) m;
+            ActiveMQMessage amq = (ActiveMQMessage)msg.getJmsMsg();
             // Build headers
             for (Header h : Header.values()) {
                 headers.put(h, ActiveMQHeaders.getFunctions().get(h).get(amq));
