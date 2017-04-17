@@ -81,7 +81,12 @@ public class MessageRunnableTest {
 
     // Supportive classes for invalidOnValidate
     public static class TestConsumer1 {
-        public static AtomicBoolean success = new AtomicBoolean(false);
+        public static AtomicBoolean success = null;
+
+        static{
+            System.out.println("Static init block in TestConsumer1");
+            success = new AtomicBoolean(false);
+        }
 
         @OnMessage
         public void consumeMsg() {
