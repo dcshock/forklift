@@ -2,28 +2,18 @@ package forklift.connectors;
 
 import forklift.consumer.ActiveMQMessageConsumer;
 import forklift.consumer.ForkliftConsumerI;
-import forklift.message.ActiveMQHeaders;
-import forklift.message.Header;
 import forklift.producers.ActiveMQProducer;
 import forklift.producers.ForkliftProducerI;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQSession;
-import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
 import javax.jms.Connection;
 import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
 import javax.jms.Session;
 
 public class ActiveMQConnector implements ForkliftConnectorI {
@@ -61,7 +51,6 @@ public class ActiveMQConnector implements ForkliftConnectorI {
             }
     }
 
-    @Override
     public synchronized Connection getConnection()
       throws ConnectorException {
         if (conn == null || !conn.isStarted())
@@ -111,38 +100,6 @@ public class ActiveMQConnector implements ForkliftConnectorI {
     }
 
     @Override
-    public ForkliftMessage jmsToForklift(Message m) {
-        try {
-            final ForkliftMessage msg = new ForkliftMessage(m);
-            if (m instanceof ActiveMQTextMessage) {
-                msg.setMsg(((ActiveMQTextMessage)m).getText());
-            } else {
-                msg.setFlagged(true);
-                msg.setWarning("Unexpected message type: " + m.getClass().getName());
-            }
-
-            Map<Header, Object> headers = new HashMap<>();
-            ActiveMQMessage amq = (ActiveMQMessage) m;
-            // Build headers
-            for (Header h : Header.values()) {
-                headers.put(h, ActiveMQHeaders.getFunctions().get(h).get(amq));
-            }
-            msg.setHeaders(headers);
-
-            // Build properties
-            try {
-                msg.setProperties(amq.getProperties());
-            } catch (IOException ignored) {
-                // Shouldn't happen
-            }
-
-            return msg;
-        } catch (JMSException e) {
-            return null;
-        }
-    }
-
-    @Override
     public ForkliftProducerI getQueueProducer(String name) {
         try {
             final Session s = getSession();
@@ -162,5 +119,25 @@ public class ActiveMQConnector implements ForkliftConnectorI {
             log.error("getTopicProducer, throwing error", e);
             return null;
         }
+    }
+
+    @Override
+    public boolean supportsOrder() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsResponse() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsTopic() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsQueue() {
+        return true;
     }
 }

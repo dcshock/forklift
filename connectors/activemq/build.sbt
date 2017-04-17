@@ -2,10 +2,9 @@ organization := "com.github.dcshock"
 
 name := "forklift-activemq"
 
-version := "0.11"
+version := "1.1"
 
-// target and Xlint cause sbt dist to fail
-javacOptions ++= Seq("-source", "1.8")//, "-target", "1.8", "-Xlint")
+javacOptions ++= Seq("-source", "1.8")
 
 javacOptions in compile ++= Seq("-g:lines,vars,source")
 
@@ -15,23 +14,29 @@ initialize := {
     sys.error("Java 8 is required for this project.")
 }
 
-libraryDependencies ++= Seq(
-    "com.github.dcshock" % "forklift" % "0.19",
-    "org.apache.activemq" % "activemq-client" % "5.14.0",
-    "org.apache.activemq" % "activemq-broker" % "5.14.0",
-    "com.fasterxml.jackson.core" % "jackson-databind" % "2.7.3",
-    "com.fasterxml.jackson.datatype" % "jackson-datatype-jsr310" % "2.7.3",
-    "commons-io" % "commons-io" % "2.4" % "test",
-    "com.novocode" % "junit-interface" % "0.11" % "test",
-    "org.apache.activemq" % "activemq-all" % "5.14.0" % "test"
+resolvers ++= Seq(
+  "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
+  "Maven Central" at "http://repo1.maven.org/maven2",
+  "Fuse Snapshots" at "http://repo.fusesource.com/nexus/content/repositories/snapshots",
+  "Fuse" at "http://repo.fusesource.com/nexus/content/groups/public"
 )
 
-resolvers ++= Seq(
-    "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
-    "Maven Central" at "http://repo1.maven.org/maven2",
-    "Fuse Snapshots" at "http://repo.fusesource.com/nexus/content/repositories/snapshots",
-    "Fuse" at "http://repo.fusesource.com/nexus/content/groups/public"
+libraryDependencies ++= Seq(
+  "com.github.dcshock" % "forklift" % "1.0",
+  "org.apache.activemq" % "activemq-client" % "5.14.0",
+  "org.apache.activemq" % "activemq-broker" % "5.14.0",
+  "com.fasterxml.jackson.core" % "jackson-databind" % "2.7.3",
+  "com.fasterxml.jackson.datatype" % "jackson-datatype-jsr310" % "2.7.3",
+  "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
 )
+
+lazy val testDependencies = Seq(
+  "commons-io" % "commons-io" % "2.4",
+  "com.novocode" % "junit-interface" % "0.11",
+  "org.apache.activemq" % "activemq-all" % "5.14.0"
+)
+
+libraryDependencies ++= testDependencies.map(_ % "test")
 
 // Remove scala dependency for pure Java libraries
 autoScalaLibrary := false
@@ -71,5 +76,3 @@ pomExtra := (
       <url>http://www.mattconroy.com</url>
     </developer>
   </developers>)
-
-useGpg := true

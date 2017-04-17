@@ -4,10 +4,14 @@ package forklift.consumer.decorators;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-import forklift.TestMsg;
+import forklift.Forklift;
+import forklift.connectors.ForkliftConnectorI;
 import forklift.connectors.ForkliftMessage;
 import forklift.consumer.Consumer;
+import forklift.consumer.LifeCycleMonitors;
 import forklift.decorators.Config;
 import forklift.decorators.Queue;
 import forklift.properties.PropertiesManager;
@@ -23,12 +27,21 @@ public class ConfigTest {
 
     private static File file;
     private static PropertiesManager pm;
-
+    private Forklift forklift;
+    private ForkliftConnectorI connector;
+    
     @Before
     public void setUp() {
         file = new File(Thread.currentThread().getContextClassLoader().getResource(CONF + ".properties").getPath());
         pm = new PropertiesManager();
         pm.register(file);
+        LifeCycleMonitors lifeCycle = new LifeCycleMonitors();
+        forklift = mock(Forklift.class);
+        connector = mock(ForkliftConnectorI.class);
+        when(connector.supportsQueue()).thenReturn(true);
+        when(connector.supportsTopic()).thenReturn(true);
+        when(forklift.getLifeCycle()).thenReturn(lifeCycle);
+        when(forklift.getConnector()).thenReturn(connector);
     }
 
     @After
@@ -38,9 +51,11 @@ public class ConfigTest {
 
     @Test
     public void testConfigInjection() {
-        Consumer test = new Consumer(TestConsumer.class, null, this.getClass().getClassLoader());
+        Consumer test = new Consumer(TestConsumer.class, forklift, this.getClass().getClassLoader());
         TestConsumer tc = new TestConsumer();
-        test.inject(new ForkliftMessage(new TestMsg("1")), tc);
+        final ForkliftMessage msg = new ForkliftMessage();
+        msg.setId("1");
+        test.inject(msg, tc);
         assertEquals(tc.all.get("value"), "a");
         assertEquals(tc.configTestProperties.get("value"), "a");
         assertEquals(tc.value, "a");

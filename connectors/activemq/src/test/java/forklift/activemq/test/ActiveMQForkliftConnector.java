@@ -2,14 +2,11 @@ package forklift.activemq.test;
 
 import forklift.connectors.ConnectorException;
 import forklift.connectors.ForkliftConnectorI;
-import forklift.connectors.ForkliftMessage;
 import forklift.consumer.ForkliftConsumerI;
 import forklift.producers.ForkliftProducerI;
 
 import javax.inject.Named;
 import javax.jms.Connection;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
 
 /**
  * Wrap the activemq connector with a spring annotation so that forklift can
@@ -30,7 +27,6 @@ public class ActiveMQForkliftConnector implements ForkliftConnectorI {
         TestServiceManager.getConnector().stop();
     }
 
-    @Override
     public Connection getConnection() throws ConnectorException {
         return TestServiceManager.getConnector().getConnection();
     }
@@ -43,11 +39,6 @@ public class ActiveMQForkliftConnector implements ForkliftConnectorI {
     @Override
     public ForkliftConsumerI getTopic(String name) throws ConnectorException {
         return TestServiceManager.getConnector().getTopic(name);
-    }
-
-    @Override
-    public ForkliftMessage jmsToForklift(Message m) {
-        return TestServiceManager.getConnector().jmsToForklift(m);
     }
 
     @Override

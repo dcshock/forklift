@@ -1,118 +1,87 @@
 = Forklift
 
-'''
 The Enterprise Service Bus that supports building and deploying microservices quickly
 and easily. Forklift makes your life easier by providing common functionality that can
 be shared by easily by annotating your code. To see what it can do for you check out the
 full documentation.
 
 link:doc/forklift.adoc[Documentation]
-= Releases
-* 0.33
-** Added support for embedding Forklift Server and runtime deployments
 
-* 0.32
-** Improve performance of replay indexing.
+== Releases
+link:doc/prev_releases.adoc[Previous Releases]
 
-* 0.31
+* *April 10th 2017* - v1.1
+** Kafka Connector
+** Core no longer depends on the JMS spec libraries
 
-* 0.30
-** Add ordering of messages. Ensures exclusive consumers process messages based on an abitrary order specified by the consumer.
+== Current Release Dependencies
+=== SBT
+----
+libraryDependencies += "com.github.dcshock" % "forklift-server" % "1.1"
+----
 
-* 0.29
-** Improve ES indexing performance by using the transport client rather than REST.
+=== Maven
+----
+<dependency>
+    <groupId>com.github.dcshock</groupId>
+    <artifactId>forklift-server</artifactId>
+    <version>1.0</version>
+</dependency>
+----
 
-* 0.28
-** Performance fix for Replay ES. Shouldn't block all threads based on the indexing resp time of elastic search. 
-** Correct shutdown issue that caused a queue to be completely consumed before allowing forklift to shutdown.
+=== link:https://hub.docker.com/r/dcshock/forklift/[Docker]
 
-* 0.27
-** Log errors from messages that will be retried as warnings. 
+==== Dockerfile
+----
+FROM dcshock/forklift:1.1
 
-* 0.26
-** Startup deployment scanning order changed to avoid a race condition where a property value may not have been loaded before the start of a consumer.
-** Fix validation issue that caused lists to not be validated correctly. 
+# Add jar'd binks projects to the deployment directory
+ADD my.jar $FORKLIFT_CONSUMER_HOME/my.jar
 
-* 0.25
-** Fix multithreading that didn't scale past two threads.
-** Include bash in the alpine based docker container so work arounds aren't necessary to start the system.
+# See boot.sh file below
+ADD boot.sh /opt/boot.sh
+CMD ["/opt/boot.sh"]
+----
 
-* 0.24
-** Synchronous producers
+==== Docker boot.sh
+A boot script that will start forklift based on several environment variables.
+----
+#!/bin/sh
+# startup forklift
 
-* 0.23
-* 0.22
-** Add retries to es indexing code for the retry and replay plugins.
+forklift-server 
+ -consulHost $NODE_IP 
+ -url consul.activemq-broker 
+ -monitor1 /usr/local/forklift/consumers 
+ -monitor2 /config 
+ -retryESHost $FORKLIFT_ES_HOST 
+ -retryESPort $FORKLIFT_ES_PORT 
+ -replayESHost $FORKLIFT_ES_HOST 
+ -replayESPort $FORKLIFT_ES_TRANSPORT_PORT 
+ -replayESCluster $FORKLIFT_ES_CLUSTER 
+ $FORKLIFT_RETRIES
+----
 
-* 0.21
-** Ensure consumers connections are cleaned up correctly.
+== Components
+Forklift is separated into individual libraries that make up the framework. forklift-server will bring
+in all the necessary dependencies and plugins to use Forklift with ActiveMQ.
 
-* 0.20
-** Fix thread pool restart after a consumer receives a badly formed message.
+Forklift-Server::
+Forklift packaged as a set of server based components that can be executed at runtime.
 
-* 0.18
-** Acknowledge messages once forklift has obtained the message and begins processing it. This
-corrects a bug that could cause a message to be processed twice in the event of a broker node failure.
+Forklift-Activemq::
+A connector for ActiveMQ.
 
-* 0.17
-** Add a separate thread to push replay logs to elastic search. This will allow msgs to be unhindered by the REST calls to ES.
-** Cleanup old errors from previous indexes before indexing the new doc. This can be inefficient, but guarantees the msg id is only in the system once.
+Forklift-Kafka::
+A connector for Kafka.
 
-* 0.16
-** Fix bug that causes the max retries exceeded prop to not show in replay logs.
-** Fix bug that caused the retry startup search to fail due to having too many results.
+Forklift-Stats::
+A plugin for Forklift that collects stats for each message and places them
+in properties for storage by other plugins.
 
-* 0.15
-** Elasticsearch implementation of retries and replay logs.
+Forklift-Retry::
+A broker agnostic implementation of retries. Uses elastic search for storage.
 
-* 0.13
-** Fix MultiThreaded consumer auto closing of resources.
-
-* 0.12
-** Auto closing of producers that are injected.
-
-* 0.11
-** Close jms sessions correctly to avoid open session buildup on the amq nodes.
-
-* 0.10
-** Added a new @Property annotation that injects message properties into the consumer
-** Extended @Config and @Headers to allow you to inject specific headers and config fields
-** The @On decorator now is repeatable; one method can now intercept multiple lifecycle events
-** Override classloader to delegate to the JVM libraries in cases where libs that start with these packages ("java", "com.sun", "sun", "org.xml", "org.w3c").
-
-* 0.9
-** Removed Scala build dependencies.
-** Added the ability to close the forklift producer to avoid memory leaks in client code.
-** Added key/value pair send viathe forklift producer.
-** Added a new On decorator that allows the lifecycle to be intercepted at any point by a method intercept.
-
-* 0.8
-** Remove spring completely from the core and replace with a service mechanism.
-
-* 0.7
-** Fix issue that would cause a consumer to stop processing due to a redelivery loop. This was caused any time a bad json parse occurred.
-
-* 0.6
-** Replay logger flush periodically if no messages are received. Helps guarantee nothing gets lost in the buffer.
-** Log file configuration. Setup the container to drop a log file in /logs.
-** Fix lost msgs that end up in the dead letter queue by using the core thread to process messages during a thread pool overload.
-** Allow multiple Queue/Topic annotations per consumer. This helps when needing to monitor two different queues for fast vs slow processing.
-
-* 0.5
-** Spring setup fixes
-** Main thread death fix when a consumer's spring context startup fails
-
-* 0.4
-** Allow the consul host to be specified
-** Fix failover url construction when using service discovery with only one broker.
-
-* 0.3
-** Updates to docker container builds
-** New arguments to allow retry/replay dirs to be set
-** Allow two deployment directories to be scanned
-
-* 0.2
-** Fix for property file injection into consumer.
-
-* 0.1
-** Initial beta release
+Forklift-Replay::
+A broker agnostic implementation of message replay logging. Uses elastic search for storage.
+Kibana makes a great tool to view Forklift replay logs.

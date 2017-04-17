@@ -1,5 +1,6 @@
 package forklift.replay;
 
+import forklift.Forklift;
 import forklift.connectors.ForkliftConnectorI;
 import forklift.connectors.ForkliftMessage;
 import forklift.consumer.Consumer;
@@ -25,8 +26,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-
-import javax.jms.JMSException;
 
 @Service
 public class ReplayES {
@@ -77,8 +76,9 @@ public class ReplayES {
         });
 
         this.producer = connector.getQueueProducer(ReplayConsumer.class.getAnnotation(Queue.class).value());
-
-        this.consumer = new Consumer(ReplayConsumer.class, connector,
+        final Forklift forklift = new Forklift();
+        forklift.setConnector(connector);
+        this.consumer = new Consumer(ReplayConsumer.class, forklift,
             Thread.currentThread().getContextClassLoader(), ReplayConsumer.class.getAnnotation(Queue.class));
         this.consumer.addServices(new ConsumerService(this));
         this.thread = new ConsumerThread(this.consumer);
@@ -149,7 +149,7 @@ public class ReplayES {
         final ForkliftMessage msg = mr.getMsg();
 
         // Read props of the message to see what we need to do with retry counts
-        final Map<String, Object> props = msg.getProperties();
+        final Map<String, String> props = msg.getProperties();
 
         final Map<String, String> fields = new HashMap<>();
         fields.put("text", msg.getMsg());
@@ -196,20 +196,15 @@ public class ReplayES {
         if (mr.getConsumer().getTopic() != null)
             fields.put("topic", mr.getConsumer().getTopic().value());
 
-        // Generate the id from the correlation id first followed by the generated amq id.
-        String id = null;
-        try {
-            id = msg.getJmsMsg().getJMSCorrelationID();
-            if (id == null || "".equals(id))
-                id = msg.getJmsMsg().getJMSMessageID();
-        } catch (JMSException ignored) {
-        }
-
-        // Push the message to the consumer
-        try {
-            this.producer.send(new ReplayESWriterMsg(id, fields));
-        } catch (ProducerException e) {
-            log.error("Unable to producer ES msg", e);
+        // Generate the id by reading the message id. If an id isn't found we just ignore the message.
+        final String id = msg.getId();
+        if (id != null) {
+            // Push the message to the consumer
+            try {
+                this.producer.send(new ReplayESWriterMsg(id, fields));
+            } catch (ProducerException e) {
+                log.error("Unable to producer ES msg", e);
+            }
         }
     }
 }

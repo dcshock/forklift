@@ -3,6 +3,7 @@ package forklift;
 import forklift.connectors.ConnectorException;
 import forklift.connectors.ForkliftConnectorI;
 import forklift.consumer.ConsumerDeploymentEvents;
+import forklift.consumer.LifeCycleMonitors;
 import forklift.deployment.DeploymentWatch;
 import forklift.exception.StartupException;
 
@@ -19,6 +20,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class Forklift {
     private static Logger log = LoggerFactory.getLogger("ForkLift");
 
+    private LifeCycleMonitors lifeCycle = new LifeCycleMonitors();
     private ForkliftConnectorI connector;
     private AtomicBoolean running = new AtomicBoolean(false);
 
@@ -55,6 +57,10 @@ public class Forklift {
 
     public void setConnector(ForkliftConnectorI connector) {
         this.connector = connector;
+    }
+
+    public LifeCycleMonitors getLifeCycle() {
+        return this.lifeCycle;
     }
 
     public boolean isRunning() {

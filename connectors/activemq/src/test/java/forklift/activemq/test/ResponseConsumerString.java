@@ -21,7 +21,7 @@ public class ResponseConsumerString {
     @OnMessage
     public void go() throws JMSException {
         if ("test".equals(s)) {
-            resolver.resolve(m.getJmsMsg().getJMSCorrelationID(), s);
+            resolver.resolve(m.getId(), s);
             throw new RuntimeException("This is expected");
         }
     }

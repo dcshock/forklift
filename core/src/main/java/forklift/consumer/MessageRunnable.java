@@ -1,6 +1,7 @@
 package forklift.consumer;
 
 import forklift.classloader.RunAsClassLoader;
+import forklift.connectors.ConnectorException;
 import forklift.connectors.ForkliftMessage;
 import forklift.producers.ForkliftProducerI;
 import org.slf4j.Logger;
@@ -15,8 +16,6 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import javax.jms.JMSException;
 
 public class MessageRunnable implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(MessageRunnable.class);
@@ -33,6 +32,7 @@ public class MessageRunnable implements Runnable {
     private List<String> errors;
     private List<Closeable> closeMe;
     private boolean warnOnly = false;
+    private LifeCycleMonitors lifeCycle;
 
     MessageRunnable(Consumer consumer, ForkliftMessage msg, ClassLoader classLoader, Object handler, List<Method> onMessage,
                     List<Method> onValidate, List<Method> onResponse, Map<ProcessStep, List<Method>> onProcessStep,
@@ -51,24 +51,31 @@ public class MessageRunnable implements Runnable {
         this.errors = new ArrayList<>();
         this.closeMe = closeMe;
 
-        LifeCycleMonitors.call(ProcessStep.Pending, this);
+        this.lifeCycle = consumer.getForklift().getLifeCycle();
+
+        this.lifeCycle.call(ProcessStep.Pending, this);
     }
 
     @Override
     public void run() {
         RunAsClassLoader.run(classLoader, () -> {
-            // Always ack message to prevent activemq deadlock
+            // Always ack message to prevent deadlocks
+            boolean acknowledged = false;
             try {
-                msg.getJmsMsg().acknowledge();
-            } catch (JMSException e) {
+                acknowledged = msg.acknowledge();
+            } catch (ConnectorException e) {
                 log.error("Error while acking message.", e);
+                acknowledged = false;
+            }
+
+            if (!acknowledged) {
                 close();
                 return;
             }
 
             // { Validating }
             runHooks(ProcessStep.Validating);
-            LifeCycleMonitors.call(ProcessStep.Validating, this);
+            this.lifeCycle.call(ProcessStep.Validating, this);
             for (Method m : onValidate) {
                 if (m.getReturnType() == List.class) {
                     addError(runLoggingErrors(() -> (List<String>)m.invoke(handler)));
@@ -84,18 +91,18 @@ public class MessageRunnable implements Runnable {
             if (errors.size() > 0) {
                 // { Invalid }
                 runHooks(ProcessStep.Invalid);
-                LifeCycleMonitors.call(ProcessStep.Invalid, this);
+                this.lifeCycle.call(ProcessStep.Invalid, this);
             } else {
                 // { Processing }
                 runHooks(ProcessStep.Processing);
-                LifeCycleMonitors.call(ProcessStep.Processing, this);
+                this.lifeCycle.call(ProcessStep.Processing, this);
                 for (Method m : onMessage) {
                     runLoggingErrors(() -> m.invoke(handler));
                 }
                 if (errors.size() > 0) {
                     // { Error }
                     runHooks(ProcessStep.Error);
-                    LifeCycleMonitors.call(ProcessStep.Error, this);
+                    this.lifeCycle.call(ProcessStep.Error, this);
                 } else {
                     // { Complete }
                     runHooks(ProcessStep.Complete);
@@ -118,13 +125,13 @@ public class MessageRunnable implements Runnable {
                                         respMsg.setMsg(consumer.mapper.writeValueAsString(obj));
                                     switch (uri.getScheme()) {
                                         case "queue":
-                                            try (ForkliftProducerI producer = consumer.getConnector().getQueueProducer(uri.getHost())) {
+                                            try (ForkliftProducerI producer = consumer.getForklift().getConnector().getQueueProducer(uri.getHost())) {
                                                 System.out.println("Sending: " + respMsg.getMsg());
                                                 producer.send(respMsg);
                                             }
                                             break;
                                         case "topic":
-                                            try (ForkliftProducerI producer = consumer.getConnector().getTopicProducer(uri.getHost())) {
+                                            try (ForkliftProducerI producer = consumer.getForklift().getConnector().getTopicProducer(uri.getHost())) {
                                                 producer.send(respMsg);
                                             }
                                             break;
@@ -144,7 +151,7 @@ public class MessageRunnable implements Runnable {
                         }
                     }
 
-                    LifeCycleMonitors.call(ProcessStep.Complete, this);
+                    this.lifeCycle.call(ProcessStep.Complete, this);
                 }
             }
             // Always log all non-null errors
