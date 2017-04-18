@@ -153,6 +153,7 @@ public class ConsumerTest {
         assertNotNull(ec.msg);
         assertNotNull(ec.person);
         assertTrue("scanning".equals(ec.msg.ideas[0]));
+        assertEquals(3, ec.kvl.size());
         assertEquals(2, ec.msg.ideas.length);
         assertEquals("Fred Jones", ec.msg.name);
         assertEquals("http://forklift", ec.msg.url);
