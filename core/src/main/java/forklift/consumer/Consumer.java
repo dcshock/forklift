@@ -35,7 +35,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -389,7 +388,7 @@ public class Consumer {
                         if (value instanceof ForkliftProducerI) {
                             closeMe.add((ForkliftProducerI)value);
                         }
-                        if(value != null) {
+                        if (value != null) {
                             f.set(instance, value);
                         }
                     } catch (JsonMappingException | JsonParseException e) {
@@ -429,18 +428,13 @@ public class Consumer {
                     break;
                 }
             }
-            if (injectable == null) {
-                throw new IllegalStateException("Unable to inject " +
-                                                constructor.getParameters()[index].getName() +
-                                                ".  Please check your annotations");
-            } else {
-                Parameter p = constructor.getParameters()[index];
-                Object value = getInjectableValue(injectable, null, p.getType(), forkliftMessage);
-                parameters[index] = value;
-                if (value != null && value instanceof ForkliftProducerI) {
-                    closeables.add((ForkliftProducerI)value);
-                }
+            Parameter p = constructor.getParameters()[index];
+            Object value = getInjectableValue(injectable, null, p.getType(), forkliftMessage);
+            parameters[index] = value;
+            if (value != null && value instanceof ForkliftProducerI) {
+                closeables.add((ForkliftProducerI)value);
             }
+
             index++;
         }
         return parameters;
@@ -448,7 +442,23 @@ public class Consumer {
 
     private Object getInjectableValue(Annotation decorator, String mappedName, Class<?> mappedClass, ForkliftMessage msg) throws IOException {
         Object value = null;
-        if (decorator.annotationType() == forklift.decorators.Message.class && msg.getMsg() != null) {
+        if (decorator == null || decorator.annotationType() == javax.inject.Inject.class) {
+            if (this.services != null) {
+                // Try to resolve the class from any available BeanResolvers.
+                for (ConsumerService s : this.services) {
+                    try {
+                        final Object o = s.resolve(mappedClass, null);
+                        if (o != null) {
+                            value = o;
+                            break;
+                        }
+                    } catch (Exception e) {
+                        log.debug("", e);
+                    }
+                }
+            }
+        }
+        else if (decorator.annotationType() == forklift.decorators.Message.class && msg.getMsg() != null) {
             if (mappedClass == ForkliftMessage.class) {
                 value = msg;
             } else if (mappedClass == String.class) {
@@ -459,19 +469,6 @@ public class Consumer {
             } else {
                 // Attempt to parse a json
                 value = mapper.readValue(msg.getMsg(), mappedClass);
-            }
-        } else if (decorator.annotationType() == javax.inject.Inject.class && this.services != null) {
-            // Try to resolve the class from any available BeanResolvers.
-            for (ConsumerService s : this.services) {
-                try {
-                    final Object o = s.resolve(mappedClass, null);
-                    if (o != null) {
-                        value = o;
-                        break;
-                    }
-                } catch (Exception e) {
-                    log.debug("", e);
-                }
             }
         } else if (decorator.annotationType() == Config.class) {
             if (mappedClass == Properties.class) {

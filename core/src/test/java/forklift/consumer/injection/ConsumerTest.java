@@ -1,4 +1,4 @@
-package forklift;
+package forklift.consumer.injection;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -7,10 +7,12 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import forklift.Forklift;
 import forklift.connectors.ConnectorException;
 import forklift.connectors.ForkliftConnectorI;
 import forklift.connectors.ForkliftMessage;
 import forklift.consumer.Consumer;
+import forklift.consumer.ConsumerService;
 import forklift.decorators.Headers;
 import forklift.decorators.Message;
 import forklift.decorators.Properties;
@@ -22,11 +24,9 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.inject.Inject;
 
 public class ConsumerTest {
 
@@ -134,17 +134,24 @@ public class ConsumerTest {
         assertEquals("default", ec.strval);
     }
 
+    /**
+     * Tests constructor injection into a consumer.
+     *
+     * @throws Exception
+     */
     @Test
-    public void jsonConstructorInjection() throws IOException, InstantiationException, IllegalAccessException, InvocationTargetException {
+    public void jsonConstructorInjection() throws Exception {
+        ConsumerService service = new ConsumerService(ServiceBeanResolver.class);
         Consumer test = new Consumer(ConstructorJsonConsumer.class, forklift, this.getClass().getClassLoader());
-
+        test.setServices(Arrays.asList(service));
 
         ForkliftMessage msg = new ForkliftMessage();
         msg.setId("1");
         msg.setMsg("{\"name\":\"Fred Jones\", \"url\":\"http://forklift\", \"ideas\":[\"scanning\", \"verifying\"]}");
         ConstructorJsonConsumer ec = (ConstructorJsonConsumer)test.getMsgHandlerInstance(msg);
-        
+
         assertNotNull(ec.msg);
+        assertNotNull(ec.person);
         assertTrue("scanning".equals(ec.msg.ideas[0]));
         assertEquals(2, ec.msg.ideas.length);
         assertEquals("Fred Jones", ec.msg.name);
@@ -182,6 +189,7 @@ public class ConsumerTest {
         assertEquals("blah", ec.strval);
         assertEquals(ec.producer, "testing");
     }
+
     @Test
     public void testHeadersAndProperties() {
 

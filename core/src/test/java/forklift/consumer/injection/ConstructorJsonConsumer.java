@@ -1,4 +1,4 @@
-package forklift;
+package forklift.consumer.injection;
 
 import forklift.connectors.ForkliftMessage;
 import forklift.decorators.Headers;
@@ -22,6 +22,7 @@ public class ConstructorJsonConsumer {
     Map<String, String> kvl;
     String str;
     ConsumerTest.ExpectedMsg msg;
+    Person person;
 
     @Inject
     public ConstructorJsonConsumer(@Headers Map<Headers, String> headers,
@@ -31,7 +32,8 @@ public class ConstructorJsonConsumer {
                                    @Message ForkliftMessage fmsg,
                                    @Message Map<String, String> kvl,
                                    @Message String str,
-                                   @Message ConsumerTest.ExpectedMsg msg) {
+                                   @Message ConsumerTest.ExpectedMsg msg,
+                                   Person person) {
         this.headers = headers;
         this.producer = producer;
         this.properties = properties;
@@ -40,6 +42,7 @@ public class ConstructorJsonConsumer {
         this.kvl = kvl;
         this.str = str;
         this.msg = msg;
+        this.person = person;
     }
 
 }
