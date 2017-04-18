@@ -4,6 +4,7 @@ name := "forklift-kafka"
 
 version := "1.0"
 
+//required for some test dependencies
 scalaVersion := "2.11.7"
 
 javacOptions ++= Seq("-source", "1.8")
