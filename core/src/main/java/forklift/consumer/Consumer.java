@@ -354,7 +354,7 @@ public class Consumer {
     public void setOutOfMessages(java.util.function.Consumer<Consumer> outOfMessages) {
         this.outOfMessages = outOfMessages;
     }
-
+    
     private final void configureConstructorInjection() {
         Constructor<?>[] constructors = msgHandler.getDeclaredConstructors();
         for (Constructor<?> constructor : constructors) {
@@ -457,8 +457,7 @@ public class Consumer {
                     }
                 }
             }
-        }
-        else if (decorator.annotationType() == forklift.decorators.Message.class && msg.getMsg() != null) {
+        } else if (decorator.annotationType() == forklift.decorators.Message.class && msg.getMsg() != null) {
             if (mappedClass == ForkliftMessage.class) {
                 value = msg;
             } else if (mappedClass == String.class) {
@@ -542,8 +541,16 @@ public class Consumer {
         return msgHandler;
     }
 
+    /**
+     * Creates an instance of hte MessageHandler class utilized by this constructor.  Constructor and Field level injection is performed using both the
+     * passed in msg and any Services {@link #addServices(ConsumerService...) added} to this consumer.
+     *
+     * @param msg
+     */
     public Object getMsgHandlerInstance(ForkliftMessage msg) throws InvocationTargetException, IOException, InstantiationException, IllegalAccessException {
-        return this.constructMessageHandlerInstance(msg, new ArrayList<>());
+        Object instance = this.constructMessageHandlerInstance(msg, new ArrayList<>());
+        inject(msg, instance);
+        return instance;
     }
 
     public Queue getQueue() {

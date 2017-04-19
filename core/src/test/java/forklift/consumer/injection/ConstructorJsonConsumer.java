@@ -11,6 +11,9 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
+/**
+ * A Consumer used to test constructor level injection.
+ */
 @Queue("constructorA")
 public class ConstructorJsonConsumer {
 
