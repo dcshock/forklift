@@ -10,7 +10,7 @@ import forklift.consumer.MessageRunnable;
 import forklift.consumer.ProcessStep;
 import forklift.decorators.BeanResolver;
 import forklift.decorators.LifeCycle;
-import forklift.decorators.Queue;
+import forklift.decorators.Topic;
 import forklift.decorators.Service;
 import forklift.message.Header;
 import forklift.producers.ForkliftProducerI;
@@ -75,11 +75,11 @@ public class ReplayES {
             }
         });
 
-        this.producer = connector.getQueueProducer(ReplayConsumer.class.getAnnotation(Queue.class).value());
+        this.producer = connector.getQueueProducer(ReplayConsumer.class.getAnnotation(Topic.class).value());
         final Forklift forklift = new Forklift();
         forklift.setConnector(connector);
         this.consumer = new Consumer(ReplayConsumer.class, forklift,
-            Thread.currentThread().getContextClassLoader(), ReplayConsumer.class.getAnnotation(Queue.class));
+            Thread.currentThread().getContextClassLoader(), ReplayConsumer.class.getAnnotation(Topic.class));
         this.consumer.addServices(new ConsumerService(this));
         this.thread = new ConsumerThread(this.consumer);
         this.thread.setName("ReplayES");
