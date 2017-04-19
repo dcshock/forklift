@@ -6,6 +6,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -52,14 +53,27 @@ public class KafkaControllerTests {
     }
 
     @Test
-    public void addTopicTrueTest() {
+    public void addTopicTrueTest() throws InterruptedException {
+        this.controller.start();
         String topic1 = "topic1";
         boolean added = this.controller.addTopic(topic1);
         assertEquals(true, added);
     }
 
     @Test
-    public void addTopicFalseTest() {
+    public void addingTheSameTopicRepeatedlyDoesntLock() throws InterruptedException {
+
+        this.controller.start();
+        String topic1 = "topic1";
+        for(int i = 0; i < 10; i++){
+            this.controller.addTopic(topic1);
+        }
+        assertTrue(true);
+    }
+
+    @Test
+    public void addTopicFalseTest() throws InterruptedException  {
+        this.controller.start();
         String topic1 = "topic1";
         boolean added = this.controller.addTopic(topic1);
         assertEquals(true, added);
@@ -68,7 +82,8 @@ public class KafkaControllerTests {
     }
 
     @Test
-    public void removeAddedTopicTest() {
+    public void removeAddedTopicTest() throws InterruptedException  {
+        this.controller.start();
         String topic1 = "topic1";
         this.controller.addTopic(topic1);
         boolean removed = this.controller.removeTopic(topic1);
@@ -76,7 +91,8 @@ public class KafkaControllerTests {
     }
 
     @Test
-    public void removeNotAddedTopicTest() {
+    public void removeNotAddedTopicTest() throws InterruptedException  {
+        this.controller.start();
         String topic1 = "topic1";
         boolean removed = this.controller.removeTopic(topic1);
         assertEquals(false, removed);
@@ -124,16 +140,18 @@ public class KafkaControllerTests {
         assertEquals(1, subscribeCaptor.getValue().size());
         assertTrue(subscribeCaptor.getValue().contains(topic1));
         //remove the topic
+        reset(kafkaConsumer);
         this.controller.removeTopic(topic1);
         verify(kafkaConsumer, timeout(200).times(1)).subscribe(subscribeCaptor.capture(), any());
         assertEquals(0, subscribeCaptor.getValue().size());
-        this.controller.stop(10, TimeUnit.MILLISECONDS);
         //add the topic back
+        reset(kafkaConsumer);
         this.controller.addTopic(topic1);
         verify(kafkaConsumer, timeout(200).times(1)).subscribe(subscribeCaptor.capture(), any());
         verify(kafkaConsumer, timeout(200).atLeast(5)).poll((anyLong()));
         assertEquals(1, subscribeCaptor.getValue().size());
         assertTrue(subscribeCaptor.getValue().contains(topic1));
+        this.controller.stop(10, TimeUnit.MILLISECONDS);
     }
 
     private ConsumerRecord<?, ?> generateRecord(String topic, int partition, String value, long offset) {

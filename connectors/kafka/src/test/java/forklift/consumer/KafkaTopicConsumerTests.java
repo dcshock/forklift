@@ -53,13 +53,13 @@ public class KafkaTopicConsumerTests {
     }
 
     @Test
-    public void addTopicTest() throws ConnectorException {
+    public void addTopicTest() throws ConnectorException, InterruptedException {
         consumer.receive(100);
         verify(controller).addTopic(this.topic);
     }
 
     @Test
-    public void closeAndRemoveTopicTest() throws ConnectorException {
+    public void closeAndRemoveTopicTest() throws ConnectorException, InterruptedException {
         consumer.close();
         verify(controller).removeTopic(this.topic);
     }
