@@ -354,14 +354,14 @@ public class Consumer {
     public void setOutOfMessages(java.util.function.Consumer<Consumer> outOfMessages) {
         this.outOfMessages = outOfMessages;
     }
-    
+
     private final void configureConstructorInjection() {
         Constructor<?>[] constructors = msgHandler.getDeclaredConstructors();
         List<Constructor> injectableConstructors = Arrays.stream(constructors).filter(constructor -> constructor.isAnnotationPresent(Inject.class)).collect(Collectors.toList());
-        if(injectableConstructors.size() > 0){
+        if (injectableConstructors.size() > 0) {
             this.constructor = injectableConstructors.get(0);
             this.constructorAnnotations = this.constructor.getParameterAnnotations();
-            if(injectableConstructors.size() > 1) {
+            if (injectableConstructors.size() > 1) {
                 log.error("Multiple constructors annotated with Inject.  Using first injectable constructor found");
             }
         }
@@ -548,9 +548,18 @@ public class Consumer {
      *
      * @param msg
      */
-    public Object getMsgHandlerInstance(ForkliftMessage msg) throws InvocationTargetException, IOException, InstantiationException, IllegalAccessException {
-        Object instance = this.constructMessageHandlerInstance(msg, new ArrayList<>());
-        inject(msg, instance);
+    public Object getMsgHandlerInstance(ForkliftMessage msg) {
+        Object instance = null;
+        try {
+            instance = this.constructMessageHandlerInstance(msg, new ArrayList<>());
+            inject(msg, instance);
+        } catch (JsonMappingException | JsonParseException e) {
+            log.warn("Unable to parse json for injection.", e);
+        } catch (Exception e) {
+            log.error("Error injecting data into Msg Handler", e);
+            e.printStackTrace();
+            throw new RuntimeException("Error injecting data into Msg Handler Constructor");
+        }
         return instance;
     }
 
