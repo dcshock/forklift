@@ -48,6 +48,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -357,11 +358,12 @@ public class Consumer {
     
     private final void configureConstructorInjection() {
         Constructor<?>[] constructors = msgHandler.getDeclaredConstructors();
-        for (Constructor<?> constructor : constructors) {
-            if (constructor.isAnnotationPresent(Inject.class)) {
-                this.constructor = constructor;
-                this.constructorAnnotations = this.constructor.getParameterAnnotations();
-                break;
+        List<Constructor> injectableConstructors = Arrays.stream(constructors).filter(constructor -> constructor.isAnnotationPresent(Inject.class)).collect(Collectors.toList());
+        if(injectableConstructors.size() > 0){
+            this.constructor = injectableConstructors.get(0);
+            this.constructorAnnotations = this.constructor.getParameterAnnotations();
+            if(injectableConstructors.size() > 1) {
+                log.error("Multiple constructors annotated with Inject.  Using first injectable constructor found");
             }
         }
     }
