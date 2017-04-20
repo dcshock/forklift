@@ -544,7 +544,7 @@ public class Consumer {
     }
 
     /**
-     * Creates an instance of hte MessageHandler class utilized by this constructor.  Constructor and Field level injection is performed using both the
+     * Creates an instance of the MessageHandler class utilized by this constructor.  Constructor and Field level injection is performed using both the
      * passed in msg and any Services {@link #addServices(ConsumerService...) added} to this consumer.
      *
      * @param msg
