@@ -252,7 +252,6 @@ public class Consumer {
                 ForkliftMessage consumerMsg;
                 while ((consumerMsg = consumer.receive(2500)) != null && running.get()) {
                     try {
-
                         final List<Closeable> closeMe = new ArrayList<>();
                         final Object handler = constructMessageHandlerInstance(consumerMsg, closeMe);
 
