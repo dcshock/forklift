@@ -1,5 +1,7 @@
 package forklift.decorators;
 
+import forklift.source.TopicSource;
+
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
@@ -12,6 +14,7 @@ import java.lang.annotation.Target;
  * Specify which Topic a processor should watch for messages.
  */
 @Documented
+@SourceType(TopicSource.class)
 @Repeatable(Topics.class)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})

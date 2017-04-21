@@ -8,6 +8,7 @@ public interface ForkliftConnectorI {
     void stop() throws ConnectorException;
     ForkliftConsumerI getQueue(String name) throws ConnectorException;
     ForkliftConsumerI getTopic(String name) throws ConnectorException;
+    ForkliftConsumerI consumeFromSource(ConsumerSource source) throws ConnectorException;
     ForkliftProducerI getQueueProducer(String name);
     ForkliftProducerI getTopicProducer(String name);
 

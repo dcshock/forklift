@@ -15,6 +15,9 @@ import forklift.decorators.Service;
 import forklift.message.Header;
 import forklift.producers.ForkliftProducerI;
 import forklift.producers.ProducerException;
+import forklift.source.TopicSource;
+import forklift.source.QueueSource;
+
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
@@ -191,10 +194,9 @@ public class ReplayES {
         fields.put("time", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
 
         // Store the queue/topic.
-        if (mr.getConsumer().getQueue() != null)
-            fields.put("queue", mr.getConsumer().getQueue().value());
-        if (mr.getConsumer().getTopic() != null)
-            fields.put("topic", mr.getConsumer().getTopic().value());
+        mr.getConsumer().getSource()
+            .accept(QueueSource.class, queue -> fields.put("queue", queue.getName()) )
+            .accept(TopicSource.class, topic -> fields.put("topic", topic.getName()) );
 
         // Generate the id by reading the message id. If an id isn't found we just ignore the message.
         final String id = msg.getId();

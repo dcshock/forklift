@@ -1,14 +1,10 @@
 package forklift.consumer;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import forklift.Forklift;
 import forklift.classloader.RunAsClassLoader;
 import forklift.connectors.ConnectorException;
 import forklift.connectors.ForkliftMessage;
+import forklift.connectors.ConsumerSource;
 import forklift.consumer.parser.KeyValueParser;
 import forklift.decorators.Config;
 import forklift.decorators.Headers;
@@ -24,6 +20,15 @@ import forklift.decorators.Topic;
 import forklift.message.Header;
 import forklift.producers.ForkliftProducerI;
 import forklift.properties.PropertiesManager;
+import forklift.source.QueueSource;
+import forklift.source.TopicSource;
+
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,8 +66,8 @@ public class Consumer {
     private final Map<String, List<MessageRunnable>> orderQueue;
     private final Map<ProcessStep, List<Method>> onProcessStep;
     private String name;
-    private Queue queue;
-    private Topic topic;
+    private ConsumerSource source;
+
     private List<ConsumerService> services;
     private Method orderMethod;
 
@@ -85,25 +90,36 @@ public class Consumer {
         this(msgHandler, forklift, classLoader, false);
     }
 
-    public Consumer(Class<?> msgHandler, Forklift forklift, ClassLoader classLoader, Queue q) {
+    public Consumer(Class<?> msgHandler, Forklift forklift, ClassLoader classLoader, Queue queue) {
         this(msgHandler, forklift, classLoader, true);
-        this.queue = q;
-
-        if (this.queue == null)
+        if (queue == null)
             throw new IllegalArgumentException("Msg Handler must handle a queue.");
 
+        this.source = new ConsumerSource(new QueueSource(queue));
         this.name = queue.value() + ":" + id.getAndIncrement();
+
         log = LoggerFactory.getLogger(this.name);
     }
 
-    public Consumer(Class<?> msgHandler, Forklift forklift, ClassLoader classLoader, Topic t) {
+    public Consumer(Class<?> msgHandler, Forklift forklift, ClassLoader classLoader, Topic topic) {
         this(msgHandler, forklift, classLoader, true);
-        this.topic = t;
-
-        if (this.topic == null)
+        if (topic == null)
             throw new IllegalArgumentException("Msg Handler must handle a topic.");
 
+        this.source = new ConsumerSource(new TopicSource(topic));
         this.name = topic.value() + ":" + id.getAndIncrement();
+
+        log = LoggerFactory.getLogger(this.name);
+    }
+
+    public Consumer(Class<?> msgHandler, Forklift forklift, ClassLoader classLoader, ConsumerSource source) {
+        this(msgHandler, forklift, classLoader, true);
+        this.source = source;
+
+        this.name = source
+            .apply(QueueSource.class, queue -> queue.getName())
+            .apply(TopicSource.class, topic -> topic.getName())
+            .get() + ":" + id.getAndIncrement();
         log = LoggerFactory.getLogger(this.name);
     }
 
@@ -113,25 +129,19 @@ public class Consumer {
         this.forklift = forklift;
         this.msgHandler = msgHandler;
 
-        if (!preinit && queue == null && topic == null) {
-            this.queue = msgHandler.getAnnotation(Queue.class);
-            this.topic = msgHandler.getAnnotation(Topic.class);
+        if (!preinit && source == null) {
+            final List<ConsumerSource> sources = ConsumerSource.getConsumerSources(msgHandler);
 
-            if (this.queue != null && this.topic != null)
-                throw new IllegalArgumentException("Msg Handler cannot consume a queue and topic");
+            if (sources.size() > 1)
+                throw new IllegalArgumentException("One consumer instance cannot consume more than one source");
+            if (sources.size() == 0)
+                throw new IllegalArgumentException("A consumer must consume at least one source");
 
-            if (this.queue != null && !forklift.getConnector().supportsQueue())
-                throw new RuntimeException("@Queue is not supported by the current connector");
-
-            if (this.topic != null && !forklift.getConnector().supportsTopic())
-                throw new RuntimeException("@Topic is not supported by the current connector");
-
-            if (this.queue != null)
-                this.name = queue.value() + ":" + id.getAndIncrement();
-            else if (this.topic != null)
-                this.name = topic.value() + ":" + id.getAndIncrement();
-            else
-                throw new IllegalArgumentException("Msg Handler must handle a queue or topic.");
+            this.source = sources.get(0);
+            this.name = source
+                .apply(QueueSource.class, queue -> queue.getName())
+                .apply(TopicSource.class, topic -> topic.getName())
+                .get() + ":" + id.getAndIncrement();
         }
 
         log = LoggerFactory.getLogger(Consumer.class);
@@ -199,12 +209,7 @@ public class Consumer {
     public void listen() {
         final ForkliftConsumerI consumer;
         try {
-            if (topic != null)
-                consumer = forklift.getConnector().getTopic(topic.value());
-            else if (queue != null)
-                consumer = forklift.getConnector().getQueue(queue.value());
-            else
-                throw new RuntimeException("No queue/topic specified");
+            consumer = forklift.getConnector().consumeFromSource(source);
 
             // Init the thread pools if the msg handler is multi threaded. If the msg handler is single threaded
             // it'll just run in the current thread to prevent any message read ahead that would be performed.
@@ -487,16 +492,12 @@ public class Consumer {
         return msgHandler;
     }
 
-    public Queue getQueue() {
-        return queue;
-    }
-
-    public Topic getTopic() {
-        return topic;
-    }
-
     public Forklift getForklift() {
         return forklift;
+    }
+
+    public ConsumerSource getSource() {
+        return source;
     }
 
     public void addServices(ConsumerService... services) {

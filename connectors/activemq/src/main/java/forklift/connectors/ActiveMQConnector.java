@@ -4,6 +4,9 @@ import forklift.consumer.ActiveMQMessageConsumer;
 import forklift.consumer.ForkliftConsumerI;
 import forklift.producers.ActiveMQProducer;
 import forklift.producers.ForkliftProducerI;
+import forklift.source.QueueSource;
+import forklift.source.TopicSource;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQSession;
@@ -97,6 +100,14 @@ public class ActiveMQConnector implements ForkliftConnectorI {
         } catch (JMSException e) {
             throw new ConnectorException(e.getMessage());
         }
+    }
+
+    @Override
+    public ForkliftConsumerI consumeFromSource(ConsumerSource source) throws ConnectorException {
+        return source
+            .apply(QueueSource.class, queue -> getQueue(queue.getName()))
+            .apply(TopicSource.class, topic -> getTopic(topic.getName()))
+            .elseUnsupported();
     }
 
     @Override

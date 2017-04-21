@@ -6,10 +6,10 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@SourceTypeContainer
+/**
+ * Specifies that the annotated annotation contains ConsumerSource annotations that can be used to get a ForkliftConsumerI from a connector.
+ */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE})
-public @interface Queues {
-    Queue[] value();
-}
+@Target(ElementType.ANNOTATION_TYPE)
+public @interface SourceTypeContainer {}

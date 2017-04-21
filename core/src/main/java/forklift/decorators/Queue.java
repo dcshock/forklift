@@ -1,5 +1,7 @@
 package forklift.decorators;
 
+import forklift.source.QueueSource;
+
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
@@ -12,6 +14,7 @@ import java.lang.annotation.Target;
  * Specify which queue a processor should pull messages off.
  */
 @Documented
+@SourceType(QueueSource.class)
 @Repeatable(Queues.class)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})

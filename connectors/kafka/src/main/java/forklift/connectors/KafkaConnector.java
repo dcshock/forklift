@@ -6,6 +6,8 @@ import forklift.controller.KafkaController;
 import forklift.message.MessageStream;
 import forklift.producers.ForkliftProducerI;
 import forklift.producers.KafkaForkliftProducer;
+import forklift.source.QueueSource;
+import forklift.source.TopicSource;
 
 import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
 import io.confluent.kafka.serializers.KafkaAvroSerializerConfig;
@@ -98,6 +100,14 @@ public class KafkaConnector implements ForkliftConnectorI {
     @Override
     public ForkliftConsumerI getQueue(String name) throws ConnectorException {
         return getTopic(name);
+    }
+
+    @Override
+    public ForkliftConsumerI consumeFromSource(ConsumerSource source) throws ConnectorException {
+        return source
+            .apply(QueueSource.class, queue -> getQueue(queue.getName()))
+            .apply(TopicSource.class, topic -> getTopic(topic.getName()))
+            .elseUnsupported();
     }
 
     @Override

@@ -1,16 +1,20 @@
 package forklift.retry;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.google.gson.JsonObject;
 import forklift.Forklift;
 import forklift.connectors.ForkliftMessage;
 import forklift.consumer.MessageRunnable;
 import forklift.consumer.ProcessStep;
 import forklift.decorators.LifeCycle;
 import forklift.message.Header;
+import forklift.source.TopicSource;
+import forklift.source.QueueSource;
+
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.google.gson.JsonObject;
+
 import io.searchbox.client.JestClient;
 import io.searchbox.client.JestClientFactory;
 import io.searchbox.client.config.HttpClientConfig;
@@ -19,10 +23,10 @@ import io.searchbox.core.Index;
 import io.searchbox.core.Search;
 import io.searchbox.core.SearchResult;
 import io.searchbox.core.SearchResult.Hit;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.function.Consumer;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -32,6 +36,7 @@ import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 /**
  * Handles retries for consumers that have been annotated with Retry
@@ -214,10 +219,9 @@ public class RetryES {
         fields.put("time", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
 
         // Store the queue/topic.
-        if (mr.getConsumer().getQueue() != null)
-            fields.put("queue", mr.getConsumer().getQueue().value());
-        if (mr.getConsumer().getTopic() != null)
-            fields.put("topic", mr.getConsumer().getTopic().value());
+        mr.getConsumer().getSource()
+            .accept(QueueSource.class, queue -> fields.put("queue", queue.getName()))
+            .accept(TopicSource.class, topic -> fields.put("topic", topic.getName()));
 
         // Get the message id. If there is no id we ignore the retry...
         final String id = msg.getId();
@@ -256,11 +260,9 @@ public class RetryES {
         retryMessage.setStep(ProcessStep.Error);
         retryMessage.setProperties(msg.getProperties());
 
-        if (mr.getConsumer().getQueue() != null)
-            retryMessage.setQueue(mr.getConsumer().getQueue().value());
-
-        if (mr.getConsumer().getTopic() != null)
-            retryMessage.setTopic(mr.getConsumer().getTopic().value());
+        mr.getConsumer().getSource()
+            .accept(QueueSource.class, queue -> retryMessage.setQueue(queue.getName()))
+            .accept(TopicSource.class, topic -> retryMessage.setTopic(topic.getName()));
 
         return retryMessage;
     }

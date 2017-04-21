@@ -1,9 +1,11 @@
 package forklift.activemq.test;
 
 import forklift.connectors.ConnectorException;
+import forklift.connectors.ConsumerSource;
 import forklift.connectors.ForkliftConnectorI;
 import forklift.consumer.ForkliftConsumerI;
 import forklift.producers.ForkliftProducerI;
+import forklift.source.SourceI;
 
 import javax.inject.Named;
 import javax.jms.Connection;
@@ -39,6 +41,11 @@ public class ActiveMQForkliftConnector implements ForkliftConnectorI {
     @Override
     public ForkliftConsumerI getTopic(String name) throws ConnectorException {
         return TestServiceManager.getConnector().getTopic(name);
+    }
+
+    @Override
+    public ForkliftConsumerI consumeFromSource(ConsumerSource source) throws ConnectorException {
+        return TestServiceManager.getConnector().consumeFromSource(source);
     }
 
     @Override

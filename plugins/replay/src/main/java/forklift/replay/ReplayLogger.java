@@ -5,6 +5,8 @@ import forklift.consumer.Consumer;
 import forklift.consumer.MessageRunnable;
 import forklift.consumer.ProcessStep;
 import forklift.decorators.LifeCycle;
+import forklift.source.QueueSource;
+import forklift.source.TopicSource;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -83,11 +85,9 @@ public class ReplayLogger {
         replayMsg.properties = msg.getProperties();
         replayMsg.errors = mr.getErrors();
 
-        if (consumer.getQueue() != null)
-            replayMsg.queue = consumer.getQueue().value();
-
-        if (consumer.getTopic() != null)
-            replayMsg.topic = consumer.getTopic().value();
+        consumer.getSource()
+            .accept(QueueSource.class, queue -> replayMsg.queue = queue.getName())
+            .accept(TopicSource.class, topic -> replayMsg.topic = topic.getName());
 
         this.writer.put(replayMsg);
     }
