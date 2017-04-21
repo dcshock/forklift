@@ -247,17 +247,12 @@ public class ConsumerSourceTest {
 
     class JustATestException extends Exception { }
 
-    @Test
-    public void testExceptionalFunctionApplicationsThrowCorrectExceptions() {
+    @Test(expected = JustATestException.class)
+    public void testExceptionalFunctionApplicationThrowsCorrectException() throws JustATestException {
         final ConsumerSource source = new ConsumerSource(new QueueSource("a"));
 
-        try {
-            source.apply(QueueSource.class, queue -> {
-                throw new JustATestException();
-            });
-        } catch (JustATestException expected) { // catching or throwing this exception is required by the compiler
-            return;
-        }
-        Assert.fail();
+        source.apply(QueueSource.class, queue -> {
+            throw new JustATestException();
+        });
     }
 }
