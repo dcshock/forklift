@@ -104,6 +104,12 @@ public class ConsumerSource {
             return result;
         }
 
+        public OUT getOrDefault(OUT defaultValue) {
+            if (!handled)
+                return defaultValue;
+            return result;
+        }
+
         public OUT elseUnsupportedError() {
             if (!handled) {
                 throw new RuntimeException("SourceType " + source.getClass().getSimpleName() + " is not supported");

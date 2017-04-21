@@ -166,6 +166,18 @@ public class ConsumerSourceTest {
         Assert.assertNull(result);
     }
 
+    @Test
+    public void testGetOrDefaultAfterUhandledFunctionApplicationGivesDefaultValue() {
+        final ConsumerSource source = new ConsumerSource(new QueueSource("a"));
+        final String defaultValue = "default";
+
+        final String result = source
+            .apply(TopicSource.class, topic -> "topic")
+            .getOrDefault(defaultValue);
+
+        Assert.assertEquals(defaultValue, result);
+    }
+
     @Test(expected = RuntimeException.class)
     public void testUnhandledFunctionApplicationGivesUnhandledException() {
         final ConsumerSource source = new ConsumerSource(new QueueSource("a"));
