@@ -4,6 +4,7 @@ import forklift.consumer.ActiveMQMessageConsumer;
 import forklift.consumer.ForkliftConsumerI;
 import forklift.producers.ActiveMQProducer;
 import forklift.producers.ForkliftProducerI;
+import forklift.source.GroupedTopicSource;
 import forklift.source.QueueSource;
 import forklift.source.TopicSource;
 
@@ -107,7 +108,15 @@ public class ActiveMQConnector implements ForkliftConnectorI {
         return source
             .apply(QueueSource.class, queue -> getQueue(queue.getName()))
             .apply(TopicSource.class, topic -> getTopic(topic.getName()))
+            .apply(GroupedTopicSource.class, topic -> getGroupedTopic(topic))
             .elseUnsupportedError();
+    }
+
+    private ForkliftConsumerI getGroupedTopic(GroupedTopicSource source) throws ConnectorException {
+        if (!source.groupSpecified())
+            throw new ConnectorException("No consumer group specified");
+
+        return getQueue("Consumer." + source.getGroup() + ".VirtualTopic." + source.getName());
     }
 
     @Override
