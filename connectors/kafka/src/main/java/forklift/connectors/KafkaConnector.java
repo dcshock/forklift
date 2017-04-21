@@ -6,6 +6,7 @@ import forklift.controller.KafkaController;
 import forklift.message.MessageStream;
 import forklift.producers.ForkliftProducerI;
 import forklift.producers.KafkaForkliftProducer;
+import forklift.source.GroupedTopicSource;
 import forklift.source.QueueSource;
 import forklift.source.TopicSource;
 
@@ -98,26 +99,40 @@ public class KafkaConnector implements ForkliftConnectorI {
     }
 
     @Override
-    public ForkliftConsumerI getQueue(String name) throws ConnectorException {
-        return getTopic(name);
-    }
-
-    @Override
     public ForkliftConsumerI consumeFromSource(ConsumerSource source) throws ConnectorException {
         return source
             .apply(QueueSource.class, queue -> getQueue(queue.getName()))
             .apply(TopicSource.class, topic -> getTopic(topic.getName()))
+            .apply(GroupedTopicSource.class, topic -> getGroupedTopic(topic))
             .elseUnsupportedError();
     }
 
-    @Override
-    public synchronized ForkliftConsumerI getTopic(String name) throws ConnectorException {
+    public synchronized ForkliftConsumerI getGroupedTopic(GroupedTopicSource source) throws ConnectorException {
+        if (!source.groupSpecified()) {
+            source.overrideGroup(groupId);
+        }
+
+        if (!source.getGroup().equals(groupId)) {
+            throw new ConnectorException("Unexpected group '" + source.getGroup() + "'; only the connector group '" + groupId + "' is allowed");
+        }
+
         if (controller == null || !controller.isRunning()) {
             controller = createController();
             controller.start();
         }
-        return new KafkaTopicConsumer(name, controller);
+        return new KafkaTopicConsumer(source.getName(), controller);
     }
+
+    @Override
+    public ForkliftConsumerI getQueue(String name) throws ConnectorException {
+        return getGroupedTopic(new GroupedTopicSource(name, groupId));
+    }
+
+    @Override
+    public ForkliftConsumerI getTopic(String name) throws ConnectorException {
+        return getGroupedTopic(new GroupedTopicSource(name, groupId));
+    }
+
 
     @Override
     public ForkliftProducerI getQueueProducer(String name) {
