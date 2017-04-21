@@ -11,6 +11,7 @@ import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class ConsumerSourceTest {
     @Test
@@ -25,6 +26,9 @@ public class ConsumerSourceTest {
                                new ConsumerSource(new TopicSource("test")));
     }
 
+    /**
+     * Test creating ConsumerSource lists from annotated consumer classes
+     */
     @Test
     public void testCreationFromNoSourceConsumer() {
         final List<ConsumerSource> sources = ConsumerSource.getConsumerSources(NoSourceConsumer.class);
@@ -87,4 +91,128 @@ public class ConsumerSourceTest {
     @Topic("test-topic")
     class MixedSourceConsumer {}
 
+    /**
+     * Test case handling on ConsumerSource
+     */
+    @Test
+    public void testFunctionApplicationNormalCases() {
+        final ConsumerSource queueSource = new ConsumerSource(new QueueSource("a"));
+        final ConsumerSource topicSource = new ConsumerSource(new TopicSource("b"));
+
+        Assert.assertEquals("queue-a", simpleSourceOp(queueSource));
+        Assert.assertEquals("topic-b", simpleSourceOp(topicSource));
+    }
+
+    private String simpleSourceOp(ConsumerSource source) {
+        return source
+            .apply(QueueSource.class, queue -> "queue-" + queue.getName())
+            .apply(TopicSource.class, topic -> "topic-" + topic.getName())
+            .get();
+    }
+
+    @Test
+    public void testFunctionApplicationCaseOrder() {
+        final ConsumerSource source = new ConsumerSource(new QueueSource("a"));
+
+        final String resultOrderA = source
+            .apply(QueueSource.class, queue -> "queue")
+            .apply(TopicSource.class, topic -> "topic")
+            .get();
+        final String resultOrderB = source
+            .apply(TopicSource.class, topic -> "topic")
+            .apply(QueueSource.class, queue -> "queue")
+            .get();
+
+        Assert.assertEquals(resultOrderA, resultOrderB);
+    }
+
+    @Test
+    public void testFunctionApplicationUnhandledNull() {
+        final ConsumerSource source = new ConsumerSource(new QueueSource("a"));
+
+        final String result = source
+            .apply(TopicSource.class, topic -> "topic")
+            .get();
+
+        Assert.assertNull(result);
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testUnhandledFunctionApplicationGivesUnhandledException() {
+        final ConsumerSource source = new ConsumerSource(new QueueSource("a"));
+
+        final String result = source
+            .apply(TopicSource.class, topic -> "topic")
+            .elseUnsupportedError();
+    }
+
+    @Test
+    public void testHandledFunctionApplicationGivesNoUnhandledException() {
+        final ConsumerSource source = new ConsumerSource(new QueueSource("a"));
+
+        final String result = source
+            .apply(QueueSource.class, topic -> "queue")
+            .elseUnsupportedError();
+    }
+
+    @Test
+    public void testVoidFunctionApplicationNormalCases() {
+        final AtomicReference<String> state = new AtomicReference<>("unset");
+        final ConsumerSource queueSource = new ConsumerSource(new QueueSource("a"));
+        final ConsumerSource topicSource = new ConsumerSource(new TopicSource("b"));
+
+        queueSource
+            .accept(QueueSource.class, queue -> state.set("queue"))
+            .accept(TopicSource.class, topic -> state.set("topic"));
+        Assert.assertEquals(state.get(), "queue");
+
+        state.set("unset");
+
+        topicSource
+            .accept(QueueSource.class, queue -> state.set("queue"))
+            .accept(TopicSource.class, topic -> state.set("topic"));
+        Assert.assertEquals(state.get(), "topic");
+    }
+
+    @Test
+    public void testVoidFunctionApplicationCaseOrder() {
+        final AtomicReference<String> state = new AtomicReference<>("unset");
+        final ConsumerSource source = new ConsumerSource(new QueueSource("a"));
+
+        source
+            .accept(QueueSource.class, queue -> state.set("queue"))
+            .accept(TopicSource.class, topic -> state.set("topic"));
+        final String stateOrderA = state.get();
+
+        state.set("unset");
+
+        source
+            .accept(TopicSource.class, topic -> state.set("topic"))
+            .accept(QueueSource.class, queue -> state.set("queue"));
+        final String stateOrderB = state.get();
+
+        Assert.assertEquals(stateOrderA, stateOrderB);
+    }
+
+    private void noop() {}
+
+    @Test
+    public void testVoidFunctionApplicationGivesNull() {
+        final ConsumerSource source = new ConsumerSource(new QueueSource("a"));
+
+        Object o = source
+            .accept(QueueSource.class, queue -> noop())
+            .get();
+
+        Assert.assertNull(o);
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testUnhandledVoidFunctionApplicationGivesUnhandledException() {
+        final ConsumerSource source = new ConsumerSource(new QueueSource("a"));
+
+        source
+            .accept(TopicSource.class, topic -> noop())
+            .elseUnsupportedError();
+    }
 }
