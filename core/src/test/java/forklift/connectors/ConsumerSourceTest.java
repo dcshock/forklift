@@ -9,6 +9,11 @@ import forklift.source.TopicSource;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Repeatable;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -54,6 +59,7 @@ public class ConsumerSourceTest {
         Assert.assertEquals(expectedSources, sources);
     }
 
+
     @Test
     public void testCreationFromManualRepeatedSourceConsumer() {
         final List<ConsumerSource> sources = ConsumerSource.getConsumerSources(ManualRepeatedSourceConsumer.class);
@@ -68,6 +74,15 @@ public class ConsumerSourceTest {
         final List<ConsumerSource> sources = ConsumerSource.getConsumerSources(MixedSourceConsumer.class);
         final List<ConsumerSource> expectedSources = Arrays.asList(new ConsumerSource(new QueueSource("test-queue")),
                                                                    new ConsumerSource(new TopicSource("test-topic")));
+
+        Assert.assertEquals(expectedSources, sources);
+    }
+
+    @Test
+    public void testCreationIgnoresNonSourceTypeAnnotations() {
+        final List<ConsumerSource> sources = ConsumerSource.getConsumerSources(SomeIrrelevantAnnotationSourceConsumer.class);
+        final List<ConsumerSource> expectedSources = Arrays.asList(new ConsumerSource(new QueueSource("a")),
+                                                                   new ConsumerSource(new TopicSource("b")));
 
         Assert.assertEquals(expectedSources, sources);
     }
@@ -90,6 +105,20 @@ public class ConsumerSourceTest {
     @Queue("test-queue")
     @Topic("test-topic")
     class MixedSourceConsumer {}
+
+    // Some meaningless annotations to test that they are ignored
+    @Target(ElementType.TYPE) @Retention(RetentionPolicy.RUNTIME) @interface Bogus {}
+    @Target(ElementType.TYPE) @Retention(RetentionPolicy.RUNTIME) @Repeatable(Things.class) @interface Thing {}
+    @Target(ElementType.TYPE) @Retention(RetentionPolicy.RUNTIME) @interface Things { Thing[] value(); }
+
+    @Queue("a")
+    @Bogus
+    @Things({
+        @Thing,
+        @Thing
+    })
+    @Topic("b")
+    class SomeIrrelevantAnnotationSourceConsumer {}
 
     /**
      * Test case handling on ConsumerSource
@@ -214,5 +243,21 @@ public class ConsumerSourceTest {
         source
             .accept(TopicSource.class, topic -> noop())
             .elseUnsupportedError();
+    }
+
+    class JustATestException extends Exception { }
+
+    @Test
+    public void testExceptionalFunctionApplicationsThrowCorrectExceptions() {
+        final ConsumerSource source = new ConsumerSource(new QueueSource("a"));
+
+        try {
+            source.apply(QueueSource.class, queue -> {
+                throw new JustATestException();
+            });
+        } catch (JustATestException expected) { // catching or throwing this exception is required by the compiler
+            return;
+        }
+        Assert.fail();
     }
 }
