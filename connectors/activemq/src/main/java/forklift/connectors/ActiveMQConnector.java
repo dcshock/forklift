@@ -107,7 +107,7 @@ public class ActiveMQConnector implements ForkliftConnectorI {
         return source
             .apply(QueueSource.class, queue -> getQueue(queue.getName()))
             .apply(TopicSource.class, topic -> getTopic(topic.getName()))
-            .elseUnsupported();
+            .elseUnsupportedError();
     }
 
     @Override

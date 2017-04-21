@@ -104,7 +104,7 @@ public class ConsumerSource {
             return result;
         }
 
-        public OUT elseUnsupported() {
+        public OUT elseUnsupportedError() {
             if (!handled) {
                 throw new RuntimeException("SourceType " + source.getClass().getSimpleName() + " is not supported");
             }
