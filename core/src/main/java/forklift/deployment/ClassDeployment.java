@@ -2,7 +2,7 @@ package forklift.deployment;
 
 import forklift.decorators.CoreService;
 import forklift.decorators.Service;
-import forklift.source.SourceI;
+import forklift.source.SourceUtil;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
@@ -32,7 +32,7 @@ public class ClassDeployment implements Deployment {
             if (c.isAnnotationPresent(Service.class)){
                 services.add(c);
             }
-            if (SourceI.hasSourceAnnotation(c)) {
+            if (SourceUtil.hasSourceAnnotation(c)) {
                 consumers.add(c);
             }
         }

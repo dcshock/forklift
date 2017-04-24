@@ -4,7 +4,7 @@ import forklift.classloader.ChildFirstClassLoader;
 import forklift.classloader.RunAsClassLoader;
 import forklift.decorators.CoreService;
 import forklift.decorators.Service;
-import forklift.source.SourceI;
+import forklift.source.SourceUtil;
 
 import org.reflections.Reflections;
 import org.reflections.scanners.SubTypesScanner;
@@ -72,7 +72,7 @@ public class FileDeployment implements Deployment{
 
         // Reflect the deployment to determine if there are any consumers
         // annotated.
-        SourceI.SourceTypeScanner sourceScanner = new SourceI.SourceTypeScanner(cl);
+        SourceUtil.SourceTypeScanner sourceScanner = new SourceUtil.SourceTypeScanner(cl);
         reflections = new Reflections(new ConfigurationBuilder()
             .addClassLoader(cl)
             .setUrls(urls)

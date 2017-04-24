@@ -3,6 +3,7 @@ package forklift.connectors;
 import forklift.decorators.SourceType;
 import forklift.decorators.SourceTypeContainer;
 import forklift.source.SourceI;
+import forklift.source.SourceUtil;
 
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
@@ -18,14 +19,14 @@ public class ConsumerSource {
     public static List<ConsumerSource> getConsumerSources(Class<?> clazz) {
         return Arrays.stream(clazz.getAnnotations())
             .flatMap(annotation -> {
-                if (SourceI.isSourceAnnotation(annotation))
+                if (SourceUtil.isSourceAnnotation(annotation))
                     return Stream.of(annotation);
-                else if (SourceI.isSourceAnnotationContainer(annotation))
+                else if (SourceUtil.isSourceAnnotationContainer(annotation))
                     return Arrays.stream(getContainedAnnotations(annotation));
 
                 return Stream.empty();
              })
-            .map(annotation -> SourceI.fromSourceAnnotation(annotation))
+            .map(annotation -> SourceUtil.fromSourceAnnotation(annotation))
             .map(source -> new ConsumerSource(source))
             .collect(Collectors.toList());
     }
