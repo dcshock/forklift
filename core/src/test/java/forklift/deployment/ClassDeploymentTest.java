@@ -26,8 +26,7 @@ public class ClassDeploymentTest {
         File f = ForkliftTest.testMultiTQJar();
         ClassDeployment d = new ClassDeployment(TestCoreService1.class, TestQueue1.class, TestQueue2.class, TestService1.class, TestTopic1.class);
         assertNotNull(d);
-        assertEquals(2, d.getQueues().size());
-        assertEquals(1, d.getTopics().size());
+        assertEquals(3, d.getConsumers().size());
         assertEquals(1, d.getCoreServices().size());
         assertEquals(1, d.getServices().size());
     }

@@ -3,6 +3,7 @@ package forklift.consumer;
 import forklift.Forklift;
 import forklift.classloader.CoreClassLoaders;
 import forklift.classloader.RunAsClassLoader;
+import forklift.connectors.ConsumerSource;
 import forklift.concurrent.Executors;
 import forklift.decorators.Queue;
 import forklift.decorators.Topic;
@@ -63,22 +64,11 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
         // TODO initialize core services, and join classloaders.
         // CoreClassLoaders.getInstance().register(deployment.getClassLoader());
 
-        deployment.getQueues().forEach(c -> {
-            for (Annotation a : c.getAnnotationsByType(Queue.class)) {
-                log.info("Found annotation {} on {}", a, c);
-                final Consumer consumer = new Consumer(c, forklift, deployment.getClassLoader(), (Queue)a); 
-                consumer.setServices(services);
-                
-                final ConsumerThread thread = new ConsumerThread(consumer);
-                threads.add(thread);
-                executor.submit(thread);    
-            }
-        });
+        deployment.getConsumers().forEach(consumerClass -> {
+            for (ConsumerSource source : ConsumerSource.getConsumerSources(consumerClass)) {
+                log.info("Found source {} on {}", source, consumerClass);
 
-        deployment.getTopics().forEach(c -> {
-            for (Annotation a : c.getAnnotationsByType(Topic.class)) {
-                log.info("Found annotation {} on {}", a, c);
-                final Consumer consumer = new Consumer(c, forklift, deployment.getClassLoader(), (Topic)a); 
+                final Consumer consumer = new Consumer(consumerClass, forklift, deployment.getClassLoader(), source);
                 consumer.setServices(services);
 
                 final ConsumerThread thread = new ConsumerThread(consumer);

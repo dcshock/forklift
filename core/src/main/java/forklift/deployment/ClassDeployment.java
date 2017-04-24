@@ -1,8 +1,11 @@
 package forklift.deployment;
 
+import forklift.decorators.CoreService;
+import forklift.decorators.Service;
+import forklift.source.SourceI;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
-import forklift.decorators.*;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -16,32 +19,21 @@ import java.util.stream.Stream;
  * Created by afrieze on 10/28/16.
  */
 public class ClassDeployment implements Deployment {
-
-    private Set<Class<?>> queues = new HashSet<>();
-    private Set<Class<?>> topics = new HashSet<>();
+    private Set<Class<?>> consumers = new HashSet<>();
     private Set<Class<?>> services = new HashSet<>();
     private Set<Class<?>> coreServices = new HashSet<>();
 
     public ClassDeployment(Class<?> ...deploymentClasses){
         Preconditions.checkNotNull(deploymentClasses);
         for(Class<?> c : deploymentClasses){
-            if(c.isAnnotationPresent(CoreService.class)){
+            if (c.isAnnotationPresent(CoreService.class)){
                 coreServices.add(c);
             }
-            if(c.isAnnotationPresent(Queue.class)){
-                queues.add(c);
-            }
-            if(c.isAnnotationPresent(Queues.class)){
-                queues.add(c);
-            }
-            if(c.isAnnotationPresent(Service.class)){
+            if (c.isAnnotationPresent(Service.class)){
                 services.add(c);
             }
-            if(c.isAnnotationPresent(Topic.class)){
-                topics.add(c);
-            }
-            if(c.isAnnotationPresent(Topics.class)){
-                topics.add(c);
+            if (SourceI.hasSourceAnnotation(c)) {
+                consumers.add(c);
             }
         }
     }
@@ -57,13 +49,8 @@ public class ClassDeployment implements Deployment {
     }
 
     @Override
-    public Set<Class<?>> getQueues() {
-        return queues;
-    }
-
-    @Override
-    public Set<Class<?>> getTopics() {
-        return topics;
+    public Set<Class<?>> getConsumers() {
+        return consumers;
     }
 
     @Override
@@ -78,8 +65,7 @@ public class ClassDeployment implements Deployment {
 
         ClassDeployment that = (ClassDeployment) o;
 
-        if (!queues.equals(that.queues)) return false;
-        if (!topics.equals(that.topics)) return false;
+        if (!consumers.equals(that.consumers)) return false;
         if (!services.equals(that.services)) return false;
         return coreServices.equals(that.coreServices);
 
@@ -87,8 +73,7 @@ public class ClassDeployment implements Deployment {
 
     @Override
     public int hashCode() {
-        int result = queues.hashCode();
-        result = 31 * result + topics.hashCode();
+        int result = consumers.hashCode();
         result = 31 * result + services.hashCode();
         result = 31 * result + coreServices.hashCode();
         return result;
