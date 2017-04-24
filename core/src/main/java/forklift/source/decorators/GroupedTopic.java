@@ -1,4 +1,4 @@
-package forklift.decorators;
+package forklift.source.decorators;
 
 import forklift.source.GroupedTopicSource;
 

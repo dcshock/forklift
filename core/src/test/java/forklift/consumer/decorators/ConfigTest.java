@@ -13,8 +13,9 @@ import forklift.connectors.ForkliftMessage;
 import forklift.consumer.Consumer;
 import forklift.consumer.LifeCycleMonitors;
 import forklift.decorators.Config;
-import forklift.decorators.Queue;
 import forklift.properties.PropertiesManager;
+import forklift.source.decorators.Queue;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

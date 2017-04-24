@@ -14,14 +14,14 @@ import forklift.decorators.OnMessage;
 import forklift.decorators.OnValidate;
 import forklift.decorators.Ons;
 import forklift.decorators.Order;
-import forklift.decorators.Queue;
 import forklift.decorators.Response;
-import forklift.decorators.Topic;
 import forklift.message.Header;
 import forklift.producers.ForkliftProducerI;
 import forklift.properties.PropertiesManager;
 import forklift.source.QueueSource;
 import forklift.source.TopicSource;
+import forklift.source.decorators.Queue;
+import forklift.source.decorators.Topic;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.DeserializationFeature;

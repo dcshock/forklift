@@ -119,8 +119,9 @@ public final class ForkliftServer {
     }
 
     /**
-     * Registers a collection of classes as new deployment.  Classes are scanned for the {@link Queue}, {@link Topic},
-     * {@link Topics} {@link Service}, {@link CoreService} annotations.
+     * Registers a collection of classes as new deployment.
+     * Classes are scanned for the annotations: {@link forklift.decorators.Service}, {@link forklift.decorators.CoreService}, and
+     * the {@link forklift.source.decorators.SourceType} group of annotations.
      *
      * @param deploymentClasses the classes which make up the deployment
      */

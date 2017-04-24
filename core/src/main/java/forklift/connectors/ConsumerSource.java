@@ -1,9 +1,9 @@
 package forklift.connectors;
 
-import forklift.decorators.SourceType;
-import forklift.decorators.SourceTypeContainer;
 import forklift.source.SourceI;
 import forklift.source.SourceUtil;
+import forklift.source.decorators.SourceType;
+import forklift.source.decorators.SourceTypeContainer;
 
 import java.lang.annotation.Annotation;
 import java.util.Arrays;

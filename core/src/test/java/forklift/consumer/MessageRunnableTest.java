@@ -9,7 +9,7 @@ import forklift.connectors.ForkliftMessage;
 import forklift.decorators.LifeCycle;
 import forklift.decorators.OnMessage;
 import forklift.decorators.OnValidate;
-import forklift.decorators.Queue;
+import forklift.source.decorators.Queue;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;

@@ -1,7 +1,7 @@
 package forklift.source;
 
-import forklift.decorators.SourceType;
-import forklift.decorators.SourceTypeContainer;
+import forklift.source.decorators.SourceType;
+import forklift.source.decorators.SourceTypeContainer;
 
 import org.reflections.scanners.AbstractScanner;
 import org.slf4j.Logger;

@@ -2,10 +2,11 @@ package forklift.activemq.test;
 
 import forklift.connectors.ForkliftConnectorI;
 import forklift.consumer.Consumer;
-import forklift.decorators.Queue;
 import forklift.producers.ForkliftResultResolver;
 import forklift.producers.ForkliftSyncProducer;
 import forklift.producers.ForkliftSyncProducerI;
+import forklift.source.decorators.Queue;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;

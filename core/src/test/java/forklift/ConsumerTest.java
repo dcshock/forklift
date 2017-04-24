@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
 import forklift.connectors.ConnectorException;
 import forklift.connectors.ForkliftConnectorI;
 import forklift.connectors.ForkliftMessage;
@@ -13,11 +14,13 @@ import forklift.consumer.Consumer;
 import forklift.decorators.Headers;
 import forklift.decorators.Message;
 import forklift.decorators.Properties;
-import forklift.decorators.Queue;
-import forklift.decorators.Topic;
 import forklift.message.Header;
+import forklift.source.decorators.Queue;
+import forklift.source.decorators.Topic;
+
 import org.junit.Before;
 import org.junit.Test;
+
 import java.util.HashMap;
 import java.util.Map;
 

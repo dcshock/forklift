@@ -1,6 +1,6 @@
 package forklift.source;
 
-import forklift.decorators.Queue;
+import forklift.source.decorators.Queue;
 
 import java.util.Objects;
 

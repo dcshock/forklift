@@ -6,10 +6,10 @@ import forklift.connectors.ForkliftMessage;
 import forklift.decorators.MultiThreaded;
 import forklift.decorators.OnMessage;
 import forklift.decorators.Producer;
-import forklift.decorators.Queue;
 import forklift.integration.server.TestServiceManager;
 import forklift.producers.ForkliftProducerI;
 import forklift.schemas.AvroMessage;
+import forklift.source.decorators.Queue;
 
 import org.junit.After;
 import org.junit.Before;

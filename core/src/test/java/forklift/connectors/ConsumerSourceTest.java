@@ -1,10 +1,10 @@
 package forklift.connectors;
 
-import forklift.decorators.Queue;
-import forklift.decorators.Queues;
-import forklift.decorators.Topic;
 import forklift.source.QueueSource;
 import forklift.source.TopicSource;
+import forklift.source.decorators.Queue;
+import forklift.source.decorators.Queues;
+import forklift.source.decorators.Topic;
 
 import org.junit.Assert;
 import org.junit.Test;

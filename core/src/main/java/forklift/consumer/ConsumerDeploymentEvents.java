@@ -5,8 +5,6 @@ import forklift.classloader.CoreClassLoaders;
 import forklift.classloader.RunAsClassLoader;
 import forklift.connectors.ConsumerSource;
 import forklift.concurrent.Executors;
-import forklift.decorators.Queue;
-import forklift.decorators.Topic;
 import forklift.deployment.Deployment;
 import forklift.deployment.FileDeployment;
 import forklift.deployment.DeploymentEvents;

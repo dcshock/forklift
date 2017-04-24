@@ -10,13 +10,13 @@ import forklift.consumer.MessageRunnable;
 import forklift.consumer.ProcessStep;
 import forklift.decorators.BeanResolver;
 import forklift.decorators.LifeCycle;
-import forklift.decorators.Queue;
 import forklift.decorators.Service;
 import forklift.message.Header;
 import forklift.producers.ForkliftProducerI;
 import forklift.producers.ProducerException;
 import forklift.source.TopicSource;
 import forklift.source.QueueSource;
+import forklift.source.decorators.Queue;
 
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.node.Node;
