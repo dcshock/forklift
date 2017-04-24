@@ -12,6 +12,7 @@ import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Stream;
 
 /**
  * A utility for dealing with Source annotations
@@ -19,8 +20,28 @@ import java.util.Set;
 public class SourceUtil {
     private static final Logger log = LoggerFactory.getLogger(SourceUtil.class);
 
+    public static Stream<SourceI> getSources(Class<?> clazz) {
+        return Arrays.stream(clazz.getAnnotations())
+            .flatMap(annotation -> {
+                if (isSourceAnnotation(annotation))
+                    return Stream.of(annotation);
+                else if (isSourceAnnotationContainer(annotation))
+                    return Arrays.stream(getContainedAnnotations(annotation));
+
+                return Stream.empty();
+             })
+            .map(annotation -> fromSourceAnnotation(annotation));
+    }
+
+    private static Annotation[] getContainedAnnotations(Annotation annotation) {
+        try {
+            return (Annotation[]) annotation.annotationType().getMethod("value").invoke(annotation);
+        } catch (Exception ignored) {}
+        return new Annotation[] {};
+    }
+
     public static SourceI fromSourceAnnotation(Annotation annotation) {
-        if (!SourceUtil.isSourceAnnotation(annotation))
+        if (!isSourceAnnotation(annotation))
             return null;
 
         try {
@@ -40,11 +61,11 @@ public class SourceUtil {
             .anyMatch(annotation -> isSourceAnnotation(annotation) || isSourceAnnotationContainer(annotation));
     }
 
-    public static boolean isSourceAnnotation(Annotation annotation) {
+    private static boolean isSourceAnnotation(Annotation annotation) {
         return annotation.annotationType().isAnnotationPresent(SourceType.class);
     }
 
-    public static boolean isSourceAnnotationContainer(Annotation annotation) {
+    private static boolean isSourceAnnotationContainer(Annotation annotation) {
         return annotation.annotationType().isAnnotationPresent(SourceTypeContainer.class);
     }
 
@@ -65,7 +86,7 @@ public class SourceUtil {
             try {
                 Class<?> clazz = loader.loadClass(className);
 
-                if (SourceUtil.hasSourceAnnotation(clazz)) {
+                if (hasSourceAnnotation(clazz)) {
                     classesFound.add(clazz);
                 }
             } catch (ClassNotFoundException e) {

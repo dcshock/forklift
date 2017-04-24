@@ -17,25 +17,9 @@ import java.util.stream.Stream;
 
 public class ConsumerSource {
     public static List<ConsumerSource> getConsumerSources(Class<?> clazz) {
-        return Arrays.stream(clazz.getAnnotations())
-            .flatMap(annotation -> {
-                if (SourceUtil.isSourceAnnotation(annotation))
-                    return Stream.of(annotation);
-                else if (SourceUtil.isSourceAnnotationContainer(annotation))
-                    return Arrays.stream(getContainedAnnotations(annotation));
-
-                return Stream.empty();
-             })
-            .map(annotation -> SourceUtil.fromSourceAnnotation(annotation))
+        return SourceUtil.getSources(clazz)
             .map(source -> new ConsumerSource(source))
             .collect(Collectors.toList());
-    }
-
-    private static Annotation[] getContainedAnnotations(Annotation annotation) {
-        try {
-            return (Annotation[]) annotation.annotationType().getMethod("value").invoke(annotation);
-        } catch (Exception ignored) {}
-        return new Annotation[] {};
     }
 
     private SourceI source;
