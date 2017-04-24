@@ -116,7 +116,12 @@ public class ActiveMQConnector implements ForkliftConnectorI {
         if (!source.groupSpecified())
             throw new ConnectorException("No consumer group specified");
 
-        return getQueue("Consumer." + source.getGroup() + ".VirtualTopic." + source.getName());
+        // Sanitize the group and topic names so that group and topic names don't accidentally
+        // mess up ActiveMQ's pattern matching
+        final String groupName = source.getGroup().replaceAll("\\.", "_");
+        final String topicName = source.getName().replaceAll("\\.", "_");
+
+        return consumeFromSource(new ConsumerSource(new QueueSource("Consumer." + groupName + ".VirtualTopic." + topicName)));
     }
 
     @Override
