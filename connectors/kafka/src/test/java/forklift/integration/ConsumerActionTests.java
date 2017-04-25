@@ -15,8 +15,6 @@ public class ConsumerActionTests extends BaseIntegrationTest {
      */
     @Test
     public void topicTurnoverTest() throws StartupException, ConnectorException, InterruptedException, ProducerException {
-
-        String topic = "forklift-string-topic";
         Forklift forklift = serviceManager.newManagedForkliftInstance();
         ForkliftProducerI producer = forklift.getConnector().getQueueProducer("forklift-string-topic");
         sentMessageIds.add(producer.send("message1"));
