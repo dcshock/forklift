@@ -4,12 +4,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
 import forklift.controller.KafkaController;
 import forklift.message.MessageStream;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -22,8 +22,12 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
 import java.util.Collection;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by afrieze on 3/3/17.
@@ -62,17 +66,27 @@ public class KafkaControllerTests {
 
     @Test
     public void addingTheSameTopicRepeatedlyDoesntLock() throws InterruptedException {
-
+        ExecutorService executor = Executors.newSingleThreadExecutor();
         this.controller.start();
         String topic1 = "topic1";
-        for(int i = 0; i < 10; i++){
-            this.controller.addTopic(topic1);
+        AtomicInteger timesAdded = new AtomicInteger(0);
+        int timesToAdd = 10;
+        for (int i = 0; i < timesToAdd; i++) {
+            executor.execute(() -> {
+                try {
+                    this.controller.addTopic(topic1);
+                    timesAdded.incrementAndGet();
+                } catch (InterruptedException ignored) {
+                }
+            });
         }
-        assertTrue(true);
+        executor.shutdown();
+        executor.awaitTermination(500, TimeUnit.MILLISECONDS);
+        assertEquals(timesToAdd, timesAdded.get());
     }
 
     @Test
-    public void addTopicFalseTest() throws InterruptedException  {
+    public void addTopicFalseTest() throws InterruptedException {
         this.controller.start();
         String topic1 = "topic1";
         boolean added = this.controller.addTopic(topic1);
@@ -82,7 +96,7 @@ public class KafkaControllerTests {
     }
 
     @Test
-    public void removeAddedTopicTest() throws InterruptedException  {
+    public void removeAddedTopicTest() throws InterruptedException {
         this.controller.start();
         String topic1 = "topic1";
         this.controller.addTopic(topic1);
@@ -91,7 +105,7 @@ public class KafkaControllerTests {
     }
 
     @Test
-    public void removeNotAddedTopicTest() throws InterruptedException  {
+    public void removeNotAddedTopicTest() throws InterruptedException {
         this.controller.start();
         String topic1 = "topic1";
         boolean removed = this.controller.removeTopic(topic1);
