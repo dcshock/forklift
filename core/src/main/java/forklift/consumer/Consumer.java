@@ -421,7 +421,6 @@ public class Consumer {
         Object[] parameters = new Object[constructorAnnotations.length];
         int index = 0;
         for (Annotation[] parameterAnnotations : constructorAnnotations) {
-            //there must be at least one annotation that indicates what we should inject
             Annotation injectable = null;
             for (Annotation parameterAnnotation : parameterAnnotations) {
                 if (injectFields.containsKey(parameterAnnotation.annotationType())) {
