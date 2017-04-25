@@ -2,6 +2,7 @@ package forklift.source;
 
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -13,10 +14,30 @@ import java.util.stream.Stream;
  */
 public abstract class SourceI {
     public static List<SourceI> getSources(Class<?> clazz) {
-        return SourceUtil.getSources(clazz)
-            .collect(Collectors.toList());
+        return Collections.unmodifiableList(
+            SourceUtil.getSources(clazz)
+                .collect(Collectors.toList()));
     }
 
+    private Class<?> contextClass;
+    public void setContextClass(Class<?> contextClass){
+        this.contextClass = contextClass;
+
+        onContextSet();
+    }
+
+    public Class<?> getContextClass() {
+        return contextClass;
+    }
+
+    /**
+     * This method should be overriden to initialize any state that depends on the class-based context for the source
+     */
+    protected void onContextSet() {}
+
+    /*
+     * Case class-type logic
+     */
     public <SOURCE extends SourceI, OUT, EX extends Throwable> SourceIHandler<OUT> apply(Class<SOURCE> sourceType, ExceptionalFunction<SOURCE, OUT, EX> action) throws EX {
         return new SourceIHandler<OUT>(this).apply(sourceType, action);
     }

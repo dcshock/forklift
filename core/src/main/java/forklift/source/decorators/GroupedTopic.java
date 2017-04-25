@@ -1,10 +1,10 @@
 package forklift.source.decorators;
 
 import forklift.source.GroupedTopicSource;
+import forklift.source.SourceType;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
-import java.lang.annotation.Inherited;
 import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

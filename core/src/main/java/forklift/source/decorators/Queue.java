@@ -1,6 +1,7 @@
 package forklift.source.decorators;
 
 import forklift.source.QueueSource;
+import forklift.source.SourceType;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

@@ -1,7 +1,7 @@
 package forklift.source;
 
-import forklift.source.decorators.SourceType;
-import forklift.source.decorators.SourceTypeContainer;
+import forklift.source.SourceType;
+import forklift.source.SourceTypeContainer;
 
 import org.reflections.scanners.AbstractScanner;
 import org.slf4j.Logger;
@@ -30,7 +30,11 @@ public class SourceUtil {
 
                 return Stream.empty();
              })
-            .map(annotation -> fromSourceAnnotation(annotation));
+            .map(annotation -> {
+                SourceI source = fromSourceAnnotation(annotation);
+                source.setContextClass(clazz);
+                return source;
+            });
     }
 
     private static Annotation[] getContainedAnnotations(Annotation annotation) {
