@@ -7,7 +7,7 @@ import java.util.Objects;
 /**
  * A more easily usable form of the annotation {@code @GroupTopic}.
  */
-public class GroupedTopicSource implements SourceI {
+public class GroupedTopicSource extends SourceI {
     private final String name;
     private String group;
 

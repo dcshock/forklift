@@ -4,7 +4,6 @@ import forklift.Forklift;
 import forklift.classloader.RunAsClassLoader;
 import forklift.connectors.ConnectorException;
 import forklift.connectors.ForkliftMessage;
-import forklift.connectors.ConsumerSource;
 import forklift.consumer.parser.KeyValueParser;
 import forklift.decorators.Config;
 import forklift.decorators.Headers;
@@ -20,6 +19,7 @@ import forklift.producers.ForkliftProducerI;
 import forklift.properties.PropertiesManager;
 import forklift.source.GroupedTopicSource;
 import forklift.source.QueueSource;
+import forklift.source.SourceI;
 import forklift.source.TopicSource;
 import forklift.source.decorators.GroupedTopic;
 import forklift.source.decorators.Queue;
@@ -68,7 +68,7 @@ public class Consumer {
     private final Map<String, List<MessageRunnable>> orderQueue;
     private final Map<ProcessStep, List<Method>> onProcessStep;
     private String name;
-    private ConsumerSource source;
+    private SourceI source;
 
     private List<ConsumerService> services;
     private Method orderMethod;
@@ -97,7 +97,7 @@ public class Consumer {
         if (queue == null)
             throw new IllegalArgumentException("Msg Handler must handle a queue.");
 
-        this.source = new ConsumerSource(new QueueSource(queue));
+        this.source = new QueueSource(queue);
         this.name = queue.value() + ":" + id.getAndIncrement();
 
         log = LoggerFactory.getLogger(this.name);
@@ -108,13 +108,13 @@ public class Consumer {
         if (topic == null)
             throw new IllegalArgumentException("Msg Handler must handle a topic.");
 
-        this.source = new ConsumerSource(new TopicSource(topic));
+        this.source = new TopicSource(topic);
         this.name = topic.value() + ":" + id.getAndIncrement();
 
         log = LoggerFactory.getLogger(this.name);
     }
 
-    public Consumer(Class<?> msgHandler, Forklift forklift, ClassLoader classLoader, ConsumerSource source) {
+    public Consumer(Class<?> msgHandler, Forklift forklift, ClassLoader classLoader, SourceI source) {
         this(msgHandler, forklift, classLoader, true);
         this.source = source;
 
@@ -133,7 +133,7 @@ public class Consumer {
         this.msgHandler = msgHandler;
 
         if (!preinit && source == null) {
-            final List<ConsumerSource> sources = ConsumerSource.getConsumerSources(msgHandler);
+            final List<SourceI> sources = SourceI.getSources(msgHandler);
 
             if (sources.size() > 1)
                 throw new IllegalArgumentException("One consumer instance cannot consume more than one source");
@@ -500,7 +500,7 @@ public class Consumer {
         return forklift;
     }
 
-    public ConsumerSource getSource() {
+    public SourceI getSource() {
         return source;
     }
 

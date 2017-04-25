@@ -7,7 +7,7 @@ import java.util.Objects;
 /**
  * A more easily usable form of the annotation {@code @Queue}.
  */
-public class QueueSource implements SourceI {
+public class QueueSource extends SourceI {
     private final String name;
     public QueueSource(String name) {
         this.name = name;

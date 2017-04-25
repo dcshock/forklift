@@ -6,6 +6,7 @@ import forklift.producers.ActiveMQProducer;
 import forklift.producers.ForkliftProducerI;
 import forklift.source.GroupedTopicSource;
 import forklift.source.QueueSource;
+import forklift.source.SourceI;
 import forklift.source.TopicSource;
 
 import org.apache.activemq.ActiveMQConnection;
@@ -104,7 +105,7 @@ public class ActiveMQConnector implements ForkliftConnectorI {
     }
 
     @Override
-    public ForkliftConsumerI consumeFromSource(ConsumerSource source) throws ConnectorException {
+    public ForkliftConsumerI consumeFromSource(SourceI source) throws ConnectorException {
         return source
             .apply(QueueSource.class, queue -> getQueue(queue.getName()))
             .apply(TopicSource.class, topic -> getTopic(topic.getName()))
@@ -121,7 +122,7 @@ public class ActiveMQConnector implements ForkliftConnectorI {
         final String groupName = source.getGroup().replaceAll("\\.", "_");
         final String topicName = source.getName().replaceAll("\\.", "_");
 
-        return consumeFromSource(new ConsumerSource(new QueueSource("Consumer." + groupName + ".VirtualTopic." + topicName)));
+        return consumeFromSource(new QueueSource("Consumer." + groupName + ".VirtualTopic." + topicName));
     }
 
     @Override

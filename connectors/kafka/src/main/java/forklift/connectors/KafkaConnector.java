@@ -8,6 +8,7 @@ import forklift.producers.ForkliftProducerI;
 import forklift.producers.KafkaForkliftProducer;
 import forklift.source.GroupedTopicSource;
 import forklift.source.QueueSource;
+import forklift.source.SourceI;
 import forklift.source.TopicSource;
 
 import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
@@ -99,7 +100,7 @@ public class KafkaConnector implements ForkliftConnectorI {
     }
 
     @Override
-    public ForkliftConsumerI consumeFromSource(ConsumerSource source) throws ConnectorException {
+    public ForkliftConsumerI consumeFromSource(SourceI source) throws ConnectorException {
         return source
             .apply(QueueSource.class, queue -> getQueue(queue.getName()))
             .apply(TopicSource.class, topic -> getTopic(topic.getName()))

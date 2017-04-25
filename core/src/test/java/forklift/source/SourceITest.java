@@ -1,4 +1,4 @@
-package forklift.connectors;
+package forklift.source;
 
 import forklift.source.QueueSource;
 import forklift.source.TopicSource;
@@ -18,49 +18,49 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class ConsumerSourceTest {
+public class SourceITest {
     @Test
     public void testSameSourceEqual() {
-        Assert.assertEquals(new ConsumerSource(new QueueSource("test")),
-                            new ConsumerSource(new QueueSource("test")));
+        Assert.assertEquals(new QueueSource("test"),
+                            new QueueSource("test"));
     }
 
     @Test
     public void testSameSourceTypeWithDifferentPropertiesNotEqual() {
-        Assert.assertNotEquals(new ConsumerSource(new QueueSource("test")),
-                               new ConsumerSource(new QueueSource("not-test")));
+        Assert.assertNotEquals(new QueueSource("test"),
+                               new QueueSource("not-test"));
     }
 
     @Test
     public void testDifferentSourceNotEqual() {
-        Assert.assertNotEquals(new ConsumerSource(new QueueSource("test")),
-                               new ConsumerSource(new TopicSource("test")));
+        Assert.assertNotEquals(new QueueSource("test"),
+                               new TopicSource("test"));
     }
 
     /**
-     * Test creating ConsumerSource lists from annotated consumer classes
+     * Test creating SourceI lists from annotated consumer classes
      */
     @Test
     public void testCreationFromNoSourceConsumer() {
-        final List<ConsumerSource> sources = ConsumerSource.getConsumerSources(NoSourceConsumer.class);
-        final List<ConsumerSource> expectedSources = Arrays.asList();
+        final List<SourceI> sources = SourceI.getSources(NoSourceConsumer.class);
+        final List<SourceI> expectedSources = Arrays.asList();
 
         Assert.assertEquals(expectedSources, sources);
     }
 
     @Test
     public void testCreationFromSingleSourceConsumer() {
-        final List<ConsumerSource> sources = ConsumerSource.getConsumerSources(SingleSourceConsumer.class);
-        final List<ConsumerSource> expectedSources = Arrays.asList(new ConsumerSource(new QueueSource("b")));
+        final List<SourceI> sources = SourceI.getSources(SingleSourceConsumer.class);
+        final List<SourceI> expectedSources = Arrays.asList(new QueueSource("b"));
 
         Assert.assertEquals(expectedSources, sources);
     }
 
     @Test
     public void testCreationFromRepeatedSourceConsumer() {
-        final List<ConsumerSource> sources = ConsumerSource.getConsumerSources(RepeatedSourceConsumer.class);
-        final List<ConsumerSource> expectedSources = Arrays.asList(new ConsumerSource(new QueueSource("a")),
-                                                                   new ConsumerSource(new QueueSource("b")));
+        final List<SourceI> sources = SourceI.getSources(RepeatedSourceConsumer.class);
+        final List<SourceI> expectedSources = Arrays.asList(new QueueSource("a"),
+                                                            new QueueSource("b"));
 
         Assert.assertEquals(expectedSources, sources);
     }
@@ -68,27 +68,27 @@ public class ConsumerSourceTest {
 
     @Test
     public void testCreationFromManualRepeatedSourceConsumer() {
-        final List<ConsumerSource> sources = ConsumerSource.getConsumerSources(ManualRepeatedSourceConsumer.class);
-        final List<ConsumerSource> expectedSources = Arrays.asList(new ConsumerSource(new QueueSource("a")),
-                                                                   new ConsumerSource(new QueueSource("b")));
+        final List<SourceI> sources = SourceI.getSources(ManualRepeatedSourceConsumer.class);
+        final List<SourceI> expectedSources = Arrays.asList(new QueueSource("a"),
+                                                            new QueueSource("b"));
 
         Assert.assertEquals(expectedSources, sources);
     }
 
     @Test
     public void testCreationFromMixedSourceConsumer() {
-        final List<ConsumerSource> sources = ConsumerSource.getConsumerSources(MixedSourceConsumer.class);
-        final List<ConsumerSource> expectedSources = Arrays.asList(new ConsumerSource(new QueueSource("test-queue")),
-                                                                   new ConsumerSource(new TopicSource("test-topic")));
+        final List<SourceI> sources = SourceI.getSources(MixedSourceConsumer.class);
+        final List<SourceI> expectedSources = Arrays.asList(new QueueSource("test-queue"),
+                                                            new TopicSource("test-topic"));
 
         Assert.assertEquals(expectedSources, sources);
     }
 
     @Test
     public void testCreationIgnoresNonSourceTypeAnnotations() {
-        final List<ConsumerSource> sources = ConsumerSource.getConsumerSources(SomeIrrelevantAnnotationSourceConsumer.class);
-        final List<ConsumerSource> expectedSources = Arrays.asList(new ConsumerSource(new QueueSource("a")),
-                                                                   new ConsumerSource(new TopicSource("b")));
+        final List<SourceI> sources = SourceI.getSources(SomeIrrelevantAnnotationSourceConsumer.class);
+        final List<SourceI> expectedSources = Arrays.asList(new QueueSource("a"),
+                                                            new TopicSource("b"));
 
         Assert.assertEquals(expectedSources, sources);
     }
@@ -127,18 +127,18 @@ public class ConsumerSourceTest {
     class SomeIrrelevantAnnotationSourceConsumer {}
 
     /**
-     * Test case handling on ConsumerSource
+     * Test case handling on SourceI
      */
     @Test
     public void testFunctionApplicationNormalCases() {
-        final ConsumerSource queueSource = new ConsumerSource(new QueueSource("a"));
-        final ConsumerSource topicSource = new ConsumerSource(new TopicSource("b"));
+        final SourceI queueSource = new QueueSource("a");
+        final SourceI topicSource = new TopicSource("b");
 
         Assert.assertEquals("queue-a", simpleSourceOp(queueSource));
         Assert.assertEquals("topic-b", simpleSourceOp(topicSource));
     }
 
-    private String simpleSourceOp(ConsumerSource source) {
+    private String simpleSourceOp(SourceI source) {
         return source
             .apply(QueueSource.class, queue -> "queue-" + queue.getName())
             .apply(TopicSource.class, topic -> "topic-" + topic.getName())
@@ -147,7 +147,7 @@ public class ConsumerSourceTest {
 
     @Test
     public void testFunctionApplicationCaseOrder() {
-        final ConsumerSource source = new ConsumerSource(new QueueSource("a"));
+        final SourceI source = new QueueSource("a");
 
         final String resultOrderA = source
             .apply(QueueSource.class, queue -> "queue")
@@ -163,7 +163,7 @@ public class ConsumerSourceTest {
 
     @Test
     public void testFunctionApplicationUnhandledNull() {
-        final ConsumerSource source = new ConsumerSource(new QueueSource("a"));
+        final SourceI source = new QueueSource("a");
 
         final String result = source
             .apply(TopicSource.class, topic -> "topic")
@@ -174,7 +174,7 @@ public class ConsumerSourceTest {
 
     @Test
     public void testGetOrDefaultAfterUhandledFunctionApplicationGivesDefaultValue() {
-        final ConsumerSource source = new ConsumerSource(new QueueSource("a"));
+        final SourceI source = new QueueSource("a");
         final String defaultValue = "default";
 
         final String result = source
@@ -186,7 +186,7 @@ public class ConsumerSourceTest {
 
     @Test(expected = RuntimeException.class)
     public void testUnhandledFunctionApplicationGivesUnhandledException() {
-        final ConsumerSource source = new ConsumerSource(new QueueSource("a"));
+        final SourceI source = new QueueSource("a");
 
         final String result = source
             .apply(TopicSource.class, topic -> "topic")
@@ -195,7 +195,7 @@ public class ConsumerSourceTest {
 
     @Test
     public void testHandledFunctionApplicationGivesNoUnhandledException() {
-        final ConsumerSource source = new ConsumerSource(new QueueSource("a"));
+        final SourceI source = new QueueSource("a");
 
         final String result = source
             .apply(QueueSource.class, topic -> "queue")
@@ -205,8 +205,8 @@ public class ConsumerSourceTest {
     @Test
     public void testVoidFunctionApplicationNormalCases() {
         final AtomicReference<String> state = new AtomicReference<>("unset");
-        final ConsumerSource queueSource = new ConsumerSource(new QueueSource("a"));
-        final ConsumerSource topicSource = new ConsumerSource(new TopicSource("b"));
+        final SourceI queueSource = new QueueSource("a");
+        final SourceI topicSource = new TopicSource("b");
 
         queueSource
             .accept(QueueSource.class, queue -> state.set("queue"))
@@ -224,7 +224,7 @@ public class ConsumerSourceTest {
     @Test
     public void testVoidFunctionApplicationCaseOrder() {
         final AtomicReference<String> state = new AtomicReference<>("unset");
-        final ConsumerSource source = new ConsumerSource(new QueueSource("a"));
+        final SourceI source = new QueueSource("a");
 
         source
             .accept(QueueSource.class, queue -> state.set("queue"))
@@ -245,7 +245,7 @@ public class ConsumerSourceTest {
 
     @Test
     public void testVoidFunctionApplicationGivesNull() {
-        final ConsumerSource source = new ConsumerSource(new QueueSource("a"));
+        final SourceI source = new QueueSource("a");
 
         Object o = source
             .accept(QueueSource.class, queue -> noop())
@@ -256,7 +256,7 @@ public class ConsumerSourceTest {
 
     @Test(expected = RuntimeException.class)
     public void testUnhandledVoidFunctionApplicationGivesUnhandledException() {
-        final ConsumerSource source = new ConsumerSource(new QueueSource("a"));
+        final SourceI source = new QueueSource("a");
 
         source
             .accept(TopicSource.class, topic -> noop())
@@ -267,7 +267,7 @@ public class ConsumerSourceTest {
 
     @Test(expected = JustATestException.class)
     public void testExceptionalFunctionApplicationThrowsCorrectException() throws JustATestException {
-        final ConsumerSource source = new ConsumerSource(new QueueSource("a"));
+        final SourceI source = new QueueSource("a");
 
         source.apply(QueueSource.class, queue -> {
             throw new JustATestException();

@@ -7,7 +7,7 @@ import java.util.Objects;
 /**
  * A more easily usable form of the annotation {@code @Topic}.
  */
-public class TopicSource implements SourceI {
+public class TopicSource extends SourceI {
     private final String name;
     public TopicSource(String name) {
         this.name = name;
