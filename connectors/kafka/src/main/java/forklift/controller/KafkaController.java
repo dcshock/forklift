@@ -263,7 +263,7 @@ public class KafkaController {
         if (topicToRemove != null) {
             topics.remove(topicToRemove);
             messageStream.removeTopic(topicToRemove);
-            Set<TopicPartition> removed = kafkaConsumer.assignment().stream().filter(partition -> !topics.contains(partition.topic())).collect(Collectors.toSet());
+            Set<TopicPartition> removed = kafkaConsumer.assignment().stream().filter(partition -> partition.topic().equals(topicToRemove)).collect(Collectors.toSet());
             Map<TopicPartition, OffsetAndMetadata> offsets = acknowledgmentHandler.removePartitions(removed);
             removed.forEach(partition -> flowControl.remove(partition));
             commitOffsets(offsets);
