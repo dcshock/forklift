@@ -26,6 +26,12 @@ public class ConsumerSourceTest {
     }
 
     @Test
+    public void testSameSourceTypeWithDifferentPropertiesNotEqual() {
+        Assert.assertNotEquals(new ConsumerSource(new QueueSource("test")),
+                               new ConsumerSource(new QueueSource("not-test")));
+    }
+
+    @Test
     public void testDifferentSourceNotEqual() {
         Assert.assertNotEquals(new ConsumerSource(new QueueSource("test")),
                                new ConsumerSource(new TopicSource("test")));
