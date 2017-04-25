@@ -6,6 +6,9 @@ import forklift.controller.KafkaController;
 import forklift.message.MessageStream;
 import forklift.producers.ForkliftProducerI;
 import forklift.producers.KafkaForkliftProducer;
+import forklift.replay.Replay;
+import forklift.replay.ReplaySource;
+import forklift.replay.ReplayConsumerWrapper;
 import forklift.source.GroupedTopicSource;
 import forklift.source.QueueSource;
 import forklift.source.SourceI;
@@ -105,6 +108,7 @@ public class KafkaConnector implements ForkliftConnectorI {
             .apply(QueueSource.class, queue -> getQueue(queue.getName()))
             .apply(TopicSource.class, topic -> getTopic(topic.getName()))
             .apply(GroupedTopicSource.class, topic -> getGroupedTopic(topic))
+            .apply(ReplaySource.class, replay -> getReplay(replay))
             .elseUnsupportedError();
     }
 
@@ -122,6 +126,15 @@ public class KafkaConnector implements ForkliftConnectorI {
             controller.start();
         }
         return new KafkaTopicConsumer(source.getName(), controller);
+    }
+
+    public synchronized ForkliftConsumerI getReplay(ReplaySource source) throws ConnectorException {
+        if (!source.isRoleDefined())
+            throw new ConnectorException("Could not get replay consumer for unspecified role");
+
+        // replay using a grouped topic in Kafka
+        return new ReplayConsumerWrapper(consumeFromSource(
+            new GroupedTopicSource("replay-" + source.getRole(), groupId)));
     }
 
     @Override
