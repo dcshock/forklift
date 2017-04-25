@@ -35,7 +35,11 @@ public class KafkaTopicConsumer implements ForkliftConsumerI {
      */
     @Override
     public ForkliftMessage receive(long timeout) throws ConnectorException {
-        addTopicIfMissing();
+        try {
+            addTopicIfMissing();
+        } catch (InterruptedException e) {
+            throw new ConnectorException("Topic add interrupted");
+        }
         //ensure that the controller is still running
         if (!controller.isRunning()) {
             throw new ConnectorException("Connection to Kafka Controller lost");
@@ -47,7 +51,7 @@ public class KafkaTopicConsumer implements ForkliftConsumerI {
         }
     }
 
-    private void addTopicIfMissing() {
+    private void addTopicIfMissing() throws InterruptedException {
         if (!topicAdded) {
             synchronized (this) {
                 if (!topicAdded) {
@@ -67,6 +71,10 @@ public class KafkaTopicConsumer implements ForkliftConsumerI {
      */
     @Override
     public void close() {
-        controller.removeTopic(topic);
+        try {
+            controller.removeTopic(topic);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 }
