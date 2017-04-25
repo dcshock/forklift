@@ -6,6 +6,7 @@ import forklift.consumer.Consumer;
 import forklift.exception.StartupException;
 import forklift.producers.ForkliftProducerI;
 import org.junit.Test;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -18,7 +19,7 @@ import java.util.concurrent.Executors;
  * Tests which focus on causing partitions to be rebalanced.
  */
 public class RebalanceTests extends BaseIntegrationTest {
-    
+
     @Test
     public void testRebalanceUnderLoad() throws InterruptedException {
         ExecutorService executor = Executors.newFixedThreadPool(35);
