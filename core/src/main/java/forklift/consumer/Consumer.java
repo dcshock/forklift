@@ -18,8 +18,10 @@ import forklift.decorators.Response;
 import forklift.message.Header;
 import forklift.producers.ForkliftProducerI;
 import forklift.properties.PropertiesManager;
+import forklift.source.GroupedTopicSource;
 import forklift.source.QueueSource;
 import forklift.source.TopicSource;
+import forklift.source.decorators.GroupedTopic;
 import forklift.source.decorators.Queue;
 import forklift.source.decorators.Topic;
 
@@ -119,6 +121,7 @@ public class Consumer {
         this.name = source
             .apply(QueueSource.class, queue -> queue.getName())
             .apply(TopicSource.class, topic -> topic.getName())
+            .apply(GroupedTopicSource.class, topic -> topic.getName())
             .get() + ":" + id.getAndIncrement();
         log = LoggerFactory.getLogger(this.name);
     }
@@ -141,6 +144,7 @@ public class Consumer {
             this.name = source
                 .apply(QueueSource.class, queue -> queue.getName())
                 .apply(TopicSource.class, topic -> topic.getName())
+                .apply(GroupedTopicSource.class, topic -> topic.getName())
                 .get() + ":" + id.getAndIncrement();
         }
 
@@ -231,7 +235,7 @@ public class Consumer {
             if (consumer != null)
                 consumer.close();
         } catch (ConnectorException e) {
-            log.debug("", e);
+            log.error("Error getting consumer from connector", e);
         }
     }
 

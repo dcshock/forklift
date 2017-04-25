@@ -35,7 +35,7 @@ public class GroupedTopicSource implements SourceI {
      * @return whether a group name is specified
      */
     public boolean groupSpecified() {
-        return group == null || group.isEmpty();
+        return group != null && !group.isEmpty();
     }
 
     /**
@@ -61,6 +61,6 @@ public class GroupedTopicSource implements SourceI {
 
     @Override
     public String toString() {
-        return "GroupedTopic@Source(" + name + ")";
+        return "GroupedTopicSource(name=" + name + ", group=" + group + ")";
     }
 }

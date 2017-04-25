@@ -3,6 +3,7 @@ package forklift.consumer;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
 import forklift.Forklift;
 import forklift.connectors.ForkliftConnectorI;
 import forklift.connectors.ForkliftMessage;
@@ -10,10 +11,12 @@ import forklift.decorators.LifeCycle;
 import forklift.decorators.OnMessage;
 import forklift.decorators.OnValidate;
 import forklift.source.decorators.Queue;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;

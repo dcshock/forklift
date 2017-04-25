@@ -15,6 +15,10 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * A convenience class for containing and acting on {@link forklift.source.SourceI}
+ * instances conditionally depending on their type.
+ */
 public class ConsumerSource {
     public static List<ConsumerSource> getConsumerSources(Class<?> clazz) {
         return SourceUtil.getSources(clazz)
