@@ -382,15 +382,15 @@ public class Consumer {
             final Map<Class<?>, List<Field>> fields = injectFields.get(decorator);
 
             fields.keySet().stream().forEach(clazz -> {
-                fields.get(clazz).forEach(f -> {
-                    log.trace("Inject target> Field: ({})  Decorator: ({})", f, decorator);
+                fields.get(clazz).forEach(field -> {
+                    log.trace("Inject target> Field: ({})  Decorator: ({})", field, decorator);
                     try {
-                        Object value = getInjectableValue(f.getAnnotation(decorator), f.getName(), clazz, msg);
+                        Object value = getInjectableValue(field.getAnnotation(decorator), field.getName(), clazz, msg);
                         if (value instanceof ForkliftProducerI) {
                             closeMe.add((ForkliftProducerI)value);
                         }
                         if (value != null) {
-                            f.set(instance, value);
+                            field.set(instance, value);
                         }
                     } catch (JsonMappingException | JsonParseException e) {
                         log.warn("Unable to parse json for injection.", e);
