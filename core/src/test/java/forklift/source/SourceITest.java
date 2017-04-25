@@ -1,7 +1,5 @@
 package forklift.source;
 
-import forklift.source.QueueSource;
-import forklift.source.TopicSource;
 import forklift.source.decorators.Queue;
 import forklift.source.decorators.Queues;
 import forklift.source.decorators.Topic;
@@ -19,24 +17,6 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class SourceITest {
-    @Test
-    public void testSameSourceEqual() {
-        Assert.assertEquals(new QueueSource("test"),
-                            new QueueSource("test"));
-    }
-
-    @Test
-    public void testSameSourceTypeWithDifferentPropertiesNotEqual() {
-        Assert.assertNotEquals(new QueueSource("test"),
-                               new QueueSource("not-test"));
-    }
-
-    @Test
-    public void testDifferentSourceNotEqual() {
-        Assert.assertNotEquals(new QueueSource("test"),
-                               new TopicSource("test"));
-    }
-
     /**
      * Test creating SourceI lists from annotated consumer classes
      */
