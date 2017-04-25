@@ -1,7 +1,7 @@
 package forklift.replay;
 
 import forklift.decorators.ConsumerRole;
-import forklift.source.SourceI;
+import forklift.source.SourceUtil;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -41,7 +41,8 @@ public class ReplaySourceTest {
      */
     @Test
     public void testClassWithNoRoleSetHasClassnameRole() {
-        final ReplaySource source = (ReplaySource) SourceI.getSources(UnnamedConsumer.class).get(0);
+        final ReplaySource source = SourceUtil.getSources(UnnamedConsumer.class, ReplaySource.class)
+            .findFirst().get();
 
         Assert.assertTrue(source.isRoleDefined());
         Assert.assertEquals("UnnamedConsumer", source.getRole());
@@ -49,7 +50,8 @@ public class ReplaySourceTest {
 
     @Test
     public void testClassWithReplayRoleHasGivenRole() {
-        final ReplaySource source = (ReplaySource) SourceI.getSources(ReplayRoleConsumer.class).get(0);
+        final ReplaySource source = SourceUtil.getSources(ReplayRoleConsumer.class, ReplaySource.class)
+            .findFirst().get();
 
         Assert.assertTrue(source.isRoleDefined());
         Assert.assertEquals("test-role", source.getRole());
@@ -57,7 +59,8 @@ public class ReplaySourceTest {
 
     @Test
     public void testClassWithConsumerRoleHasGivenRole() {
-        final ReplaySource source = (ReplaySource) SourceI.getSources(ConsumerRoleConsumer.class).get(0);
+        final ReplaySource source = SourceUtil.getSources(ConsumerRoleConsumer.class, ReplaySource.class)
+            .findFirst().get();
 
         Assert.assertTrue(source.isRoleDefined());
         Assert.assertEquals("test-consumer-role", source.getRole());
@@ -65,7 +68,8 @@ public class ReplaySourceTest {
 
     @Test
     public void testClassWithMultipleRolesUsesReplayRole() {
-        final ReplaySource source = (ReplaySource) SourceI.getSources(MultipleRoleConsumer.class).get(0);
+        final ReplaySource source = SourceUtil.getSources(MultipleRoleConsumer.class, ReplaySource.class)
+            .findFirst().get();
 
         Assert.assertTrue(source.isRoleDefined());
         Assert.assertEquals("replay-role", source.getRole());

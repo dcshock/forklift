@@ -22,7 +22,7 @@ public class SourceITest {
      */
     @Test
     public void testCreationFromNoSourceConsumer() {
-        final List<SourceI> sources = SourceI.getSources(NoSourceConsumer.class);
+        final List<SourceI> sources = SourceUtil.getSourcesAsList(NoSourceConsumer.class);
         final List<SourceI> expectedSources = Arrays.asList();
 
         Assert.assertEquals(expectedSources, sources);
@@ -30,7 +30,7 @@ public class SourceITest {
 
     @Test
     public void testCreationFromSingleSourceConsumer() {
-        final List<SourceI> sources = SourceI.getSources(SingleSourceConsumer.class);
+        final List<SourceI> sources = SourceUtil.getSourcesAsList(SingleSourceConsumer.class);
         final List<SourceI> expectedSources = Arrays.asList(new QueueSource("b"));
 
         Assert.assertEquals(expectedSources, sources);
@@ -38,7 +38,7 @@ public class SourceITest {
 
     @Test
     public void testCreationFromRepeatedSourceConsumer() {
-        final List<SourceI> sources = SourceI.getSources(RepeatedSourceConsumer.class);
+        final List<SourceI> sources = SourceUtil.getSourcesAsList(RepeatedSourceConsumer.class);
         final List<SourceI> expectedSources = Arrays.asList(new QueueSource("a"),
                                                             new QueueSource("b"));
 
@@ -48,7 +48,7 @@ public class SourceITest {
 
     @Test
     public void testCreationFromManualRepeatedSourceConsumer() {
-        final List<SourceI> sources = SourceI.getSources(ManualRepeatedSourceConsumer.class);
+        final List<SourceI> sources = SourceUtil.getSourcesAsList(ManualRepeatedSourceConsumer.class);
         final List<SourceI> expectedSources = Arrays.asList(new QueueSource("a"),
                                                             new QueueSource("b"));
 
@@ -57,7 +57,7 @@ public class SourceITest {
 
     @Test
     public void testCreationFromMixedSourceConsumer() {
-        final List<SourceI> sources = SourceI.getSources(MixedSourceConsumer.class);
+        final List<SourceI> sources = SourceUtil.getSourcesAsList(MixedSourceConsumer.class);
         final List<SourceI> expectedSources = Arrays.asList(new QueueSource("test-queue"),
                                                             new TopicSource("test-topic"));
 
@@ -66,7 +66,7 @@ public class SourceITest {
 
     @Test
     public void testCreationIgnoresNonSourceTypeAnnotations() {
-        final List<SourceI> sources = SourceI.getSources(SomeIrrelevantAnnotationSourceConsumer.class);
+        final List<SourceI> sources = SourceUtil.getSourcesAsList(SomeIrrelevantAnnotationSourceConsumer.class);
         final List<SourceI> expectedSources = Arrays.asList(new QueueSource("a"),
                                                             new TopicSource("b"));
 

@@ -20,6 +20,7 @@ import forklift.properties.PropertiesManager;
 import forklift.source.GroupedTopicSource;
 import forklift.source.QueueSource;
 import forklift.source.SourceI;
+import forklift.source.SourceUtil;
 import forklift.source.TopicSource;
 import forklift.source.decorators.GroupedTopic;
 import forklift.source.decorators.Queue;
@@ -133,7 +134,7 @@ public class Consumer {
         this.msgHandler = msgHandler;
 
         if (!preinit && source == null) {
-            final List<SourceI> sources = SourceI.getSources(msgHandler);
+            final List<SourceI> sources = SourceUtil.getSourcesAsList(msgHandler);
 
             if (sources.size() > 1)
                 throw new IllegalArgumentException("One consumer instance cannot consume more than one source");

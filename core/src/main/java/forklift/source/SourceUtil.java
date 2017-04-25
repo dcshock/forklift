@@ -10,8 +10,11 @@ import org.slf4j.LoggerFactory;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -35,6 +38,24 @@ public class SourceUtil {
                 source.setContextClass(clazz);
                 return source;
             });
+    }
+
+    public static List<SourceI> getSourcesAsList(Class<?> clazz) {
+        return Collections.unmodifiableList(
+            SourceUtil.getSources(clazz)
+                .collect(Collectors.toList()));
+    }
+
+    public static <SOURCE extends SourceI> Stream<SOURCE> getSources(Class<?> clazz, Class<SOURCE> sourceType) {
+        return getSources(clazz)
+                .filter(source -> sourceType.isInstance(source))
+                .map(source -> {
+                     try {
+                         return sourceType.cast(source);
+                     } catch (ClassCastException e) { // a class cast exception should be impossible
+                         return null;
+                     }
+                });
     }
 
     private static Annotation[] getContainedAnnotations(Annotation annotation) {
