@@ -239,8 +239,10 @@ public class KafkaController {
     }
 
     private boolean processTopicChanges() throws InterruptedException {
-        boolean topicsChanged = processTopicAdd();
-        topicsChanged = processTopicRemoved() || topicsChanged;
+        boolean topicsAdded = processTopicAdd();
+        boolean topicsRemoved = processTopicRemoved();
+        boolean topicsChanged = topicsAdded || topicsRemoved;
+
         if (topicsChanged) {
             kafkaConsumer.subscribe(topics, new RebalanceListener());
         }
