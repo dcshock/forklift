@@ -30,7 +30,7 @@ object ForkliftBuild extends Build {
     lazy val kafka = Project(
         id = "kafka",
         base = file("connectors/kafka")
-    ).dependsOn(core, replay)
+    ).dependsOn(core)
 
     lazy val server = Project(
         id = "server",
