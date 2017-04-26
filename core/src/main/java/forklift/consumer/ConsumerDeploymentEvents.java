@@ -7,6 +7,7 @@ import forklift.concurrent.Executors;
 import forklift.deployment.Deployment;
 import forklift.deployment.FileDeployment;
 import forklift.deployment.DeploymentEvents;
+import forklift.source.SourceI;
 import forklift.source.SourceUtil;
 
 import org.slf4j.Logger;
@@ -64,10 +65,11 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
         // CoreClassLoaders.getInstance().register(deployment.getClassLoader());
 
         deployment.getConsumers().forEach(consumerClass -> {
-            SourceUtil.getSources(consumerClass).forEach(source -> {
+            List<SourceI> sources = SourceUtil.getSourcesAsList(consumerClass);
+            sources.forEach(source -> {
                 log.info("Found source {} on {}", source, consumerClass);
 
-                final Consumer consumer = new Consumer(consumerClass, forklift, deployment.getClassLoader(), source);
+                final Consumer consumer = new Consumer(consumerClass, forklift, deployment.getClassLoader(), source, sources);
                 consumer.setServices(services);
 
                 final ConsumerThread thread = new ConsumerThread(consumer);

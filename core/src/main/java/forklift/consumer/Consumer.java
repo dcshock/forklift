@@ -41,6 +41,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,6 +53,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 public class Consumer {
     static ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule())
@@ -70,7 +72,7 @@ public class Consumer {
     private final Map<ProcessStep, List<Method>> onProcessStep;
     private String name;
     private SourceI source;
-
+    private List<SourceI> roleSources = Collections.emptyList();
     private List<ConsumerService> services;
     private Method orderMethod;
 
@@ -115,9 +117,10 @@ public class Consumer {
         log = LoggerFactory.getLogger(this.name);
     }
 
-    public Consumer(Class<?> msgHandler, Forklift forklift, ClassLoader classLoader, SourceI source) {
+    public Consumer(Class<?> msgHandler, Forklift forklift, ClassLoader classLoader, SourceI source, List<SourceI> roleSources) {
         this(msgHandler, forklift, classLoader, true);
         this.source = source;
+        this.roleSources = roleSources;
 
         this.name = source
             .apply(QueueSource.class, queue -> queue.getName())
@@ -134,14 +137,14 @@ public class Consumer {
         this.msgHandler = msgHandler;
 
         if (!preinit && source == null) {
-            final List<SourceI> sources = SourceUtil.getSourcesAsList(msgHandler);
+            this.roleSources = SourceUtil.getSourcesAsList(msgHandler);
 
-            if (sources.size() > 1)
+            if (this.roleSources.size() > 1)
                 throw new IllegalArgumentException("One consumer instance cannot consume more than one source");
-            if (sources.size() == 0)
+            if (this.roleSources.size() == 0)
                 throw new IllegalArgumentException("A consumer must consume at least one source");
 
-            this.source = sources.get(0);
+            this.source = roleSources.get(0);
             this.name = source
                 .apply(QueueSource.class, queue -> queue.getName())
                 .apply(TopicSource.class, topic -> topic.getName())
@@ -503,6 +506,21 @@ public class Consumer {
 
     public SourceI getSource() {
         return source;
+    }
+
+    public List<SourceI> getRoleSources() {
+        return roleSources;
+    }
+
+    public <SOURCE extends SourceI> Stream<SOURCE> getRoleSources(Class<SOURCE> sourceType) {
+        return roleSources.stream()
+            .filter(source -> sourceType.isInstance(source))
+            .map(source -> {
+                try {
+                    return sourceType.cast(source);
+                } catch (ClassCastException e) {} // should be impossible
+                return null;
+            });
     }
 
     public void addServices(ConsumerService... services) {
