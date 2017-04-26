@@ -103,7 +103,7 @@ public class KafkaConnector implements ForkliftConnectorI {
     }
 
     @Override
-    public ForkliftConsumerI consumeFromSource(SourceI source) throws ConnectorException {
+    public ForkliftConsumerI getConsumerForSource(SourceI source) throws ConnectorException {
         return source
             .apply(QueueSource.class, queue -> getQueue(queue.getName()))
             .apply(TopicSource.class, topic -> getTopic(topic.getName()))
@@ -133,7 +133,7 @@ public class KafkaConnector implements ForkliftConnectorI {
             throw new ConnectorException("Could not get replay consumer for unspecified role");
 
         // replay using a grouped topic in Kafka
-        return new ReplayConsumerWrapper(consumeFromSource(
+        return new ReplayConsumerWrapper(getConsumerForSource(
             new GroupedTopicSource("replay-" + source.getRole(), groupId)));
     }
 

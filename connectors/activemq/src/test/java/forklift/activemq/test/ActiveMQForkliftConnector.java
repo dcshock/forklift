@@ -43,8 +43,8 @@ public class ActiveMQForkliftConnector implements ForkliftConnectorI {
     }
 
     @Override
-    public ForkliftConsumerI consumeFromSource(SourceI source) throws ConnectorException {
-        return TestServiceManager.getConnector().consumeFromSource(source);
+    public ForkliftConsumerI getConsumerForSource(SourceI source) throws ConnectorException {
+        return TestServiceManager.getConnector().getConsumerForSource(source);
     }
 
     @Override

@@ -214,7 +214,7 @@ public class Consumer {
     public void listen() {
         final ForkliftConsumerI consumer;
         try {
-            consumer = forklift.getConnector().consumeFromSource(source);
+            consumer = forklift.getConnector().getConsumerForSource(source);
 
             // Init the thread pools if the msg handler is multi threaded. If the msg handler is single threaded
             // it'll just run in the current thread to prevent any message read ahead that would be performed.
