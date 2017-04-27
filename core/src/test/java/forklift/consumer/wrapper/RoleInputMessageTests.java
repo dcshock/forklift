@@ -12,7 +12,7 @@ import java.util.Map;
 
 public class RoleInputMessageTests {
     @Test
-    public void testJsonEncoding() {
+    public void testJsonEncodingEncodesFields() {
         final RoleInputMessage message = new RoleInputMessage("test-role",
                                                               "test-id",
                                                               "test-message",
@@ -43,7 +43,7 @@ public class RoleInputMessageTests {
     }
 
     @Test
-    public void testJsonDecoding() {
+    public void testJsonDecodingExtractsFields() {
         final String inputJson = "{" +
             "\"role\":\"test-role\"," +
             "\"id\":\"test-id\"," +
@@ -60,8 +60,18 @@ public class RoleInputMessageTests {
         Assert.assertEquals(Collections.singletonMap(Header.Priority, 6), decodedMessage.getHeaders());
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testJsonDecodingFailsWithInvalidJson() {
+        final RoleInputMessage decodedMessage = RoleInputMessage.fromString("{)..v[");
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testJsonDecodingFailsWithNullString() {
+        final RoleInputMessage decodedMessage = RoleInputMessage.fromString(null);
+    }
+
     @Test
-    public void testForkliftMessageCreation() {
+    public void testForkliftMessageCreationCopiesFields() {
         final String testId = "test-id";
         final String testMessage = "test-message";
         final Map<String, String> testProperties = Collections.singletonMap("forklift-retry-count", "2");
@@ -80,7 +90,22 @@ public class RoleInputMessageTests {
     }
 
     @Test
-    public void testCreationFromForkliftMessage() {
+    public void testForkliftMessageCreationFromNullFieldsGivesDefaultValues() {
+        final RoleInputMessage roleMessage = new RoleInputMessage(null,
+                                                                  null,
+                                                                  null,
+                                                                  null,
+                                                                  null);
+        final ForkliftMessage resultingMessage = roleMessage.toForkliftMessage(null);
+
+        Assert.assertNull(resultingMessage.getId());
+        Assert.assertNull(resultingMessage.getMsg());
+        Assert.assertEquals(Collections.emptyMap(), resultingMessage.getProperties());
+        Assert.assertEquals(Collections.emptyMap(), resultingMessage.getHeaders());
+    }
+
+    @Test
+    public void testCreationFromForkliftMessageCopiesFields() {
         final String testRole = "test-role";
         final String testId = "test-id";
         final String testMessage = "test-message";
@@ -103,7 +128,7 @@ public class RoleInputMessageTests {
     }
 
     @Test
-    public void testFromJsonAndBack() {
+    public void testRemappedJsonEqualsOriginalJson() {
         final String inputJson = "{" +
             "\"role\":\"test-role\"," +
             "\"id\":\"test-id\"," +
@@ -116,7 +141,7 @@ public class RoleInputMessageTests {
     }
 
     @Test
-    public void testToJsonAndBack() {
+    public void testRemappedMessageEqualsOriginalMessage() {
         final RoleInputMessage message = new RoleInputMessage("test-role",
                                                               "test-id",
                                                               "test-message",
@@ -126,7 +151,7 @@ public class RoleInputMessageTests {
     }
 
     @Test
-    public void fromForkliftMessageAndBack() {
+    public void testRemappedForkliftMessageAndEqualsOriginal() {
         final ForkliftMessage sourceMessage = new ForkliftMessage();
         sourceMessage.setId("test-id");
         sourceMessage.setMsg("test-message");
@@ -143,14 +168,17 @@ public class RoleInputMessageTests {
     }
 
     @Test
+    public void testAcknowledgmentWIthNullSourceMessage() throws ConnectorException {
+        final String inputJson = "{\"msg\":\"test-message\",\"headers\":{},\"properties\":{}}";
+        final RoleInputMessage roleMessage = RoleInputMessage.fromString(inputJson);
+        final ForkliftMessage resultMessage = roleMessage.toForkliftMessage(null);
+
+        Assert.assertTrue(resultMessage.acknowledge());
+    }
+
+    @Test
     public void testAcknowledgmentMapsToSourceMessage() throws ConnectorException {
-        final String inputJson = "{" +
-            "\"role\":\"test-role\"," +
-            "\"id\":\"test-id\"," +
-            "\"msg\":\"test-message\"," +
-            "\"properties\":{\"forklift-retry-count\":\"2\"}," +
-            "\"headers\":{\"Priority\":6}" +
-            "}";
+        final String inputJson = "{\"msg\":\"test-message\",\"headers\":{},\"properties\":{}}";
 
         final TestAcknowledgmentMessage ackMessage = new TestAcknowledgmentMessage();
         ackMessage.setMsg(inputJson);

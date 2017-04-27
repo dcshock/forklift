@@ -39,6 +39,25 @@ public class RoleInputConsumerWrapperTests {
         Assert.assertEquals(Collections.singletonMap(Header.Priority, 6), extractedMessage.getHeaders());
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testInvalidJsonMessage() throws ConnectorException {
+        final String sourceJson = "{[hi";
+        final ForkliftMessage sourceMessage = new ForkliftMessage(sourceJson);
+        final ForkliftConsumerI testConsumer = new ConstantMessageConsumer(sourceMessage);
+        final ForkliftConsumerI consumerWrapper = new RoleInputConsumerWrapper(testConsumer);
+
+        final ForkliftMessage extractedMessage = consumerWrapper.receive(1000);
+    }
+
+    @Test
+    public void testNullSourceMessage() throws ConnectorException {
+        final ForkliftConsumerI testConsumer = new ConstantMessageConsumer(null);
+        final ForkliftConsumerI consumerWrapper = new RoleInputConsumerWrapper(testConsumer);
+
+        final ForkliftMessage extractedMessage = consumerWrapper.receive(1000);
+        Assert.assertNull(extractedMessage);
+    }
+
     private static class ConstantMessageConsumer implements ForkliftConsumerI {
         private ForkliftMessage outputMessage;
         public ConstantMessageConsumer(ForkliftMessage outputMessage) {

@@ -91,9 +91,8 @@ public class RoleInputMessage {
         try {
             return mapper.readValue(input, RoleInputMessage.class);
         } catch (IOException e) {
-            log.error("Could not deserialize RoleInputMessage: {}", input, e);
+            throw new IllegalArgumentException("Could not deserialize RoleInputMessage from JSON: " + input);
         }
-        return null;
     }
 
     /**
@@ -137,10 +136,18 @@ public class RoleInputMessage {
     public ForkliftMessage toForkliftMessage(ForkliftMessage sourceMessage) {
         final ForkliftMessage result = new AcknowledgingMessage(sourceMessage);
 
-        result.setId(id);
-        result.setMsg(msg);
-        result.setProperties(properties);
-        result.setHeaders(headers);
+        if (id != null) {
+            result.setId(id);
+        }
+        if (msg != null) {
+            result.setMsg(msg);
+        }
+        if (properties != null) {
+            result.setProperties(properties);
+        }
+        if (headers != null) {
+            result.setHeaders(headers);
+        }
 
         return result;
     }

@@ -5,6 +5,7 @@ import forklift.consumer.KafkaTopicConsumer;
 import forklift.controller.KafkaController;
 import forklift.message.MessageStream;
 import forklift.producers.ForkliftProducerI;
+import forklift.producers.ForkliftSerializer;
 import forklift.producers.KafkaForkliftProducer;
 import forklift.source.GroupedTopicSource;
 import forklift.source.QueueSource;
@@ -12,6 +13,7 @@ import forklift.source.SourceI;
 import forklift.source.TopicSource;
 
 import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
+import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import io.confluent.kafka.serializers.KafkaAvroSerializerConfig;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -21,13 +23,15 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 /**
  * Manages both consuming and producing events on the kafka message broker.
  */
-public class KafkaConnector implements ForkliftConnectorI {
+public class KafkaConnector implements ForkliftConnectorI, ForkliftSerializer {
     private static final Logger log = LoggerFactory.getLogger(KafkaConnector.class);
 
     private final String kafkaHosts;
@@ -36,6 +40,7 @@ public class KafkaConnector implements ForkliftConnectorI {
 
     private KafkaProducer<?, ?> kafkaProducer;
     private KafkaController controller;
+    private KafkaAvroSerializer serializer;
 
     /**
      * Constructs a new instance of the KafkaConnector
@@ -48,6 +53,16 @@ public class KafkaConnector implements ForkliftConnectorI {
         this.kafkaHosts = kafkaHosts;
         this.schemaRegistries = schemaRegistries;
         this.groupId = groupId;
+        this.serializer = newSerializer();
+    }
+
+    private KafkaAvroSerializer newSerializer() {
+        Map<String, Object> serializerProperties = new HashMap<>();
+        serializerProperties.put(KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistries);
+
+        KafkaAvroSerializer result = new KafkaAvroSerializer();
+        result.configure(serializerProperties, false);
+        return result;
     }
 
     @Override
@@ -97,6 +112,17 @@ public class KafkaConnector implements ForkliftConnectorI {
             kafkaProducer.close();
             kafkaProducer = null;
         }
+    }
+
+    @Override
+    public byte[] serializeForSource(SourceI source, Object o) {
+        final String topicName = source
+            .apply(QueueSource.class, queue -> queue.getName())
+            .apply(TopicSource.class, topic -> topic.getName())
+            .apply(GroupedTopicSource.class, topic -> topic.getName())
+            .elseUnsupportedError();
+
+        return serializer.serialize(topicName, o);
     }
 
     @Override

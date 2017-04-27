@@ -12,9 +12,11 @@ public class RoleInputConsumerWrapper implements ForkliftConsumerI {
 
     @Override
     public ForkliftMessage receive(long timeout) throws ConnectorException {
-        ForkliftMessage initialMessage = consumer.receive(timeout);
-        RoleInputMessage roleInputMessage = RoleInputMessage.fromString(initialMessage.getMsg());
+        final ForkliftMessage initialMessage = consumer.receive(timeout);
+        if (initialMessage == null)
+            return null;
 
+        final RoleInputMessage roleInputMessage = RoleInputMessage.fromString(initialMessage.getMsg());
         return roleInputMessage.toForkliftMessage(initialMessage);
     }
 
