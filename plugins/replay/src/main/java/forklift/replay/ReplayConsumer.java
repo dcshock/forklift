@@ -5,11 +5,11 @@ import forklift.decorators.MultiThreaded;
 import forklift.decorators.OnMessage;
 import forklift.decorators.OnValidate;
 import forklift.decorators.Order;
-import forklift.source.decorators.Queue;
+import forklift.source.decorators.Topic;
 
 import javax.inject.Inject;
 
-@Queue("forklift.replay.es?consumer.exclusive=true")
+@Topic("forklift.replay.es")
 @MultiThreaded(10)
 public class ReplayConsumer {
     @Inject private ReplayESWriter writer;
@@ -23,10 +23,5 @@ public class ReplayConsumer {
     @OnMessage
     public void onMessage() {
         this.writer.poll(msg);
-    }
-
-    @Order
-    public String orderBy() {
-        return msg.getId();
     }
 }

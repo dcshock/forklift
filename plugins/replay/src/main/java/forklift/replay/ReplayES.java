@@ -16,7 +16,7 @@ import forklift.producers.ForkliftProducerI;
 import forklift.producers.ProducerException;
 import forklift.source.TopicSource;
 import forklift.source.QueueSource;
-import forklift.source.decorators.Queue;
+import forklift.source.decorators.Topic;
 
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.node.Node;
@@ -78,11 +78,11 @@ public class ReplayES {
             }
         });
 
-        this.producer = connector.getQueueProducer(ReplayConsumer.class.getAnnotation(Queue.class).value());
+        this.producer = connector.getQueueProducer(ReplayConsumer.class.getAnnotation(Topic.class).value());
         final Forklift forklift = new Forklift();
         forklift.setConnector(connector);
         this.consumer = new Consumer(ReplayConsumer.class, forklift,
-            Thread.currentThread().getContextClassLoader(), ReplayConsumer.class.getAnnotation(Queue.class));
+            Thread.currentThread().getContextClassLoader(), ReplayConsumer.class.getAnnotation(Topic.class));
         this.consumer.addServices(new ConsumerService(this));
         this.thread = new ConsumerThread(this.consumer);
         this.thread.setName("ReplayES");
