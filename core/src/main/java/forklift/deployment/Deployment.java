@@ -22,7 +22,7 @@ public interface Deployment {
     /**
      * Gives all of the classes in the deployment that consume a source.
      *
-     * @return clases in this Deployment annotated with a {@link forlift.decorators.SourceType} type annotation
+     * @return clases in this Deployment annotated with a {@link forklift.source.SourceType} type annotation
      */
     Set<Class<?>> getConsumers();
 

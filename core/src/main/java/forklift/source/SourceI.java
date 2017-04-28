@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * A superclass for {@link forklift.decorators.SourceType} annotations that provides some
+ * A superclass for {@link forklift.source.SourceType} annotations that provides some
  * case handling
  */
 public abstract class SourceI {
