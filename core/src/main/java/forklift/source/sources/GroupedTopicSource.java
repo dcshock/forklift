@@ -1,5 +1,6 @@
 package forklift.source.sources;
 
+import forklift.source.ActionSource;
 import forklift.source.SourceI;
 import forklift.source.decorators.GroupedTopic;
 
@@ -8,7 +9,7 @@ import java.util.Objects;
 /**
  * A more easily usable form of the annotation {@code @GroupTopic}.
  */
-public class GroupedTopicSource extends SourceI {
+public class GroupedTopicSource extends ActionSource {
     private final String name;
     private String group;
 

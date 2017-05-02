@@ -1,15 +1,21 @@
 package forklift.source.sources;
 
+import forklift.source.ActionSource;
+import forklift.source.LogicalSource;
+import forklift.source.LogicalSourceContext;
 import forklift.source.SourceI;
 import forklift.source.decorators.RoleInput;
 
+
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Represents a source of messages for a consumer with the given named role.
  */
-public class RoleInputSource extends SourceI {
+public class RoleInputSource extends LogicalSource {
     private String role;
+
     public RoleInputSource(String role) {
         this.role = role;
     }
@@ -34,6 +40,10 @@ public class RoleInputSource extends SourceI {
             return null;
         }
         return role;
+    }
+
+    public ActionSource getActionSource(LogicalSourceContext context) {
+        return context.mapSource(this);
     }
 
     @Override

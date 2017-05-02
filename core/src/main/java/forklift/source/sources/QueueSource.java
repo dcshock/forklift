@@ -1,5 +1,6 @@
 package forklift.source.sources;
 
+import forklift.source.ActionSource;
 import forklift.source.SourceI;
 import forklift.source.decorators.Queue;
 
@@ -8,7 +9,7 @@ import java.util.Objects;
 /**
  * A more easily usable form of the annotation {@code @Queue}.
  */
-public class QueueSource extends SourceI {
+public class QueueSource extends ActionSource {
     private final String name;
     public QueueSource(String name) {
         this.name = name;

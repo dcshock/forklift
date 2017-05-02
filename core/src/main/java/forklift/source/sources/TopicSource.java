@@ -1,5 +1,6 @@
 package forklift.source.sources;
 
+import forklift.source.ActionSource;
 import forklift.source.SourceI;
 import forklift.source.decorators.Topic;
 
@@ -8,7 +9,7 @@ import java.util.Objects;
 /**
  * A more easily usable form of the annotation {@code @Topic}.
  */
-public class TopicSource extends SourceI {
+public class TopicSource extends ActionSource {
     private final String name;
     public TopicSource(String name) {
         this.name = name;

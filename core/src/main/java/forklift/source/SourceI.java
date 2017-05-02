@@ -29,6 +29,8 @@ public abstract class SourceI {
      */
     protected void onContextSet() {}
 
+    public abstract boolean isLogicalSource();
+
     /*
      * Case class-type logic
      */
