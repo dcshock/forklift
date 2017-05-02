@@ -1,6 +1,4 @@
-package forklift.source;
-
-import forklift.source.GroupedTopicSource;
+package forklift.source.sources;
 
 import org.junit.Assert;
 import org.junit.Test;

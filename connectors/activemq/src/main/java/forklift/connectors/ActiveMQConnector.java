@@ -4,10 +4,10 @@ import forklift.consumer.ActiveMQMessageConsumer;
 import forklift.consumer.ForkliftConsumerI;
 import forklift.producers.ActiveMQProducer;
 import forklift.producers.ForkliftProducerI;
-import forklift.source.GroupedTopicSource;
-import forklift.source.QueueSource;
 import forklift.source.SourceI;
-import forklift.source.TopicSource;
+import forklift.source.sources.GroupedTopicSource;
+import forklift.source.sources.QueueSource;
+import forklift.source.sources.TopicSource;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;

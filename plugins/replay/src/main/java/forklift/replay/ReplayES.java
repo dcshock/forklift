@@ -14,9 +14,9 @@ import forklift.decorators.Service;
 import forklift.message.Header;
 import forklift.producers.ForkliftProducerI;
 import forklift.producers.ProducerException;
-import forklift.source.TopicSource;
-import forklift.source.QueueSource;
 import forklift.source.decorators.Topic;
+import forklift.source.sources.TopicSource;
+import forklift.source.sources.QueueSource;
 
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.node.Node;

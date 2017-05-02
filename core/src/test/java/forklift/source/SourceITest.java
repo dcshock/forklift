@@ -3,6 +3,8 @@ package forklift.source;
 import forklift.source.decorators.Queue;
 import forklift.source.decorators.Queues;
 import forklift.source.decorators.Topic;
+import forklift.source.sources.QueueSource;
+import forklift.source.sources.TopicSource;
 
 import org.junit.Assert;
 import org.junit.Test;

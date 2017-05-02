@@ -1,5 +1,6 @@
-package forklift.source;
+package forklift.source.sources;
 
+import forklift.source.SourceUtil;
 import forklift.source.decorators.RoleInput;
 
 import org.junit.Assert;

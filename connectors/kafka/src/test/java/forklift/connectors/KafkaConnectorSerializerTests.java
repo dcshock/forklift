@@ -3,7 +3,7 @@ package forklift.connectors;
 import forklift.Forklift;
 import forklift.integration.server.TestServiceManager;
 import forklift.producers.ForkliftSerializer;
-import forklift.source.TopicSource;
+import forklift.source.sources.TopicSource;
 
 import org.junit.AfterClass;
 import org.junit.Assert;

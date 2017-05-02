@@ -6,8 +6,8 @@ import forklift.consumer.MessageRunnable;
 import forklift.consumer.ProcessStep;
 import forklift.decorators.LifeCycle;
 import forklift.file.FileScanner;
-import forklift.source.QueueSource;
-import forklift.source.TopicSource;
+import forklift.source.sources.QueueSource;
+import forklift.source.sources.TopicSource;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;

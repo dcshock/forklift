@@ -1,5 +1,6 @@
-package forklift.source;
+package forklift.source.sources;
 
+import forklift.source.SourceI;
 import forklift.source.decorators.Topic;
 
 import java.util.Objects;

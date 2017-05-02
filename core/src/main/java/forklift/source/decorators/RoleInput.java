@@ -1,7 +1,7 @@
 package forklift.source.decorators;
 
-import forklift.source.RoleInputSource;
 import forklift.source.SourceType;
+import forklift.source.sources.RoleInputSource;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

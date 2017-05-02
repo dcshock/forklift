@@ -7,10 +7,10 @@ import forklift.message.MessageStream;
 import forklift.producers.ForkliftProducerI;
 import forklift.producers.ForkliftSerializer;
 import forklift.producers.KafkaForkliftProducer;
-import forklift.source.GroupedTopicSource;
-import forklift.source.QueueSource;
 import forklift.source.SourceI;
-import forklift.source.TopicSource;
+import forklift.source.sources.GroupedTopicSource;
+import forklift.source.sources.QueueSource;
+import forklift.source.sources.TopicSource;
 
 import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
 import io.confluent.kafka.serializers.KafkaAvroSerializer;

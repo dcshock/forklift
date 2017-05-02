@@ -1,4 +1,4 @@
-package forklift.source;
+package forklift.source.sources;
 
 import org.junit.Assert;
 import org.junit.Test;

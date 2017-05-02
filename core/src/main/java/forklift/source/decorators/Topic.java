@@ -1,7 +1,7 @@
 package forklift.source.decorators;
 
 import forklift.source.SourceType;
-import forklift.source.TopicSource;
+import forklift.source.sources.TopicSource;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
