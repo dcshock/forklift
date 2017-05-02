@@ -1,5 +1,6 @@
 package forklift.source.sources;
 
+import forklift.source.LogicalSourceContext;
 import forklift.source.SourceUtil;
 import forklift.source.decorators.RoleInput;
 
@@ -20,7 +21,26 @@ public class RoleInputSourceTest {
     }
 
     @Test
-    public void testEqualityCorrespondsRoleEquality() {
+    public void testIsLogicalSource() {
+        Assert.assertTrue(new RoleInputSource("TestRole").isLogicalSource());
+    }
+
+    @Test
+    public void testActionSourceIsTakenFromContext() {
+        final LogicalSourceContext testContext = source -> {
+            return source
+                .apply(RoleInputSource.class, roleSource -> new QueueSource("action-role-" + roleSource.getRole()))
+                .get();
+        };
+
+        final RoleInputSource roleInput = new RoleInputSource("TestRole");
+
+        Assert.assertEquals(new QueueSource("action-role-TestRole"),
+                            roleInput.getActionSource(testContext));
+    }
+
+    @Test
+    public void testEqualityCorrespondsToRoleEquality() {
         final String testRole = "test-role";
         final String otherRole = "other-role";
 
