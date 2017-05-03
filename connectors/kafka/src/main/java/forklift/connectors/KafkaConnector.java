@@ -7,8 +7,11 @@ import forklift.message.MessageStream;
 import forklift.producers.ForkliftProducerI;
 import forklift.producers.ForkliftSerializer;
 import forklift.producers.KafkaForkliftProducer;
+import forklift.source.ActionSource;
+import forklift.source.LogicalSource;
 import forklift.source.SourceI;
 import forklift.source.sources.GroupedTopicSource;
+import forklift.source.sources.RoleInputSource;
 import forklift.source.sources.QueueSource;
 import forklift.source.sources.TopicSource;
 
@@ -172,6 +175,13 @@ public class KafkaConnector implements ForkliftConnectorI, ForkliftSerializer {
             kafkaProducer = createKafkaProducer();
         }
         return new KafkaForkliftProducer(name, kafkaProducer);
+    }
+
+    @Override
+    public ActionSource mapSource(LogicalSource source) {
+        return source
+            .apply(RoleInputSource.class, roleSource -> new GroupedTopicSource("forklift-role-" + roleSource.getRole(), groupId))
+            .get();
     }
 
     @Override

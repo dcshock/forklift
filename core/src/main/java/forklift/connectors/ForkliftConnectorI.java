@@ -3,8 +3,9 @@ package forklift.connectors;
 import forklift.consumer.ForkliftConsumerI;
 import forklift.producers.ForkliftProducerI;
 import forklift.source.SourceI;
+import forklift.source.LogicalSourceContext;
 
-public interface ForkliftConnectorI {
+public interface ForkliftConnectorI extends LogicalSourceContext {
     void start() throws ConnectorException;
     void stop() throws ConnectorException;
     ForkliftConsumerI getQueue(String name) throws ConnectorException;

@@ -4,9 +4,12 @@ import forklift.consumer.ActiveMQMessageConsumer;
 import forklift.consumer.ForkliftConsumerI;
 import forklift.producers.ActiveMQProducer;
 import forklift.producers.ForkliftProducerI;
+import forklift.source.ActionSource;
+import forklift.source.LogicalSource;
 import forklift.source.SourceI;
 import forklift.source.sources.GroupedTopicSource;
 import forklift.source.sources.QueueSource;
+import forklift.source.sources.RoleInputSource;
 import forklift.source.sources.TopicSource;
 
 import org.apache.activemq.ActiveMQConnection;
@@ -145,6 +148,13 @@ public class ActiveMQConnector implements ForkliftConnectorI {
             log.error("getTopicProducer, throwing error", e);
             return null;
         }
+    }
+
+    @Override
+    public ActionSource mapSource(LogicalSource source) {
+        return source
+            .apply(RoleInputSource.class, roleSource -> new QueueSource("forklift-role-" + roleSource.getRole()))
+            .get();
     }
 
     @Override
