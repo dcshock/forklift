@@ -23,11 +23,19 @@ public @interface Retry {
     int maxRetries() default 1;
 
     /**
-     * The amount of time in milliseconds between retry attempts. Default is 12 hours
+     * The amount of time in seconds between retry attempts. Default is 12 hours
      *
      * @return timeout in seconds. Default 12 hrs
      */
     long timeout() default 12 * 60 * 60;
+
+    /**
+     * The name of the role to use to write retry messages, if there is no
+     * {@link forklift.source.decorators.RoleInput} annotation present on a consumer.
+     *
+     * @return the name of the fallback role for writing retry messages.
+     */
+    String role() default "";
 
     /**
      * Should the message be persisted between retries. Default is true

@@ -1,13 +1,19 @@
 package forklift.retry;
 
 import forklift.Forklift;
+import forklift.connectors.ForkliftConnectorI;
 import forklift.connectors.ForkliftMessage;
+import forklift.connectors.ForkliftSerializer;
 import forklift.consumer.MessageRunnable;
 import forklift.consumer.ProcessStep;
+import forklift.consumer.wrapper.RoleInputMessage;
 import forklift.decorators.LifeCycle;
 import forklift.message.Header;
+import forklift.source.ActionSource;
+import forklift.source.sources.GroupedTopicSource;
 import forklift.source.sources.TopicSource;
 import forklift.source.sources.QueueSource;
+import forklift.source.sources.RoleInputSource;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -30,9 +36,12 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Base64;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -53,7 +62,7 @@ public class RetryES {
     private final ScheduledExecutorService executor;
     private final JestClient client;
     private final ObjectMapper mapper;
-    private final Consumer<RetryMessage> cleanup;
+    private final Consumer<Map<String, String>> cleanup;
 
     /*
      * Just a test case.
@@ -108,11 +117,12 @@ public class RetryES {
         client = factory.getObject();
 
         // Cleanup after a retry is completed.
-        cleanup = (msg) -> {
+        cleanup = (fields) -> {
+            final String id = fields.get("id");
             try {
-                client.execute(new Delete.Builder(msg.getMessageId()).index("forklift-retry").type("msg").build());
+                client.execute(new Delete.Builder(id).index("forklift-retry").type("msg").build());
             } catch (IOException e) {
-                log.error("Unable to cleanup retry: {}", msg.getMessageId(), e);
+                log.error("Unable to cleanup retry: {}", id, e);
             }
         };
 
@@ -122,20 +132,29 @@ public class RetryES {
          * to shut this functionality off.
          */
         if (runRetries) {
+            final String givenConnector = forklift.getConnector().getClass().getSimpleName();
+            boolean retriesSkipped = false;
+            Set<String> skippedConnectors = new HashSet<>();
+
             try {
                 final String query = "{\"size\" : \"10000\", \"query\" : { \"match_all\" : {} }}";
                 final Search search = new Search.Builder(query).addIndex("forklift-retry").build();
                 final SearchResult results = client.execute(search);
                 if (results != null) {
                     try {
-                        for (Hit<JsonObject, Void> msg : results.getHits(JsonObject.class)) {
+                        for (Hit<Map, Void> msg : results.getHits(Map.class)) {
                             try {
-                                final RetryMessage
-                                                retryMessage =
-                                                mapper.readValue(msg.source.get("forklift-retry-msg").getAsString(), RetryMessage.class);
-                                log.info("Retrying: {}", retryMessage);
-                                executor.schedule(new RetryRunnable(retryMessage, forklift.getConnector(), cleanup),
-                                                  Long.parseLong(retryMessage.getProperties().get("forklift-retry-timeout")), TimeUnit.SECONDS);
+                                final Map<String, String> fields = msg.source;
+                                final String msgConnector = fields.get("connectorName");
+
+                                if (msgConnector != null &&
+                                    !givenConnector.equals(msgConnector)) {
+                                    skippedConnectors.add(msgConnector);
+                                    retriesSkipped = true;
+                                } else {
+                                    log.info("Retrying: {}", fields);
+                                    new RetryRunnable(fields, forklift.getConnector(), cleanup).run();
+                                }
                             } catch (Exception e) {
                                 log.error("Unable to read result {}", msg.source);
                             }
@@ -148,16 +167,32 @@ public class RetryES {
             } catch (Exception e) {
                 log.error("@trevor - don't ignore this!", e);
             }
+
+            if (retriesSkipped) {
+                log.warn("Some retries weren't ran due to being targetted at a different connector: {}", skippedConnectors);
+            }
         }
+    }
+
+    private String fallbackRole(Retry retry, Class<?> msgHandler) {
+        return Optional.of(retry.role())
+            .filter(role -> !role.isEmpty())
+            .orElse(msgHandler.getSimpleName());
     }
 
     @LifeCycle(value=ProcessStep.Error, annotation=Retry.class)
     public void msg(MessageRunnable mr, Retry retry) {
         final ForkliftMessage msg = mr.getMsg();
+        final String id = msg.getId();
+        final ForkliftConnectorI connector = mr.getConsumer().getForklift().getConnector();
+        final String connectorName = connector.getClass().getSimpleName();
+        final Map<String, String> fields = new HashMap<>();
 
-        final Map<String, String> fields = new HashMap<String, String>();
-        fields.put("text", msg.getMsg());
-        fields.put("step", ProcessStep.Error.toString());
+        // Get the message id. If there is no id we ignore the retry...
+        if (id == null) {
+            log.error("Could not retry message; no message id for connector: {}, message: {}", connectorName, msg.getMsg());
+            return;
+        }
 
         // Map in headers
         for (Header key : msg.getHeaders().keySet()) {
@@ -176,6 +211,9 @@ public class RetryES {
         {
             // Read props of the message to see what we need to do with retry counts
             final Map<String, String> props = msg.getProperties();
+            final String sourceDescription = mr.getConsumer().getSource().toString();
+
+            props.putIfAbsent("source-description", sourceDescription);
 
             // Determine the current retry count. We have to handle string or integer input types
             // since stomp doesn't differentiate the two.
@@ -210,60 +248,71 @@ public class RetryES {
             }
         }
 
-        // Errors are nullable.
-        final Optional<String> errors = mr.getErrors().stream().reduce((a, b) -> a + ":" + b);
-        if (errors.isPresent())
-            fields.put("errors", errors.get());
-
-        // Add a timestamp of when we processed this replay message.
-        fields.put("time", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
-
-        // Store the queue/topic.
-        mr.getConsumer().getSource()
-            .accept(QueueSource.class, queue -> fields.put("queue", queue.getName()))
-            .accept(TopicSource.class, topic -> fields.put("topic", topic.getName()));
-
-        // Get the message id. If there is no id we ignore the retry...
-        final String id = msg.getId();
-        if (id == null)
-            return;
-
-        try {
-            final RetryMessage retryMsg = buildRetry(mr, retry, id);
-            fields.put("forklift-retry-msg", mapper.writeValueAsString(retryMsg));
-
-            for (int i = 0; i < 3; i++) {
-                try {
-                    // Index the new information.
-                    client.execute(new Index.Builder(fields).index("forklift-retry").type("msg").id(id).build());
-                    break;
-                } catch (IOException e) {
-                    if (i == 2)
-                        log.error("Unable to index retry: {}", fields.toString(), e);
-                }
-            }
-
-            // Scheule the message to be retried.
-            executor.schedule(new RetryRunnable(retryMsg, forklift.getConnector(), cleanup), retry.timeout(), TimeUnit.SECONDS);
-        } catch (IOException e) {
-            log.error("Unable to index retry: {}", fields.toString(), e);
+        Optional<ForkliftSerializer> serializer = Optional.empty();
+        if (connector instanceof ForkliftSerializer) {
+            serializer = Optional.of((ForkliftSerializer) connector);
         }
-    }
 
-    public RetryMessage buildRetry(MessageRunnable mr, Retry retry, String id) {
-        final ForkliftMessage msg = mr.getMsg();
+        final Optional<String> errors = mr.getErrors().stream().reduce((a, b) -> a + ":" + b);
 
-        final RetryMessage retryMessage = new RetryMessage();
-        retryMessage.setMessageId(id);
-        retryMessage.setText(msg.getMsg());
-        retryMessage.setHeaders(msg.getHeaders());
-        retryMessage.setStep(ProcessStep.Error);
-        retryMessage.setProperties(msg.getProperties());
+        final Optional<RoleInputSource> declaredRoleSource = mr.getConsumer().getRoleSources(RoleInputSource.class).findFirst();
+        final String role = declaredRoleSource.map(source -> source.getRole())
+            .orElseGet(() -> fallbackRole(retry, mr.getConsumer().getMsgHandler()));
+        final RoleInputSource roleSource = declaredRoleSource.orElseGet(() -> new RoleInputSource(role));
+        final ActionSource actionSource = roleSource.getActionSource(connector);
 
-        mr.getConsumer().getSource()
-            .accept(QueueSource.class, queue -> retryMessage.setQueue(queue.getName()))
-            .accept(TopicSource.class, topic -> retryMessage.setTopic(topic.getName()));
+        final RoleInputMessage roleMessage = RoleInputMessage.fromForkliftMessage(role, msg);
+        final String roleMessageJson = roleMessage.toString();
 
-        return retryMessage;
+        // process-level details
+        fields.put("role", role);
+        fields.put("step", ProcessStep.Error.toString());
+        errors.ifPresent(errorString -> fields.put("errors", errorString));
+        fields.put("time", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+        fields.put("forklift-retry-version", "2");
+
+        // message-level details
+        fields.put("text", msg.getMsg());
+
+        // basic details for sending retries
+        fields.put("destination-connector", connectorName);
+        fields.put("destination-type", actionSource
+            .apply(QueueSource.class, queue -> "queue")
+            .apply(TopicSource.class, topic -> "topic")
+            .apply(GroupedTopicSource.class, topic -> "topic")
+            .getOrDefault("unknown")
+        );
+        fields.put("destination-name", actionSource
+            .apply(QueueSource.class, queue -> queue.getName())
+            .apply(TopicSource.class, topic -> topic.getName())
+            .apply(GroupedTopicSource.class, topic -> topic.getName())
+            .getOrDefault("unknown")
+        );
+
+        // the message to use for resending the original message
+        if (serializer.isPresent()) {
+            final byte[] roleMessageBytes = serializer.get().serializeForSource(roleSource, roleMessageJson);
+            final String roleMessageBase64 = Base64.getEncoder().encodeToString(roleMessageBytes);
+
+            fields.put("destination-message", roleMessageBase64);
+            fields.put("destination-message-format", "base64-bytes");
+        } else {
+            fields.put("destination-message", roleMessageJson);
+            fields.put("destination-message-format", "raw-string");
+        }
+
+        for (int i = 0; i < 3; i++) {
+            try {
+                // Index the new information.
+                client.execute(new Index.Builder(fields).index("forklift-retry").type("msg").id(id).build());
+                break;
+            } catch (IOException e) {
+                if (i == 2)
+                    log.error("Unable to index retry: {}", fields.toString(), e);
+            }
+        }
+
+        // Scheule the message to be retried.
+        executor.schedule(new RetryRunnable(fields, connector, cleanup), retry.timeout(), TimeUnit.SECONDS);
     }
 }

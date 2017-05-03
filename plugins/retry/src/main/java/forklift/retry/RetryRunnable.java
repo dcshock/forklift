@@ -2,22 +2,30 @@ package forklift.retry;
 
 import forklift.connectors.ForkliftConnectorI;
 import forklift.connectors.ForkliftMessage;
+import forklift.connectors.ForkliftSerializer;
+import forklift.consumer.wrapper.RoleInputMessage;
 import forklift.message.Header;
 import forklift.producers.ForkliftProducerI;
+import forklift.source.SourceI;
+import forklift.source.sources.QueueSource;
+import forklift.source.sources.TopicSource;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Base64;
+import java.util.Map;
 import java.util.function.Consumer;
 
 public class RetryRunnable implements Runnable {
     public static final Logger log = LoggerFactory.getLogger(RetryRunnable.class);
 
-    private RetryMessage msg;
+    private Map<String, String> fields;
     private ForkliftConnectorI connector;
-    private Consumer<RetryMessage> complete;
+    private Consumer<Map<String, String>> complete;
 
-    public RetryRunnable(RetryMessage msg, ForkliftConnectorI connector, Consumer<RetryMessage> complete) {
-        this.msg = msg;
+    public RetryRunnable(Map<String, String> fields, ForkliftConnectorI connector, Consumer<Map<String, String>> complete) {
+        this.fields = fields;
         this.connector = connector;
         this.complete = complete;
     }
@@ -25,35 +33,45 @@ public class RetryRunnable implements Runnable {
     @Override
     public void run() {
         ForkliftProducerI producer = null;
+        SourceI destinationSource = null;
+
         try {
-        if (msg.getQueue() != null)
-            producer = connector.getQueueProducer(msg.getQueue());
-        else if (msg.getTopic() != null)
-            producer = connector.getTopicProducer(msg.getTopic());
+            final String destinationType = fields.get("destination-type");
+            final String destinationName = fields.get("destination-name");
+
+            if ("queue".equals(destinationType)) {
+                producer = connector.getQueueProducer(destinationName);
+                destinationSource = new QueueSource(destinationName);
+            } else if ("topic".equals(destinationType)) {
+                producer = connector.getTopicProducer(destinationName);
+                destinationSource = new TopicSource(destinationName);
+            }
         } catch (Throwable e) {
             log.error("", e);
             e.printStackTrace();
             return;
         }
 
-        log.info("Retrying {}", msg);
+        final String messageFormat = fields.get("destination-message-format");
+        String roleMessage = fields.get("destination-message");
+
+        if ("base64-bytes".equals(messageFormat)) {
+            ForkliftSerializer serializer = (ForkliftSerializer) connector;
+
+            roleMessage = serializer.deserializeForSource(
+                destinationSource, Base64.getDecoder().decode(roleMessage));
+        } else if(!"raw-string".equals(messageFormat)) {
+            log.error("Unrecognized message format '{}' while retrying message", messageFormat);
+        }
+
         try {
-            producer.send(toForkliftMessage(msg));
+            producer.send(roleMessage);
         } catch (Exception e) {
-            log.warn("Unable to resend msg", e);
+            log.error("Unable to resend msg", e);
             // TODO schedule this message to run again.
             return;
         }
 
-        complete.accept(msg);
-    }
-
-    private ForkliftMessage toForkliftMessage(RetryMessage msg) {
-        final ForkliftMessage forkliftMsg = new ForkliftMessage();
-        msg.getHeaders().put(Header.CorrelationId, msg.getMessageId());
-        forkliftMsg.setHeaders(msg.getHeaders());
-        forkliftMsg.setMsg(msg.getText());
-        forkliftMsg.setProperties(msg.getProperties());
-        return forkliftMsg;
+        complete.accept(fields);
     }
 }
