@@ -65,6 +65,8 @@ public class KafkaMessage extends ForkliftMessage {
                 String jsonValue = genericRecord.toString();
                 value = jsonValue != null && jsonValue.startsWith("{") ? jsonValue : null;
             }
+        } else if (consumerRecord.value() instanceof String) {
+            return (String) consumerRecord.value();
         }
         return value == null?null:value.toString();
     }

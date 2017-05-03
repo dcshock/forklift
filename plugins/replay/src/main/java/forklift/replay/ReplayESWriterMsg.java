@@ -5,15 +5,16 @@ import java.util.Map;
 public class ReplayESWriterMsg {
     private String id;
     private Map<String, String> fields;
-    private long version = System.currentTimeMillis();
+    private long version;
 
     public ReplayESWriterMsg() {
 
     }
 
-    public ReplayESWriterMsg(String id, Map<String, String> fields) {
+    public ReplayESWriterMsg(String id, Map<String, String> fields, long version) {
         this.id = id;
         this.fields = fields;
+        this.version = version;
     }
 
     public String getId() {
