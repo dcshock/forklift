@@ -115,7 +115,17 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
 
     @Override
     public String send(String message) throws ProducerException {
-        return sendForkliftWrappedMessage(message, null);
+        // let the schema registry just treat it as an avro string and ignore producer properties
+        ProducerRecord record = new ProducerRecord<>(topic, null, message);
+        try {
+            RecordMetadata result = (RecordMetadata)kafkaProducer.send(record).get();
+            return result.topic() + "-" + result.partition() + "-" + result.offset();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new ProducerException("Error sending Kafka Message", e);
+        } catch (ExecutionException e) {
+            throw new ProducerException("Error sending Kafka Message", e);
+        }
     }
 
     @Override
