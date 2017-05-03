@@ -21,6 +21,7 @@ import forklift.source.SourceI;
 import forklift.source.SourceUtil;
 import forklift.source.sources.GroupedTopicSource;
 import forklift.source.sources.QueueSource;
+import forklift.source.sources.RoleInputSource;
 import forklift.source.sources.TopicSource;
 import forklift.source.decorators.GroupedTopic;
 import forklift.source.decorators.Queue;
@@ -126,6 +127,7 @@ public class Consumer {
             .apply(QueueSource.class, queue -> queue.getName())
             .apply(TopicSource.class, topic -> topic.getName())
             .apply(GroupedTopicSource.class, topic -> topic.getName())
+            .apply(RoleInputSource.class, roleSource -> roleSource.getRole())
             .get() + ":" + id.getAndIncrement();
         log = LoggerFactory.getLogger(this.name);
     }

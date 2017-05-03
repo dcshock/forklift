@@ -2,6 +2,7 @@ package forklift.connectors;
 
 import forklift.consumer.ForkliftConsumerI;
 import forklift.consumer.KafkaTopicConsumer;
+import forklift.consumer.wrapper.RoleInputConsumerWrapper;
 import forklift.controller.KafkaController;
 import forklift.message.MessageStream;
 import forklift.producers.ForkliftProducerI;
@@ -123,6 +124,7 @@ public class KafkaConnector implements ForkliftConnectorI, ForkliftSerializer {
             .apply(QueueSource.class, queue -> queue.getName())
             .apply(TopicSource.class, topic -> topic.getName())
             .apply(GroupedTopicSource.class, topic -> topic.getName())
+            .apply(RoleInputSource.class, roleSource -> mapRoleInputSource(roleSource).getName())
             .elseUnsupportedError();
 
         return serializer.serialize(topicName, o);
@@ -134,6 +136,10 @@ public class KafkaConnector implements ForkliftConnectorI, ForkliftSerializer {
             .apply(QueueSource.class, queue -> getQueue(queue.getName()))
             .apply(TopicSource.class, topic -> getTopic(topic.getName()))
             .apply(GroupedTopicSource.class, topic -> getGroupedTopic(topic))
+            .apply(RoleInputSource.class, roleSource -> {
+                final ForkliftConsumerI rawConsumer = getConsumerForSource(roleSource.getActionSource(this));
+                return new RoleInputConsumerWrapper(rawConsumer);
+             })
             .elseUnsupportedError();
     }
 
@@ -180,8 +186,12 @@ public class KafkaConnector implements ForkliftConnectorI, ForkliftSerializer {
     @Override
     public ActionSource mapSource(LogicalSource source) {
         return source
-            .apply(RoleInputSource.class, roleSource -> new GroupedTopicSource("forklift-role-" + roleSource.getRole(), groupId))
+            .apply(RoleInputSource.class, roleSource -> mapRoleInputSource(roleSource))
             .get();
+    }
+
+    private GroupedTopicSource mapRoleInputSource(RoleInputSource roleSource) {
+        return new GroupedTopicSource("forklift-role-" + roleSource.getRole(), groupId);
     }
 
     @Override

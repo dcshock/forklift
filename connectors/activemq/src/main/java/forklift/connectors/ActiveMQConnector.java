@@ -2,6 +2,7 @@ package forklift.connectors;
 
 import forklift.consumer.ActiveMQMessageConsumer;
 import forklift.consumer.ForkliftConsumerI;
+import forklift.consumer.wrapper.RoleInputConsumerWrapper;
 import forklift.producers.ActiveMQProducer;
 import forklift.producers.ForkliftProducerI;
 import forklift.source.ActionSource;
@@ -113,6 +114,10 @@ public class ActiveMQConnector implements ForkliftConnectorI {
             .apply(QueueSource.class, queue -> getQueue(queue.getName()))
             .apply(TopicSource.class, topic -> getTopic(topic.getName()))
             .apply(GroupedTopicSource.class, topic -> getGroupedTopic(topic))
+            .apply(RoleInputSource.class, roleSource -> {
+                final ForkliftConsumerI rawConsumer = getConsumerForSource(roleSource.getActionSource(this));
+                return new RoleInputConsumerWrapper(rawConsumer);
+            })
             .elseUnsupportedError();
     }
 
