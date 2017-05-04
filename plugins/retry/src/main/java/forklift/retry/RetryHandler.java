@@ -69,8 +69,8 @@ public class RetryHandler {
             .forEach(result -> {
                 try {
                     final RetryMessage retryMessage = mapper.readValue(new File(dir, result.getFilename()), RetryMessage.class);
-                    executor.schedule(new RetryRunnable(retryMessage, forklift.getConnector(), cleanup),
-                        Long.parseLong(Integer.toString(Integer.parseInt(retryMessage.getProperties().get("forklift-retry-timeout")))), TimeUnit.SECONDS);
+                    /*executor.schedule(new RetryRunnable(retryMessage, forklift.getConnector(), cleanup),
+                        Long.parseLong(Integer.toString(Integer.parseInt(retryMessage.getProperties().get("forklift-retry-timeout")))), TimeUnit.SECONDS);*/
                 } catch (Exception e) {
                     log.error("Unable to read file {}", result.getFilename());
                 }
@@ -129,7 +129,7 @@ public class RetryHandler {
             }
 
             // Scheule the message to be retried.
-            executor.schedule(new RetryRunnable(retryMessage, forklift.getConnector(), cleanup), retry.timeout(), TimeUnit.SECONDS);
+            // executor.schedule(new RetryRunnable(retryMessage, forklift.getConnector(), cleanup), retry.timeout(), TimeUnit.SECONDS);
         } catch (IOException ignored) {
         }
     }
