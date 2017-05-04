@@ -6,7 +6,6 @@ import forklift.consumer.wrapper.RoleInputConsumerWrapper;
 import forklift.controller.KafkaController;
 import forklift.message.MessageStream;
 import forklift.producers.ForkliftProducerI;
-import forklift.producers.ForkliftSerializer;
 import forklift.producers.KafkaForkliftProducer;
 import forklift.source.ActionSource;
 import forklift.source.LogicalSource;
@@ -16,6 +15,7 @@ import forklift.source.sources.RoleInputSource;
 import forklift.source.sources.QueueSource;
 import forklift.source.sources.TopicSource;
 
+import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
 import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import io.confluent.kafka.serializers.KafkaAvroSerializerConfig;
@@ -45,6 +45,7 @@ public class KafkaConnector implements ForkliftConnectorI, ForkliftSerializer {
     private KafkaProducer<?, ?> kafkaProducer;
     private KafkaController controller;
     private KafkaAvroSerializer serializer;
+    private KafkaAvroDeserializer deserializer;
 
     /**
      * Constructs a new instance of the KafkaConnector
@@ -58,6 +59,7 @@ public class KafkaConnector implements ForkliftConnectorI, ForkliftSerializer {
         this.schemaRegistries = schemaRegistries;
         this.groupId = groupId;
         this.serializer = newSerializer();
+        this.deserializer = newDeserializer();
     }
 
     private KafkaAvroSerializer newSerializer() {
@@ -66,6 +68,16 @@ public class KafkaConnector implements ForkliftConnectorI, ForkliftSerializer {
 
         KafkaAvroSerializer result = new KafkaAvroSerializer();
         result.configure(serializerProperties, false);
+        return result;
+    }
+
+    private KafkaAvroDeserializer newDeserializer() {
+        Map<String, Object> deserializerProperties = new HashMap<>();
+        deserializerProperties.put(KafkaAvroDeserializerConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistries);
+        deserializerProperties.put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, false);
+
+        KafkaAvroDeserializer result = new KafkaAvroDeserializer();
+        result.configure(deserializerProperties, false);
         return result;
     }
 
@@ -128,6 +140,18 @@ public class KafkaConnector implements ForkliftConnectorI, ForkliftSerializer {
             .elseUnsupportedError();
 
         return serializer.serialize(topicName, o);
+    }
+
+    @Override
+    public <T> T deserializeForSource(SourceI source, byte[] bytes) {
+        final String topicName = source
+            .apply(QueueSource.class, queue -> queue.getName())
+            .apply(TopicSource.class, topic -> topic.getName())
+            .apply(GroupedTopicSource.class, topic -> topic.getName())
+            .apply(RoleInputSource.class, roleSource -> mapRoleInputSource(roleSource).getName())
+            .elseUnsupportedError();
+
+        return (T) deserializer.deserialize(topicName, bytes);
     }
 
     @Override
