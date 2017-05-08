@@ -20,11 +20,13 @@ import java.util.function.Consumer;
 public class RetryRunnable implements Runnable {
     public static final Logger log = LoggerFactory.getLogger(RetryRunnable.class);
 
+    private String id;
     private Map<String, String> fields;
     private ForkliftConnectorI connector;
-    private Consumer<Map<String, String>> complete;
+    private Consumer<String> complete;
 
-    public RetryRunnable(Map<String, String> fields, ForkliftConnectorI connector, Consumer<Map<String, String>> complete) {
+    public RetryRunnable(String id, Map<String, String> fields, ForkliftConnectorI connector, Consumer<String> complete) {
+        this.id = id;
         this.fields = fields;
         this.connector = connector;
         this.complete = complete;
@@ -72,6 +74,6 @@ public class RetryRunnable implements Runnable {
             return;
         }
 
-        complete.accept(fields);
+        complete.accept(id);
     }
 }

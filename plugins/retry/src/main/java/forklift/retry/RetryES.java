@@ -62,7 +62,7 @@ public class RetryES {
     private final ScheduledExecutorService executor;
     private final JestClient client;
     private final ObjectMapper mapper;
-    private final Consumer<Map<String, String>> cleanup;
+    private final Consumer<String> cleanup;
 
     /*
      * Just a test case.
@@ -117,8 +117,12 @@ public class RetryES {
         client = factory.getObject();
 
         // Cleanup after a retry is completed.
-        cleanup = (fields) -> {
-            final String id = fields.get("id");
+        cleanup = (id) -> {
+            if (id == null) {
+                log.error("Cannot cleanup retry with null id: {}", id);
+                return;
+            }
+
             try {
                 client.execute(new Delete.Builder(id).index("forklift-retry").type("msg").build());
             } catch (IOException e) {
@@ -153,7 +157,7 @@ public class RetryES {
                                     retriesSkipped = true;
                                 } else {
                                     log.info("Retrying: {}", fields);
-                                    new RetryRunnable(fields, forklift.getConnector(), cleanup).run();
+                                    new RetryRunnable(msg.id, fields, forklift.getConnector(), cleanup).run();
                                 }
                             } catch (Exception e) {
                                 log.error("Unable to read result {}", msg.source);
@@ -313,6 +317,6 @@ public class RetryES {
         }
 
         // Scheule the message to be retried.
-        executor.schedule(new RetryRunnable(fields, connector, cleanup), retry.timeout(), TimeUnit.SECONDS);
+        executor.schedule(new RetryRunnable(id, fields, connector, cleanup), retry.timeout(), TimeUnit.SECONDS);
     }
 }
