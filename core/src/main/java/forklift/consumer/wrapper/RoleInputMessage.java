@@ -42,8 +42,12 @@ public class RoleInputMessage {
         this.role = role;
         this.id = id;
         this.msg = msg;
-        this.properties = properties;
-        this.headers = headers;
+        if (properties != null) {
+            this.properties = new HashMap<>(properties);
+        }
+        if (headers != null) {
+            this.headers = new HashMap<>(headers);
+        }
     }
 
     public String getRole() {

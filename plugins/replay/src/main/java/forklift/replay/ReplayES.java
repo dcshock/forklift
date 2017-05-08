@@ -204,6 +204,14 @@ public class ReplayES {
         final ActionSource actionSource = roleSource.getActionSource(connector);
 
         final RoleInputMessage roleMessage = RoleInputMessage.fromForkliftMessage(role, msg);
+
+        // remove properties that are related to one lifecycle of the message
+        final Map<String, String> roleProperties = roleMessage.getProperties();
+        roleProperties.remove("forklift-retry-count");
+        roleProperties.remove("forklift-retry-max-retries");
+        roleProperties.remove("forklift-retry-timeout");
+        roleProperties.remove("forklift-retry-max-retries-exceeded");
+
         final String roleMessageJson = roleMessage.toString();
 
         // Map in headers
