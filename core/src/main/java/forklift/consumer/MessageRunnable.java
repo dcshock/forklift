@@ -11,6 +11,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.ArrayList;
@@ -217,6 +218,10 @@ public class MessageRunnable implements Runnable {
         try {
             return func.get();
         } catch (Throwable e) {
+            if (e instanceof InvocationTargetException) {
+                e = ((InvocationTargetException) e).getTargetException();
+            }
+
             StringWriter sw = new StringWriter();
             e.printStackTrace(new PrintWriter(sw)); // stack trace as a string
 
