@@ -27,7 +27,8 @@ libraryDependencies ++= Seq(
 )
 
 lazy val testDependencies = Seq(
-  "com.novocode" % "junit-interface" % "0.11"
+  "com.novocode" % "junit-interface" % "0.11",
+  "org.mockito" % "mockito-all" % "1.9.5"
 )
 
 libraryDependencies ++= testDependencies.map(_ % "test")
