@@ -228,8 +228,8 @@ public class ReplayES {
         // carry a description of the original source across restarts
         props.putIfAbsent("source-description", sourceDescription);
 
-        final long stepCount = Integer.parseInt(props.getOrDefault("step-count", "0")) + 1;
-        props.put("step-count", "" + stepCount);
+        final long stepCount = Integer.parseInt(props.getOrDefault("forklift-replay-step-count", "0")) + 1;
+        props.put("forklift-replay-step-count", "" + stepCount);
 
         // Map in properties
         for (String key : msg.getProperties().keySet()) {
