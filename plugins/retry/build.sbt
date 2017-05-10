@@ -26,6 +26,13 @@ libraryDependencies ++= Seq(
   "io.searchbox" % "jest" % "2.4.0"
 )
 
+lazy val testDependencies = Seq(
+  "com.novocode" % "junit-interface" % "0.11",
+  "org.mockito" % "mockito-all" % "1.9.5"
+)
+
+libraryDependencies ++= testDependencies.map(_ % "test")
+
 // Remove scala dependency for pure Java libraries
 autoScalaLibrary := false
 
