@@ -166,11 +166,14 @@ public class RetryLogBuilderTest {
         final byte[] testBytes = new byte[]{'h', 'i'};
         final String encodedBytes = Base64.getEncoder().encodeToString(testBytes);
 
-        final ForkliftConnectorI connector = Mockito.mock(ForkliftConnectorI.class, Mockito.withSettings().extraInterfaces(ForkliftSerializer.class));
-        final ForkliftSerializer serializer = (ForkliftSerializer) connector;
-        Mockito.when(connector.mapSource(roleSource)).thenReturn(actionSource);
+
+        final ForkliftSerializer serializer = Mockito.mock(ForkliftSerializer.class);
         Mockito.when(serializer.serializeForSource(Mockito.eq(roleSource), Mockito.any()))
             .thenReturn(testBytes);
+
+        final ForkliftConnectorI connector = Mockito.mock(ForkliftConnectorI.class);
+        Mockito.when(connector.mapSource(roleSource)).thenReturn(actionSource);
+        Mockito.when(connector.getDefaultSerializer()).thenReturn(serializer);
 
         // run the log builder
         final RetryLogBuilder logBuilder = new RetryLogBuilder(msg, consumer, errors, connector, retry);

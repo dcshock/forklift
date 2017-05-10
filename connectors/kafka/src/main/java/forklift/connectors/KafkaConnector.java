@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Manages both consuming and producing events on the kafka message broker.
  */
-public class KafkaConnector implements ForkliftConnectorI, ForkliftSerializer {
+public class KafkaConnector implements ForkliftConnectorI {
     private static final Logger log = LoggerFactory.getLogger(KafkaConnector.class);
 
     private final String kafkaHosts;
@@ -44,8 +44,7 @@ public class KafkaConnector implements ForkliftConnectorI, ForkliftSerializer {
 
     private KafkaProducer<?, ?> kafkaProducer;
     private KafkaController controller;
-    private KafkaAvroSerializer serializer;
-    private KafkaAvroDeserializer deserializer;
+    private ForkliftSerializer serializer;
 
     /**
      * Constructs a new instance of the KafkaConnector
@@ -58,8 +57,7 @@ public class KafkaConnector implements ForkliftConnectorI, ForkliftSerializer {
         this.kafkaHosts = kafkaHosts;
         this.schemaRegistries = schemaRegistries;
         this.groupId = groupId;
-        this.serializer = newSerializer();
-        this.deserializer = newDeserializer();
+        this.serializer = new KafkaSerializer(this, newSerializer(), newDeserializer());
     }
 
     private KafkaAvroSerializer newSerializer() {
@@ -79,6 +77,11 @@ public class KafkaConnector implements ForkliftConnectorI, ForkliftSerializer {
         KafkaAvroDeserializer result = new KafkaAvroDeserializer();
         result.configure(deserializerProperties, false);
         return result;
+    }
+
+    @Override
+    public ForkliftSerializer getDefaultSerializer() {
+        return serializer;
     }
 
     @Override
@@ -128,30 +131,6 @@ public class KafkaConnector implements ForkliftConnectorI, ForkliftSerializer {
             kafkaProducer.close();
             kafkaProducer = null;
         }
-    }
-
-    @Override
-    public byte[] serializeForSource(SourceI source, Object o) {
-        final String topicName = source
-            .apply(QueueSource.class, queue -> queue.getName())
-            .apply(TopicSource.class, topic -> topic.getName())
-            .apply(GroupedTopicSource.class, topic -> topic.getName())
-            .apply(RoleInputSource.class, roleSource -> mapRoleInputSource(roleSource).getName())
-            .elseUnsupportedError();
-
-        return serializer.serialize(topicName, o);
-    }
-
-    @Override
-    public <T> T deserializeForSource(SourceI source, byte[] bytes) {
-        final String topicName = source
-            .apply(QueueSource.class, queue -> queue.getName())
-            .apply(TopicSource.class, topic -> topic.getName())
-            .apply(GroupedTopicSource.class, topic -> topic.getName())
-            .apply(RoleInputSource.class, roleSource -> mapRoleInputSource(roleSource).getName())
-            .elseUnsupportedError();
-
-        return (T) deserializer.deserialize(topicName, bytes);
     }
 
     @Override
@@ -214,7 +193,7 @@ public class KafkaConnector implements ForkliftConnectorI, ForkliftSerializer {
             .get();
     }
 
-    private GroupedTopicSource mapRoleInputSource(RoleInputSource roleSource) {
+    protected GroupedTopicSource mapRoleInputSource(RoleInputSource roleSource) {
         return new GroupedTopicSource("forklift-role-" + roleSource.getRole(), groupId);
     }
 

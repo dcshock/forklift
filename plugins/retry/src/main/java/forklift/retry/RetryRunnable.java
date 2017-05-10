@@ -58,7 +58,7 @@ public class RetryRunnable implements Runnable {
         String roleMessage = fields.get("destination-message");
 
         if ("base64-bytes".equals(messageFormat)) {
-            ForkliftSerializer serializer = (ForkliftSerializer) connector;
+            ForkliftSerializer serializer = connector.getDefaultSerializer();
 
             roleMessage = serializer.deserializeForSource(
                 destinationSource, Base64.getDecoder().decode(roleMessage));

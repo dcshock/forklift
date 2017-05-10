@@ -84,10 +84,7 @@ public class RetryLogBuilder {
             }
         }
 
-        Optional<ForkliftSerializer> serializer = Optional.empty();
-        if (connector instanceof ForkliftSerializer) {
-            serializer = Optional.of((ForkliftSerializer) connector);
-        }
+        Optional<ForkliftSerializer> serializer = Optional.ofNullable(connector.getDefaultSerializer());
 
         final Optional<String> errors = errorList.stream().reduce((a, b) -> a + ":" + b);
 

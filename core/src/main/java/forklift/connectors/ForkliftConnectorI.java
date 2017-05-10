@@ -14,6 +14,10 @@ public interface ForkliftConnectorI extends LogicalSourceContext {
     ForkliftProducerI getQueueProducer(String name);
     ForkliftProducerI getTopicProducer(String name);
 
+    default ForkliftSerializer getDefaultSerializer() {
+        return null;
+    }
+
     default boolean supportsOrder() {
         return false;
     }

@@ -28,10 +28,7 @@ public class ReplayLogBuilder {
     final Map<String, String> fields = new HashMap<>();
     public ReplayLogBuilder(ForkliftMessage msg, Consumer consumer, List<String> errorList, ForkliftConnectorI connector, Replay replay, ProcessStep step) {
         final Map<String, String> props = msg.getProperties();
-        Optional<ForkliftSerializer> serializer = Optional.empty();
-        if (connector instanceof ForkliftSerializer) {
-            serializer = Optional.of((ForkliftSerializer) connector);
-        }
+        Optional<ForkliftSerializer> serializer = Optional.ofNullable(connector.getDefaultSerializer());
 
         final String connectorName = connector.getClass().getSimpleName();
         final String sourceDescription = consumer.getSource().toString();

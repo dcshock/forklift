@@ -23,7 +23,7 @@ public class KafkaConnectorSerializerTests {
         serviceManager.start();
 
         Forklift forklift = serviceManager.newManagedForkliftInstance();
-        connectorSerializer = (ForkliftSerializer) forklift.getConnector();
+        connectorSerializer = forklift.getConnector().getDefaultSerializer();
     }
 
     @AfterClass
