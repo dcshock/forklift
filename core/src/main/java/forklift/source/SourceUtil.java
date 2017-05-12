@@ -53,6 +53,7 @@ public class SourceUtil {
                      try {
                          return sourceType.cast(source);
                      } catch (ClassCastException e) { // a class cast exception should be impossible
+                         log.error("Impossible class cast exception; sound the alarms", e);
                          return null;
                      }
                 });

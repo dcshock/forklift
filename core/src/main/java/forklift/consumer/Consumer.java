@@ -520,7 +520,9 @@ public class Consumer {
             .map(source -> {
                 try {
                     return sourceType.cast(source);
-                } catch (ClassCastException e) {} // should be impossible
+                } catch (ClassCastException e) { // should be impossible
+                    log.error("Impossible class cast exception; sound the alarms", e);
+                }
                 return null;
             });
     }

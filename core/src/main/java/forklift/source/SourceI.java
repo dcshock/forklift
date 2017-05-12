@@ -1,5 +1,8 @@
 package forklift.source;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import java.util.List;
@@ -13,6 +16,8 @@ import java.util.stream.Stream;
  * case handling
  */
 public abstract class SourceI {
+    private static final Logger log = LoggerFactory.getLogger(SourceI.class);
+
     private Class<?> contextClass;
     public void setContextClass(Class<?> contextClass){
         this.contextClass = contextClass;
@@ -62,6 +67,7 @@ public abstract class SourceI {
                     result = action.apply(specificSource);
                     handled = true;
                 } catch (ClassCastException ignored) { // class cast exception should be impossible
+                    log.error("Impossible class cast exception; sound the alarms", ignored);
                 } catch (Throwable t) {
                     throw t;
                 }
