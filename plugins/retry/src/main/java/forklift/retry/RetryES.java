@@ -181,18 +181,20 @@ public class RetryES {
         final RetryLogBuilder logBuilder = new RetryLogBuilder(msg, mr.getConsumer(), mr.getErrors(), connector, retry);
         final Map<String, String> fields = logBuilder.getFields();
 
-        for (int i = 0; i < 3; i++) {
-            try {
-                // Index the new information.
-                client.execute(new Index.Builder(fields).index("forklift-retry").type("msg").id(id).build());
-                break;
-            } catch (IOException e) {
-                if (i == 2)
-                    log.error("Unable to index retry: {}", fields.toString(), e);
+        if (fields != null) {
+            for (int i = 0; i < 3; i++) {
+                try {
+                    // Index the new information.
+                    client.execute(new Index.Builder(fields).index("forklift-retry").type("msg").id(id).build());
+                    break;
+                } catch (IOException e) {
+                    if (i == 2)
+                        log.error("Unable to index retry: {}", fields.toString(), e);
+                }
             }
-        }
 
-        // Scheule the message to be retried.
-        executor.schedule(new RetryRunnable(id, fields, connector, cleanup), retry.timeout(), TimeUnit.SECONDS);
+            // Scheule the message to be retried.
+            executor.schedule(new RetryRunnable(id, fields, connector, cleanup), retry.timeout(), TimeUnit.SECONDS);
+        }
     }
 }
