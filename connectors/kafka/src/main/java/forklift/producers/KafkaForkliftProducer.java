@@ -1,6 +1,7 @@
 package forklift.producers;
 
 import forklift.connectors.ForkliftMessage;
+import forklift.connectors.KafkaSerializer;
 import forklift.message.Header;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -46,7 +47,7 @@ import java.util.stream.Collectors;
 /**
  * Implementation of the {@link forklift.producers.ForkliftProducerI}.  Messages sent are fully integrated
  * with confluent's schema-registry.  Avro compiled objects may be sent through the {@link #send(Object)} method.  If
- * an avro object is sent, the schema will be evolved to include the {@link #SCHEMA_FIELD_NAME_PROPERTIES} field as
+ * an avro object is sent, the schema will be evolved to include the {@link KafkaSerializer#SCHEMA_FIELD_NAME_PROPERTIES} field as
  * follows:
  * <pre>
  * {"name":"forkliftProperties","type":"string","default":"",
@@ -83,30 +84,12 @@ import java.util.stream.Collectors;
 public class KafkaForkliftProducer implements ForkliftProducerI {
     private static final Logger log = LoggerFactory.getLogger(KafkaForkliftProducer.class);
 
-    public final static String SCHEMA_FIELD_NAME_VALUE = "forkliftValue";
-    public final static String SCHEMA_FIELD_NAME_PROPERTIES = "forkliftProperties";
-
-    private final static String SCHEMA_FIELD_VALUE_PROPERTIES =
-                    "{\"name\":\"forkliftProperties\",\"type\":\"string\",\"default\":\"\"," +
-                    "\"doc\":\"Properties added to support forklift interfaces. Format is key,value entries delimited with new lines\"}";
-
     private final String topic;
     private final KafkaProducer<?, ?> kafkaProducer;
     private static final ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule())
                                                                  .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    private static final Schema forkliftSchema = readSchemaFromClasspath("schemas/ForkliftMessage.avsc");
     private static final Map<Class<?>, Schema> avroSchemaCache = new ConcurrentHashMap<>();
     private Map<String, String> properties = new HashMap<>();
-
-    private static Schema readSchemaFromClasspath(String path) {
-        Schema.Parser parser = new Schema.Parser();
-        try {
-            return parser.parse(Thread.currentThread().getContextClassLoader().getResourceAsStream(path));
-        } catch (Exception e) {
-            log.error("Couldn't parse forklift schema", e);
-        }
-        return null;
-    }
 
     public KafkaForkliftProducer(String topic, KafkaProducer<?, ?> kafkaProducer) {
         this.kafkaProducer = kafkaProducer;
@@ -115,17 +98,7 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
 
     @Override
     public String send(String message) throws ProducerException {
-        // let the schema registry just treat it as an avro string and ignore producer properties
-        ProducerRecord record = new ProducerRecord<>(topic, null, message);
-        try {
-            RecordMetadata result = (RecordMetadata)kafkaProducer.send(record).get();
-            return result.topic() + "-" + result.partition() + "-" + result.offset();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new ProducerException("Error sending Kafka Message", e);
-        } catch (ExecutionException e) {
-            throw new ProducerException("Error sending Kafka Message", e);
-        }
+        return sendForkliftWrappedMessage(message, null);
     }
 
     @Override
@@ -191,15 +164,15 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
     }
 
     private String sendForkliftWrappedMessage(String message, Map<String, String> messageProperties) throws ProducerException {
-        GenericRecord avroRecord = new GenericData.Record(forkliftSchema);
-        avroRecord.put(SCHEMA_FIELD_NAME_VALUE, message);
+        GenericRecord avroRecord = new GenericData.Record(KafkaSerializer.FORKLIFT_SCHEMA);
+        avroRecord.put(KafkaSerializer.SCHEMA_FIELD_NAME_VALUE, message);
         //message level properties take precedence over producer level properties
         Map<String, String> appliedProperties = new HashMap<>(properties);
         if (messageProperties == null) {
             messageProperties = Collections.emptyMap();
         }
         appliedProperties.putAll(messageProperties);
-        avroRecord.put(SCHEMA_FIELD_NAME_PROPERTIES, this.formatMap(appliedProperties));
+        avroRecord.put(KafkaSerializer.SCHEMA_FIELD_NAME_PROPERTIES, this.formatMap(appliedProperties));
         ProducerRecord record = new ProducerRecord<>(topic, null, avroRecord);
         try {
             RecordMetadata result = (RecordMetadata)kafkaProducer.send(record).get();
@@ -214,7 +187,7 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
 
     private Schema addForkliftPropertiesToSchema(Schema schema) throws IOException {
         String originalJson = schema.toString(false);
-        JsonNode propertiesField = mapper.readTree(SCHEMA_FIELD_VALUE_PROPERTIES);
+        JsonNode propertiesField = mapper.readTree(KafkaSerializer.SCHEMA_FIELD_VALUE_PROPERTIES);
         ObjectNode schemaNode = (ObjectNode)mapper.readTree(originalJson);
         ArrayNode fieldsNode = (ArrayNode)schemaNode.get("fields");
         fieldsNode.add(propertiesField);
@@ -241,7 +214,7 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
 
         //add forklift properties to json
         ObjectNode messageNode = (ObjectNode)mapper.readTree(json);
-        messageNode.put(SCHEMA_FIELD_NAME_PROPERTIES, this.formatMap(this.properties));
+        messageNode.put(KafkaSerializer.SCHEMA_FIELD_NAME_PROPERTIES, this.formatMap(this.properties));
 
         //read modified json to avro object with modified schema
         InputStream input = new ByteArrayInputStream(messageNode.toString().getBytes(Charset.forName("UTF-8")));

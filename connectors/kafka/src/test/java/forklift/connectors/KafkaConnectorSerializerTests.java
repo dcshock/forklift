@@ -69,7 +69,8 @@ public class KafkaConnectorSerializerTests {
         final byte[] sampleStringAvro = stripHeader(sampleStringSerialized);
         final byte[] expectedSampleStringAvro = new byte[]{
             10, // double the length of the string
-            'h', 'e', 'l', 'l', 'o'
+            'h', 'e', 'l', 'l', 'o',
+            0 // double the length of the properties (none supplied)
         };
 
 
