@@ -115,7 +115,9 @@ public class SourceUtil {
                 if (hasSourceAnnotation(clazz)) {
                     classesFound.add(clazz);
                 }
-            } catch (ClassNotFoundException e) {
+            } catch (ClassNotFoundException | NoClassDefFoundError e) {
+                // It's possible for some of the scanned files to throw a NoClassDefFoundError
+                // while loading; in which case we just move on
                 log.debug("Could not find class while scanning: " + className, e);
             }
         }
