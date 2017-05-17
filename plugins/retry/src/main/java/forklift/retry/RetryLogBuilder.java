@@ -26,6 +26,8 @@ import java.util.Optional;
  */
 public class RetryLogBuilder {
     private Map<String, String> fields = new HashMap<>();
+    private boolean logProduced = true;
+
     public RetryLogBuilder(ForkliftMessage msg, Consumer consumer, List<String> errorList, ForkliftConnectorI connector, Retry retry) {
         final String connectorName = connector.getClass().getSimpleName();
 
@@ -69,6 +71,7 @@ public class RetryLogBuilder {
             if (retryCount > retry.maxRetries()) {
                 props.put("forklift-retry-max-retries-exceeded", "true");
                 fields = null;
+                logProduced = false;
                 return;
             } else {
                 props.put("forklift-retry-max-retries", "" + retry.maxRetries());
@@ -143,5 +146,9 @@ public class RetryLogBuilder {
 
     public Map<String, String> getFields() {
         return fields;
+    }
+
+    public boolean logProduced() {
+        return logProduced;
     }
 }

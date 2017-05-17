@@ -181,7 +181,7 @@ public class RetryES {
         final RetryLogBuilder logBuilder = new RetryLogBuilder(msg, mr.getConsumer(), mr.getErrors(), connector, retry);
         final Map<String, String> fields = logBuilder.getFields();
 
-        if (fields != null) {
+        if (logBuilder.logProduced()) {
             for (int i = 0; i < 3; i++) {
                 try {
                     // Index the new information.
