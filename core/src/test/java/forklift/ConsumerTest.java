@@ -33,8 +33,6 @@ public class ConsumerTest {
     public void setup() {
         forklift = mock(Forklift.class);
         connector = mock(ForkliftConnectorI.class);
-        when(connector.supportsQueue()).thenReturn(true);
-        when(connector.supportsTopic()).thenReturn(true);
         when(forklift.getConnector()).thenReturn(connector);
     }
 

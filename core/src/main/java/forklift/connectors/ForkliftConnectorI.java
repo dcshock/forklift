@@ -25,12 +25,4 @@ public interface ForkliftConnectorI extends LogicalSourceContext {
     default boolean supportsResponse() {
         return false;
     }
-
-    default boolean supportsQueue() {
-        return false;
-    }
-
-    default boolean supportsTopic() {
-        return false;
-    }
 }

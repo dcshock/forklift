@@ -171,14 +171,4 @@ public class ActiveMQConnector implements ForkliftConnectorI {
     public boolean supportsResponse() {
         return true;
     }
-
-    @Override
-    public boolean supportsTopic() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsQueue() {
-        return true;
-    }
 }

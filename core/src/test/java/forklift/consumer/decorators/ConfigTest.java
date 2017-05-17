@@ -39,8 +39,6 @@ public class ConfigTest {
         LifeCycleMonitors lifeCycle = new LifeCycleMonitors();
         forklift = mock(Forklift.class);
         connector = mock(ForkliftConnectorI.class);
-        when(connector.supportsQueue()).thenReturn(true);
-        when(connector.supportsTopic()).thenReturn(true);
         when(forklift.getLifeCycle()).thenReturn(lifeCycle);
         when(forklift.getConnector()).thenReturn(connector);
     }
