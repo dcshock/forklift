@@ -14,6 +14,8 @@ import forklift.message.Header;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTextMessage;
 
+import java.util.Optional;
+import java.util.UUID;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
@@ -54,7 +56,18 @@ public class ActiveMQMessageConsumer implements ForkliftConsumerI {
 
         try {
             final ActiveMQForkliftMessage msg = new ActiveMQForkliftMessage(m);
-            msg.setId(m.getJMSCorrelationID());
+
+            Optional<String> messageId = Optional.ofNullable(m.getJMSCorrelationID())
+                .filter(id -> !id.isEmpty());
+
+            // use JMS message id if no correlation id is given
+            if (!messageId.isPresent()) {
+                messageId = Optional.ofNullable(m.getJMSMessageID())
+                    .filter(id -> !id.isEmpty());
+            }
+
+            msg.setId(messageId.orElseGet(() -> UUID.randomUUID().toString().replaceAll("-", "")));
+
             if (m instanceof ActiveMQTextMessage) {
                 msg.setMsg(((ActiveMQTextMessage)m).getText());
             } else {
