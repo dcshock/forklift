@@ -173,7 +173,7 @@ public class RetryES {
         final String connectorName = connector.getClass().getSimpleName();
 
         // Get the message id. If there is no id we ignore the retry...
-        if (id == null) {
+        if (id == null || id.isEmpty()) {
             log.error("Could not retry message; no message id for connector: {}, message: {}", connectorName, msg.getMsg());
             return;
         }

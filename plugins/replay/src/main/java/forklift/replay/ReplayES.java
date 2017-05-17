@@ -174,7 +174,7 @@ public class ReplayES {
             mr.setWarnOnly(true);
         }
 
-        if (id != null) {
+        if (id != null && !id.isEmpty()) {
             ReplayLogBuilder logBuilder = new ReplayLogBuilder(msg, mr.getConsumer(), mr.getErrors(), connector, replay, step);
             // Push the message to the consumer
             try {
