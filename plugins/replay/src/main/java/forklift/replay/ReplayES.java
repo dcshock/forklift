@@ -32,7 +32,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-@Service
+/**
+ * A plugin that writes replay log messages to elasticsearch, so that messages
+ * can be reliably tracked and resent.
+ *
+ * Replay logs are queued on the "forklift.replay.es" queue on the given connector
+ * to avoid long delays as messages are being processed.
+ */
 public class ReplayES {
     private static final Logger log = LoggerFactory.getLogger(ReplayES.class);
 
@@ -42,10 +48,31 @@ public class ReplayES {
     private final ConsumerThread thread;
     private final Consumer consumer;
 
+    /**
+     * Constructs a new ReplayES instance using the default transport port (9200) for
+     * sending messages to elasticsearch.
+     *
+     * @param clientOnly whether the plugin is only an elasticsearch client, or an
+     *     embedded elasticsearch node should be started
+     * @param hostname the address of the ES host to send messages to
+     * @param clusterName the name of the elasticsearch cluster to send logs to
+     * @param connector the connector to use for queuing messages
+     */
     public ReplayES(boolean clientOnly, String hostname, String clusterName, ForkliftConnectorI connector) {
         this(clientOnly, hostname, 9200, clusterName, connector);
     }
 
+    /**
+     * Constructs a new ReplayES instance sending messages to elasticsearch based
+     * on the given parameters.
+     *
+     * @param clientOnly whether the plugin is only an elasticsearch client, or an
+     *     embedded elasticsearch node should be started
+     * @param hostname the address of the ES host to send messages to
+     * @param port the port number of the ES transport port for the given host
+     * @param clusterName the name of the elasticsearch cluster to send logs to
+     * @param connector the connector to use for queuing messages
+     */
     public ReplayES(boolean clientOnly, String hostname, int port, String clusterName, ForkliftConnectorI connector) {
         /*
          * Setup the connection to the server. If we are only a client we'll not setup a node locally to run.

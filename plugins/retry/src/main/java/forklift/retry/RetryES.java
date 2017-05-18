@@ -51,38 +51,18 @@ public class RetryES {
     private final ObjectMapper mapper;
     private final Consumer<String> cleanup;
 
-    /*
-     * Just a test case.
+    /**
+     * Creates a new instance of the retry plugin that temporarily writes logs to elasticsearch using
+     * the REST interface.
+     *
+     * @param forklift the forklift server using this plugin
+     * @param ssl whether or not to connect to elasticsearch using http or https
+     * @param hostname the hostname to use to connect to elasticsearch
+     * @param port the REST port for elasticsearch
+     * @param runRetries whether or not re-process messages found in the retry log in elasticsearch;
+     *      may cause duplicate messages if triggered when another forklift server is already processing
+     *      a message
      */
-//    public static void main(String[] args) throws IOException {
-//        final JestClientFactory factory = new JestClientFactory();
-//        factory.setHttpClientConfig(
-//            new HttpClientConfig.Builder("http://localhost:9200")
-//               .multiThreaded(true)
-//               .build());
-//        JestClient client = factory.getObject();
-//
-//        final ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule())
-//                                                      .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-//        mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-//
-//        final String query = "{\"size\" : \"10000\", \"query\" : { \"match_all\" : {} }}";
-//        final Search search = new Search.Builder(query).addIndex("forklift-retry").addType("msg").build();
-//        final SearchResult results = client.execute(search);
-//
-//        log.error(results.getErrorMessage());
-//        log.info("{}", results.getHits(JsonObject.class));
-//
-//        for (Hit<JsonObject, Void> msg : results.getHits(JsonObject.class)) {
-//            try {
-//                final RetryMessage retryMessage = mapper.readValue(msg.source.get("forklift-retry-msg").getAsString(), RetryMessage.class);
-//                log.info("Retrying: {}", retryMessage);
-//            } catch (Exception e) {
-//                log.error("Unable to read result {}", msg.source);
-//            }
-//        }
-//    }
-
     public RetryES(Forklift forklift, boolean ssl, String hostname, int port, boolean runRetries) {
         this.forklift = forklift;
         this.executor = Executors.newScheduledThreadPool(1);
