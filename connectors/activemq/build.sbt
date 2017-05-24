@@ -38,6 +38,9 @@ lazy val testDependencies = Seq(
 
 libraryDependencies ++= testDependencies.map(_ % "test")
 
+// Integration tests use embedded servers.  We can only allow one instance at a time
+// so disable parallel test execution
+parallelExecution in Test := false
 testOptions += Tests.Argument(TestFrameworks.JUnit, "-v", "-a")
 
 // Remove scala dependency for pure Java libraries
