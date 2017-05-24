@@ -79,7 +79,7 @@ public class ResponseTest {
         // Produce messages with a sync producer that connects the producer, resolver, and response uri together.
         try (ForkliftSyncProducerI<Map<String, String>> producer = new ForkliftSyncProducer<>(
                 connector.getQueueProducer("response"), resolver, "queue://" + ResponseConsumerMap.class.getAnnotation(Queue.class).value())) {
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; i < 10; i++)
                 futures.add(producer.send("{}"));
         }
 
@@ -121,7 +121,7 @@ public class ResponseTest {
         // Produce messages with a sync producer that connects the producer, resolver, and response uri together.
         try (ForkliftSyncProducerI<ResponseObj> producer = new ForkliftSyncProducer<>(
                 connector.getQueueProducer("response"), resolver, "queue://" + ResponseConsumerMap.class.getAnnotation(Queue.class).value())) {
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; i < 10; i++)
                 futures.add(producer.send("{}"));
         }
 
