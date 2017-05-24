@@ -51,16 +51,4 @@ public class KafkaTopicConsumerTests {
         when(this.controller.isRunning()).thenReturn(false);
         consumer.receive(100);
     }
-
-    @Test
-    public void addTopicTest() throws ConnectorException, InterruptedException {
-        consumer.receive(100);
-        verify(controller).addTopic(this.topic);
-    }
-
-    @Test
-    public void closeAndRemoveTopicTest() throws ConnectorException, InterruptedException {
-        consumer.close();
-        verify(controller).removeTopic(this.topic);
-    }
 }
