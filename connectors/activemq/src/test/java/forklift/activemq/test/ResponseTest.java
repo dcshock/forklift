@@ -28,6 +28,9 @@ public class ResponseTest {
         TestServiceManager.stop();
     }
 
+    private static final int maxTimeouts = 5;
+    private int timeouts = 0;
+
 //    @Test
     public void testStringResp() throws Exception {
         final ForkliftConnectorI connector = TestServiceManager.getConnector();
@@ -85,7 +88,11 @@ public class ResponseTest {
         ResponseConsumerMap.resolver = resolver;
         final Consumer c = new Consumer(ResponseConsumerMap.class, TestServiceManager.getForklift());
         c.setOutOfMessages((listener) -> {
-            listener.shutdown();
+            timeouts++;
+
+            if (futures.stream().allMatch(future -> future.isDone()) || timeouts > maxTimeouts) {
+                listener.shutdown();
+            }
         });
         c.listen();
 
@@ -123,7 +130,11 @@ public class ResponseTest {
         ResponseConsumerObj.resolver = resolver;
         final Consumer c = new Consumer(ResponseConsumerObj.class, TestServiceManager.getForklift());
         c.setOutOfMessages((listener) -> {
-            listener.shutdown();
+            timeouts++;
+
+            if (futures.stream().allMatch(future -> future.isDone()) || timeouts > maxTimeouts) {
+                listener.shutdown();
+            }
         });
         c.listen();
 
