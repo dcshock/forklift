@@ -14,7 +14,6 @@ public class KafkaTopicConsumer implements ForkliftConsumerI {
     private final String topic;
     private final KafkaController controller;
     private final ReadableMessageStream messageStream;
-    private volatile boolean topicAdded = false;
 
     public KafkaTopicConsumer(String topic, KafkaController controller) {
         this.topic = topic;
