@@ -61,13 +61,18 @@ public class ForkliftMessageTests extends BaseIntegrationTest {
         final Consumer c = new Consumer(ForkliftMessageConsumer.class, forklift);
         // Shutdown the consumer after all the messages have been processed.
         c.setOutOfMessages((listener) -> {
-            listener.shutdown();
-            assertTrue("Message properties were overwritten", isPropOverwritten == false);
-            assertTrue("Message properties were not set", isPropsSet == true);
+            timeouts++;
+
+            if (sentMessageIds.equals(consumedMessageIds) || timeouts > maxTimeouts) {
+                listener.shutdown();
+            }
         });
         // Start the consumer.
         c.listen();
         messageAsserts();
+
+        assertTrue("Message properties were overwritten", isPropOverwritten == false);
+        assertTrue("Message properties were not set", isPropsSet == true);
     }
 
     @Queue("forklift-string-topic")
