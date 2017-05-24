@@ -38,6 +38,8 @@ lazy val testDependencies = Seq(
 
 libraryDependencies ++= testDependencies.map(_ % "test")
 
+testOptions += Tests.Argument(TestFrameworks.JUnit, "-v", "-a")
+
 // Remove scala dependency for pure Java libraries
 autoScalaLibrary := false
 
