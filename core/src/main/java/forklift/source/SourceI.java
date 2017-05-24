@@ -12,8 +12,28 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * A superclass for {@link forklift.source.SourceType} annotations that provides some
- * case handling
+ * A class for sources generated from annotations annotated with the {@link SourceType} annotation.
+ *
+ * <p>These sources are instantiated by passing the annotation scanned at runtime into a constructor
+ * for the class specified by the {@link SourceType} annotation.
+ *
+ * <p>For example, if a class is annotated by {@code @Queue("test")}, passing that class into
+ * {@link SourceUtil#getSources(Class)}, will return a {@link java.util.stream.Stream} containing
+ * a {@link forklift.source.sources.QueueSource} with a name of {@code "test"}. This is done with
+ * the following process: <ol>
+ * <li>Search all of the sources on the given source</li>
+ * <li>When it comes across the {@link forklift.source.decorators.Queue queue annotation},
+ *     it will see that annotation is annotated with {@code @SourceType(QueueSource.class)}. This
+ *     will cause a new {@link forklift.source.sources.QueueSource} to be created using the
+ *     {@link forklift.source.sources.QueueSource#QueueSource(forklift.source.decorators.Queue)}
+ *     constructor.</li>
+ * </ol>
+ *
+ * <p>This class also provides a limited form of case handling for sources, so that one source
+ * can be handled only for a few particular cases, in way that is somewhat similar to pattern
+ * matching case classes in scala.
+ *
+ * @see SourceUtil
  */
 public abstract class SourceI {
     private static final Logger log = LoggerFactory.getLogger(SourceI.class);
@@ -34,6 +54,9 @@ public abstract class SourceI {
      */
     protected void onContextSet() {}
 
+    /**
+     * @return whether or not this source needs to be resolved to an action source
+     */
     public abstract boolean isLogicalSource();
 
     /*

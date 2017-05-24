@@ -18,7 +18,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * A utility for dealing with Source annotations
+ * A utility for creating {@link SourceI sources} from {@link SourceType} annotations.
+ *
+ * @see SourceI
  */
 public class SourceUtil {
     private static final Logger log = LoggerFactory.getLogger(SourceUtil.class);
