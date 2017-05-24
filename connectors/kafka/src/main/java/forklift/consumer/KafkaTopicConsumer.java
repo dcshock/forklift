@@ -27,9 +27,6 @@ public class KafkaTopicConsumer implements ForkliftConsumerI {
      * <p>
      * Retrieves the {@link forklift.message.MessageStream#nextRecord(String, long) nextRecord} from the messageStream.
      * If no record is available within the specified timeout, null is returned.
-     * <p>
-     * <strong>Note:</strong> Because we do not wish to poll for kafka topics until we are actively receiving messages, this method is
-     * also responsible for calling {@link forklift.controller.KafkaController#addTopic(String) addTopic} on the kafkaController.
      *
      * @param timeout the time in milliseconds to wait for a record to become available
      * @return a message if one is available, else null
@@ -52,8 +49,7 @@ public class KafkaTopicConsumer implements ForkliftConsumerI {
     /**
      * {@inheritDoc}
      * <p>
-     * Removes this consumer's topic from the controller.  Future calls to {@link #receive(long) receive} will re-add the
-     * topic to the controller.
+     * Closes this consumer and stops the controller.
      * </p>
      */
     @Override
