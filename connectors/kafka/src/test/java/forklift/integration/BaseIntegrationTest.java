@@ -39,6 +39,8 @@ public abstract class BaseIntegrationTest {
     protected static Set<String> sentMessageIds = ConcurrentHashMap.newKeySet();
     protected static Set<String> consumedMessageIds = ConcurrentHashMap.newKeySet();
     protected TestServiceManager serviceManager;
+    protected final int maxTimeouts = 5;
+    protected int timeouts = 0;
 
     @After
     public void after() {
