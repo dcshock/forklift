@@ -47,10 +47,9 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
 
         // Start services by instantiating them. 
         RunAsClassLoader.run(deployment.getClassLoader(), () -> {
-            deployment.getServices().forEach(s -> {
+            deployment.getServices().forEach(service -> {
                 try {
-                    log.info("Starting service {}", s);
-                    final ConsumerService service = new ConsumerService(s);
+                    log.info("Starting service {}", service);
                     service.onDeploy();
                     services.add(service);
                 } catch (Exception e) {

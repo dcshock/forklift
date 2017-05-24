@@ -2,12 +2,14 @@ package forklift.deployment;
 
 import forklift.classloader.ChildFirstClassLoader;
 import forklift.classloader.RunAsClassLoader;
+import forklift.consumer.ConsumerService;
 import forklift.decorators.CoreService;
 import forklift.decorators.Queue;
 import forklift.decorators.Queues;
 import forklift.decorators.Service;
 import forklift.decorators.Topic;
 import forklift.decorators.Topics;
+
 import org.reflections.Reflections;
 import org.reflections.util.ConfigurationBuilder;
 
@@ -25,10 +27,10 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 
-public class FileDeployment implements Deployment{
+public class FileDeployment implements Deployment {
     private Set<Class<?>> queues = new HashSet<>();
     private Set<Class<?>> topics = new HashSet<>();
-    private Set<Class<?>> services = new HashSet<>();
+    private Set<ConsumerService> services = new HashSet<>();
     private Set<Class<?>> coreServices = new HashSet<>();
     private ClassLoader cl;
 
@@ -81,7 +83,9 @@ public class FileDeployment implements Deployment{
             coreServices.addAll(reflections.getTypesAnnotatedWith(CoreService.class));
             queues.addAll(reflections.getTypesAnnotatedWith(Queue.class));
             queues.addAll(reflections.getTypesAnnotatedWith(Queues.class));
-            services.addAll(reflections.getTypesAnnotatedWith(Service.class));
+            services.addAll(reflections.getTypesAnnotatedWith(Service.class).stream()
+                .map(clazz -> new ConsumerService(clazz))
+                .collect(Collectors.toSet()));
             topics.addAll(reflections.getTypesAnnotatedWith(Topic.class));
             topics.addAll(reflections.getTypesAnnotatedWith(Topics.class));
         });
@@ -116,7 +120,7 @@ public class FileDeployment implements Deployment{
     }
 
     @Override
-    public Set<Class<?>> getServices() {
+    public Set<ConsumerService> getServices() {
         return services;
     }
 

@@ -1,5 +1,7 @@
 package forklift.deployment;
 
+import forklift.consumer.ConsumerService;
+
 import java.util.Set;
 
 /**
@@ -15,9 +17,13 @@ public interface Deployment {
     Set<Class<?>> getCoreServices();
 
     /**
-     * @return clases in this Deployment annotated with the {@link forklift.decorators.Service} annotation
+     * Gives the set of {@link forklift.consumer.ConsumerService services} that should be deployed with the
+     * classes in this {@link Deployment deployment}. These may be automatically derived from classes annotated
+     * with the {@link forklift.decorators.Service} annotation.
+     *
+     * @return the ConsumerServices to be used in this deployment
      */
-    Set<Class<?>> getServices();
+    Set<ConsumerService> getServices();
 
     /**
      * @return clases in this Deployment annotated with the {@link forklift.decorators.Queue} annotation

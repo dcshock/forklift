@@ -20,9 +20,8 @@ public class ConsumerService {
 	private List<Method> onDeploy = new ArrayList<>();
 	private List<Method> onUndeploy = new ArrayList<>();
 
-	public ConsumerService(Class<?> clazz) 
-	  throws Exception {
-		this(clazz, clazz.newInstance());
+	public ConsumerService(Class<?> clazz) {
+		this(clazz, null);
 	}
 
 	public ConsumerService(Object instance) {
@@ -34,6 +33,8 @@ public class ConsumerService {
 		this.instance = instance;
 
 		try {
+            if (this.instance == null)
+                this.instance = clazz.newInstance();
 			for (Method m : clazz.getDeclaredMethods()) {
                 if (m.isAnnotationPresent(BeanResolver.class))
                     beanResolvers.add(m);

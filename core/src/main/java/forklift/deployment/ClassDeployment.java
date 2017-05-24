@@ -1,8 +1,10 @@
 package forklift.deployment;
 
+import forklift.decorators.*;
+import forklift.consumer.ConsumerService;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
-import forklift.decorators.*;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -19,7 +21,7 @@ public class ClassDeployment implements Deployment {
 
     private Set<Class<?>> queues = new HashSet<>();
     private Set<Class<?>> topics = new HashSet<>();
-    private Set<Class<?>> services = new HashSet<>();
+    private Set<ConsumerService> services = new HashSet<>();
     private Set<Class<?>> coreServices = new HashSet<>();
 
     public ClassDeployment(Class<?> ...deploymentClasses){
@@ -35,7 +37,7 @@ public class ClassDeployment implements Deployment {
                 queues.add(c);
             }
             if(c.isAnnotationPresent(Service.class)){
-                services.add(c);
+                services.add(new ConsumerService(c));
             }
             if(c.isAnnotationPresent(Topic.class)){
                 topics.add(c);
@@ -46,13 +48,17 @@ public class ClassDeployment implements Deployment {
         }
     }
 
+    public void addService(ConsumerService service) {
+        services.add(service);
+    }
+
     @Override
     public Set<Class<?>> getCoreServices() {
         return coreServices;
     }
 
     @Override
-    public Set<Class<?>> getServices() {
+    public Set<ConsumerService> getServices() {
         return services;
     }
 
