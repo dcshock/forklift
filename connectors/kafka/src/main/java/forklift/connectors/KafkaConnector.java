@@ -105,7 +105,7 @@ public class KafkaConnector implements ForkliftConnectorI {
     @Override
     public synchronized ForkliftConsumerI getTopic(String name) throws ConnectorException {
         KafkaController controller = controllers.get(name);
-        if(controller != null && controller.isRunning()){
+        if (controller != null && controller.isRunning()) {
             log.warn("Consumer for topic already exists under this controller's groupname.  Messages will be divided amongst consumers.");
         } else {
             controller = createController(name);
