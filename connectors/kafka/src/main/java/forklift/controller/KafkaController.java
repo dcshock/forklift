@@ -140,10 +140,6 @@ public class KafkaController {
             throw t;
         } finally {
             running = false;
-            synchronized (this) {
-                //wake up any threads waiting on a control loop operation
-                this.notifyAll();
-            }
             try {
                 Map<TopicPartition, OffsetAndMetadata> finalOffsets = new HashMap<>();
                 if (failedOffset != null) {
