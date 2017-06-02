@@ -27,6 +27,9 @@ public class ResponseTest {
         TestServiceManager.stop();
     }
 
+    private static final int maxTimeouts = 5;
+    private int timeouts = 0;
+
 //    @Test
     public void testStringResp() throws Exception {
         final ForkliftConnectorI connector = TestServiceManager.getConnector();
@@ -76,7 +79,7 @@ public class ResponseTest {
         // Produce messages with a sync producer that connects the producer, resolver, and response uri together.
         try (ForkliftSyncProducerI<Map<String, String>> producer = new ForkliftSyncProducer<>(
                 connector.getQueueProducer("response"), resolver, "queue://" + ResponseConsumerMap.class.getAnnotation(Queue.class).value())) {
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; i < 10; i++)
                 futures.add(producer.send("{}"));
         }
 
@@ -84,7 +87,11 @@ public class ResponseTest {
         ResponseConsumerMap.resolver = resolver;
         final Consumer c = new Consumer(ResponseConsumerMap.class, TestServiceManager.getForklift());
         c.setOutOfMessages((listener) -> {
-            listener.shutdown();
+            timeouts++;
+
+            if (futures.stream().allMatch(future -> future.isDone()) || timeouts > maxTimeouts) {
+                listener.shutdown();
+            }
         });
         c.listen();
 
@@ -114,7 +121,7 @@ public class ResponseTest {
         // Produce messages with a sync producer that connects the producer, resolver, and response uri together.
         try (ForkliftSyncProducerI<ResponseObj> producer = new ForkliftSyncProducer<>(
                 connector.getQueueProducer("response"), resolver, "queue://" + ResponseConsumerMap.class.getAnnotation(Queue.class).value())) {
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; i < 10; i++)
                 futures.add(producer.send("{}"));
         }
 
@@ -122,7 +129,11 @@ public class ResponseTest {
         ResponseConsumerObj.resolver = resolver;
         final Consumer c = new Consumer(ResponseConsumerObj.class, TestServiceManager.getForklift());
         c.setOutOfMessages((listener) -> {
-            listener.shutdown();
+            timeouts++;
+
+            if (futures.stream().allMatch(future -> future.isDone()) || timeouts > maxTimeouts) {
+                listener.shutdown();
+            }
         });
         c.listen();
 
