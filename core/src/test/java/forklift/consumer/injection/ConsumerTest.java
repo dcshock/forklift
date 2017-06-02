@@ -1,4 +1,4 @@
-package forklift;
+package forklift.consumer.injection;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -6,10 +6,13 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import forklift.Forklift;
 import forklift.connectors.ConnectorException;
 import forklift.connectors.ForkliftConnectorI;
 import forklift.connectors.ForkliftMessage;
 import forklift.consumer.Consumer;
+import forklift.consumer.ConsumerService;
 import forklift.decorators.Headers;
 import forklift.decorators.Message;
 import forklift.decorators.Properties;
@@ -18,6 +21,10 @@ import forklift.decorators.Topic;
 import forklift.message.Header;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -125,6 +132,63 @@ public class ConsumerTest {
         assertNull(ec.cid);
         assertEquals(ec.producer, "replace");
         assertEquals("default", ec.strval);
+    }
+
+    /**
+     * Tests constructor injection into a consumer.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void jsonConstructorInjection() throws Exception {
+        ConsumerService service = new ConsumerService(ServiceBeanResolver.class);
+        Consumer test = new Consumer(ConstructorJsonConsumer.class, forklift, this.getClass().getClassLoader());
+        test.setServices(Arrays.asList(service));
+
+        ForkliftMessage msg = new ForkliftMessage();
+        msg.setId("1");
+        msg.setMsg("{\"name\":\"Fred Jones\", \"url\":\"http://forklift\", \"ideas\":[\"scanning\", \"verifying\"]}");
+        ConstructorJsonConsumer ec = (ConstructorJsonConsumer)test.getMsgHandlerInstance(msg);
+
+        assertNotNull(ec.msg);
+        assertNotNull(ec.person);
+        assertTrue("scanning".equals(ec.msg.ideas[0]));
+        assertEquals(3, ec.kvl.size());
+        assertEquals(2, ec.msg.ideas.length);
+        assertEquals("Fred Jones", ec.msg.name);
+        assertEquals("http://forklift", ec.msg.url);
+        assertNotNull(ec.headers);
+        assertNotNull(ec.properties);
+        assertEquals(0, ec.headers.size());
+        assertEquals(0, ec.properties.size());
+        assertEquals(ec.producer, null);
+        assertEquals(null, ec.strval);
+    }
+
+    @Test
+    public void testHeadersAndPropertiesWithConstructorInjection() throws IOException, InstantiationException, IllegalAccessException, InvocationTargetException {
+
+        Consumer test = new Consumer(ConstructorJsonConsumer.class, forklift, this.getClass().getClassLoader());
+        ForkliftMessage msg = new ForkliftMessage();
+        msg.setId("1");
+        msg.setMsg("{}");
+
+        Map<Header, Object> headers = new HashMap<>();
+        headers.put(Header.DeliveryCount, "3");
+        headers.put(Header.Producer, "testing");
+        headers.put(Header.Priority, "1");
+        headers.put(Header.CorrelationId, "abcd");
+        msg.setHeaders(headers);
+
+        Map<String, String> properties = new HashMap<>();
+        properties.put("mystrval", "blah");
+        msg.setProperties(properties);
+        ConstructorJsonConsumer ec = (ConstructorJsonConsumer)test.getMsgHandlerInstance(msg);
+
+        assertEquals(4, ec.headers.size());
+        assertEquals(1, ec.properties.size());
+        assertEquals("blah", ec.strval);
+        assertEquals(ec.producer, "testing");
     }
 
     @Test
