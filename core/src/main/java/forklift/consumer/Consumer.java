@@ -38,8 +38,12 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -54,7 +58,9 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.inject.Inject;
 
 public class Consumer {
     static ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule())
@@ -71,6 +77,8 @@ public class Consumer {
     private final List<Method> onResponse;
     private final Map<String, List<MessageRunnable>> orderQueue;
     private final Map<ProcessStep, List<Method>> onProcessStep;
+    private Constructor<?> constructor;
+    private Annotation[][] constructorAnnotations;
     private String name;
     private SourceI source;
     private List<SourceI> roleSources = Collections.emptyList();
@@ -169,20 +177,20 @@ public class Consumer {
             else if (m.isAnnotationPresent(OnValidate.class))
                 onValidate.add(m);
             else if (m.isAnnotationPresent(Response.class)) {
-                if (!forklift.getConnector().supportsResponse()) 
+                if (!forklift.getConnector().supportsResponse())
                     throw new RuntimeException("@Response is not supported by the current connector");
 
                 onResponse.add(m);
             } else if (m.isAnnotationPresent(Order.class)) {
-                if (!forklift.getConnector().supportsOrder()) 
+                if (!forklift.getConnector().supportsOrder())
                     throw new RuntimeException("@Order is not supported by the current connector");
 
                 orderMethod = m;
             } else if (m.isAnnotationPresent(On.class) || m.isAnnotationPresent(Ons.class))
                 Arrays.stream(m.getAnnotationsByType(On.class))
-                    .map(on -> on.value())
-                    .distinct()
-                    .forEach(x -> onProcessStep.get(x).add(m));
+                      .map(on -> on.value())
+                      .distinct()
+                      .forEach(x -> onProcessStep.get(x).add(m));
         }
 
         if (orderMethod != null)
@@ -209,6 +217,7 @@ public class Consumer {
                 }
             });
         }
+        configureConstructorInjection();
     }
 
     /**
@@ -228,7 +237,7 @@ public class Consumer {
                 log.info("Creating thread pool of {}", multiThreaded.value());
                 blockQueue = new ArrayBlockingQueue<>(multiThreaded.value() * 100 + 100);
                 threadPool = new ThreadPoolExecutor(
-                    multiThreaded.value(), multiThreaded.value(), 5L, TimeUnit.MINUTES, blockQueue);
+                                                       multiThreaded.value(), multiThreaded.value(), 5L, TimeUnit.MINUTES, blockQueue);
                 threadPool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
             } else {
                 blockQueue = null;
@@ -257,11 +266,11 @@ public class Consumer {
                 ForkliftMessage consumerMsg;
                 while ((consumerMsg = consumer.receive(2500)) != null && running.get()) {
                     try {
-                        final Object handler = msgHandler.newInstance();
+                        final List<Closeable> closeMe = new ArrayList<>();
+                        final Object handler = constructMessageHandlerInstance(consumerMsg, closeMe);
 
                         final ForkliftMessage msg = consumerMsg;
 
-                        final List<Closeable> closeMe = new ArrayList<>();
                         RunAsClassLoader.run(classLoader, () -> {
                             closeMe.addAll(inject(msg, handler));
                         });
@@ -360,9 +369,22 @@ public class Consumer {
         this.outOfMessages = outOfMessages;
     }
 
+    private final void configureConstructorInjection() {
+        Constructor<?>[] constructors = msgHandler.getDeclaredConstructors();
+        List<Constructor> injectableConstructors = Arrays.stream(constructors).filter(constructor -> constructor.isAnnotationPresent(Inject.class)).collect(Collectors.toList());
+        if (injectableConstructors.size() > 0) {
+            this.constructor = injectableConstructors.get(0);
+            this.constructorAnnotations = this.constructor.getParameterAnnotations();
+            if (injectableConstructors.size() > 1) {
+                log.error("Multiple constructors annotated with Inject.  Using first injectable constructor found");
+            }
+        }
+    }
+
     /**
      * Inject the data from a forklift message into an instance of the msgHandler class.
-     * @param msg containing data
+     *
+     * @param msg      containing data
      * @param instance an instance of the msgHandler class.
      */
     public List<Closeable> inject(ForkliftMessage msg, final Object instance) {
@@ -374,115 +396,15 @@ public class Consumer {
             final Map<Class<?>, List<Field>> fields = injectFields.get(decorator);
 
             fields.keySet().stream().forEach(clazz -> {
-                fields.get(clazz).forEach(f -> {
-                    log.trace("Inject target> Field: ({})  Decorator: ({})", f, decorator);
+                fields.get(clazz).forEach(field -> {
+                    log.trace("Inject target> Field: ({})  Decorator: ({})", field, decorator);
                     try {
-                        if (decorator == forklift.decorators.Message.class && msg.getMsg() != null) {
-                            if (clazz == ForkliftMessage.class) {
-                                f.set(instance, msg);
-                            } else if (clazz == String.class) {
-                                f.set(instance, msg.getMsg());
-                            } else if (clazz == Map.class && !msg.getMsg().startsWith("{")) {
-                                // We assume that the map is <String, String>.
-                                f.set(instance, KeyValueParser.parse(msg.getMsg()));
-                            } else {
-                                // Attempt to parse a json
-                                f.set(instance, mapper.readValue(msg.getMsg(), clazz));
-                            }
-                        } else if (decorator == javax.inject.Inject.class && this.services != null) {
-                            // Try to resolve the class from any available BeanResolvers.
-                            for (ConsumerService s : this.services) {
-                                try {
-                                    final Object o = s.resolve(clazz, null);
-                                    if (o != null) {
-                                        f.set(instance, o);
-                                        break;
-                                    }
-                                } catch (Exception e) {
-                                    log.debug("", e);
-                                }
-                            }
-                        } else if (decorator == Config.class) {
-                            final forklift.decorators.Config annotation = f.getAnnotation(forklift.decorators.Config.class);
-                            if (clazz == Properties.class) {
-                                String confName = annotation.value();
-                                if (confName.equals("")) {
-                                    confName = f.getName();
-                                }
-                                final Properties config = PropertiesManager.get(confName);
-                                if (config == null) {
-                                    log.warn("Attempt to inject field failed because resource file {} was not found", annotation.value());
-                                    return;
-                                }
-                                f.set(instance, config);
-                            } else {
-                                final Properties config = PropertiesManager.get(annotation.value());
-                                if (config == null) {
-                                    log.warn("Attempt to inject field failed because resource file {} was not found", annotation.value());
-                                    return;
-                                }
-                                String key = annotation.field();
-                                if (key.equals("")) {
-                                    key = f.getName();
-                                }
-                                Object value = config.get(key);
-                                if (value != null) {
-                                    f.set(instance, value);
-                                }
-                            }
-                        } else if (decorator == Headers.class) {
-                            final Headers annotation = f.getAnnotation(Headers.class);
-                            final Map<Header, Object> headers = msg.getHeaders();
-                            if (clazz == Map.class) {
-                                f.set(instance, headers);
-                            } else {
-                                final Header key = annotation.value();
-                                if (headers == null) {
-                                    log.warn("Attempt to inject {} from headers, but headers are null", key);
-                                } else if (!key.getHeaderType().equals(f.getType())) {
-                                    log.warn("Injecting field {} failed because it is not type {}", f.getName(), key.getHeaderType());
-                                } else {
-                                    final Object value = headers.get(key);
-                                    if (value != null) {
-                                        f.set(instance, value);
-                                    }
-                                }
-                            }
-                        } else if (decorator == forklift.decorators.Properties.class) {
-                            forklift.decorators.Properties annotation = f.getAnnotation(forklift.decorators.Properties.class);
-                            Map<String, String> properties = msg.getProperties();
-                            if (clazz == Map.class) {
-                                f.set(instance, msg.getProperties());
-                            } else if (properties != null) {
-                                String key = annotation.value();
-                                if (key.equals("")) {
-                                    key = f.getName();
-                                }
-                                if (properties == null) {
-                                    log.warn("Attempt to inject field {} from properties, but properties is null", key);
-                                    return;
-                                }
-                                final Object value = properties.get(key);
-                                if (value != null) {
-                                    f.set(instance, value);
-                                }
-                            }
-                        } else if (decorator == forklift.decorators.Producer.class) {
-                            if (clazz == ForkliftProducerI.class) {
-                                forklift.decorators.Producer producer = f.getAnnotation(forklift.decorators.Producer.class);
-
-                                final ForkliftProducerI p;
-                                if (producer.queue().length() > 0)
-                                    p = forklift.getConnector().getQueueProducer(producer.queue());
-                                else if (producer.topic().length() > 0)
-                                    p = forklift.getConnector().getTopicProducer(producer.topic());
-                                else
-                                    p = null;
-
-                                if (p != null)
-                                    closeMe.add(p);
-                                f.set(instance, p);
-                            }
+                        Object value = getInjectableValue(field.getAnnotation(decorator), field.getName(), clazz, msg);
+                        if (value instanceof ForkliftProducerI) {
+                            closeMe.add((ForkliftProducerI)value);
+                        }
+                        if (value != null) {
+                            field.set(instance, value);
                         }
                     } catch (JsonMappingException | JsonParseException e) {
                         log.warn("Unable to parse json for injection.", e);
@@ -498,12 +420,164 @@ public class Consumer {
         return closeMe;
     }
 
+    private Object constructMessageHandlerInstance(ForkliftMessage forkliftMessage, List<Closeable> closeables) throws IllegalAccessException, InvocationTargetException, InstantiationException, IOException {
+        Object instance = null;
+        if (this.constructor != null) {
+            Object[] constructorParameters = buildConstructorParameters(forkliftMessage, closeables);
+            instance = this.constructor.newInstance(constructorParameters);
+        } else {
+            instance = msgHandler.newInstance();
+        }
+        return instance;
+    }
+
+    private Object[] buildConstructorParameters(ForkliftMessage forkliftMessage, List<Closeable> closeables) throws IOException {
+        Object[] parameters = new Object[constructorAnnotations.length];
+        int index = 0;
+        for (Annotation[] parameterAnnotations : constructorAnnotations) {
+            Annotation injectable = null;
+            for (Annotation parameterAnnotation : parameterAnnotations) {
+                if (injectFields.containsKey(parameterAnnotation.annotationType())) {
+                    injectable = parameterAnnotation;
+                    break;
+                }
+            }
+            Parameter p = constructor.getParameters()[index];
+            Object value = getInjectableValue(injectable, null, p.getType(), forkliftMessage);
+            parameters[index] = value;
+            if (value != null && value instanceof ForkliftProducerI) {
+                closeables.add((ForkliftProducerI)value);
+            }
+
+            index++;
+        }
+        return parameters;
+    }
+
+    private Object getInjectableValue(Annotation decorator, String mappedName, Class<?> mappedClass, ForkliftMessage msg) throws IOException {
+        Object value = null;
+        if (decorator == null || decorator.annotationType() == javax.inject.Inject.class) {
+            if (this.services != null) {
+                // Try to resolve the class from any available BeanResolvers.
+                for (ConsumerService s : this.services) {
+                    try {
+                        final Object o = s.resolve(mappedClass, null);
+                        if (o != null) {
+                            value = o;
+                            break;
+                        }
+                    } catch (Exception e) {
+                        log.debug("", e);
+                    }
+                }
+            }
+        } else if (decorator.annotationType() == forklift.decorators.Message.class && msg.getMsg() != null) {
+            if (mappedClass == ForkliftMessage.class) {
+                value = msg;
+            } else if (mappedClass == String.class) {
+                value = msg.getMsg();
+            } else if (mappedClass == Map.class && !msg.getMsg().startsWith("{")) {
+                value = KeyValueParser.parse(msg.getMsg());
+                // We assume that the map is <String, String>.
+            } else {
+                // Attempt to parse a json
+                value = mapper.readValue(msg.getMsg(), mappedClass);
+            }
+        } else if (decorator.annotationType() == Config.class) {
+            if (mappedClass == Properties.class) {
+                String confName = ((Config)decorator).value();
+                if (confName.equals("")) {
+                    confName = mappedName;
+                }
+                final Properties config = PropertiesManager.get(confName);
+                if (config == null) {
+                    log.warn("Attempt to inject field failed because resource file {} was not found", ((Config)decorator).value());
+                } else {
+                    value = config;
+                }
+            } else {
+                final Properties config = PropertiesManager.get(((Config)decorator).value());
+                if (config == null) {
+                    log.warn("Attempt to inject field failed because resource file {} was not found", ((Config)decorator).value());
+                }
+                String key = ((Config)decorator).field();
+                if (key.equals("")) {
+                    key = mappedName;
+                }
+                value = config.get(key);
+            }
+        } else if (decorator.annotationType() == Headers.class) {
+            final Map<Header, Object> headers = msg.getHeaders();
+            if (mappedClass == Map.class) {
+                value = headers;
+            } else {
+                final Header key = ((Headers)decorator).value();
+                if (headers == null) {
+                    log.warn("Attempt to inject {} from headers, but headers are null", key);
+                } else if (!key.getHeaderType().equals(mappedClass)) {
+                    log.warn("Injecting field {} failed because it is not type {}", mappedName, key.getHeaderType());
+                } else {
+                    value = headers.get(key);
+                }
+            }
+        } else if (decorator.annotationType() == forklift.decorators.Properties.class) {
+            Map<String, String> properties = msg.getProperties();
+            if (mappedClass == Map.class) {
+                value = msg.getProperties();
+            } else if (properties != null) {
+                String key = ((forklift.decorators.Properties)decorator).value();
+                if (key.equals("")) {
+                    key = mappedName;
+                }
+                if (properties == null) {
+                    log.warn("Attempt to inject field {} from properties, but properties is null", key);
+                } else {
+                    value = properties.get(key);
+                }
+            }
+        } else if (decorator.annotationType() == forklift.decorators.Producer.class) {
+            if (mappedClass == ForkliftProducerI.class) {
+                forklift.decorators.Producer producer = (forklift.decorators.Producer)decorator;
+                final ForkliftProducerI p;
+                if (producer.queue().length() > 0)
+                    p = forklift.getConnector().getQueueProducer(producer.queue());
+                else if (producer.topic().length() > 0)
+                    p = forklift.getConnector().getTopicProducer(producer.topic());
+                else
+                    p = null;
+                value = p;
+            }
+        }
+        return value;
+    }
+
     public Class<?> getMsgHandler() {
         return msgHandler;
     }
 
     public Forklift getForklift() {
         return forklift;
+    }
+
+    /**
+     * Creates an instance of the MessageHandler class utilized by this constructor.  Constructor and Field level injection is performed using both the
+     * passed in msg and any Services {@link #addServices(ConsumerService...) added} to this consumer.
+     *
+     * @param msg the message used for injection
+     */
+    public Object getMsgHandlerInstance(ForkliftMessage msg) {
+        Object instance = null;
+        try {
+            instance = this.constructMessageHandlerInstance(msg, new ArrayList<>());
+            inject(msg, instance);
+        } catch (JsonMappingException | JsonParseException e) {
+            log.warn("Unable to parse json for injection.", e);
+        } catch (Exception e) {
+            log.error("Error injecting data into Msg Handler", e);
+            e.printStackTrace();
+            throw new RuntimeException("Error injecting data into Msg Handler Constructor");
+        }
+        return instance;
     }
 
     public SourceI getSource() {

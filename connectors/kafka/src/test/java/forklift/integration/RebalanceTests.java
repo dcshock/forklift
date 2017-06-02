@@ -6,6 +6,7 @@ import forklift.consumer.Consumer;
 import forklift.exception.StartupException;
 import forklift.producers.ForkliftProducerI;
 import org.junit.Test;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -70,7 +71,7 @@ public class RebalanceTests extends BaseIntegrationTest {
         server6.stopProducers();
         server7.stopProducers();
         //wait to finish any processing
-        for (int i = 0; i < 60 && consumedMessageIds.size() != sentMessageIds.size(); i++) {
+        for (int i = 0; i < 30 && consumedMessageIds.size() != sentMessageIds.size(); i++) {
             log.info("Waiting: " + i);
             Thread.sleep(1000);
         }
@@ -153,7 +154,7 @@ public class RebalanceTests extends BaseIntegrationTest {
 
         server10.stopProducers();
         //wait to finish any processing
-        for (int i = 0; i < 60 && consumedMessageIds.size() != sentMessageIds.size(); i++) {
+        for (int i = 0; i < 30 && consumedMessageIds.size() != sentMessageIds.size(); i++) {
             log.info("Waiting: " + i);
             Thread.sleep(1000);
         }

@@ -19,7 +19,6 @@ import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
 import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import io.confluent.kafka.serializers.KafkaAvroSerializerConfig;
-
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -45,6 +44,7 @@ public class KafkaConnector implements ForkliftConnectorI {
     private KafkaProducer<?, ?> kafkaProducer;
     private KafkaController controller;
     private ForkliftSerializer serializer;
+    private Map<String, KafkaController> controllers = new HashMap<>();
 
     /**
      * Constructs a new instance of the KafkaConnector
@@ -101,7 +101,7 @@ public class KafkaConnector implements ForkliftConnectorI {
         return new KafkaProducer(producerProperties);
     }
 
-    private KafkaController createController() {
+    private KafkaController createController(String topicName) {
         Properties props = new Properties();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaHosts);
         props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
@@ -114,19 +114,21 @@ public class KafkaConnector implements ForkliftConnectorI {
         props.put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, false);
 
         final KafkaConsumer<?, ?> kafkaConsumer = new KafkaConsumer(props);
-        return new KafkaController(kafkaConsumer, new MessageStream());
+        return new KafkaController(kafkaConsumer, new MessageStream(), topicName);
     }
 
     @Override
     public synchronized void stop() throws ConnectorException {
-        try {
-            if (controller != null) {
-                controller.stop(2000, TimeUnit.MILLISECONDS);
-                controller = null;
+
+        controllers.values().parallelStream().forEach(controller -> {
+            try {
+                controller.stop(5000, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                log.error("KafkaConnector interrupted while stopping");
             }
-        } catch (InterruptedException e) {
-            log.error("KafkaConnector interrupted while stopping");
-        }
+        });
+        controllers.clear();
+
         if (kafkaProducer != null) {
             kafkaProducer.close();
             kafkaProducer = null;
@@ -151,12 +153,16 @@ public class KafkaConnector implements ForkliftConnectorI {
             source.overrideGroup(groupId);
         }
 
-        if (!source.getGroup().equals(groupId)) {
+        if (!source.getGroup().equals(groupId)) { //TODO actually support GroupedTopics
             throw new ConnectorException("Unexpected group '" + source.getGroup() + "'; only the connector group '" + groupId + "' is allowed");
         }
 
-        if (controller == null || !controller.isRunning()) {
-            controller = createController();
+        KafkaController controller = controllers.get(source.getName());
+        if (controller != null && controller.isRunning()) {
+            log.warn("Consumer for topic already exists under this controller's groupname.  Messages will be divided amongst consumers.");
+        } else {
+            controller = createController(source.getName());
+            this.controllers.put(source.getName(), controller);
             controller.start();
         }
         return new KafkaTopicConsumer(source.getName(), controller);
