@@ -10,6 +10,16 @@ link:doc/forklift.adoc[Documentation]
 == Releases
 link:doc/prev_releases.adoc[Previous Releases]
 
+* *June 2nd 2017* - v2.0
+** Moved core source annotations from the "forklift.decorators" package to "forklift.source.decorators"
+** Added RoleInput and GroupedTopic sources
+** Made replay and retry usable for kafka by way of RoleInput (see link:doc/PLUGINS.md[the plugins documentation])
+** Added constructor injection
+** The Replay message consumer is now idempotent, enabling better scaling
+** Internally, made source processing more general
+** Reworked some of the internals of the Kafka Connector
+** Made a few bug fixes for the Kafka Connector
+
 * *April 10th 2017* - v1.1
 ** Kafka Connector
 ** Core no longer depends on the JMS spec libraries
@@ -85,3 +95,5 @@ A broker agnostic implementation of retries. Uses elastic search for storage.
 Forklift-Replay::
 A broker agnostic implementation of message replay logging. Uses elastic search for storage.
 Kibana makes a great tool to view Forklift replay logs.
+
+See the link:doc/PLUGINS.md[plugins documentation] for more information on how to install and use plugins.
