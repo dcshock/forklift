@@ -47,8 +47,7 @@ public class FileDeploymentTest {
             FileDeployment d = new FileDeployment(f);
             assertEquals(f.getName(), d.getDeployedFile().getName());
             assertTrue(d.isJar());
-            assertEquals(0, d.getQueues().size());
-            assertEquals(0, d.getTopics().size());
+            assertEquals(0, d.getConsumers().size());
             // Make sure we don't accidentally delete on deploy
             assertTrue(f.exists());
         } finally {
@@ -65,8 +64,7 @@ public class FileDeploymentTest {
         FileDeployment d = new FileDeployment(f);
         assertNotNull(d);
         assertTrue(d.isJar());
-        assertEquals(2, d.getQueues().size());
-        assertEquals(2, d.getTopics().size());
+        assertEquals(3, d.getConsumers().size());
         // Make sure we don't accidentally delete on deploy
         assertTrue(f.exists());
     }
@@ -80,8 +78,7 @@ public class FileDeploymentTest {
         FileDeployment d = new FileDeployment(f);
         assertNotNull(d);
         assertTrue(d.isJar());
-        assertEquals(4, d.getQueues().size());
-        assertEquals(2, d.getTopics().size());
+        assertEquals(5, d.getConsumers().size());
         // Make sure we don't accidentally delete on deploy
         assertTrue(f.exists());
     }

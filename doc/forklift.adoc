@@ -225,70 +225,10 @@ will automatically route the life-cycle to the Error state. This event can
 then be hooked to show the errors. For more information on logging and
 auditing see information about some of the plug-ins that have been built.
 
-=== Plug-ins
-Forklift has been thoughtfully designed enough to allow developers to
-extend the base functionality for message processing. One of the major
-requirements when originally developing this system was the ability to
-log/audit every step of the life-cycle. However, every developer has
-different logging requirements, whether that be logging to a file or sending
-all logs to a database table. So integrating a single solution for auditing
-did not make sense.
+=== Plugins
 
-Several plug-ins have been developed that may be useful to other developers
-for general use or as a template to build their own. These are part of
-the Forklift project and are described below.
-
-==== Specialized Message Handling
-
-===== Retry Message Handler.
-There are times when a consumer may not be able to successfully complete
-processing a message. Say for example that a message is placed on the queue
-and the data is to be pushed to a remote web-service. Of course the consumer
-could write all the code to send the message, catch any exceptions and then
-retry if it fails. Problem is, threads get bogged down doing retries and there
-is no record of failed attempts. The retry message handler adds an annotation
-that can be placed on the consumer that instructs Forklift on failure of
-consuming a message to schedule to retry processing the message a set
-number of times after a specified delay.
-
-* @Retry - Placed on the consumer class will tell Forklift to reschedule
-the message to be rerun if it errors.
-
-===== Notifications - TBD
-The best coders in the world can't guard against every last possible situation
-that may arise in code. In a past life, we had a developer named Dan that
-stated that a specific error case could never-ever happen. We called it the
-DanException. Guess what--we did eventually see the DanException. The problem
-was that even though we coded for it--we didn't have a way to handle it.
-The Notification plug-in provides a way for a single consumer to intercept
-the life-cycle and perform a specified notification when the life-cycle
-event happens. For example, it is possible to write an Email notification
-handler and then easily add to the consumer the ability to send an
-email notification to a specific email address when a consumer Errors within
-the life-cycle.
-
-* @Notify - Placed on the consumer class will tell Forklift to send the
-specified notification when the consumer enters into the specified life-cycle
-events.
-
-===== Replay Auditing
-One of the joys of auditing is seeing what actually happened when the system
-executes. Being able to view the entire life-cycle on every message that
-goes through a system provides some with a great sense of comfort. In the
-case when a consumer errors, it may be for a reason outside the consumer's
-control. In this case just being able to resend the message as it originally
-existed, may allow it to process. The replay auditor provides a log of
-every life-cycle event for each annotated consumer that can then be parsed
-and used to recreate an event.
-
-* @Replay - Placed on the consumer class will log out all the life-cycle
-events to a log file with enough data to be able to replay the message. In
-essence making it possible to resend a message that has already been processed.
-
-===== Stats Collector
-The stats collector plugin appends statistical processing data to the properties
-of each message processed. This works really well in conjunction with the replay
-plugin which stores this information in a datastore like elastic search.
+Forklift plugins allow for additional actions to be performed at various stages in
+a message's lifecycle. For more details, see the [plugins documentation](PLUGINS.md).
 
 ## Quickstart Guide
 

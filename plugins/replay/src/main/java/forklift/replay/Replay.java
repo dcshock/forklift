@@ -15,4 +15,11 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
 public @interface Replay {
+    /**
+     * The name of the role to use to write retry messages, if there is no
+     * {@link forklift.source.decorators.RoleInput} annotation present on a consumer.
+     *
+     * @return the name of the fallback role for writing retry messages.
+     */
+    String role() default "";
 }

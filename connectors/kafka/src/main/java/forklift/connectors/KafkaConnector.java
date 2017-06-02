@@ -2,11 +2,22 @@ package forklift.connectors;
 
 import forklift.consumer.ForkliftConsumerI;
 import forklift.consumer.KafkaTopicConsumer;
+import forklift.consumer.wrapper.RoleInputConsumerWrapper;
 import forklift.controller.KafkaController;
 import forklift.message.MessageStream;
 import forklift.producers.ForkliftProducerI;
 import forklift.producers.KafkaForkliftProducer;
+import forklift.source.ActionSource;
+import forklift.source.LogicalSource;
+import forklift.source.SourceI;
+import forklift.source.sources.GroupedTopicSource;
+import forklift.source.sources.RoleInputSource;
+import forklift.source.sources.QueueSource;
+import forklift.source.sources.TopicSource;
+
+import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
+import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import io.confluent.kafka.serializers.KafkaAvroSerializerConfig;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -31,6 +42,8 @@ public class KafkaConnector implements ForkliftConnectorI {
     private final String groupId;
 
     private KafkaProducer<?, ?> kafkaProducer;
+    private KafkaController controller;
+    private ForkliftSerializer serializer;
     private Map<String, KafkaController> controllers = new HashMap<>();
 
     /**
@@ -44,6 +57,31 @@ public class KafkaConnector implements ForkliftConnectorI {
         this.kafkaHosts = kafkaHosts;
         this.schemaRegistries = schemaRegistries;
         this.groupId = groupId;
+        this.serializer = new KafkaSerializer(this, newSerializer(), newDeserializer());
+    }
+
+    private KafkaAvroSerializer newSerializer() {
+        Map<String, Object> serializerProperties = new HashMap<>();
+        serializerProperties.put(KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistries);
+
+        KafkaAvroSerializer result = new KafkaAvroSerializer();
+        result.configure(serializerProperties, false);
+        return result;
+    }
+
+    private KafkaAvroDeserializer newDeserializer() {
+        Map<String, Object> deserializerProperties = new HashMap<>();
+        deserializerProperties.put(KafkaAvroDeserializerConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistries);
+        deserializerProperties.put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, false);
+
+        KafkaAvroDeserializer result = new KafkaAvroDeserializer();
+        result.configure(deserializerProperties, false);
+        return result;
+    }
+
+    @Override
+    public ForkliftSerializer getDefaultSerializer() {
+        return serializer;
     }
 
     @Override
@@ -98,22 +136,48 @@ public class KafkaConnector implements ForkliftConnectorI {
     }
 
     @Override
-    public ForkliftConsumerI getQueue(String name) throws ConnectorException {
-        return getTopic(name);
+    public ForkliftConsumerI getConsumerForSource(SourceI source) throws ConnectorException {
+        return source
+            .apply(QueueSource.class, queue -> getQueue(queue.getName()))
+            .apply(TopicSource.class, topic -> getTopic(topic.getName()))
+            .apply(GroupedTopicSource.class, topic -> getGroupedTopic(topic))
+            .apply(RoleInputSource.class, roleSource -> {
+                final ForkliftConsumerI rawConsumer = getConsumerForSource(roleSource.getActionSource(this));
+                return new RoleInputConsumerWrapper(rawConsumer);
+             })
+            .elseUnsupportedError();
     }
 
-    @Override
-    public synchronized ForkliftConsumerI getTopic(String name) throws ConnectorException {
-        KafkaController controller = controllers.get(name);
+    public synchronized ForkliftConsumerI getGroupedTopic(GroupedTopicSource source) throws ConnectorException {
+        if (!source.groupSpecified()) {
+            source.overrideGroup(groupId);
+        }
+
+        if (!source.getGroup().equals(groupId)) { //TODO actually support GroupedTopics
+            throw new ConnectorException("Unexpected group '" + source.getGroup() + "'; only the connector group '" + groupId + "' is allowed");
+        }
+
+        KafkaController controller = controllers.get(source.getName());
         if (controller != null && controller.isRunning()) {
             log.warn("Consumer for topic already exists under this controller's groupname.  Messages will be divided amongst consumers.");
         } else {
-            controller = createController(name);
-            this.controllers.put(name, controller);
+            controller = createController(source.getName());
+            this.controllers.put(source.getName(), controller);
             controller.start();
         }
-        return new KafkaTopicConsumer(name, controller);
+        return new KafkaTopicConsumer(source.getName(), controller);
     }
+
+    @Override
+    public ForkliftConsumerI getQueue(String name) throws ConnectorException {
+        return getGroupedTopic(new GroupedTopicSource(name, groupId));
+    }
+
+    @Override
+    public ForkliftConsumerI getTopic(String name) throws ConnectorException {
+        return getGroupedTopic(new GroupedTopicSource(name, groupId));
+    }
+
 
     @Override
     public ForkliftProducerI getQueueProducer(String name) {
@@ -129,17 +193,18 @@ public class KafkaConnector implements ForkliftConnectorI {
     }
 
     @Override
+    public ActionSource mapSource(LogicalSource source) {
+        return source
+            .apply(RoleInputSource.class, roleSource -> mapRoleInputSource(roleSource))
+            .get();
+    }
+
+    protected GroupedTopicSource mapRoleInputSource(RoleInputSource roleSource) {
+        return new GroupedTopicSource("forklift-role-" + roleSource.getRole(), groupId);
+    }
+
+    @Override
     public boolean supportsResponse() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsTopic() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsQueue() {
         return true;
     }
 }

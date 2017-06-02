@@ -50,6 +50,7 @@ public class TestServiceManager {
             Thread.sleep(2000); //kafka doesn't seem to be quite ready after it starts listening on its port
             executor.execute(schemaRegistry);
             waitService("127.0.0.1", schemaPort);
+            Thread.sleep(1000); //give the schema-registry a little time also
         } catch (Throwable e) {
             e.printStackTrace();
         }

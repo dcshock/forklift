@@ -5,6 +5,10 @@ import forklift.message.Header;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * A class that encapsulates a message to retrieve or send on a message bus
+ * and its various metadata.
+ */
 public class ForkliftMessage {
     private String id;
     protected String msg;

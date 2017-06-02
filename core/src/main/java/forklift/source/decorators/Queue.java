@@ -1,4 +1,7 @@
-package forklift.decorators;
+package forklift.source.decorators;
+
+import forklift.source.SourceType;
+import forklift.source.sources.QueueSource;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -9,12 +12,13 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Specify which Topic a processor should watch for messages.
+ * Specify which queue a processor should pull messages off.
  */
 @Documented
-@Repeatable(Topics.class)
+@SourceType(QueueSource.class)
+@Repeatable(Queues.class)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
-public @interface Topic {
+public @interface Queue {
     String value();
 }

@@ -4,6 +4,8 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.index.VersionType;
+import org.elasticsearch.index.engine.VersionConflictEngineException;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.slf4j.Logger;
@@ -56,8 +58,14 @@ public class ReplayESWriter extends ReplayStoreThread<ReplayESWriterMsg> {
             log.error("Unable to search for old replay logs {}", t.getId());
         }
 
-        // Index the new information.
-        client.prepareIndex(index, "log").setId(t.getId()).setSource(t.getFields()).execute().actionGet();
+        try {
+            // Index the new information.
+            client.prepareIndex(index, "log")
+                .setVersion(t.getVersion()).setVersionType(VersionType.EXTERNAL_GTE)
+                .setId(t.getId()).setSource(t.getFields()).execute().actionGet();
+        } catch (VersionConflictEngineException expected) {
+            log.debug("Newer replay message already exists", expected);
+        }
     }
 
     public void shutdown() {

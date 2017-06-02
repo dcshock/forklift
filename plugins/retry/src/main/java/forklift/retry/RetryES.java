@@ -1,16 +1,18 @@
 package forklift.retry;
 
+import forklift.Forklift;
+import forklift.connectors.ForkliftConnectorI;
+import forklift.connectors.ForkliftMessage;
+import forklift.consumer.MessageRunnable;
+import forklift.consumer.ProcessStep;
+import forklift.decorators.LifeCycle;
+
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.gson.JsonObject;
-import forklift.Forklift;
-import forklift.connectors.ForkliftMessage;
-import forklift.consumer.MessageRunnable;
-import forklift.consumer.ProcessStep;
-import forklift.decorators.LifeCycle;
-import forklift.message.Header;
+
 import io.searchbox.client.JestClient;
 import io.searchbox.client.JestClientFactory;
 import io.searchbox.client.config.HttpClientConfig;
@@ -19,19 +21,18 @@ import io.searchbox.core.Index;
 import io.searchbox.core.Search;
 import io.searchbox.core.SearchResult;
 import io.searchbox.core.SearchResult.Hit;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.function.Consumer;
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
-import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 /**
  * Handles retries for consumers that have been annotated with Retry
@@ -48,40 +49,20 @@ public class RetryES {
     private final ScheduledExecutorService executor;
     private final JestClient client;
     private final ObjectMapper mapper;
-    private final Consumer<RetryMessage> cleanup;
+    private final Consumer<String> cleanup;
 
-    /*
-     * Just a test case.
+    /**
+     * Creates a new instance of the retry plugin that temporarily writes logs to elasticsearch using
+     * the REST interface.
+     *
+     * @param forklift the forklift server using this plugin
+     * @param ssl whether or not to connect to elasticsearch using http or https
+     * @param hostname the hostname to use to connect to elasticsearch
+     * @param port the REST port for elasticsearch
+     * @param runRetries whether or not re-process messages found in the retry log in elasticsearch;
+     *      may cause duplicate messages if triggered when another forklift server is already processing
+     *      a message
      */
-//    public static void main(String[] args) throws IOException {
-//        final JestClientFactory factory = new JestClientFactory();
-//        factory.setHttpClientConfig(
-//            new HttpClientConfig.Builder("http://localhost:9200")
-//               .multiThreaded(true)
-//               .build());
-//        JestClient client = factory.getObject();
-//
-//        final ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule())
-//                                                      .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-//        mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-//
-//        final String query = "{\"size\" : \"10000\", \"query\" : { \"match_all\" : {} }}";
-//        final Search search = new Search.Builder(query).addIndex("forklift-retry").addType("msg").build();
-//        final SearchResult results = client.execute(search);
-//
-//        log.error(results.getErrorMessage());
-//        log.info("{}", results.getHits(JsonObject.class));
-//
-//        for (Hit<JsonObject, Void> msg : results.getHits(JsonObject.class)) {
-//            try {
-//                final RetryMessage retryMessage = mapper.readValue(msg.source.get("forklift-retry-msg").getAsString(), RetryMessage.class);
-//                log.info("Retrying: {}", retryMessage);
-//            } catch (Exception e) {
-//                log.error("Unable to read result {}", msg.source);
-//            }
-//        }
-//    }
-
     public RetryES(Forklift forklift, boolean ssl, String hostname, int port, boolean runRetries) {
         this.forklift = forklift;
         this.executor = Executors.newScheduledThreadPool(1);
@@ -103,11 +84,16 @@ public class RetryES {
         client = factory.getObject();
 
         // Cleanup after a retry is completed.
-        cleanup = (msg) -> {
+        cleanup = (id) -> {
+            if (id == null) {
+                log.error("Cannot cleanup retry with null id: {}", id);
+                return;
+            }
+
             try {
-                client.execute(new Delete.Builder(msg.getMessageId()).index("forklift-retry").type("msg").build());
+                client.execute(new Delete.Builder(id).index("forklift-retry").type("msg").build());
             } catch (IOException e) {
-                log.error("Unable to cleanup retry: {}", msg.getMessageId(), e);
+                log.error("Unable to cleanup retry: {}", id, e);
             }
         };
 
@@ -117,20 +103,29 @@ public class RetryES {
          * to shut this functionality off.
          */
         if (runRetries) {
+            final String givenConnector = forklift.getConnector().getClass().getSimpleName();
+            boolean retriesSkipped = false;
+            Set<String> skippedConnectors = new HashSet<>();
+
             try {
                 final String query = "{\"size\" : \"10000\", \"query\" : { \"match_all\" : {} }}";
                 final Search search = new Search.Builder(query).addIndex("forklift-retry").build();
                 final SearchResult results = client.execute(search);
                 if (results != null) {
                     try {
-                        for (Hit<JsonObject, Void> msg : results.getHits(JsonObject.class)) {
+                        for (Hit<Map, Void> msg : results.getHits(Map.class)) {
                             try {
-                                final RetryMessage
-                                                retryMessage =
-                                                mapper.readValue(msg.source.get("forklift-retry-msg").getAsString(), RetryMessage.class);
-                                log.info("Retrying: {}", retryMessage);
-                                executor.schedule(new RetryRunnable(retryMessage, forklift.getConnector(), cleanup),
-                                                  Long.parseLong(retryMessage.getProperties().get("forklift-retry-timeout")), TimeUnit.SECONDS);
+                                final Map<String, String> fields = msg.source;
+                                final String msgConnector = fields.get("connectorName");
+
+                                if (msgConnector != null &&
+                                    !givenConnector.equals(msgConnector)) {
+                                    skippedConnectors.add(msgConnector);
+                                    retriesSkipped = true;
+                                } else {
+                                    log.info("Retrying: {}", fields);
+                                    new RetryRunnable(msg.id, fields, forklift.getConnector(), cleanup).run();
+                                }
                             } catch (Exception e) {
                                 log.error("Unable to read result {}", msg.source);
                             }
@@ -143,91 +138,30 @@ public class RetryES {
             } catch (Exception e) {
                 log.error("@trevor - don't ignore this!", e);
             }
+
+            if (retriesSkipped) {
+                log.warn("Some retries weren't ran due to being targetted at a different connector: {}", skippedConnectors);
+            }
         }
     }
 
     @LifeCycle(value=ProcessStep.Error, annotation=Retry.class)
     public void msg(MessageRunnable mr, Retry retry) {
         final ForkliftMessage msg = mr.getMsg();
-
-        final Map<String, String> fields = new HashMap<String, String>();
-        fields.put("text", msg.getMsg());
-        fields.put("step", ProcessStep.Error.toString());
-
-        // Map in headers
-        for (Header key : msg.getHeaders().keySet()) {
-            // Skip the correlation id because it is already set in the user id field.
-            if (key == Header.CorrelationId)
-                continue;
-
-            final Object val = msg.getHeaders().get(key);
-            if (val != null)
-                fields.put(key.toString(), msg.getHeaders().get(key).toString());
-        }
-
-        /*
-         * Properties handling
-         */
-        {
-            // Read props of the message to see what we need to do with retry counts
-            final Map<String, String> props = msg.getProperties();
-
-            // Determine the current retry count. We have to handle string or integer input types
-            // since stomp doesn't differentiate the two.
-            Integer retryCount;
-            final Object obj = props.get("forklift-retry-count");
-            if (obj instanceof String)
-                retryCount = Integer.parseInt((String)obj);
-            else if (obj instanceof Integer)
-                retryCount = (Integer)obj;
-            else
-                retryCount = null;
-
-            // Handle retries
-            if (retryCount == null)
-                retryCount = 1;
-            else
-                retryCount++;
-            if (retryCount > retry.maxRetries()) {
-                props.put("forklift-retry-max-retries-exceeded", "true");
-                return;
-            } else {
-                props.put("forklift-retry-max-retries", "" + retry.maxRetries());
-                props.put("forklift-retry-count", "" + retryCount);
-                props.put("forklift-retry-timeout", "" + retry.timeout());
-            }
-
-            // Map in properties
-            for (String key : props.keySet()) {
-                final Object val = msg.getProperties().get(key);
-                if (val != null)
-                    fields.put(key.toString(), msg.getProperties().get(key).toString());
-            }
-        }
-
-        // Errors are nullable.
-        final Optional<String> errors = mr.getErrors().stream().reduce((a, b) -> a + ":" + b);
-        if (errors.isPresent())
-            fields.put("errors", errors.get());
-
-        // Add a timestamp of when we processed this replay message.
-        fields.put("time", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
-
-        // Store the queue/topic.
-        if (mr.getConsumer().getQueue() != null)
-            fields.put("queue", mr.getConsumer().getQueue().value());
-        if (mr.getConsumer().getTopic() != null)
-            fields.put("topic", mr.getConsumer().getTopic().value());
+        final String id = msg.getId();
+        final ForkliftConnectorI connector = mr.getConsumer().getForklift().getConnector();
+        final String connectorName = connector.getClass().getSimpleName();
 
         // Get the message id. If there is no id we ignore the retry...
-        final String id = msg.getId();
-        if (id == null)
+        if (id == null || id.isEmpty()) {
+            log.error("Could not retry message; no message id for connector: {}, message: {}", connectorName, msg.getMsg());
             return;
+        }
 
-        try {
-            final RetryMessage retryMsg = buildRetry(mr, retry, id);
-            fields.put("forklift-retry-msg", mapper.writeValueAsString(retryMsg));
+        final RetryLogBuilder logBuilder = new RetryLogBuilder(msg, mr.getConsumer(), mr.getErrors(), connector, retry);
+        final Map<String, String> fields = logBuilder.getFields();
 
+        if (logBuilder.logProduced()) {
             for (int i = 0; i < 3; i++) {
                 try {
                     // Index the new information.
@@ -240,28 +174,7 @@ public class RetryES {
             }
 
             // Scheule the message to be retried.
-            executor.schedule(new RetryRunnable(retryMsg, forklift.getConnector(), cleanup), retry.timeout(), TimeUnit.SECONDS);
-        } catch (IOException e) {
-            log.error("Unable to index retry: {}", fields.toString(), e);
+            executor.schedule(new RetryRunnable(id, fields, connector, cleanup), retry.timeout(), TimeUnit.SECONDS);
         }
-    }
-
-    public RetryMessage buildRetry(MessageRunnable mr, Retry retry, String id) {
-        final ForkliftMessage msg = mr.getMsg();
-
-        final RetryMessage retryMessage = new RetryMessage();
-        retryMessage.setMessageId(id);
-        retryMessage.setText(msg.getMsg());
-        retryMessage.setHeaders(msg.getHeaders());
-        retryMessage.setStep(ProcessStep.Error);
-        retryMessage.setProperties(msg.getProperties());
-
-        if (mr.getConsumer().getQueue() != null)
-            retryMessage.setQueue(mr.getConsumer().getQueue().value());
-
-        if (mr.getConsumer().getTopic() != null)
-            retryMessage.setTopic(mr.getConsumer().getTopic().value());
-
-        return retryMessage;
     }
 }

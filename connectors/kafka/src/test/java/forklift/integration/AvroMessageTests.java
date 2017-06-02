@@ -5,13 +5,13 @@ import forklift.connectors.ConnectorException;
 import forklift.connectors.ForkliftMessage;
 import forklift.consumer.Consumer;
 import forklift.decorators.OnMessage;
-import forklift.decorators.Queue;
 import forklift.exception.StartupException;
 import forklift.integration.server.TestServiceManager;
 import forklift.producers.ForkliftProducerI;
 import forklift.producers.ProducerException;
 import forklift.schemas.StateCode;
 import forklift.schemas.UserRegistered;
+import forklift.source.decorators.Queue;
 
 import org.junit.After;
 import org.junit.Before;

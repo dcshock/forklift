@@ -2,8 +2,17 @@ package forklift.connectors;
 
 import forklift.consumer.ActiveMQMessageConsumer;
 import forklift.consumer.ForkliftConsumerI;
+import forklift.consumer.wrapper.RoleInputConsumerWrapper;
 import forklift.producers.ActiveMQProducer;
 import forklift.producers.ForkliftProducerI;
+import forklift.source.ActionSource;
+import forklift.source.LogicalSource;
+import forklift.source.SourceI;
+import forklift.source.sources.GroupedTopicSource;
+import forklift.source.sources.QueueSource;
+import forklift.source.sources.RoleInputSource;
+import forklift.source.sources.TopicSource;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQSession;
@@ -100,6 +109,33 @@ public class ActiveMQConnector implements ForkliftConnectorI {
     }
 
     @Override
+    public ForkliftConsumerI getConsumerForSource(SourceI source) throws ConnectorException {
+        return source
+            .apply(QueueSource.class, queue -> getQueue(queue.getName()))
+            .apply(TopicSource.class, topic -> getTopic(topic.getName()))
+            .apply(GroupedTopicSource.class, topic -> getGroupedTopic(topic))
+            .apply(RoleInputSource.class, roleSource -> {
+                final ForkliftConsumerI rawConsumer = getConsumerForSource(roleSource.getActionSource(this));
+                return new RoleInputConsumerWrapper(rawConsumer);
+            })
+            .elseUnsupportedError();
+    }
+
+    private ForkliftConsumerI getGroupedTopic(GroupedTopicSource source) throws ConnectorException {
+        if (!source.groupSpecified())
+            throw new ConnectorException("No consumer group specified");
+
+        // Sanitize the group and topic names so that group and topic names don't accidentally
+        // mess up ActiveMQ's pattern matching (e.g. by making a group name of
+        // "test.VirtualTopic.blah" and a topic of "topic", which would cause AMQ to look for a topic
+        // named "blah.VirtualTopic.topic" and a group of "test")
+        final String groupName = source.getGroup().replaceAll("\\.", "_");
+        final String topicName = source.getName();
+
+        return getConsumerForSource(new QueueSource("Consumer." + groupName + ".VirtualTopic." + topicName));
+    }
+
+    @Override
     public ForkliftProducerI getQueueProducer(String name) {
         try {
             final Session s = getSession();
@@ -122,22 +158,19 @@ public class ActiveMQConnector implements ForkliftConnectorI {
     }
 
     @Override
+    public ActionSource mapSource(LogicalSource source) {
+        return source
+            .apply(RoleInputSource.class, roleSource -> new QueueSource("forklift-role-" + roleSource.getRole()))
+            .get();
+    }
+
+    @Override
     public boolean supportsOrder() {
         return true;
     }
 
     @Override
     public boolean supportsResponse() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsTopic() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsQueue() {
         return true;
     }
 }

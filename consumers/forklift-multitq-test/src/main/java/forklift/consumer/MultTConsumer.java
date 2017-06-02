@@ -2,7 +2,7 @@ package forklift.consumer;
 
 import forklift.decorators.OnMessage;
 import forklift.decorators.OnValidate;
-import forklift.decorators.Topic;
+import forklift.source.decorators.Topic;
 
 @Topic("test-topics")
 public class MultTConsumer {

@@ -16,9 +16,10 @@ import forklift.consumer.ConsumerService;
 import forklift.decorators.Headers;
 import forklift.decorators.Message;
 import forklift.decorators.Properties;
-import forklift.decorators.Queue;
-import forklift.decorators.Topic;
 import forklift.message.Header;
+import forklift.source.decorators.Queue;
+import forklift.source.decorators.Topic;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -37,8 +38,6 @@ public class ConsumerTest {
     public void setup() {
         forklift = mock(Forklift.class);
         connector = mock(ForkliftConnectorI.class);
-        when(connector.supportsQueue()).thenReturn(true);
-        when(connector.supportsTopic()).thenReturn(true);
         when(forklift.getConnector()).thenReturn(connector);
     }
 

@@ -4,11 +4,12 @@ import forklift.Forklift;
 import forklift.classloader.CoreClassLoaders;
 import forklift.classloader.RunAsClassLoader;
 import forklift.concurrent.Executors;
-import forklift.decorators.Queue;
-import forklift.decorators.Topic;
 import forklift.deployment.Deployment;
 import forklift.deployment.FileDeployment;
 import forklift.deployment.DeploymentEvents;
+import forklift.source.SourceI;
+import forklift.source.SourceUtil;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,28 +64,18 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
         // TODO initialize core services, and join classloaders.
         // CoreClassLoaders.getInstance().register(deployment.getClassLoader());
 
-        deployment.getQueues().forEach(c -> {
-            for (Annotation a : c.getAnnotationsByType(Queue.class)) {
-                log.info("Found annotation {} on {}", a, c);
-                final Consumer consumer = new Consumer(c, forklift, deployment.getClassLoader(), (Queue)a); 
-                consumer.setServices(services);
-                
-                final ConsumerThread thread = new ConsumerThread(consumer);
-                threads.add(thread);
-                executor.submit(thread);    
-            }
-        });
+        deployment.getConsumers().forEach(consumerClass -> {
+            List<SourceI> sources = SourceUtil.getSourcesAsList(consumerClass);
+            sources.forEach(source -> {
+                log.info("Found source {} on {}", source, consumerClass);
 
-        deployment.getTopics().forEach(c -> {
-            for (Annotation a : c.getAnnotationsByType(Topic.class)) {
-                log.info("Found annotation {} on {}", a, c);
-                final Consumer consumer = new Consumer(c, forklift, deployment.getClassLoader(), (Topic)a); 
+                final Consumer consumer = new Consumer(consumerClass, forklift, deployment.getClassLoader(), source, sources);
                 consumer.setServices(services);
 
                 final ConsumerThread thread = new ConsumerThread(consumer);
                 threads.add(thread);
                 executor.submit(thread);    
-            }
+            });
         });
 
         deployments.put(deployment, threads);

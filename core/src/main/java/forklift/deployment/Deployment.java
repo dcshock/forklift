@@ -20,14 +20,11 @@ public interface Deployment {
     Set<Class<?>> getServices();
 
     /**
-     * @return clases in this Deployment annotated with the {@link forklift.decorators.Queue} annotation
+     * Gives all of the classes in the deployment that consume a source.
+     *
+     * @return clases in this Deployment annotated with a {@link forklift.source.SourceType} type annotation
      */
-    Set<Class<?>> getQueues();
-
-    /**
-     * @return clases in this Deployment annotated with the {@link forklift.decorators.Topics} annotation
-     */
-    Set<Class<?>> getTopics();
+    Set<Class<?>> getConsumers();
 
     /**
      * Returns a {@link ClassLoader} capable of loading the classes encapsulated by this deployment

@@ -13,7 +13,7 @@ import static org.kohsuke.args4j.ExampleMode.ALL;
  */
 public class ForkliftMain {
 
-    /**
+    /*
      * Launch a Forklift server instance.
      */
     public static void main(String[] args) throws Throwable {

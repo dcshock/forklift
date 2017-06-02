@@ -11,11 +11,11 @@ import forklift.decorators.LifeCycle;
 import forklift.decorators.OnMessage;
 import forklift.decorators.OnValidate;
 import forklift.decorators.Producer;
-import forklift.decorators.Queue;
-import forklift.decorators.Topic;
 import forklift.message.Header;
 import forklift.producers.ForkliftProducerI;
 import forklift.producers.ProducerException;
+import forklift.source.decorators.Queue;
+import forklift.source.decorators.Topic;
 
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.junit.After;

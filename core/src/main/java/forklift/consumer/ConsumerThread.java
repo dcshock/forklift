@@ -34,6 +34,7 @@ public class ConsumerThread extends Thread {
 
     @Override
     public void run() {
+        log.info("starting consumer");
         running.set(true);
 
         LocalDateTime lastConnectAttemptTime;
@@ -41,11 +42,14 @@ public class ConsumerThread extends Thread {
         do {
             lastConnectAttemptTime = LocalDateTime.now();
 
-            log.info("starting consumer");
             try {
                 consumer.listen();
             } catch (Exception e) {
-                log.debug("Couldn't get connection", e);
+                if (connectAttempt == 0) {
+                    log.error("Couldn't get connection", e);
+                } else {
+                    log.warn("Couldn't get connection, attempt {}", connectAttempt + 1, e);
+                }
             }
 
             synchronized (lock) {

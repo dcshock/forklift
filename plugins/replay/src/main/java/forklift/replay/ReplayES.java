@@ -10,24 +10,35 @@ import forklift.consumer.MessageRunnable;
 import forklift.consumer.ProcessStep;
 import forklift.decorators.BeanResolver;
 import forklift.decorators.LifeCycle;
-import forklift.decorators.Queue;
 import forklift.decorators.Service;
-import forklift.message.Header;
 import forklift.producers.ForkliftProducerI;
 import forklift.producers.ProducerException;
+import forklift.source.ActionSource;
+import forklift.source.SourceI;
+import forklift.source.SourceUtil;
+import forklift.source.decorators.Topic;
+import forklift.source.sources.GroupedTopicSource;
+import forklift.source.sources.TopicSource;
+import forklift.source.sources.QueueSource;
+
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-@Service
+/**
+ * A plugin that writes replay log messages to elasticsearch, so that messages
+ * can be reliably tracked and resent.
+ *
+ * Replay logs are queued on the "forklift.replay.es" queue on the given connector
+ * to avoid long delays as messages are being processed.
+ */
 public class ReplayES {
     private static final Logger log = LoggerFactory.getLogger(ReplayES.class);
 
@@ -37,10 +48,31 @@ public class ReplayES {
     private final ConsumerThread thread;
     private final Consumer consumer;
 
+    /**
+     * Constructs a new ReplayES instance using the default transport port (9200) for
+     * sending messages to elasticsearch.
+     *
+     * @param clientOnly whether the plugin is only an elasticsearch client, or an
+     *     embedded elasticsearch node should be started
+     * @param hostname the address of the ES host to send messages to
+     * @param clusterName the name of the elasticsearch cluster to send logs to
+     * @param connector the connector to use for queuing messages
+     */
     public ReplayES(boolean clientOnly, String hostname, String clusterName, ForkliftConnectorI connector) {
         this(clientOnly, hostname, 9200, clusterName, connector);
     }
 
+    /**
+     * Constructs a new ReplayES instance sending messages to elasticsearch based
+     * on the given parameters.
+     *
+     * @param clientOnly whether the plugin is only an elasticsearch client, or an
+     *     embedded elasticsearch node should be started
+     * @param hostname the address of the ES host to send messages to
+     * @param port the port number of the ES transport port for the given host
+     * @param clusterName the name of the elasticsearch cluster to send logs to
+     * @param connector the connector to use for queuing messages
+     */
     public ReplayES(boolean clientOnly, String hostname, int port, String clusterName, ForkliftConnectorI connector) {
         /*
          * Setup the connection to the server. If we are only a client we'll not setup a node locally to run.
@@ -75,11 +107,21 @@ public class ReplayES {
             }
         });
 
-        this.producer = connector.getQueueProducer(ReplayConsumer.class.getAnnotation(Queue.class).value());
         final Forklift forklift = new Forklift();
         forklift.setConnector(connector);
+
+        final List<SourceI> sources = SourceUtil.getSourcesAsList(ReplayConsumer.class);
+        final SourceI primarySource = sources.stream()
+            .filter(source -> !source.isLogicalSource())
+            .findFirst().get();
+
+        this.producer = connector.getTopicProducer(primarySource
+            .apply(QueueSource.class, queue -> queue.getName())
+            .apply(TopicSource.class, topic -> topic.getName())
+            .apply(GroupedTopicSource.class, topic -> topic.getName())
+            .elseUnsupportedError());
         this.consumer = new Consumer(ReplayConsumer.class, forklift,
-            Thread.currentThread().getContextClassLoader(), ReplayConsumer.class.getAnnotation(Queue.class));
+            Thread.currentThread().getContextClassLoader(), primarySource, sources);
         this.consumer.addServices(new ConsumerService(this));
         this.thread = new ConsumerThread(this.consumer);
         this.thread.setName("ReplayES");
@@ -106,104 +148,66 @@ public class ReplayES {
     }
 
     @LifeCycle(value=ProcessStep.Pending, annotation=Replay.class)
-    public void pending(MessageRunnable mr) {
-        msg(mr, ProcessStep.Pending);
+    public void pending(MessageRunnable mr, Replay replay) {
+        msg(mr, replay, ProcessStep.Pending);
     }
 
     @LifeCycle(value=ProcessStep.Validating, annotation=Replay.class)
-    public void validating(MessageRunnable mr) {
-        msg(mr, ProcessStep.Validating);
+    public void validating(MessageRunnable mr, Replay replay) {
+        msg(mr, replay, ProcessStep.Validating);
     }
 
     @LifeCycle(value=ProcessStep.Invalid, annotation=Replay.class)
-    public void invalid(MessageRunnable mr) {
-        msg(mr, ProcessStep.Invalid);
+    public void invalid(MessageRunnable mr, Replay replay) {
+        msg(mr, replay, ProcessStep.Invalid);
     }
 
     @LifeCycle(value=ProcessStep.Processing, annotation=Replay.class)
-    public void processing(MessageRunnable mr) {
-        msg(mr, ProcessStep.Processing);
+    public void processing(MessageRunnable mr, Replay replay) {
+        msg(mr, replay, ProcessStep.Processing);
     }
 
     @LifeCycle(value=ProcessStep.Complete, annotation=Replay.class)
-    public void complete(MessageRunnable mr) {
-        msg(mr, ProcessStep.Complete);
+    public void complete(MessageRunnable mr, Replay replay) {
+        msg(mr, replay, ProcessStep.Complete);
     }
 
     @LifeCycle(value=ProcessStep.Error, annotation=Replay.class)
-    public void error(MessageRunnable mr) {
-        msg(mr, ProcessStep.Error);
+    public void error(MessageRunnable mr, Replay replay) {
+        msg(mr, replay, ProcessStep.Error);
     }
 
     @LifeCycle(value=ProcessStep.Retrying, annotation=Replay.class)
-    public void retry(MessageRunnable mr) {
-        msg(mr, ProcessStep.Retrying);
+    public void retry(MessageRunnable mr, Replay replay) {
+        msg(mr, replay, ProcessStep.Retrying);
     }
 
     @LifeCycle(value=ProcessStep.MaxRetriesExceeded, annotation=Replay.class)
-    public void maxRetries(MessageRunnable mr) {
-        msg(mr, ProcessStep.MaxRetriesExceeded);
+    public void maxRetries(MessageRunnable mr, Replay replay) {
+        msg(mr, replay, ProcessStep.MaxRetriesExceeded);
     }
 
-    public void msg(MessageRunnable mr, ProcessStep step) {
+    public void msg(MessageRunnable mr, Replay replay, ProcessStep step) {
         final ForkliftMessage msg = mr.getMsg();
-
-        // Read props of the message to see what we need to do with retry counts
+        final String id = msg.getId();
         final Map<String, String> props = msg.getProperties();
-
-        final Map<String, String> fields = new HashMap<>();
-        fields.put("text", msg.getMsg());
+        final ForkliftConnectorI connector = mr.getConsumer().getForklift().getConnector();
 
         // Integrate a little with retries. This will stop things from reporting as an error in replay logging for
         // messages that can be retried.
         if (step == ProcessStep.Error &&
             props.containsKey("forklift-retry-count") && !props.containsKey("forklift-retry-max-retries-exceeded")) {
-            fields.put("step", ProcessStep.Retrying.toString());
+            step = ProcessStep.Retrying;
             mr.setWarnOnly(true);
-        } else {
-            fields.put("step", step.toString());
         }
 
-        // Map in headers
-        for (Header key : msg.getHeaders().keySet()) {
-            // Skip the correlation id because it is already set in the user id field.
-            if (key == Header.CorrelationId)
-                continue;
-
-            final Object val = msg.getHeaders().get(key);
-            if (val != null)
-                fields.put(key.toString(), msg.getHeaders().get(key).toString());
-        }
-
-        // Map in properties
-        for (String key : msg.getProperties().keySet()) {
-            final Object val = msg.getProperties().get(key);
-            if (val != null)
-                fields.put(key.toString(), msg.getProperties().get(key).toString());
-        }
-
-        // Errors are nullable.
-        final Optional<String> errors = mr.getErrors().stream().reduce((a, b) -> a + ":" + b);
-        if (errors.isPresent())
-            fields.put("errors", errors.get());
-
-        // Add a timestamp of when we processed this replay message.
-        fields.put("time", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
-
-        // Store the queue/topic.
-        if (mr.getConsumer().getQueue() != null)
-            fields.put("queue", mr.getConsumer().getQueue().value());
-        if (mr.getConsumer().getTopic() != null)
-            fields.put("topic", mr.getConsumer().getTopic().value());
-
-        // Generate the id by reading the message id. If an id isn't found we just ignore the message.
-        final String id = msg.getId();
-        if (id != null) {
+        if (id != null && !id.isEmpty()) {
+            ReplayLogBuilder logBuilder = new ReplayLogBuilder(msg, mr.getConsumer(), mr.getErrors(), connector, replay, step);
             // Push the message to the consumer
             try {
-                this.producer.send(new ReplayESWriterMsg(id, fields));
+                this.producer.send(new ReplayESWriterMsg(id, logBuilder.getFields(), logBuilder.getStepCount()));
             } catch (ProducerException e) {
-                log.error("Unable to producer ES msg", e);
+                log.error("Unable to produce ES msg", e);
             }
         }
     }

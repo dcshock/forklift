@@ -1,8 +1,8 @@
 package forklift.consumer;
 
 import forklift.decorators.OnMessage;
-import forklift.decorators.Queue;
-import forklift.decorators.Topic;
+import forklift.source.decorators.Queue;
+import forklift.source.decorators.Topic;
 
 @Queue("test1")
 @Topic("topic1")

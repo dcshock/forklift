@@ -1,16 +1,20 @@
 package forklift.retry;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.google.common.io.Files;
 import forklift.Forklift;
 import forklift.connectors.ForkliftMessage;
 import forklift.consumer.MessageRunnable;
 import forklift.consumer.ProcessStep;
 import forklift.decorators.LifeCycle;
 import forklift.file.FileScanner;
+import forklift.source.sources.QueueSource;
+import forklift.source.sources.TopicSource;
+
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.google.common.io.Files;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,8 +69,8 @@ public class RetryHandler {
             .forEach(result -> {
                 try {
                     final RetryMessage retryMessage = mapper.readValue(new File(dir, result.getFilename()), RetryMessage.class);
-                    executor.schedule(new RetryRunnable(retryMessage, forklift.getConnector(), cleanup),
-                        Long.parseLong(Integer.toString(Integer.parseInt(retryMessage.getProperties().get("forklift-retry-timeout")))), TimeUnit.SECONDS);
+                    /*executor.schedule(new RetryRunnable(retryMessage, forklift.getConnector(), cleanup),
+                        Long.parseLong(Integer.toString(Integer.parseInt(retryMessage.getProperties().get("forklift-retry-timeout")))), TimeUnit.SECONDS);*/
                 } catch (Exception e) {
                     log.error("Unable to read file {}", result.getFilename());
                 }
@@ -103,11 +107,9 @@ public class RetryHandler {
             retryMessage.setStep(ProcessStep.Error);
             retryMessage.setProperties(msg.getProperties());
 
-            if (mr.getConsumer().getQueue() != null)
-                retryMessage.setQueue(mr.getConsumer().getQueue().value());
-
-            if (mr.getConsumer().getTopic() != null)
-                retryMessage.setTopic(mr.getConsumer().getTopic().value());
+            mr.getConsumer().getSource()
+                .accept(QueueSource.class, queue -> retryMessage.setQueue(queue.getName()))
+                .accept(TopicSource.class, topic -> retryMessage.setTopic(topic.getName()));
 
             // Only persist retries if it was requested.
             if (retry.persistent()) {
@@ -127,7 +129,7 @@ public class RetryHandler {
             }
 
             // Scheule the message to be retried.
-            executor.schedule(new RetryRunnable(retryMessage, forklift.getConnector(), cleanup), retry.timeout(), TimeUnit.SECONDS);
+            // executor.schedule(new RetryRunnable(retryMessage, forklift.getConnector(), cleanup), retry.timeout(), TimeUnit.SECONDS);
         } catch (IOException ignored) {
         }
     }

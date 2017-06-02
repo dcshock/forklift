@@ -3,12 +3,12 @@ package forklift.deployment;
 import forklift.classloader.ChildFirstClassLoader;
 import forklift.classloader.RunAsClassLoader;
 import forklift.decorators.CoreService;
-import forklift.decorators.Queue;
-import forklift.decorators.Queues;
 import forklift.decorators.Service;
-import forklift.decorators.Topic;
-import forklift.decorators.Topics;
+import forklift.source.SourceUtil;
+
 import org.reflections.Reflections;
+import org.reflections.scanners.SubTypesScanner;
+import org.reflections.scanners.TypeAnnotationsScanner;
 import org.reflections.util.ConfigurationBuilder;
 
 import java.io.File;
@@ -26,8 +26,7 @@ import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 
 public class FileDeployment implements Deployment{
-    private Set<Class<?>> queues = new HashSet<>();
-    private Set<Class<?>> topics = new HashSet<>();
+    private Set<Class<?>> consumers = new HashSet<>();
     private Set<Class<?>> services = new HashSet<>();
     private Set<Class<?>> coreServices = new HashSet<>();
     private ClassLoader cl;
@@ -73,21 +72,22 @@ public class FileDeployment implements Deployment{
 
         // Reflect the deployment to determine if there are any consumers
         // annotated.
+        SourceUtil.SourceTypeScanner sourceScanner = new SourceUtil.SourceTypeScanner(cl);
         reflections = new Reflections(new ConfigurationBuilder()
             .addClassLoader(cl)
-            .setUrls(urls));
+            .setUrls(urls)
+            .addScanners(sourceScanner));
+
 
         RunAsClassLoader.run(cl, () -> {
             coreServices.addAll(reflections.getTypesAnnotatedWith(CoreService.class));
-            queues.addAll(reflections.getTypesAnnotatedWith(Queue.class));
-            queues.addAll(reflections.getTypesAnnotatedWith(Queues.class));
             services.addAll(reflections.getTypesAnnotatedWith(Service.class));
-            topics.addAll(reflections.getTypesAnnotatedWith(Topic.class));
-            topics.addAll(reflections.getTypesAnnotatedWith(Topics.class));
+
+            consumers = sourceScanner.getSourceAnnotatedTypes();
         });
 
-        if (coreServices.size() > 0 && (queues.size() > 0 || topics.size() > 0 || services.size() > 0))
-            throw new IOException("Invalid core service due to queues/topics/services being deployed along side.");
+        if (coreServices.size() > 0 && (consumers.size() > 0 || services.size() > 0))
+            throw new IOException("Invalid core service due to consumers/services being deployed along side.");
     }
 
     public boolean isJar() {
@@ -121,13 +121,8 @@ public class FileDeployment implements Deployment{
     }
 
     @Override
-    public Set<Class<?>> getQueues() {
-        return queues;
-    }
-
-    @Override
-    public Set<Class<?>> getTopics() {
-        return topics;
+    public Set<Class<?>> getConsumers() {
+        return consumers;
     }
 
     public Reflections getReflections() {
@@ -143,7 +138,7 @@ public class FileDeployment implements Deployment{
 
     @Override
     public String toString() {
-        return "FileDeployment [queues=" + queues + ", topics=" + topics + ", cl="
+        return "FileDeployment [consumers=" + consumers + ", cl="
                 + cl + ", deployedFile=" + deployedFile + ", reflections="
                 + reflections + "]";
     }

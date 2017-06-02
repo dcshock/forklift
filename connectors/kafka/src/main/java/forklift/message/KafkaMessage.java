@@ -2,7 +2,7 @@ package forklift.message;
 
 import forklift.connectors.ConnectorException;
 import forklift.connectors.ForkliftMessage;
-import forklift.consumer.parser.KeyValueParser;
+import forklift.connectors.KafkaSerializer;
 import forklift.controller.KafkaController;
 import forklift.producers.KafkaForkliftProducer;
 
@@ -41,7 +41,7 @@ public class KafkaMessage extends ForkliftMessage {
      * <strong>WARNING:</strong> Called from constructor
      */
     private final void createMessage() {
-        String message = parseRecord();
+        String message = KafkaSerializer.extractMessageFromRecord(consumerRecord.value(), this.properties);
         if (message != null) {
             setMsg(message);
         }
@@ -49,23 +49,5 @@ public class KafkaMessage extends ForkliftMessage {
             this.setFlagged(true);
             this.setWarning("Unable to parse message for topic: " + consumerRecord.topic() + " with value: " + consumerRecord.value());
         }
-    }
-
-    private final String parseRecord(){
-        Object value = null;
-        if (consumerRecord.value() instanceof GenericRecord) {
-            GenericRecord genericRecord = (GenericRecord)consumerRecord.value();
-            Object properties = genericRecord.get(KafkaForkliftProducer.SCHEMA_FIELD_NAME_PROPERTIES);
-            if (properties != null) {
-                this.setProperties(KeyValueParser.parse(properties.toString()));
-            }
-            value = genericRecord.get(KafkaForkliftProducer.SCHEMA_FIELD_NAME_VALUE);
-            //If the value is null, this is most likely an avro object
-            if (value == null) {
-                String jsonValue = genericRecord.toString();
-                value = jsonValue != null && jsonValue.startsWith("{") ? jsonValue : null;
-            }
-        }
-        return value == null?null:value.toString();
     }
 }

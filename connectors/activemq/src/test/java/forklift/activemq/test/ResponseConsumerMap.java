@@ -2,9 +2,9 @@ package forklift.activemq.test;
 
 import forklift.connectors.ForkliftMessage;
 import forklift.decorators.OnMessage;
-import forklift.decorators.Queue;
 import forklift.decorators.Response;
 import forklift.producers.ForkliftResultResolver;
+import forklift.source.decorators.Queue;
 
 import java.util.HashMap;
 import java.util.Map;

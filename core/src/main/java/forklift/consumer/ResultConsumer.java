@@ -3,10 +3,9 @@ package forklift.consumer;
 import forklift.connectors.ForkliftMessage;
 import forklift.decorators.Message;
 import forklift.decorators.OnMessage;
-import forklift.decorators.Topic;
 import forklift.message.Header;
 import forklift.producers.ForkliftResultResolver;
-
+import forklift.source.decorators.Topic;
 
 @Topic("sync.result")
 public class ResultConsumer<T> {

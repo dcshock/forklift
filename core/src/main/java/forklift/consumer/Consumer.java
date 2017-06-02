@@ -1,10 +1,5 @@
 package forklift.consumer;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import forklift.Forklift;
 import forklift.classloader.RunAsClassLoader;
 import forklift.connectors.ConnectorException;
@@ -18,12 +13,26 @@ import forklift.decorators.OnMessage;
 import forklift.decorators.OnValidate;
 import forklift.decorators.Ons;
 import forklift.decorators.Order;
-import forklift.decorators.Queue;
 import forklift.decorators.Response;
-import forklift.decorators.Topic;
 import forklift.message.Header;
 import forklift.producers.ForkliftProducerI;
 import forklift.properties.PropertiesManager;
+import forklift.source.SourceI;
+import forklift.source.SourceUtil;
+import forklift.source.sources.GroupedTopicSource;
+import forklift.source.sources.QueueSource;
+import forklift.source.sources.RoleInputSource;
+import forklift.source.sources.TopicSource;
+import forklift.source.decorators.GroupedTopic;
+import forklift.source.decorators.Queue;
+import forklift.source.decorators.Topic;
+
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,6 +46,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,7 +59,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-
+import java.util.stream.Stream;
 import javax.inject.Inject;
 
 public class Consumer {
@@ -70,8 +80,8 @@ public class Consumer {
     private Constructor<?> constructor;
     private Annotation[][] constructorAnnotations;
     private String name;
-    private Queue queue;
-    private Topic topic;
+    private SourceI source;
+    private List<SourceI> roleSources = Collections.emptyList();
     private List<ConsumerService> services;
     private Method orderMethod;
 
@@ -94,25 +104,39 @@ public class Consumer {
         this(msgHandler, forklift, classLoader, false);
     }
 
-    public Consumer(Class<?> msgHandler, Forklift forklift, ClassLoader classLoader, Queue q) {
+    public Consumer(Class<?> msgHandler, Forklift forklift, ClassLoader classLoader, Queue queue) {
         this(msgHandler, forklift, classLoader, true);
-        this.queue = q;
-
-        if (this.queue == null)
+        if (queue == null)
             throw new IllegalArgumentException("Msg Handler must handle a queue.");
 
+        this.source = new QueueSource(queue);
         this.name = queue.value() + ":" + id.getAndIncrement();
+
         log = LoggerFactory.getLogger(this.name);
     }
 
-    public Consumer(Class<?> msgHandler, Forklift forklift, ClassLoader classLoader, Topic t) {
+    public Consumer(Class<?> msgHandler, Forklift forklift, ClassLoader classLoader, Topic topic) {
         this(msgHandler, forklift, classLoader, true);
-        this.topic = t;
-
-        if (this.topic == null)
+        if (topic == null)
             throw new IllegalArgumentException("Msg Handler must handle a topic.");
 
+        this.source = new TopicSource(topic);
         this.name = topic.value() + ":" + id.getAndIncrement();
+
+        log = LoggerFactory.getLogger(this.name);
+    }
+
+    public Consumer(Class<?> msgHandler, Forklift forklift, ClassLoader classLoader, SourceI source, List<SourceI> roleSources) {
+        this(msgHandler, forklift, classLoader, true);
+        this.source = source;
+        this.roleSources = roleSources;
+
+        this.name = source
+            .apply(QueueSource.class, queue -> queue.getName())
+            .apply(TopicSource.class, topic -> topic.getName())
+            .apply(GroupedTopicSource.class, topic -> topic.getName())
+            .apply(RoleInputSource.class, roleSource -> roleSource.getRole())
+            .get() + ":" + id.getAndIncrement();
         log = LoggerFactory.getLogger(this.name);
     }
 
@@ -122,25 +146,20 @@ public class Consumer {
         this.forklift = forklift;
         this.msgHandler = msgHandler;
 
-        if (!preinit && queue == null && topic == null) {
-            this.queue = msgHandler.getAnnotation(Queue.class);
-            this.topic = msgHandler.getAnnotation(Topic.class);
+        if (!preinit && source == null) {
+            this.roleSources = SourceUtil.getSourcesAsList(msgHandler);
 
-            if (this.queue != null && this.topic != null)
-                throw new IllegalArgumentException("Msg Handler cannot consume a queue and topic");
+            if (this.roleSources.size() > 1)
+                throw new IllegalArgumentException("One consumer instance cannot consume more than one source");
+            if (this.roleSources.size() == 0)
+                throw new IllegalArgumentException("A consumer must consume at least one source");
 
-            if (this.queue != null && !forklift.getConnector().supportsQueue())
-                throw new RuntimeException("@Queue is not supported by the current connector");
-
-            if (this.topic != null && !forklift.getConnector().supportsTopic())
-                throw new RuntimeException("@Topic is not supported by the current connector");
-
-            if (this.queue != null)
-                this.name = queue.value() + ":" + id.getAndIncrement();
-            else if (this.topic != null)
-                this.name = topic.value() + ":" + id.getAndIncrement();
-            else
-                throw new IllegalArgumentException("Msg Handler must handle a queue or topic.");
+            this.source = roleSources.get(0);
+            this.name = source
+                .apply(QueueSource.class, queue -> queue.getName())
+                .apply(TopicSource.class, topic -> topic.getName())
+                .apply(GroupedTopicSource.class, topic -> topic.getName())
+                .get() + ":" + id.getAndIncrement();
         }
 
         log = LoggerFactory.getLogger(Consumer.class);
@@ -209,12 +228,7 @@ public class Consumer {
     public void listen() {
         final ForkliftConsumerI consumer;
         try {
-            if (topic != null)
-                consumer = forklift.getConnector().getTopic(topic.value());
-            else if (queue != null)
-                consumer = forklift.getConnector().getQueue(queue.value());
-            else
-                throw new RuntimeException("No queue/topic specified");
+            consumer = forklift.getConnector().getConsumerForSource(source);
 
             // Init the thread pools if the msg handler is multi threaded. If the msg handler is single threaded
             // it'll just run in the current thread to prevent any message read ahead that would be performed.
@@ -236,7 +250,7 @@ public class Consumer {
             if (consumer != null)
                 consumer.close();
         } catch (ConnectorException e) {
-            log.debug("", e);
+            log.error("Error getting consumer from connector", e);
         }
     }
 
@@ -541,6 +555,10 @@ public class Consumer {
         return msgHandler;
     }
 
+    public Forklift getForklift() {
+        return forklift;
+    }
+
     /**
      * Creates an instance of the MessageHandler class utilized by this constructor.  Constructor and Field level injection is performed using both the
      * passed in msg and any Services {@link #addServices(ConsumerService...) added} to this consumer.
@@ -562,16 +580,25 @@ public class Consumer {
         return instance;
     }
 
-    public Queue getQueue() {
-        return queue;
+    public SourceI getSource() {
+        return source;
     }
 
-    public Topic getTopic() {
-        return topic;
+    public List<SourceI> getRoleSources() {
+        return roleSources;
     }
 
-    public Forklift getForklift() {
-        return forklift;
+    public <SOURCE extends SourceI> Stream<SOURCE> getRoleSources(Class<SOURCE> sourceType) {
+        return roleSources.stream()
+            .filter(source -> sourceType.isInstance(source))
+            .map(source -> {
+                try {
+                    return sourceType.cast(source);
+                } catch (ClassCastException e) { // should be impossible
+                    log.error("Impossible class cast exception; sound the alarms", e);
+                }
+                return null;
+            });
     }
 
     public void addServices(ConsumerService... services) {

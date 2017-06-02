@@ -4,7 +4,7 @@ import forklift.connectors.ForkliftMessage;
 import forklift.decorators.Headers;
 import forklift.decorators.Message;
 import forklift.decorators.Properties;
-import forklift.decorators.Queue;
+import forklift.source.decorators.Queue;
 import forklift.message.Header;
 
 import java.util.Map;

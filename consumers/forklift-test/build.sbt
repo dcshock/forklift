@@ -5,7 +5,7 @@ name := "forklift-test-consumer"
 version := "0.3"
 
 libraryDependencies ++= Seq(
-    "com.github.dcshock" % "forklift" % "0.3"
+    "com.github.dcshock" % "forklift" % "1.0"
 )
 
 crossPaths := false
