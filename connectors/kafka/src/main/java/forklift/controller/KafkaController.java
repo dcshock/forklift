@@ -12,8 +12,10 @@ import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.WakeupException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -37,18 +39,19 @@ public class KafkaController {
 
     private static final Logger log = LoggerFactory.getLogger(KafkaController.class);
     private volatile boolean running = false;
-    private final Set<String> topics = ConcurrentHashMap.newKeySet();
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final KafkaConsumer<?, ?> kafkaConsumer;
     private final MessageStream messageStream;
-    private volatile boolean topicsChanged = false;
+    private final String topic;
     private AcknowledgedRecordHandler acknowledgmentHandler = new AcknowledgedRecordHandler();
     private Map<TopicPartition, OffsetAndMetadata> failedOffset = null;
     private Map<TopicPartition, AtomicInteger> flowControl = new ConcurrentHashMap<>();
 
-    public KafkaController(KafkaConsumer<?, ?> kafkaConsumer, MessageStream messageStream) {
+    public KafkaController(KafkaConsumer<?, ?> kafkaConsumer, MessageStream messageStream, String topic) {
         this.kafkaConsumer = kafkaConsumer;
         this.messageStream = messageStream;
+        messageStream.addTopic(topic);
+        this.topic = topic;
     }
 
     /**
@@ -58,40 +61,6 @@ public class KafkaController {
      */
     public ReadableMessageStream getMessageStream() {
         return this.messageStream;
-    }
-
-    /**
-     * Adds a topic which the underlying {@link org.apache.kafka.clients.consumer.KafkaConsumer} will be subscribed to.  Adds
-     * the topic to the messageStream.
-     *
-     * @param topic the topic to subscribe to
-     * @return true if the topic was added, false if already added
-     */
-    public synchronized boolean addTopic(String topic) {
-        if (!topics.contains(topic)) {
-            messageStream.addTopic(topic);
-            topics.add(topic);
-            topicsChanged = true;
-            this.notifyAll();
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Unsubscribe the underlying {@link org.apache.kafka.clients.consumer.KafkaConsumer} from the passed in topic and removes the
-     * topic from the message stream.
-     *
-     * @param topic the topic to remove
-     * @return true if the topic was removed, false if it wasn't present
-     */
-    public synchronized boolean removeTopic(String topic) {
-        boolean removed = topics.remove(topic);
-        if (removed) {
-            messageStream.removeTopic(topic);
-            topicsChanged = true;
-        }
-        return removed;
     }
 
     /**
@@ -145,10 +114,9 @@ public class KafkaController {
      * @throws InterruptedException if the thread is interrupted
      */
     public void stop(long timeout, TimeUnit timeUnit) throws InterruptedException {
-        kafkaConsumer.wakeup();
-        executor.shutdownNow();
-
         running = false;
+        kafkaConsumer.wakeup();
+        executor.shutdown();
         if (!executor.awaitTermination(timeout, timeUnit)) {
             log.error("Failed to stop KafkaController in {} {}", timeout, timeUnit);
         }
@@ -156,21 +124,9 @@ public class KafkaController {
 
     private void controlLoop() {
         try {
+            kafkaConsumer.subscribe(Collections.singleton(topic), new RebalanceListener());
             while (running) {
-                boolean updatedAssignment = false;
-                if (topics.size() == 0) {
-                    commitPendingAndWaitForTopics();
-                }
-                if (topicsChanged) {
-                    commitPendingOffsetsForRemovedTopics();
-                    kafkaConsumer.subscribe(topics, new RebalanceListener());
-                    updatedAssignment = true;
-                }
                 ConsumerRecords<?, ?> records = flowControlledPoll();
-                //Update the assignment before adding records to stream
-                if (updatedAssignment) {
-                    updateAssignment();
-                }
                 addRecordsToStream(records);
                 Map<TopicPartition, OffsetAndMetadata> offsets = acknowledgmentHandler.getAcknowledged();
                 commitOffsets(offsets);
@@ -212,41 +168,6 @@ public class KafkaController {
         }
     }
 
-    private void commitPendingAndWaitForTopics() throws InterruptedException {
-        //check if the last remaining topic was removed
-        if (kafkaConsumer.assignment().size() > 0) {
-            Map<TopicPartition, OffsetAndMetadata>
-                            offsets =
-                            acknowledgmentHandler.removePartitions(kafkaConsumer.assignment());
-            commitOffsets(offsets);
-            kafkaConsumer.unsubscribe();
-        }
-        synchronized (this) {
-            //recheck wait condition inside synchronized block
-            while (topics.size() == 0) {
-                //pause the polling thread until a topic comes in
-                log.debug("controlLoop waiting for topic");
-                this.wait();
-            }
-        }
-    }
-
-    private void commitPendingOffsetsForRemovedTopics() throws InterruptedException {
-        Set<TopicPartition> removed = new HashSet<>();
-        //synchronized to avoid letting the topic set change
-        synchronized (this) {
-            for (TopicPartition partition : kafkaConsumer.assignment()) {
-                if (!topics.contains(partition.topic())) {
-                    removed.add(partition);
-                }
-            }
-            topicsChanged = false;
-        }
-        //commit any removed partitions before we unsubscribe them
-        Map<TopicPartition, OffsetAndMetadata> offsets = acknowledgmentHandler.removePartitions(removed);
-        commitOffsets(offsets);
-    }
-
     private ConsumerRecords<?, ?> flowControlledPoll() throws InterruptedException {
         //pause partitions that haven't fully been processed yet and unpause those that have
         Set<TopicPartition> paused = new HashSet<>();
@@ -260,6 +181,7 @@ public class KafkaController {
         }
         kafkaConsumer.pause(paused);
         kafkaConsumer.resume(unpaused);
+
         if (unpaused.size() == 0 && paused.size() > 0) {
             synchronized (this) {
                 //wait for flowControl to notify us, resume after a short pause to allow for heartbeats
@@ -268,14 +190,6 @@ public class KafkaController {
             return null;
         } else {
             return kafkaConsumer.poll(100);
-        }
-    }
-
-    private void updateAssignment() {
-        acknowledgmentHandler.addPartitions(kafkaConsumer.assignment());
-        for (TopicPartition partition : kafkaConsumer.assignment()) {
-            this.flowControl.merge(partition, new AtomicInteger(),
-                                   (oldValue, newValue) -> oldValue == null ? newValue : oldValue);
         }
     }
 

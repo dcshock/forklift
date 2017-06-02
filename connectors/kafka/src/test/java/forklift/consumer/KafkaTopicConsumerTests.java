@@ -51,16 +51,4 @@ public class KafkaTopicConsumerTests {
         when(this.controller.isRunning()).thenReturn(false);
         consumer.receive(100);
     }
-
-    @Test
-    public void addTopicTest() throws ConnectorException {
-        consumer.receive(100);
-        verify(controller).addTopic(this.topic);
-    }
-
-    @Test
-    public void closeAndRemoveTopicTest() throws ConnectorException {
-        consumer.close();
-        verify(controller).removeTopic(this.topic);
-    }
 }
