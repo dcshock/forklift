@@ -50,6 +50,7 @@ libraryDependencies ++= testDependencies.map(_ % "test")
 // Integration tests use embedded servers.  We can only allow one instance at a time
 // so disable parallel test execution
 parallelExecution in Test := false
+testOptions += Tests.Argument(TestFrameworks.JUnit, "-v", "-a")
 
 // avro settings
 (javaSource in avroConfig) := baseDirectory(_/"target/generated-sources").value
