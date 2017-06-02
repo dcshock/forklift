@@ -30,7 +30,11 @@ public class StringMessageTests extends BaseIntegrationTest {
         final Consumer c = new Consumer(StringConsumer.class, forklift);
         // Shutdown the consumer after all the messages have been processed.
         c.setOutOfMessages((listener) -> {
-            listener.shutdown();
+            timeouts++;
+
+            if (sentMessageIds.equals(consumedMessageIds) || timeouts > maxTimeouts) {
+                listener.shutdown();
+            }
         });
         // Start the consumer.
         c.listen();
@@ -54,7 +58,11 @@ public class StringMessageTests extends BaseIntegrationTest {
                                      forklift);
         // Shutdown the consumer after all the messages have been processed.
         c.setOutOfMessages((listener) -> {
-            listener.shutdown();
+            timeouts++;
+
+            if (sentMessageIds.equals(consumedMessageIds) || timeouts > maxTimeouts) {
+                listener.shutdown();
+            }
         });
         // Start the consumer.
         c.listen();

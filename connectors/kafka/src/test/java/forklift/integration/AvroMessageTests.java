@@ -58,7 +58,11 @@ public class AvroMessageTests extends BaseIntegrationTest {
         final Consumer c = new Consumer(AvroMessageTests.RegisteredAvroConsumer.class, forklift);
         // Shutdown the consumer after all the messages have been processed.
         c.setOutOfMessages((listener) -> {
-            listener.shutdown();
+            timeouts++;
+
+            if (sentMessageIds.equals(consumedMessageIds) || timeouts > maxTimeouts) {
+                listener.shutdown();
+            }
         });
         // Start the consumer.
         c.listen();
@@ -83,7 +87,11 @@ public class AvroMessageTests extends BaseIntegrationTest {
         final Consumer c = new Consumer(AvroMessageTests.RegisteredAvroConsumer.class, forklift);
         // Shutdown the consumer after all the messages have been processed.
         c.setOutOfMessages((listener) -> {
-            listener.shutdown();
+            timeouts++;
+
+            if (sentMessageIds.equals(consumedMessageIds) || timeouts > maxTimeouts) {
+                listener.shutdown();
+            }
         });
         // Start the consumer.
         c.listen();
