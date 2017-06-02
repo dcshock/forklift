@@ -50,24 +50,34 @@ public class TestServiceManager {
             Thread.sleep(2000); //kafka doesn't seem to be quite ready after it starts listening on its port
             executor.execute(schemaRegistry);
             waitService("127.0.0.1", schemaPort);
-            Thread.sleep(1000); //give the schema-registry a little time also
         } catch (Throwable e) {
             e.printStackTrace();
         }
     }
 
+
+    private static final int WAIT_TIME = 100;
+    private static final int MAX_RETRIES = 30;
     private void waitService(String host, int port) throws InterruptedException {
         telnet = new TelnetClient();
-        int triesLeft = 100;
-        while (triesLeft > 0)
+        boolean connected = false;
+        int triesLeft = MAX_RETRIES;
+        while (triesLeft > 0) {
             try {
                 telnet.connect(host, port);
-                triesLeft = 0;
                 telnet.disconnect();
+
+                connected = true;
+                break;
             } catch (Exception e) {
-                Thread.sleep(50);
+                Thread.sleep(WAIT_TIME);
                 triesLeft--;
             }
+        }
+
+        if (!connected) {
+            throw new RuntimeException("Could not connect to service at '" + host + ":" + port + "' after " + MAX_RETRIES + " attempts");
+        }
     }
 
     public void stop() {
