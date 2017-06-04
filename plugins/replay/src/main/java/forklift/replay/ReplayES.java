@@ -115,7 +115,7 @@ public class ReplayES {
             .filter(source -> !source.isLogicalSource())
             .findFirst().get();
 
-        this.producer = connector.getTopicProducer(primarySource
+        this.producer = connector.getQueueProducer(primarySource
             .apply(QueueSource.class, queue -> queue.getName())
             .apply(TopicSource.class, topic -> topic.getName())
             .apply(GroupedTopicSource.class, topic -> topic.getName())
