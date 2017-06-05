@@ -10,8 +10,10 @@ import forklift.deployment.Deployment;
 import forklift.deployment.DeploymentManager;
 import forklift.deployment.DeploymentWatch;
 import forklift.deployment.ClassDeployment;
+import forklift.exception.StartupException;
 import forklift.replay.ReplayES;
 import forklift.replay.ReplayLogger;
+import forklift.replay.ReplayServer;
 import forklift.retry.RetryES;
 import forklift.retry.RetryHandler;
 import forklift.stats.StatsCollector;
@@ -20,6 +22,7 @@ import org.apache.http.annotation.ThreadSafe;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -65,6 +68,7 @@ public final class ForkliftServer {
     }
 
     private ReplayES replayES;
+    private ReplayServer replayServer;
     private ConsumerDeploymentEvents deploymentEvents;
     private DeploymentManager classDeployments = new DeploymentManager();
     private CountDownLatch runningLatch = new CountDownLatch(1);
@@ -146,6 +150,7 @@ public final class ForkliftServer {
             deploymentEvents = new ConsumerDeploymentEvents(forklift);
             consumerWatch = setupConsumerWatch(deploymentEvents);
             propsWatch = setupPropertyWatch(deploymentEvents);
+            this.replayServer = setupESReplayServer(forklift);
             this.replayES = setupESReplayHandling(forklift);
             RetryES retryES = setupESRetryHandling(forklift);
             if (setupLifeCycleMonitors(replayES, retryES, forklift)) {
@@ -207,6 +212,9 @@ public final class ForkliftServer {
             if (replayES != null) {
                 replayES.shutdown();
             }
+            if (replayServer != null) {
+                replayServer.shutdown();
+            }
             if (consumerWatch != null) {
                 consumerWatch.shutdown();
             }
@@ -258,12 +266,35 @@ public final class ForkliftServer {
 
     private ReplayES setupESReplayHandling(Forklift forklift) {
         // Create the replay ES first if it's needed just in case we are utilizing the startup of the embedded es engine.
-        final ReplayES replayES;
-        if (opts.getReplayESHost() == null)
-            replayES = null;
-        else
-            replayES = new ReplayES(!opts.isReplayESServer(), opts.getReplayESHost(), opts.getReplayESPort(), opts.getReplayESCluster(), forklift.getConnector());
+        ReplayES replayES = null;
+        if (opts.isAddReplayPlugin()) {
+            replayES = new ReplayES(forklift.getConnector());
+        }
         return replayES;
+    }
+
+    private ReplayServer setupESReplayServer(Forklift forklift) {
+        final Optional<ReplayServer> replayServer = Optional.ofNullable(opts.getReplayESHost())
+            .map(host -> new ReplayServer(
+                             forklift.getConnector(),
+                             opts.getReplayESHost(),
+                             opts.getReplayESPort(),
+                             opts.getReplayESCluster(),
+                             false));
+
+        replayServer.ifPresent(server -> {
+            server.getReplayWriter().setRecoveryCallback((Throwable t) -> {
+                server.getReplayWriter().recreateEsTransportClient();
+            });
+
+            try {
+                server.start();
+            } catch(StartupException e) {
+                log.error("Could not start up replay server", e);
+            }
+        });
+
+        return replayServer.orElse(null);
     }
 
     private RetryES setupESRetryHandling(Forklift forklift) {

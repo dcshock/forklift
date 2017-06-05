@@ -27,6 +27,9 @@ public class ForkliftOpts {
     @Option(name="-runRetries", usage="run retries on this instance")
     private boolean runRetries;
 
+    @Option(name="-useReplay", usage="add the replay plugin")
+    private boolean addReplayPlugin;
+
     @Option(name="-replayDir", usage="replay log directory")
     private String replayDir;
 
@@ -38,9 +41,6 @@ public class ForkliftOpts {
 
     @Option(name="-replayESSsl", usage="connect to elastic search via ssl (https://)")
     private boolean replayESSsl;
-
-    @Option(name="-replayESServer", usage="start an embedded elastic search server")
-    private boolean replayESServer;
 
     @Option(name="-consulHost", usage="consul host name")
     private String consulHost = "localhost";
@@ -78,6 +78,14 @@ public class ForkliftOpts {
 
     public void setRetryDir(String retryDir) {
         this.retryDir = retryDir;
+    }
+
+    public boolean isAddReplayPlugin() {
+        return addReplayPlugin;
+    }
+
+    public void setUseReplayPlugin(boolean addReplayPlugin) {
+        this.addReplayPlugin = addReplayPlugin;
     }
 
     public String getReplayDir() {
@@ -142,14 +150,6 @@ public class ForkliftOpts {
 
     public void setReplayESSsl(boolean replayESSsl) {
         this.replayESSsl = replayESSsl;
-    }
-
-    public boolean isReplayESServer() {
-        return replayESServer;
-    }
-
-    public void setReplayESServer(boolean replayESServer) {
-        this.replayESServer = replayESServer;
     }
 
     public void setRunRetries(boolean runRetries) {
