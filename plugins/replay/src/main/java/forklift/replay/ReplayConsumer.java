@@ -22,6 +22,13 @@ public class ReplayConsumer {
 
     @OnMessage
     public void onMessage() {
-        this.writer.poll(msg);
+        try {
+            this.writer.poll(msg);
+        } catch (Exception e) {
+            if (writer != null && writer.getRecoveryCallback() != null) {
+                writer.getRecoveryCallback().onError(e);
+            }
+            throw e;
+        }
     }
 }

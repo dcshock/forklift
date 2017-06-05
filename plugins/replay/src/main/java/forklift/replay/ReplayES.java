@@ -1,16 +1,10 @@
 package forklift.replay;
 
-import forklift.Forklift;
 import forklift.connectors.ForkliftConnectorI;
 import forklift.connectors.ForkliftMessage;
-import forklift.consumer.Consumer;
-import forklift.consumer.ConsumerService;
-import forklift.consumer.ConsumerThread;
 import forklift.consumer.MessageRunnable;
 import forklift.consumer.ProcessStep;
-import forklift.decorators.BeanResolver;
 import forklift.decorators.LifeCycle;
-import forklift.decorators.Service;
 import forklift.producers.ForkliftProducerI;
 import forklift.producers.ProducerException;
 import forklift.source.ActionSource;
@@ -21,95 +15,33 @@ import forklift.source.sources.GroupedTopicSource;
 import forklift.source.sources.TopicSource;
 import forklift.source.sources.QueueSource;
 
-import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.node.Node;
-import org.elasticsearch.node.NodeBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * A plugin that writes replay log messages to elasticsearch, so that messages
  * can be reliably tracked and resent.
  *
- * Replay logs are queued on the "forklift.replay.es" queue on the given connector
- * to avoid long delays as messages are being processed.
+ * <p>Replay logs are queued on the "forklift.replay.es" queue on the given connector
+ * to avoid long delays as messages are being processed. This is handled by a
+ * separate consumer which will need to be started for some server.
+ *
+ * @see ReplayServer
  */
 public class ReplayES {
     private static final Logger log = LoggerFactory.getLogger(ReplayES.class);
 
-    private final Node node;
-    private final ReplayESWriter writer;
     private final ForkliftProducerI producer;
-    private final ConsumerThread thread;
-    private final Consumer consumer;
 
     /**
-     * Constructs a new ReplayES instance using the default transport port (9200) for
-     * sending messages to elasticsearch.
+     * Constructs a new ReplayES instance that sends replay mssages to a replay queue.
      *
-     * @param clientOnly whether the plugin is only an elasticsearch client, or an
-     *     embedded elasticsearch node should be started
-     * @param hostname the address of the ES host to send messages to
-     * @param clusterName the name of the elasticsearch cluster to send logs to
      * @param connector the connector to use for queuing messages
      */
-    public ReplayES(boolean clientOnly, String hostname, String clusterName, ForkliftConnectorI connector) {
-        this(clientOnly, hostname, 9200, clusterName, connector);
-    }
-
-    /**
-     * Constructs a new ReplayES instance sending messages to elasticsearch based
-     * on the given parameters.
-     *
-     * @param clientOnly whether the plugin is only an elasticsearch client, or an
-     *     embedded elasticsearch node should be started
-     * @param hostname the address of the ES host to send messages to
-     * @param port the port number of the ES transport port for the given host
-     * @param clusterName the name of the elasticsearch cluster to send logs to
-     * @param connector the connector to use for queuing messages
-     */
-    public ReplayES(boolean clientOnly, String hostname, int port, String clusterName, ForkliftConnectorI connector) {
-        /*
-         * Setup the connection to the server. If we are only a client we'll not setup a node locally to run.
-         * This will help developers and smaller setups avoid the pain of setting up elastic search.
-         */
-        if (clientOnly) {
-            node = null;
-        } else {
-            node = NodeBuilder.nodeBuilder()
-                .client(clientOnly)
-                .settings(Settings.settingsBuilder().put("http.enabled", true))
-                .settings(Settings.settingsBuilder().put("http.cors.enabled", true))
-                .settings(Settings.settingsBuilder().put("http.cors.allow-origin", "*"))
-                .settings(Settings.settingsBuilder().put("path.home", "."))
-                .node();
-            node.start();
-
-            try {
-                Thread.sleep(10000L);
-            } catch (InterruptedException ignored) {
-            }
-        }
-
-        this.writer = new ReplayESWriter(hostname, port, clusterName);
-        this.writer.start();
-
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                if (node != null && !node.isClosed())
-                    node.close();
-            }
-        });
-
-        final Forklift forklift = new Forklift();
-        forklift.setConnector(connector);
-
+    public ReplayES(ForkliftConnectorI connector) {
         final List<SourceI> sources = SourceUtil.getSourcesAsList(ReplayConsumer.class);
         final SourceI primarySource = sources.stream()
             .filter(source -> !source.isLogicalSource())
@@ -120,32 +52,10 @@ public class ReplayES {
             .apply(TopicSource.class, topic -> topic.getName())
             .apply(GroupedTopicSource.class, topic -> topic.getName())
             .elseUnsupportedError());
-        this.consumer = new Consumer(ReplayConsumer.class, forklift,
-            Thread.currentThread().getContextClassLoader(), primarySource, sources);
-        this.consumer.addServices(new ConsumerService(this));
-        this.thread = new ConsumerThread(this.consumer);
-        this.thread.setName("ReplayES");
-        this.thread.setDaemon(true);
-        this.thread.start();
     }
 
-    @BeanResolver
-    public Object resolve(Class<?> c, String name) {
-        if (c == ReplayESWriter.class)
-            return this.writer;
-
-        return null;
-    }
-
-    public void shutdown() {
-        this.thread.shutdown();
-        try {
-            this.thread.join(180 * 1000);
-        } catch (InterruptedException ignored) {
-        }
-
-        this.writer.shutdown();
-    }
+    /* shutdown method retained for comptability and flexibility */
+    public void shutdown() {}
 
     @LifeCycle(value=ProcessStep.Pending, annotation=Replay.class)
     public void pending(MessageRunnable mr, Replay replay) {
