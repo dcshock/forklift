@@ -27,7 +27,7 @@ link:doc/prev_releases.adoc[Previous Releases]
 == Current Release Dependencies
 === SBT
 ----
-libraryDependencies += "com.github.dcshock" % "forklift-server" % "1.1"
+libraryDependencies += "com.github.dcshock" % "forklift-server" % "2.0"
 ----
 
 === Maven

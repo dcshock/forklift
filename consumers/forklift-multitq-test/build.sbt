@@ -2,10 +2,10 @@ organization := "com.github.dcshock"
 
 name := "forklift-multitq-consumer"
 
-version := "0.3"
+version := "2.0"
 
 libraryDependencies ++= Seq(
-    "com.github.dcshock" % "forklift" % "1.0"
+    "com.github.dcshock" % "forklift" % "2.0"
 )
 
 crossPaths := false
