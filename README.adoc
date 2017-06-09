@@ -10,6 +10,9 @@ link:doc/forklift.adoc[Documentation]
 == Releases
 link:doc/prev_releases.adoc[Previous Releases]
 
+* *Unreleased*
+** Kafka: Add internal support for separate dedicated consumers on the same topic
+
 * *January 17th 2017* - v3.1
 ** Upgrade kafka clients to use Kafka 0.11
 ** Fix bug in the kafka connector that made it not provide heartbeats in certain situations
