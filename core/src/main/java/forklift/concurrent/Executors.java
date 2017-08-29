@@ -37,11 +37,11 @@ public final class Executors {
     }
 
     /**
-     * A core thread pool factory method that returns a "better" alternative to a cached thread pool.
+     * A core thread pool factory method that returns a cached thread pool.
      */
     public static ExecutorService newCoreThreadPool(final String name) {
         final ThreadPoolExecutor pool = new ThreadPoolExecutor(
-            (2 * cpus),  (6 * cpus), 60, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), daemonThreadFactory(name)
+            (2 * cpus),  Integer.MAX_VALUE, 60, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), daemonThreadFactory(name)
         );
         pool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         return pool;
