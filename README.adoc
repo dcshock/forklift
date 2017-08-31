@@ -10,6 +10,9 @@ link:doc/forklift.adoc[Documentation]
 == Releases
 link:doc/prev_releases.adoc[Previous Releases]
 
+* *August 31st 2017* - v2.1
+** Removed limit on the size of the core thread pool for consumer polling threads
+
 * *June 2nd 2017* - v2.0
 ** Moved core source annotations from the "forklift.decorators" package to "forklift.source.decorators"
 ** Added RoleInput and GroupedTopic sources
