@@ -116,7 +116,7 @@ public class RetryES {
                         for (Hit<Map, Void> msg : results.getHits(Map.class)) {
                             try {
                                 final Map<String, String> fields = msg.source;
-                                final String msgConnector = fields.get("connectorName");
+                                final String msgConnector = fields.get("destination-connector");
 
                                 if (msgConnector != null &&
                                     !givenConnector.equals(msgConnector)) {
