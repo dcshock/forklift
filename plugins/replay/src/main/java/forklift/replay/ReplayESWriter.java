@@ -36,35 +36,54 @@ public class ReplayESWriter extends ReplayStoreThread<ReplayESWriterMsg> {
 
     @Override
     protected void poll(ReplayESWriterMsg t) {
-        final String index = "forklift-replay-" + LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE);
+        final String replayVersion = t.getFields().get("forklift-replay-version");
+        if ("3".equals(replayVersion)) { // latest version
+            String indexDate = t.getFields().get("first-processed-date");
+            if (indexDate == null)
+                indexDate = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE);
+            final String index = "forklift-replay-" + indexDate;
 
-        // In order to ensure there is only one replay msg for a given id we have to clean the msg id from
-        // any previously created indexes.
-        try {
-            final SearchResponse resp = client.prepareSearch("forklift-replay*").setTypes("log")
-                .setQuery(QueryBuilders.termQuery("_id", t.getId()))
-                .setFrom(0).setSize(50).setExplain(false)
-                .execute()
-                .actionGet();
-
-            if (resp != null && resp.getHits() != null && resp.getHits().getHits() != null) {
-                for (SearchHit hit : resp.getHits().getHits()) {
-                    if (!hit.getIndex().equals(index))
-                        client.prepareDelete(hit.getIndex(), "log", t.getId()).execute().actionGet();
-                }
+            try {
+                // Index the new information.
+                client.prepareIndex(index, "log")
+                    .setVersion(t.getVersion()).setVersionType(VersionType.EXTERNAL_GTE)
+                    .setId(t.getId()).setSource(t.getFields()).execute().actionGet();
+            } catch (VersionConflictEngineException expected) {
+                log.debug("Newer replay message already exists", expected);
             }
-        } catch (Exception e) {
-            log.error("", e);
-            log.error("Unable to search for old replay logs {}", t.getId());
-        }
+        } else if ("2".equals(replayVersion) || replayVersion == null) { // older versions didn't have the replay version or didn't persist it with the message
+            final String index = "forklift-replay-" + LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE);
 
-        try {
-            // Index the new information.
-            client.prepareIndex(index, "log")
-                .setVersion(t.getVersion()).setVersionType(VersionType.EXTERNAL_GTE)
-                .setId(t.getId()).setSource(t.getFields()).execute().actionGet();
-        } catch (VersionConflictEngineException expected) {
-            log.debug("Newer replay message already exists", expected);
+            // In order to ensure there is only one replay msg for a given id we have to clean the msg id from
+            // any previously created indexes.
+            try {
+                final SearchResponse resp = client.prepareSearch("forklift-replay*").setTypes("log")
+                    .setQuery(QueryBuilders.termQuery("_id", t.getId()))
+                    .setFrom(0).setSize(50).setExplain(false)
+                    .execute()
+                    .actionGet();
+
+                if (resp != null && resp.getHits() != null && resp.getHits().getHits() != null) {
+                    for (SearchHit hit : resp.getHits().getHits()) {
+                        if (!hit.getIndex().equals(index))
+                            client.prepareDelete(hit.getIndex(), "log", t.getId()).execute().actionGet();
+                    }
+                }
+            } catch (Exception e) {
+                log.error("", e);
+                log.error("Unable to search for old replay logs {}", t.getId());
+            }
+
+            try {
+                // Index the new information.
+                client.prepareIndex(index, "log")
+                    .setVersion(t.getVersion()).setVersionType(VersionType.EXTERNAL_GTE)
+                    .setId(t.getId()).setSource(t.getFields()).execute().actionGet();
+            } catch (VersionConflictEngineException expected) {
+                log.debug("Newer replay message already exists", expected);
+            }
+        } else {
+            log.error("Unrecognized replay version: '{}' for message ID '{}' with fields '{}' ", replayVersion, t.getId(), t.getFields());
         }
     }
 
