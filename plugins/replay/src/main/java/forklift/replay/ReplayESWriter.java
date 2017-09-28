@@ -36,27 +36,10 @@ public class ReplayESWriter extends ReplayStoreThread<ReplayESWriterMsg> {
 
     @Override
     protected void poll(ReplayESWriterMsg t) {
-        final String index = "forklift-replay-" + LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE);
-
-        // In order to ensure there is only one replay msg for a given id we have to clean the msg id from
-        // any previously created indexes.
-        try {
-            final SearchResponse resp = client.prepareSearch("forklift-replay*").setTypes("log")
-                .setQuery(QueryBuilders.termQuery("_id", t.getId()))
-                .setFrom(0).setSize(50).setExplain(false)
-                .execute()
-                .actionGet();
-
-            if (resp != null && resp.getHits() != null && resp.getHits().getHits() != null) {
-                for (SearchHit hit : resp.getHits().getHits()) {
-                    if (!hit.getIndex().equals(index))
-                        client.prepareDelete(hit.getIndex(), "log", t.getId()).execute().actionGet();
-                }
-            }
-        } catch (Exception e) {
-            log.error("", e);
-            log.error("Unable to search for old replay logs {}", t.getId());
-        }
+        String indexDate = t.getFields().get("first-processed-date");
+        if (indexDate == null)
+            indexDate = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE);
+        final String index = "forklift-replay-" + indexDate;
 
         try {
             // Index the new information.
