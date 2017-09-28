@@ -60,7 +60,7 @@ Forklift performs the the following prime duties of an ESB of:
 * Data transformation and mapping
 * Security and exception handling
 
-The other requirements of and ESB are met by the use of a broker such as
+The other requirements of an ESB are met by the use of a broker such as
 ActiveMQ. The following diagram shows how Forklift with a message broker
 combine to form an ESB.
 
