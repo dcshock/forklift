@@ -13,6 +13,7 @@ import forklift.source.sources.TopicSource;
 import forklift.source.sources.QueueSource;
 import forklift.source.sources.RoleInputSource;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
@@ -67,6 +68,7 @@ public class ReplayLogBuilder {
 
         final long stepCount = Integer.parseInt(props.getOrDefault("forklift-replay-step-count", "0")) + 1;
         props.put("forklift-replay-step-count", "" + stepCount);
+        props.putIfAbsent("first-processed-date", LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE));
 
         // Map in properties
         for (String key : msg.getProperties().keySet()) {
