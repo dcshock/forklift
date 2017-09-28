@@ -10,6 +10,10 @@ link:doc/forklift.adoc[Documentation]
 == Releases
 link:doc/prev_releases.adoc[Previous Releases]
 
+* *September 28th 2017* - v2.2
+** Eliminate unneeded queries to elasticsearch, improving preformance the performance replay processing
+** Fix bug in re-runing failed retries in the retry plugin
+
 * *August 31st 2017* - v2.1
 ** Removed limit on the size of the core thread pool for consumer polling threads
 
