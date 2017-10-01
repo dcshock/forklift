@@ -66,6 +66,10 @@ public class ReplayLogBuilder {
         // carry a description of the original source across restarts
         props.putIfAbsent("source-description", sourceDescription);
 
+
+        if (!props.containsKey("forklift-replay-step-count")) { // new messages are version 3
+            props.putIfAbsent("forklift-replay-version", "3");
+        }
         final long stepCount = Integer.parseInt(props.getOrDefault("forklift-replay-step-count", "0")) + 1;
         props.put("forklift-replay-step-count", "" + stepCount);
         props.putIfAbsent("first-processed-date", LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE));
@@ -82,7 +86,6 @@ public class ReplayLogBuilder {
         fields.put("step", step.toString());
         errors.ifPresent(errorString -> fields.put("errors", errorString));
         fields.put("time", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
-        fields.put("forklift-replay-version", "2");
 
         // message-level details
         fields.put("text", msg.getMsg());
