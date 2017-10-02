@@ -9,9 +9,9 @@ RUN apk add --no-cache bash
 
 # Add forklift server
 WORKDIR /tmp
-ADD server/target/universal/forklift-server-2.1.zip forklift.zip
+ADD server/target/universal/forklift-server-2.2.zip forklift.zip
 RUN yes | unzip -d /usr/local forklift.zip
-RUN ln -s /usr/local/forklift-server-2.1 /usr/local/forklift
+RUN ln -s /usr/local/forklift-server-2.2 /usr/local/forklift
 
 RUN rm forklift.zip
 RUN mkdir -p /usr/local/forklift/consumers
