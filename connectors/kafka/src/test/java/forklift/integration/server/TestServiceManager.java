@@ -131,4 +131,22 @@ public class TestServiceManager {
         forklifts.add(forklift);
         return forklift;
     }
+
+
+    public String kafkaHost(){
+        return "127.0.0.1";
+    }
+
+    public int kafkaPort(){
+        return kafkaPort;
+    }
+
+    public String schemaRegistryHost(){
+        return "127.0.0.1";
+    }
+
+    public int schemaRegistryPort(){
+        return schemaPort;
+    }
+
 }

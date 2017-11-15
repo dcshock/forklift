@@ -1,9 +1,5 @@
 package forklift.producers;
 
-import forklift.connectors.ForkliftMessage;
-import forklift.connectors.KafkaSerializer;
-import forklift.message.Header;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -11,7 +7,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-
+import forklift.connectors.ForkliftMessage;
+import forklift.connectors.KafkaSerializer;
+import forklift.message.ForkliftAvroMessageUtils;
+import forklift.message.Header;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
@@ -33,7 +32,6 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -109,7 +107,7 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
     @Override
     public String send(Object message) throws ProducerException {
         if (message instanceof SpecificRecord) {
-            return sendAvroMessage((SpecificRecord)message);
+            return sendAvroMessage((SpecificRecord) message);
         } else {
             String json;
             try {
@@ -128,13 +126,13 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
 
     @Override
     public String send(Map<Header, Object> headers, Map<String, String> properties, ForkliftMessage message)
-                    throws ProducerException {
+        throws ProducerException {
         throw new UnsupportedOperationException("Kafka Producer does not support headers");
     }
 
     @Override
     public String send(Map<String, String> properties, ForkliftMessage message)
-                    throws ProducerException {
+        throws ProducerException {
         return this.sendForkliftWrappedMessage(message.getMsg(), properties);
     }
 
@@ -175,7 +173,7 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
         avroRecord.put(KafkaSerializer.SCHEMA_FIELD_NAME_PROPERTIES, this.formatMap(appliedProperties));
         ProducerRecord record = new ProducerRecord<>(topic, null, avroRecord);
         try {
-            RecordMetadata result = (RecordMetadata)kafkaProducer.send(record).get();
+            RecordMetadata result = (RecordMetadata) kafkaProducer.send(record).get();
             return result.topic() + "-" + result.partition() + "-" + result.offset();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -183,17 +181,6 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
         } catch (ExecutionException e) {
             throw new ProducerException("Error sending Kafka Message", e);
         }
-    }
-
-    private Schema addForkliftPropertiesToSchema(Schema schema) throws IOException {
-        String originalJson = schema.toString(false);
-        JsonNode propertiesField = mapper.readTree(KafkaSerializer.SCHEMA_FIELD_VALUE_PROPERTIES);
-        ObjectNode schemaNode = (ObjectNode)mapper.readTree(originalJson);
-        ArrayNode fieldsNode = (ArrayNode)schemaNode.get("fields");
-        fieldsNode.add(propertiesField);
-        schemaNode.set("fields", fieldsNode);
-        Schema.Parser parser = new Schema.Parser();
-        return parser.parse(mapper.writeValueAsString(schemaNode));
     }
 
     private GenericRecord addForkliftPropertiesToAvroObject(SpecificRecord message) throws IOException {
@@ -208,12 +195,12 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
         //modify schema to include forklift properties
         Schema modifiedSchema = avroSchemaCache.get(message.getClass());
         if (modifiedSchema == null) {
-            modifiedSchema = addForkliftPropertiesToSchema(message.getSchema());
+            modifiedSchema = ForkliftAvroMessageUtils.addForkliftPropertiesToSchema(message.getSchema());
             avroSchemaCache.put(message.getClass(), modifiedSchema);
         }
 
         //add forklift properties to json
-        ObjectNode messageNode = (ObjectNode)mapper.readTree(json);
+        ObjectNode messageNode = (ObjectNode) mapper.readTree(json);
         messageNode.put(KafkaSerializer.SCHEMA_FIELD_NAME_PROPERTIES, this.formatMap(this.properties));
 
         //read modified json to avro object with modified schema
@@ -227,15 +214,14 @@ public class KafkaForkliftProducer implements ForkliftProducerI {
     private String sendAvroMessage(SpecificRecord message) throws ProducerException {
         try {
             ProducerRecord record = null;
-            if(this.properties.size() > 0){
+            if (this.properties.size() > 0) {
                 GenericRecord avroRecord = addForkliftPropertiesToAvroObject(message);
                 record = new ProducerRecord<String, GenericRecord>(topic, null, avroRecord);
-            }
-            else{
+            } else {
                 record = new ProducerRecord<String, SpecificRecord>(topic, null, message);
             }
             try {
-                RecordMetadata result = (RecordMetadata)kafkaProducer.send(record).get();
+                RecordMetadata result = (RecordMetadata) kafkaProducer.send(record).get();
                 return result.topic() + "-" + result.partition() + "-" + result.offset();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();

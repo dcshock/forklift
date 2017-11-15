@@ -2,7 +2,7 @@ organization := "com.github.dcshock"
 
 name := "forklift-activemq"
 
-version := "2.0"
+version := "2.1"
 
 javacOptions ++= Seq("-source", "1.8")
 
@@ -22,7 +22,7 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "com.github.dcshock" % "forklift" % "2.0",
+  "com.github.dcshock" % "forklift" % "2.2",
   "org.apache.activemq" % "activemq-client" % "5.14.0",
   "org.apache.activemq" % "activemq-broker" % "5.14.0",
   "com.fasterxml.jackson.core" % "jackson-databind" % "2.7.3",

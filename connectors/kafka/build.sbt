@@ -2,7 +2,7 @@ organization := "com.github.dcshock"
 
 name := "forklift-kafka"
 
-version := "2.0"
+version := "2.1"
 
 //required for some test dependencies
 scalaVersion := "2.11.7"
@@ -26,7 +26,7 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "com.github.dcshock" % "forklift" % "2.0" ,
+  "com.github.dcshock" % "forklift" % "2.2" ,
   "com.fasterxml.jackson.core" % "jackson-databind" % "2.7.3",
   "com.fasterxml.jackson.datatype" % "jackson-datatype-jsr310" % "2.7.3",
   "org.apache.kafka" % "kafka-clients" % "0.10.1.1-cp1" exclude("org.slf4j","slf4j-log4j12"),

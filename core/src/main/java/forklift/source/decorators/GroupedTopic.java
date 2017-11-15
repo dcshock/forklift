@@ -1,5 +1,7 @@
 package forklift.source.decorators;
 
+import forklift.source.SchemaResolver;
+import forklift.source.SourceI;
 import forklift.source.SourceType;
 import forklift.source.sources.GroupedTopicSource;
 
@@ -30,4 +32,6 @@ public @interface GroupedTopic {
      * If empty, some consumer group name should be generated.
      */
     String group() default "";
+
+//    Class<? extends SchemaResolver> schemaResolver() default Topic.None.class;
 }

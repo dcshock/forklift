@@ -1,5 +1,7 @@
 package forklift.source.decorators;
 
+import forklift.source.SchemaResolver;
+import forklift.source.SourceI;
 import forklift.source.SourceType;
 import forklift.source.sources.TopicSource;
 
@@ -21,4 +23,19 @@ import java.lang.annotation.Target;
 @Target({ElementType.TYPE})
 public @interface Topic {
     String value();
+//    Class<? extends SchemaResolver> schemaResolver() default None.class;
+//
+//    //because you can't use null as a default value in an annotation.
+//    class None implements SchemaResolver {
+//        private static final long serialVersionUID = 1L;
+//
+//        private None() {
+//        }
+//
+//        @Override
+//        public String getSchema(SourceI source) {
+//            return null;
+//        }
+//    }
+
 }

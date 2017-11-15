@@ -86,8 +86,7 @@ public class ActiveMQConnector implements ForkliftConnectorI {
         }
     }
 
-    @Override
-    public ForkliftConsumerI getQueue(String name)
+    private ForkliftConsumerI getQueue(String name)
       throws ConnectorException {
         final Session s = getSession();
         try {
@@ -97,8 +96,7 @@ public class ActiveMQConnector implements ForkliftConnectorI {
         }
     }
 
-    @Override
-    public ForkliftConsumerI getTopic(String name)
+    private ForkliftConsumerI getTopic(String name)
       throws ConnectorException {
         final Session s = getSession();
         try {
@@ -111,7 +109,7 @@ public class ActiveMQConnector implements ForkliftConnectorI {
     @Override
     public ForkliftConsumerI getConsumerForSource(SourceI source) throws ConnectorException {
         return source
-            .apply(QueueSource.class, queue -> getQueue(queue.getName()))
+            .apply(QueueSource.class, queue ->   getQueue(queue.getName()))
             .apply(TopicSource.class, topic -> getTopic(topic.getName()))
             .apply(GroupedTopicSource.class, topic -> getGroupedTopic(topic))
             .apply(RoleInputSource.class, roleSource -> {

@@ -46,7 +46,7 @@ public interface ForkliftConnectorI extends LogicalSourceContext {
      * @throws ConnectorException if an error occurred interacting with the connector
      * @throws RuntimeException if reading from a queue is not supported
      */
-    ForkliftConsumerI getQueue(String name) throws ConnectorException;
+//    ForkliftConsumerI getQueue(String name) throws ConnectorException;
 
     /**
      * Retrieves a {@link ForkliftConsumerI consumer} instance that reads from
@@ -57,7 +57,7 @@ public interface ForkliftConnectorI extends LogicalSourceContext {
      * @throws ConnectorException if an error occurred interacting with the connector
      * @throws RuntimeException if reading from a topic is not supported
      */
-    ForkliftConsumerI getTopic(String name) throws ConnectorException;
+//    ForkliftConsumerI getTopic(String name) throws ConnectorException;
 
     /**
      * Gives a {@link ForkliftProducerI producer} instance that writes

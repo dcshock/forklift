@@ -1,24 +1,34 @@
 package forklift.connectors;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import forklift.consumer.ForkliftConsumerI;
 import forklift.consumer.KafkaTopicConsumer;
 import forklift.consumer.wrapper.RoleInputConsumerWrapper;
 import forklift.controller.KafkaController;
+import forklift.decorators.Message;
+import forklift.message.ForkliftAvroMessageUtils;
 import forklift.message.MessageStream;
 import forklift.producers.ForkliftProducerI;
 import forklift.producers.KafkaForkliftProducer;
+import forklift.serializers.ForkliftKafkaAvroDeserializer;
 import forklift.source.ActionSource;
 import forklift.source.LogicalSource;
 import forklift.source.SourceI;
 import forklift.source.sources.GroupedTopicSource;
-import forklift.source.sources.RoleInputSource;
 import forklift.source.sources.QueueSource;
+import forklift.source.sources.RoleInputSource;
 import forklift.source.sources.TopicSource;
-
 import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
 import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import io.confluent.kafka.serializers.KafkaAvroSerializerConfig;
+import org.apache.avro.Schema;
+import org.apache.avro.specific.SpecificRecord;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -26,9 +36,14 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -101,20 +116,43 @@ public class KafkaConnector implements ForkliftConnectorI {
         return new KafkaProducer(producerProperties);
     }
 
-    private KafkaController createController(String topicName) {
+    private KafkaController createController(GroupedTopicSource source) {
+
+        ForkliftKafkaAvroDeserializer deserializer = new ForkliftKafkaAvroDeserializer();
+        Schema readerSchema = null;
+        try {
+            readerSchema = produceReaderSchema(source);
+        } catch (Exception e) {
+            log.error("Unable to generate reader schema, falling back to writer schema.  Defaults may be lost");
+        }
+
         Properties props = new Properties();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaHosts);
         props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, io.confluent.kafka.serializers.KafkaAvroDeserializer.class);
-        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, io.confluent.kafka.serializers.KafkaAvroDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ForkliftKafkaAvroDeserializer.class);
+        if (readerSchema != null) {
+            props.put("forklift.avro.reader.schema", readerSchema);
+        }
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 200);
         props.put(KafkaAvroDeserializerConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistries);
         props.put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, false);
 
         final KafkaConsumer<?, ?> kafkaConsumer = new KafkaConsumer(props);
-        return new KafkaController(kafkaConsumer, new MessageStream(), topicName);
+        return new KafkaController(kafkaConsumer, new MessageStream(), source.getName());
+    }
+
+    private Schema produceReaderSchema(SourceI source) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, IOException {
+        Set<Field> fields = new HashSet<>();
+        for (Field field : source.getContextClass().getDeclaredFields()) {
+            if (field.isAnnotationPresent(Message.class) && SpecificRecord.class.isAssignableFrom(field.getType())) {
+                Schema schema = (Schema) field.getType().getMethod("getClassSchema").invoke(null);
+                return ForkliftAvroMessageUtils.addForkliftPropertiesToSchema(schema);
+            }
+        }
+        return null;
     }
 
     @Override
@@ -138,21 +176,30 @@ public class KafkaConnector implements ForkliftConnectorI {
     @Override
     public ForkliftConsumerI getConsumerForSource(SourceI source) throws ConnectorException {
         return source
-            .apply(QueueSource.class, queue -> getQueue(queue.getName()))
-            .apply(TopicSource.class, topic -> getTopic(topic.getName()))
-            .apply(GroupedTopicSource.class, topic -> getGroupedTopic(topic))
-            .apply(RoleInputSource.class, roleSource -> {
-                final ForkliftConsumerI rawConsumer = getConsumerForSource(roleSource.getActionSource(this));
-                return new RoleInputConsumerWrapper(rawConsumer);
-             })
-            .elseUnsupportedError();
+                   .apply(QueueSource.class, queue -> {
+                       GroupedTopicSource groupedTopicSource = new GroupedTopicSource(queue.getName(), groupId);
+                       groupedTopicSource.setContextClass(source.getContextClass());
+                       ForkliftConsumerI consumerI = getGroupedTopic(groupedTopicSource);
+                       return consumerI;
+                   })
+                   .apply(TopicSource.class, topic -> {
+                       GroupedTopicSource groupedTopicSource = new GroupedTopicSource(topic.getName(), groupId);
+                       groupedTopicSource.setContextClass(source.getContextClass());
+                       ForkliftConsumerI consumerI = getGroupedTopic(groupedTopicSource);
+                       return consumerI;
+                   })
+                   .apply(GroupedTopicSource.class, topic -> getGroupedTopic(topic))
+                   .apply(RoleInputSource.class, roleSource -> {
+                       final ForkliftConsumerI rawConsumer = getConsumerForSource(roleSource.getActionSource(this));
+                       return new RoleInputConsumerWrapper(rawConsumer);
+                   })
+                   .elseUnsupportedError();
     }
 
     public synchronized ForkliftConsumerI getGroupedTopic(GroupedTopicSource source) throws ConnectorException {
         if (!source.groupSpecified()) {
             source.overrideGroup(groupId);
         }
-
         if (!source.getGroup().equals(groupId)) { //TODO actually support GroupedTopics
             throw new ConnectorException("Unexpected group '" + source.getGroup() + "'; only the connector group '" + groupId + "' is allowed");
         }
@@ -161,23 +208,22 @@ public class KafkaConnector implements ForkliftConnectorI {
         if (controller != null && controller.isRunning()) {
             log.warn("Consumer for topic already exists under this controller's groupname.  Messages will be divided amongst consumers.");
         } else {
-            controller = createController(source.getName());
+            controller = createController(source);
             this.controllers.put(source.getName(), controller);
             controller.start();
         }
         return new KafkaTopicConsumer(source.getName(), controller);
     }
 
-    @Override
-    public ForkliftConsumerI getQueue(String name) throws ConnectorException {
-        return getGroupedTopic(new GroupedTopicSource(name, groupId));
-    }
-
-    @Override
-    public ForkliftConsumerI getTopic(String name) throws ConnectorException {
-        return getGroupedTopic(new GroupedTopicSource(name, groupId));
-    }
-
+//    @Override
+//    public ForkliftConsumerI getQueue(String name) throws ConnectorException {
+//        return getGroupedTopic(new GroupedTopicSource(name, groupId));
+//    }
+//
+//    @Override
+//    public ForkliftConsumerI getTopic(String name) throws ConnectorException {
+//        return getGroupedTopic(new GroupedTopicSource(name, groupId));
+//    }
 
     @Override
     public ForkliftProducerI getQueueProducer(String name) {
@@ -195,8 +241,8 @@ public class KafkaConnector implements ForkliftConnectorI {
     @Override
     public ActionSource mapSource(LogicalSource source) {
         return source
-            .apply(RoleInputSource.class, roleSource -> mapRoleInputSource(roleSource))
-            .get();
+                   .apply(RoleInputSource.class, roleSource -> mapRoleInputSource(roleSource))
+                   .get();
     }
 
     protected GroupedTopicSource mapRoleInputSource(RoleInputSource roleSource) {
