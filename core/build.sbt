@@ -2,7 +2,7 @@ organization := "com.github.dcshock"
 
 name := "forklift"
 
-version := "2.1"
+version := "2.2"
 
 javacOptions ++= Seq("-source", "1.8")
 

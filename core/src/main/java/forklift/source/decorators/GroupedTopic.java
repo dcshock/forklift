@@ -26,8 +26,9 @@ public @interface GroupedTopic {
 
     /**
      * The name of the consumer group reading this topic.
-     *
+     * <p>
      * If empty, some consumer group name should be generated.
      */
     String group() default "";
+
 }
