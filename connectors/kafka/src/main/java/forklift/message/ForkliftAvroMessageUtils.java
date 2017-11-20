@@ -16,6 +16,13 @@ public class ForkliftAvroMessageUtils {
     private static final ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule())
                                                                  .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
+    /**
+     * Adds the forkliftProperties field to the passed in Schema.
+     *
+     * @param schema the schema which forklift properties should be added
+     * @return Schema with forlift properties added
+     * @throws IOException
+     */
     public static Schema addForkliftPropertiesToSchema(Schema schema) throws IOException {
         String originalJson = schema.toString(false);
         JsonNode propertiesField = mapper.readTree(KafkaSerializer.SCHEMA_FIELD_VALUE_PROPERTIES);

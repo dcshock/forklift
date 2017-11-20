@@ -1,11 +1,5 @@
 package forklift.connectors;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import forklift.consumer.ForkliftConsumerI;
 import forklift.consumer.KafkaTopicConsumer;
 import forklift.consumer.wrapper.RoleInputConsumerWrapper;
@@ -121,7 +115,7 @@ public class KafkaConnector implements ForkliftConnectorI {
         ForkliftKafkaAvroDeserializer deserializer = new ForkliftKafkaAvroDeserializer();
         Schema readerSchema = null;
         try {
-            readerSchema = produceReaderSchema(source);
+            readerSchema = readerSchemaFromSource(source);
         } catch (Exception e) {
             log.error("Unable to generate reader schema, falling back to writer schema.  Defaults may be lost");
         }
@@ -133,7 +127,7 @@ public class KafkaConnector implements ForkliftConnectorI {
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, io.confluent.kafka.serializers.KafkaAvroDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ForkliftKafkaAvroDeserializer.class);
         if (readerSchema != null) {
-            props.put("forklift.avro.reader.schema", readerSchema);
+            props.put(ForkliftKafkaAvroDeserializer.READER_SCHEMA_CONFIG, readerSchema);
         }
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 200);
@@ -144,8 +138,7 @@ public class KafkaConnector implements ForkliftConnectorI {
         return new KafkaController(kafkaConsumer, new MessageStream(), source.getName());
     }
 
-    private Schema produceReaderSchema(SourceI source) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, IOException {
-        Set<Field> fields = new HashSet<>();
+    private Schema readerSchemaFromSource(SourceI source) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, IOException {
         for (Field field : source.getContextClass().getDeclaredFields()) {
             if (field.isAnnotationPresent(Message.class) && SpecificRecord.class.isAssignableFrom(field.getType())) {
                 Schema schema = (Schema) field.getType().getMethod("getClassSchema").invoke(null);
@@ -214,17 +207,7 @@ public class KafkaConnector implements ForkliftConnectorI {
         }
         return new KafkaTopicConsumer(source.getName(), controller);
     }
-
-//    @Override
-//    public ForkliftConsumerI getQueue(String name) throws ConnectorException {
-//        return getGroupedTopic(new GroupedTopicSource(name, groupId));
-//    }
-//
-//    @Override
-//    public ForkliftConsumerI getTopic(String name) throws ConnectorException {
-//        return getGroupedTopic(new GroupedTopicSource(name, groupId));
-//    }
-
+    
     @Override
     public ForkliftProducerI getQueueProducer(String name) {
         return getTopicProducer(name);

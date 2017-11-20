@@ -22,6 +22,4 @@ import java.lang.annotation.Target;
 public @interface Queue {
     String value();
 
-    //Class<? extends SchemaResolver> schemaResolver() default Topic.None.class;
-
 }

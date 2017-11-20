@@ -2,8 +2,8 @@ package forklift.connectors;
 
 import forklift.consumer.ForkliftConsumerI;
 import forklift.producers.ForkliftProducerI;
-import forklift.source.SourceI;
 import forklift.source.LogicalSourceContext;
+import forklift.source.SourceI;
 
 /**
  * An entity that manages consuming and producing to a particular message bus.
@@ -14,7 +14,7 @@ public interface ForkliftConnectorI extends LogicalSourceContext {
      * connector methods to be expected to behave properly.
      *
      * @throws ConnectorException if there was a problem initializing the state
-     *     of this connector or making a connection
+     *                            of this connector or making a connection
      */
     void start() throws ConnectorException;
 
@@ -22,7 +22,7 @@ public interface ForkliftConnectorI extends LogicalSourceContext {
      * Stops the given connector, invalidating it's current state.
      *
      * @throws ConnectorException if there was a problem un-initializing the state
-     *     of this connector
+     *                            of this connector
      */
     void stop() throws ConnectorException;
 
@@ -33,31 +33,9 @@ public interface ForkliftConnectorI extends LogicalSourceContext {
      * @param source the source to read from
      * @return a consumer that reads from the given source
      * @throws ConnectorException if an error occurred interacting with the connector
-     * @throws RuntimeException if reading from the given source is not supported
+     * @throws RuntimeException   if reading from the given source is not supported
      */
     ForkliftConsumerI getConsumerForSource(SourceI source) throws ConnectorException;
-
-    /**
-     * Retrieves the {@link ForkliftConsumerI consumer} instance that reads from
-     * the queue with the given name.
-     *
-     * @param name the name of the topic to read from
-     * @return a consumer that reads from the given topic
-     * @throws ConnectorException if an error occurred interacting with the connector
-     * @throws RuntimeException if reading from a queue is not supported
-     */
-//    ForkliftConsumerI getQueue(String name) throws ConnectorException;
-
-    /**
-     * Retrieves a {@link ForkliftConsumerI consumer} instance that reads from
-     * the topic with the given name.
-     *
-     * @param name the name of the topic to read from
-     * @return a consumer that reads from the given topic
-     * @throws ConnectorException if an error occurred interacting with the connector
-     * @throws RuntimeException if reading from a topic is not supported
-     */
-//    ForkliftConsumerI getTopic(String name) throws ConnectorException;
 
     /**
      * Gives a {@link ForkliftProducerI producer} instance that writes
@@ -83,7 +61,7 @@ public interface ForkliftConnectorI extends LogicalSourceContext {
      * need to be sent by an external application.
      *
      * @return the serializer to use for serializing messages to this connector,
-     *     or null if there is no explicit serialization method for this connector
+     * or null if there is no explicit serialization method for this connector
      */
     default ForkliftSerializer getDefaultSerializer() {
         return null;
