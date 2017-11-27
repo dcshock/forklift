@@ -46,6 +46,14 @@ lazy val baseSettings = binksSettings ++ Seq(
         <name>Matt Conroy</name>
         <url>http://www.mattconroy.com</url>
       </developer>
+      <developer>
+        <id>afrieze</id>
+        <name>Andrew Frieze</name>
+      </developer>
+      <developer>
+        <id>kuroshii</id>
+        <name>Bridger Howell</name>
+      </developer>
     </developers>)
 )
 
