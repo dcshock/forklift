@@ -1,4 +1,4 @@
-lazy val baseSettings = binksSettings ++ Seq(
+lazy val baseSettings = Seq(
   organization := "com.github.dcshock",
   version := sys.env.getOrElse("TRAVIS_BUILD_NUMBER", "SNAPSHOT"),
   scalaVersion := "2.11.7",
