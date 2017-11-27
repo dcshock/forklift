@@ -23,8 +23,8 @@ lazy val baseSettings = binksSettings ++ Seq(
   ),
   useGpg := false,
   usePgpKeyHex("E46770E4F1ED27F3"),
-  pgpPublicRing := baseDirectory.value / "project" / ".gnupg" / "pubring.gpg",
-  pgpSecretRing := baseDirectory.value / "project" / ".gnupg" / "secring.gpg",
+  pgpPublicRing := file(sys.props("user.dir")) / "project" / ".gnupg" / "pubring.gpg",
+  pgpSecretRing := file(sys.props("user.dir")) / "project" / ".gnupg" / "secring.gpg",
   pgpPassphrase := sys.env.get("GPG_PASS").map(_.toArray),
   pomIncludeRepository := { _ => false },
   pomExtra := (
