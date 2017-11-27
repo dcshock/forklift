@@ -1,6 +1,6 @@
 lazy val baseSettings = binksSettings ++ Seq(
   organization := "com.github.dcshock",
-  version := "3.0",
+  version := sys.env.getOrElse("TRAVIS_BUILD_NUMBER", "SNAPSHOT"),
   scalaVersion := "2.11.7",
   javacOptions ++= Seq("-source", "1.8"),
   javacOptions in compile ++= Seq("-g:lines,vars,source", "-deprecation"),
