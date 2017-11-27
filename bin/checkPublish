@@ -1,0 +1,9 @@
+#!/bin/bash
+BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
+echo Found branch $BRANCH
+
+if [ $BRANCH == 'master' ]
+  then
+    echo Publishing to Sonatype
+    sbt publishSigned sonatypeReleaseAll
+fi
