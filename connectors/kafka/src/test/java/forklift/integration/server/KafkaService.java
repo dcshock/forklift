@@ -27,6 +27,7 @@ public class KafkaService implements Runnable {
         Properties properties = new Properties();
         properties.setProperty("broker.id", "1");
         properties.setProperty("listeners", "PLAINTEXT://:" + listenPort);
+	properties.put("log.cleaner.dedupe.buffer.size", 2 * 1024 * 1024L);
         properties.setProperty("num.network.threads", "3");
         properties.setProperty("num.io.threads", "8");
         properties.setProperty("socket.send.buffer.bytes", "102400");

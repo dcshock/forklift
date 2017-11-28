@@ -4,3 +4,11 @@ scala:
 jdk:
     - oraclejdk8
 sudo: false
+
+env:
+  global:
+    - secure: uV1Qhx4Bgfiyc+X0GIS1LqjCfMJSm9fIdgoe63CPEPwhf6qTKfzpYOGOos6UTotvSSmIeLmUEUjJurYM1UOnRtltXClpz0lL/WrKDhoyGHdWwk+HrHAOkXhUncTloOA15gNfDS/8JeatT5J3FWXoLVXJBRBN41/uvZV0FTFKdiE=
+    - secure: oslYlw8hd54oQZUygcCYbYZiXRpUMqgDyeTxF7CdAtVpFnxK7lTnmJUXXp5S22CXEcK/n/8+V6l+DmvnWYOJ73QbDc11rrYOgrHWE3KH7Cxs0W5JonZUB5WZ2kMM3XcZlfXmggiJqtHNxHBLVoS3khM0+ta/RVcvgNCQM5ZlMao=
+    - secure: yOJT1AMsLq6x6SGr65dsRhtqvn5i3N9JEqtB3XPRMnNaHzQIg4RH0PoJMTzM0bLKG/gIEsMdB257nT7XkZjOVusrZLaf9N9c55zHNSAmoy1VlaPezWSePkrkKIscZIHUZD0psliGcE6mjO1MuqMXXipd00Zs8hgWrNxu6wlB6Is=
+after_success:
+  - ./bin/checkPublish
