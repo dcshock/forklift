@@ -1,14 +1,13 @@
 language: scala
 scala:
-    - "2.11.4"
+- 2.11.4
 jdk:
-    - oraclejdk8
+- oraclejdk8
 sudo: false
-
 env:
   global:
-    - secure: uV1Qhx4Bgfiyc+X0GIS1LqjCfMJSm9fIdgoe63CPEPwhf6qTKfzpYOGOos6UTotvSSmIeLmUEUjJurYM1UOnRtltXClpz0lL/WrKDhoyGHdWwk+HrHAOkXhUncTloOA15gNfDS/8JeatT5J3FWXoLVXJBRBN41/uvZV0FTFKdiE=
-    - secure: oslYlw8hd54oQZUygcCYbYZiXRpUMqgDyeTxF7CdAtVpFnxK7lTnmJUXXp5S22CXEcK/n/8+V6l+DmvnWYOJ73QbDc11rrYOgrHWE3KH7Cxs0W5JonZUB5WZ2kMM3XcZlfXmggiJqtHNxHBLVoS3khM0+ta/RVcvgNCQM5ZlMao=
-    - secure: yOJT1AMsLq6x6SGr65dsRhtqvn5i3N9JEqtB3XPRMnNaHzQIg4RH0PoJMTzM0bLKG/gIEsMdB257nT7XkZjOVusrZLaf9N9c55zHNSAmoy1VlaPezWSePkrkKIscZIHUZD0psliGcE6mjO1MuqMXXipd00Zs8hgWrNxu6wlB6Is=
+  - secure: f9pej7Im4e7dwwv9s/ctP1Mh+RgLF3tlUCPsewLZbHhv1plgbGQnKW10j0B/GZIy+Bc8M1+H/EnNhsHp9QE7mUOMJXM8kW/OlcBMIwxYkHFGBhHND2j7GXwUCXbjctwryjFxOg3hHMwQy+z3K4r9ShdrOnJ9cqLKo3OkTZ5Vi+M=
+  - secure: olvXVQJ6c/uCWXrm7dw/LsWCKEguylLybPoiM40trNIrHMpEcDWQ/2u+fvcQ9KWm8ztQeBSmXwlkHMCMicbh2iTX9W1hmxfzrFE8N33iVet74N72tsRfrFxcUI3HXjPfB3hCF3NbPAeplfxqYXRY2OzNOueigHb4oW6jMf1a97I=
+  - secure: JhqZSvXjlGDMHvVli9Cuv6hwOeCWLywagZsocigtIOI9b6lO4um9qokcNJTg+rbQE+bd7E65zMviJPnwMWzbuTdI4LG5Ldqxr4IQbFrkythWSDMWLHsziFPAYHPZMZPf0tALzf1F7bMj0yo4YulqeeAr/Iy7bpAQPVWPf+Lqox0=
 after_success:
-  - ./bin/checkPublish
+- ./bin/checkPublish
