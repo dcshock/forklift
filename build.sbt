@@ -14,6 +14,13 @@ lazy val baseSettings = Seq(
     "Fuse" at "http://repo.fusesource.com/nexus/content/groups/public",
     "Confluent Maven Repo" at "http://packages.confluent.io/maven/"
   ),
+  publishTo := {
+    val nexus = "https://oss.sonatype.org/"
+    if (isSnapshot.value)
+      Some("snapshots" at nexus + "content/repositories/snapshots")
+    else
+      Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+  },
   publishMavenStyle := true,
   credentials += Credentials(
     "Sonatype Nexus Repository Manager",
