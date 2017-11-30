@@ -71,3 +71,4 @@ lazy val stats = project.dependsOn(core) in file("plugins/stats") settings baseS
 lazy val activemq = project.dependsOn(core) in file("connectors/activemq") settings baseSettings
 lazy val kafka = project.dependsOn(core) in file("connectors/kafka") settings baseSettings
 lazy val server = project.dependsOn(core, replay, retry, stats, activemq, kafka) in file("server") settings baseSettings
+lazy val root = project in file(".") aggregate(core, replay, retry, stats, activemq, kafka, server) settings(skip in publish := true)
