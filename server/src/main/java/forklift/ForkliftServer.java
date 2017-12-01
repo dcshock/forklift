@@ -16,7 +16,6 @@ import forklift.retry.RetryES;
 import forklift.retry.RetryHandler;
 import forklift.stats.StatsCollector;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.http.annotation.ThreadSafe;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -41,7 +40,6 @@ import java.util.concurrent.CountDownLatch;
  *
  * @author zdavep
  */
-@ThreadSafe
 public final class ForkliftServer {
 
     private ExecutorService executor = Executors.newSingleThreadExecutor();
