@@ -150,6 +150,14 @@ public class ReplayESWriter extends ReplayStoreThread<ReplayESWriterMsg> {
         final String endpoint = "/" + index + "/log/" + id;
         try {
             restClient.performRequest("DELETE", endpoint);
+        } catch (ResponseException e) {
+            // sometimes we might try to delete something that was already deleted by something else;
+            // in which case there is no error
+            if (e.getResponse().getStatusLine().getStatusCode() == HttpStatus.SC_NOT_FOUND) {
+                return;
+            }
+
+            log.error("Error deleting message with id {} for index {}", id, index,  e);
         } catch (IOException e) {
             log.error("Error deleting message with id {} for index {}", id, index,  e);
         }
