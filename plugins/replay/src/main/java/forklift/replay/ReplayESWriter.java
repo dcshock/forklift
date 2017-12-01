@@ -17,6 +17,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -27,22 +28,35 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 
-public class ReplayESWriter extends ReplayStoreThread<ReplayESWriterMsg> {
+public class ReplayESWriter extends ReplayStoreThread<ReplayESWriterMsg> implements Closeable {
     private static final Logger log = LoggerFactory.getLogger(ReplayES.class);
     private static final ObjectMapper mapper = new ObjectMapper();
 
     private final RestClient restClient;
 
+    /**
+     * Creates a log writer that sends replay information to elasticsearch over REST,
+     * using the given hostname and port {@code 9200}.
+     *
+     * @param hostname the name or address of the host to connect to
+     */
     public ReplayESWriter(String hostname) {
-        this(hostname, 9200, "elasticsearch");
+        this(hostname, 9200);
     }
 
-    // clusterName is retained in constructor for compatibility
-    public ReplayESWriter(String hostname, int port, String clusterName) {
+    /**
+     * Creates a log writer that sends replay information to elasticsearch over REST,
+     * using the given hostname and port.
+     *
+     * @param hostname the name or address of the host to connect to
+     * @param port the connection port
+     */
+    public ReplayESWriter(String hostname, int port) {
         this.restClient = RestClient.builder(new HttpHost(hostname, port, "http"))
-            .setRequestConfigCallback(requestConfig -> requestConfig
-                                                           .setConnectTimeout(3_000)
-                                                           .setSocketTimeout(20_000))
+            .setRequestConfigCallback(requestConfig ->
+                requestConfig
+                    .setConnectTimeout(3_000)
+                    .setSocketTimeout(20_000))
             .setDefaultHeaders(new Header[] {
                  new BasicHeader("Accept", "application/json; charset=utf-8"),
                  new BasicHeader("Content-Type", "application/json; charset=utf-8")
@@ -163,7 +177,8 @@ public class ReplayESWriter extends ReplayStoreThread<ReplayESWriterMsg> {
         }
     }
 
-    public void shutdown() {
+    @Override
+    public void close() {
         if (restClient != null) {
             try {
                 restClient.close();
