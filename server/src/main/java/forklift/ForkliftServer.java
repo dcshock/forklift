@@ -260,7 +260,7 @@ public final class ForkliftServer {
         if (opts.getReplayESHost() == null)
             replayES = null;
         else
-            replayES = new ReplayES(!opts.isReplayESServer(), opts.getReplayESHost(), opts.getReplayESPort(), opts.getReplayESCluster(), forklift.getConnector());
+            replayES = new ReplayES(!opts.isReplayESServer(), opts.getReplayESHost(), opts.getReplayESPort(), forklift.getConnector());
         return replayES;
     }
 
