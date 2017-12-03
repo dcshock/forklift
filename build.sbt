@@ -1,6 +1,6 @@
 lazy val baseSettings = Seq(
   organization := "com.github.dcshock",
-  version := "2.3",
+  version := "3.0",
   scalaVersion := "2.11.7",
   javacOptions ++= Seq("-source", "1.8"),
   javacOptions in compile ++= Seq("-g:lines,vars,source", "-deprecation"),
