@@ -10,6 +10,9 @@ link:doc/forklift.adoc[Documentation]
 == Releases
 link:doc/prev_releases.adoc[Previous Releases]
 
+* *December 2nd 2017* - v3.0
+** Upgrade replay logging to utilize Elastic Search 5
+
 * *Novemeber 28th 2017* - v2.3
 ** Update build to automate releases to sonatype
 ** Align release numbers of subcomponents to avoid having a version 1 of a plugin while a version 2 of the core is being used.
