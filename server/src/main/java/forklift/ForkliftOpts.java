@@ -45,9 +45,6 @@ public class ForkliftOpts {
     @Option(name="-consulHost", usage="consul host name")
     private String consulHost = "localhost";
 
-    @Option(name="-replayESCluster", usage="name of the elastic search cluster to use for replay logs.")
-    private String replayESCluster = "elasticsearch";
-
     public String getConsumerDir() {
         return consumerDir;
     }
@@ -158,13 +155,5 @@ public class ForkliftOpts {
 
     public boolean isRunRetries() {
         return runRetries;
-    }
-
-    public String getReplayESCluster() {
-        return replayESCluster;
-    }
-
-    public void setReplayESCluster(String replayESCluster) {
-        this.replayESCluster = replayESCluster;
     }
 }
