@@ -49,7 +49,7 @@ public class ReplayES {
     private final Consumer consumer;
 
     /**
-     * Constructs a new ReplayES instance using the default transport port (9200) for
+     * Constructs a new ReplayES instance using the default REST port (9200) for
      * sending messages to elasticsearch.
      *
      * @param clientOnly whether the plugin is only an elasticsearch client, or an
@@ -57,6 +57,8 @@ public class ReplayES {
      * @param hostname the address of the ES host to send messages to
      * @param clusterName the name of the elasticsearch cluster to send logs to
      * @param connector the connector to use for queuing messages
+     *
+     * @deprecated use {@link #ReplayES(boolean, String, ForkliftConnectorI)} instead
      */
     public ReplayES(boolean clientOnly, String hostname, String clusterName, ForkliftConnectorI connector) {
         this(clientOnly, hostname, 9200, clusterName, connector);
@@ -72,8 +74,38 @@ public class ReplayES {
      * @param port the port number of the ES transport port for the given host
      * @param clusterName the name of the elasticsearch cluster to send logs to
      * @param connector the connector to use for queuing messages
+     *
+     * @deprecated use {@link #ReplayES(boolean, String, int, ForkliftConnectorI)} instead
      */
     public ReplayES(boolean clientOnly, String hostname, int port, String clusterName, ForkliftConnectorI connector) {
+        this(clientOnly, hostname, port, connector);
+    }
+
+    /**
+     * Constructs a new ReplayES instance using the default REST port (9200) for
+     * sending messages to elasticsearch.
+     *
+     * @param clientOnly whether the plugin is only an elasticsearch client, or an
+     *     embedded elasticsearch node should be started
+     * @param hostname the address of the ES host to send messages to
+     * @param connector the connector to use for queuing messages
+     */
+    public ReplayES(boolean clientOnly, String hostname, ForkliftConnectorI connector) {
+        this(clientOnly, hostname, 9200, connector);
+    }
+
+
+    /**
+     * Constructs a new ReplayES instance sending messages to elasticsearch based
+     * on the given parameters.
+     *
+     * @param clientOnly whether the plugin is only an elasticsearch client, or an
+     *     embedded elasticsearch node should be started
+     * @param hostname the address of the ES host to send messages to
+     * @param port the port number of the ES transport port for the given host
+     * @param connector the connector to use for queuing messages
+     */
+    public ReplayES(boolean clientOnly, String hostname, int port, ForkliftConnectorI connector) {
         /*
          * Setup the connection to the server. If we are only a client we'll not setup a node locally to run.
          * This will help developers and smaller setups avoid the pain of setting up elastic search.
@@ -96,7 +128,7 @@ public class ReplayES {
             }
         }
 
-        this.writer = new ReplayESWriter(hostname, port, clusterName);
+        this.writer = new ReplayESWriter(hostname, port);
         this.writer.start();
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -144,7 +176,7 @@ public class ReplayES {
         } catch (InterruptedException ignored) {
         }
 
-        this.writer.shutdown();
+        this.writer.close();
     }
 
     @LifeCycle(value=ProcessStep.Pending, annotation=Replay.class)

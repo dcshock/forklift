@@ -1,6 +1,13 @@
 language: scala
 scala:
-    - "2.11.4"
+- 2.11.4
 jdk:
-    - oraclejdk8
+- oraclejdk8
 sudo: false
+env:
+  global:
+  - secure: f9pej7Im4e7dwwv9s/ctP1Mh+RgLF3tlUCPsewLZbHhv1plgbGQnKW10j0B/GZIy+Bc8M1+H/EnNhsHp9QE7mUOMJXM8kW/OlcBMIwxYkHFGBhHND2j7GXwUCXbjctwryjFxOg3hHMwQy+z3K4r9ShdrOnJ9cqLKo3OkTZ5Vi+M=
+  - secure: olvXVQJ6c/uCWXrm7dw/LsWCKEguylLybPoiM40trNIrHMpEcDWQ/2u+fvcQ9KWm8ztQeBSmXwlkHMCMicbh2iTX9W1hmxfzrFE8N33iVet74N72tsRfrFxcUI3HXjPfB3hCF3NbPAeplfxqYXRY2OzNOueigHb4oW6jMf1a97I=
+  - secure: JhqZSvXjlGDMHvVli9Cuv6hwOeCWLywagZsocigtIOI9b6lO4um9qokcNJTg+rbQE+bd7E65zMviJPnwMWzbuTdI4LG5Ldqxr4IQbFrkythWSDMWLHsziFPAYHPZMZPf0tALzf1F7bMj0yo4YulqeeAr/Iy7bpAQPVWPf+Lqox0=
+after_success:
+- ./bin/checkPublish

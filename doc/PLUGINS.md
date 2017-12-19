@@ -95,7 +95,6 @@ final ReplayES replayPlugin = new ReplayES(
   replayServer,
   elasticSearchHost,
   elasticSearchPort,
-  elasticSearchCluster,
   connector
 );
 

@@ -10,6 +10,13 @@ link:doc/forklift.adoc[Documentation]
 == Releases
 link:doc/prev_releases.adoc[Previous Releases]
 
+* *December 2nd 2017* - v3.0
+** Use REST instead of transport for replay, adding support for Elastic Search 5
+
+* *Novemeber 28th 2017* - v2.3
+** Update build to automate releases to sonatype
+** Align release numbers of subcomponents to avoid having a version 1 of a plugin while a version 2 of the core is being used.
+
 * *September 28th 2017* - v2.2
 ** Eliminate unneeded queries to elasticsearch, improving preformance the performance replay processing
 ** Fix bug in re-runing failed retries in the retry plugin
@@ -74,8 +81,7 @@ forklift-server
  -retryESHost $FORKLIFT_ES_HOST 
  -retryESPort $FORKLIFT_ES_PORT 
  -replayESHost $FORKLIFT_ES_HOST 
- -replayESPort $FORKLIFT_ES_TRANSPORT_PORT 
- -replayESCluster $FORKLIFT_ES_CLUSTER 
+ -replayESPort $FORKLIFT_ES_PORT 
  $FORKLIFT_RETRIES
 ----
 
