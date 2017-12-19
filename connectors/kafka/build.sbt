@@ -2,7 +2,7 @@ organization := "com.github.dcshock"
 
 name := "forklift-kafka"
 
-version := "2.0"
+version := "2.1"
 
 //required for some test dependencies
 scalaVersion := "2.11.7"
