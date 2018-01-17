@@ -19,18 +19,29 @@ public class ConsumerActionTests extends BaseIntegrationTest {
         ForkliftProducerI producer = forklift.getConnector().getQueueProducer("forklift-string-topic");
         sentMessageIds.add(producer.send("message1"));
         final Consumer c1 = new Consumer(StringConsumer.class, forklift);
+
         // Shutdown the consumer after all the messages have been processed.
         c1.setOutOfMessages((listener) -> {
-            listener.shutdown();
+            timeouts++;
+
+            if (sentMessageIds.equals(consumedMessageIds) || timeouts > maxTimeouts) {
+                listener.shutdown();
+            }
         });
         // Start the consumer.
         c1.listen();
-        Thread.sleep(3000);
+
         sentMessageIds.add(producer.send("message2"));
         final Consumer c2 = new Consumer(StringConsumer.class, forklift);
+
         // Shutdown the consumer after all the messages have been processed.
+        timeouts = 0;
         c2.setOutOfMessages((listener) -> {
-            listener.shutdown();
+            timeouts++;
+
+            if (sentMessageIds.equals(consumedMessageIds) || timeouts > maxTimeouts) {
+                listener.shutdown();
+            }
         });
         // Start the consumer.
         c2.listen();

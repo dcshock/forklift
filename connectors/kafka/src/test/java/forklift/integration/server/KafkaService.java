@@ -13,7 +13,7 @@ public class KafkaService implements Runnable {
 
     private KafkaServerStartable kafka;
 
-    public File dataDir = new File("src/test/resources/zafka");
+    public File dataDir = new File("target/kafka-test-data");
     private final int localZookeeperPort;
     private final int listenPort;
 
@@ -36,11 +36,13 @@ public class KafkaService implements Runnable {
         properties.setProperty("log.dirs", dataDir.getAbsolutePath());
         properties.setProperty("num.partitions", "16");
         properties.setProperty("num.recovery.threads.per.data.dir", "1");
+        properties.setProperty("offsets.topic.replication.factor", "1");
         properties.setProperty("log.retention.hours", "168");
         properties.setProperty("log.segment.bytes", "1073741824");
         properties.setProperty("log.retention.check.interval.ms", "300000");
         properties.setProperty("zookeeper.connect", "localhost:" + localZookeeperPort);
         properties.setProperty("zookeeper.connection.timeout.ms", "6000");
+
         KafkaConfig kafkaConfig = new KafkaConfig(properties);
         kafka = new KafkaServerStartable(kafkaConfig);
         kafka.startup();
