@@ -186,8 +186,9 @@ public class KafkaController {
             synchronized (this) {
                 //wait for flowControl to notify us, resume after a short pause to allow for heartbeats
                 this.wait(100);
+                //Heartbeat is sent on poll. This call should not return records.
+                return kafkaConsumer.poll(0);
             }
-            return null;
         } else {
             return kafkaConsumer.poll(100);
         }
