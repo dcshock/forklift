@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -17,6 +18,11 @@ import java.util.concurrent.TimeUnit;
 public class MessageStream implements ReadableMessageStream {
     private static final Logger log = LoggerFactory.getLogger(MessageStream.class);
     private final Map<String, BlockingQueue<KafkaMessage>> topicQueue = new ConcurrentHashMap<>();
+
+    /** visible for testing */
+    public Queue<KafkaMessage> getQueueForTopic(String topic) {
+        return topicQueue.get(topic);
+    }
 
     /**
      * Adds the passed in records to the stream.  After being added, a record is available to be retreived through a
