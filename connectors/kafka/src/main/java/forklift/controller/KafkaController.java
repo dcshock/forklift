@@ -1,8 +1,10 @@
 package forklift.controller;
 
 import forklift.message.KafkaMessage;
+import forklift.message.Generation;
 import forklift.message.MessageStream;
 import forklift.message.ReadableMessageStream;
+
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -44,6 +46,7 @@ public class KafkaController {
     private final MessageStream messageStream;
     private final String topic;
     private AcknowledgedRecordHandler acknowledgmentHandler = new AcknowledgedRecordHandler();
+    private Map<TopicPartition, Generation> generations = new ConcurrentHashMap<>();
     private Map<TopicPartition, OffsetAndMetadata> failedOffset = null;
     private Map<TopicPartition, AtomicInteger> flowControl = new ConcurrentHashMap<>();
 
@@ -216,8 +219,10 @@ public class KafkaController {
         Map<TopicPartition, List<KafkaMessage>> messages = new HashMap<>();
         records.partitions().forEach(tp -> messages.put(tp, new ArrayList<>()));
         for (ConsumerRecord<?, ?> record : records) {
-            TopicPartition partition = new TopicPartition(record.topic(), record.partition());
-            messages.get(partition).add(new KafkaMessage(this, record));
+            final TopicPartition partition = new TopicPartition(record.topic(), record.partition());
+            final Generation generation = generations.get(partition);
+
+            messages.get(partition).add(new KafkaMessage(this, record, generation));
         }
         return messages;
     }
@@ -229,6 +234,7 @@ public class KafkaController {
             try {
                 Map<TopicPartition, OffsetAndMetadata> removedOffsets = acknowledgmentHandler.removePartitions(partitions);
                 for (TopicPartition partition : partitions) {
+                    generations.get(partition).unassign();
                     flowControl.remove(partition);
                 }
 
@@ -244,6 +250,9 @@ public class KafkaController {
             log.debug("controlLoop partitions assigned");
             acknowledgmentHandler.addPartitions(partitions);
             for (TopicPartition partition : partitions) {
+                final Generation generation = generations.computeIfAbsent(partition, ignored -> new Generation());
+                generation.assignNextGeneration();
+
                 flowControl.merge(partition, new AtomicInteger(),
                                   (oldValue, newValue) -> oldValue == null ? newValue : oldValue);
             }

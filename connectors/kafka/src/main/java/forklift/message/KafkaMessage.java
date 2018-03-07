@@ -12,10 +12,15 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 public class KafkaMessage extends ForkliftMessage {
     private final KafkaController controller;
     private final ConsumerRecord<?, ?> consumerRecord;
+    private final Generation latestGeneration;
+    private final long createdGenerationNumber;
 
-    public KafkaMessage(KafkaController controller, ConsumerRecord<?, ?> consumerRecord) {
+    public KafkaMessage(KafkaController controller, ConsumerRecord<?, ?> consumerRecord, Generation latestGeneration) {
         this.controller = controller;
         this.consumerRecord = consumerRecord;
+        this.latestGeneration = latestGeneration;
+        this.createdGenerationNumber = latestGeneration.generationNumber();
+
         createMessage();
     }
 
@@ -25,6 +30,8 @@ public class KafkaMessage extends ForkliftMessage {
 
     @Override
     public boolean acknowledge() throws ConnectorException {
+        if (!latestGeneration.acceptsGeneration(createdGenerationNumber)) { return false; }
+
         try {
             return controller.acknowledge(consumerRecord);
         } catch (InterruptedException e) {
