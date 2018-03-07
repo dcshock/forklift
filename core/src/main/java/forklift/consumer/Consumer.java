@@ -2,6 +2,7 @@ package forklift.consumer;
 
 import forklift.Forklift;
 import forklift.classloader.RunAsClassLoader;
+import forklift.concurrent.BlockingRejectedExecutionHandler;
 import forklift.connectors.ConnectorException;
 import forklift.connectors.ForkliftMessage;
 import forklift.consumer.parser.KeyValueParser;
@@ -238,7 +239,7 @@ public class Consumer {
                 blockQueue = new ArrayBlockingQueue<>(multiThreaded.value() * 100 + 100);
                 threadPool = new ThreadPoolExecutor(
                                                        multiThreaded.value(), multiThreaded.value(), 5L, TimeUnit.MINUTES, blockQueue);
-                threadPool.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+                threadPool.setRejectedExecutionHandler(new BlockingRejectedExecutionHandler());
             } else {
                 blockQueue = null;
                 threadPool = null;
@@ -342,9 +343,9 @@ public class Consumer {
             // Shutdown the pool, but let actively executing work finish.
             if (threadPool != null) {
                 log.info("Shutting down thread pool - active {}", threadPool.getActiveCount());
-                threadPool.shutdown();
-                threadPool.awaitTermination(60, TimeUnit.SECONDS);
                 blockQueue.clear();
+                threadPool.shutdown();
+                threadPool.awaitTermination(10, TimeUnit.SECONDS);
             }
         } catch (ConnectorException e) {
             running.set(false);
