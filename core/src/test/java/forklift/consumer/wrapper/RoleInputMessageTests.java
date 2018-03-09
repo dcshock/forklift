@@ -11,7 +11,7 @@ import java.util.Collections;
 import java.util.Map;
 
 public class RoleInputMessageTests {
-    @Test
+    
     public void testJsonEncodingEncodesFields() {
         final RoleInputMessage message = new RoleInputMessage("test-role",
                                                               "test-id",
@@ -42,7 +42,7 @@ public class RoleInputMessageTests {
         Assert.assertEquals(expectedJson, jsonEncodedMessage);
     }
 
-    @Test
+    
     public void testJsonDecodingExtractsFields() {
         final String inputJson = "{" +
             "\"role\":\"test-role\"," +
@@ -60,17 +60,17 @@ public class RoleInputMessageTests {
         Assert.assertEquals(Collections.singletonMap(Header.Priority, 6), decodedMessage.getHeaders());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    
     public void testJsonDecodingFailsWithInvalidJson() {
         final RoleInputMessage decodedMessage = RoleInputMessage.fromString("{)..v[");
     }
 
-    @Test(expected = NullPointerException.class)
+    
     public void testJsonDecodingFailsWithNullString() {
         final RoleInputMessage decodedMessage = RoleInputMessage.fromString(null);
     }
 
-    @Test
+    
     public void testForkliftMessageCreationCopiesFields() {
         final String testId = "test-id";
         final String testMessage = "test-message";
@@ -89,7 +89,7 @@ public class RoleInputMessageTests {
         Assert.assertEquals(testHeaders, resultingMessage.getHeaders());
     }
 
-    @Test
+    
     public void testForkliftMessageCreationFromNullFieldsGivesDefaultValues() {
         final RoleInputMessage roleMessage = new RoleInputMessage(null,
                                                                   null,
@@ -104,7 +104,7 @@ public class RoleInputMessageTests {
         Assert.assertEquals(Collections.emptyMap(), resultingMessage.getHeaders());
     }
 
-    @Test
+    
     public void testCreationFromForkliftMessageCopiesFields() {
         final String testRole = "test-role";
         final String testId = "test-id";
@@ -127,7 +127,7 @@ public class RoleInputMessageTests {
         Assert.assertEquals(testHeaders, roleMessage.getHeaders());
     }
 
-    @Test
+    
     public void testRemappedJsonEqualsOriginalJson() {
         final String inputJson = "{" +
             "\"role\":\"test-role\"," +
@@ -140,7 +140,7 @@ public class RoleInputMessageTests {
         Assert.assertEquals(inputJson, RoleInputMessage.fromString(inputJson).toString());
     }
 
-    @Test
+    
     public void testRemappedMessageEqualsOriginalMessage() {
         final RoleInputMessage message = new RoleInputMessage("test-role",
                                                               "test-id",
@@ -150,7 +150,7 @@ public class RoleInputMessageTests {
         Assert.assertEquals(message, RoleInputMessage.fromString(message.toString()));
     }
 
-    @Test
+    
     public void testRemappedForkliftMessageAndEqualsOriginal() {
         final ForkliftMessage sourceMessage = new ForkliftMessage();
         sourceMessage.setId("test-id");
@@ -167,7 +167,7 @@ public class RoleInputMessageTests {
         Assert.assertEquals(sourceMessage.getHeaders(), outMessage.getHeaders());
     }
 
-    @Test
+    
     public void testAcknowledgmentWIthNullSourceMessage() throws ConnectorException {
         final String inputJson = "{\"msg\":\"test-message\",\"headers\":{},\"properties\":{}}";
         final RoleInputMessage roleMessage = RoleInputMessage.fromString(inputJson);
@@ -176,7 +176,7 @@ public class RoleInputMessageTests {
         Assert.assertTrue(resultMessage.acknowledge());
     }
 
-    @Test
+    
     public void testAcknowledgmentMapsToSourceMessage() throws ConnectorException {
         final String inputJson = "{\"msg\":\"test-message\",\"headers\":{},\"properties\":{}}";
 
@@ -191,7 +191,7 @@ public class RoleInputMessageTests {
         Assert.assertTrue(ackMessage.acknowledged);
     }
 
-    @Test
+    
     public void testMessagesWithIdenticalFieldsAreEqual() {
         final String testRole = "test-role";
         final String testId = "test-id";
@@ -203,7 +203,7 @@ public class RoleInputMessageTests {
                             new RoleInputMessage(testRole, testId, testMessage, testProperties, testHeaders));
     }
 
-    @Test
+    
     public void testMessagesWithDifferentFieldsAreNotEqual() {
         final String testRole = "test-role";
         final String testId = "test-id";

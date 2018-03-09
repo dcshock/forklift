@@ -96,7 +96,7 @@ public class ProducerTest {
         isInjectNull = injectedProducer != null ? false : true;
     }
 
-    @Test
+    
     public void testSendStringMessage() throws ProducerException, ConnectorException {
         int msgCount = 10;
         ForkliftProducerI producer = TestServiceManager.getConnector().getQueueProducer("q2");
@@ -118,7 +118,7 @@ public class ProducerTest {
         Assert.assertTrue(called.get() > 0);
     }
 
-    @Test 
+     
     public void testSendObjectMessage() throws JMSException, ConnectorException, ProducerException {
         int msgCount = 10;
         ForkliftProducerI producer = TestServiceManager.getConnector().getQueueProducer("q2");
@@ -140,7 +140,7 @@ public class ProducerTest {
         Assert.assertTrue(called.get() > 0);
     }
 
-    @Test 
+     
     public void testSendKeyValueMessage() throws JMSException, ConnectorException, ProducerException {
         int msgCount = 10;
         ForkliftProducerI producer = TestServiceManager.getConnector().getQueueProducer("q2");
@@ -163,7 +163,7 @@ public class ProducerTest {
         Assert.assertTrue(called.get() > 0);
     }
 
-    @Test
+    
     public void testSendTripleThreat() throws ConnectorException, ProducerException {
         int msgCount = 10;
         ForkliftProducerI producer = TestServiceManager.getConnector().getQueueProducer("q2");
@@ -196,7 +196,7 @@ public class ProducerTest {
         Assert.assertTrue(called.get() > 0);
     }
 
-    @Test
+    
     /**
     * test sending a message and see if the preset headers and props get set
     * and that they do not overwrite a message property that was defined before being sent.

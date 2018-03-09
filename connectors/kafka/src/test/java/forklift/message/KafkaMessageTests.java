@@ -31,7 +31,7 @@ public class KafkaMessageTests {
         message = new KafkaMessage(controller, record, generation);
     }
 
-    @Test
+    
     public void acknowledgeFalseTest() throws ConnectorException, InterruptedException {
         when(controller.acknowledge(record)).thenReturn(false);
 
@@ -41,7 +41,7 @@ public class KafkaMessageTests {
         verify(controller).acknowledge(record);
     }
 
-    @Test
+    
     public void acknowledgeCallsControllerSuccess() throws ConnectorException, InterruptedException {
         when(controller.acknowledge(record)).thenReturn(true);
 
@@ -51,7 +51,7 @@ public class KafkaMessageTests {
         verify(controller).acknowledge(record);
     }
 
-    @Test
+    
     public void acknowledgeFailsWithUnassignedGeneration() throws ConnectorException, InterruptedException {
         generation.unassign();
         when(controller.acknowledge(record)).thenReturn(true);
@@ -62,7 +62,7 @@ public class KafkaMessageTests {
         verify(controller, never()).acknowledge(record);
     }
 
-    @Test
+    
     public void acknowledgeFailsWithOldGeneration() throws ConnectorException, InterruptedException {
         generation.unassign();
         generation.assignNextGeneration();

@@ -23,14 +23,14 @@ public class AcknowledgedRecordHandlerTests {
         this.handler = new AcknowledgedRecordHandler();
     }
 
-    @Test
+    
     public void acknowledgeRecordFalseTest() throws InterruptedException{
         ConsumerRecord<?,?> record = generateRecord("topic1", 0, "value1", 0);
         boolean acknowledged = this.handler.acknowledgeRecord(record);
         assertEquals(false, acknowledged);
     }
 
-    @Test
+    
     public void acknowledgeRecordTrueTest() throws InterruptedException{
         int partition = 0;
         String topic1 = "topic1";
@@ -41,7 +41,7 @@ public class AcknowledgedRecordHandlerTests {
         assertEquals(true, acknowledged);
     }
 
-    @Test
+    
     public void removePartitionsOffsetTest() throws InterruptedException{
         int partition = 0;
         long offset = 123;
@@ -57,7 +57,7 @@ public class AcknowledgedRecordHandlerTests {
     }
 
 
-    @Test
+    
     public void removePartitionAcknowledgeTest() throws InterruptedException{
         int partition = 0;
         long offset = 123;

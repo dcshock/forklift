@@ -14,7 +14,7 @@ public class ObjectMessageTests extends BaseIntegrationTest {
 
     private static final Logger log = LoggerFactory.getLogger(RebalanceTests.class);
 
-    @Test
+    
     public void testSendObjectMessage() throws ConnectorException, ProducerException, StartupException {
         Forklift forklift = serviceManager.newManagedForkliftInstance();
         int msgCount = 100;

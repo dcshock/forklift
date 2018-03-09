@@ -78,7 +78,7 @@ public class RetryLogBuilderTest {
         }
     };
 
-    @Test
+    
     public void testFieldsSetCorrectlyWithoutSerializer() {
         // build the message
         final String testId = "test-id";
@@ -136,7 +136,7 @@ public class RetryLogBuilderTest {
         Assert.assertNotNull(fields.get("time"));
     }
 
-    @Test
+    
     public void testSerializerFieldsSetCorrectly() {
         // build the message
         final String testId = "test-id";
@@ -195,7 +195,7 @@ public class RetryLogBuilderTest {
         Assert.assertNotNull(fields.get("time"));
     }
 
-    @Test
+    
     public void testFallbackRole() {
         // build the message
         final String testId = "test-id";
@@ -236,7 +236,7 @@ public class RetryLogBuilderTest {
         Assert.assertEquals("TestHandler", fields.get("role"));
     }
 
-    @Test
+    
     public void testRetriesExceeded() {
         // build the message
         final String testId = "test-id";

@@ -12,7 +12,7 @@ import org.junit.Test;
 import com.google.common.io.Files;
 
 public class FileScannerTest {
-    @Test
+    
     public void scan() 
       throws IOException, InterruptedException {
         final File tmpDir = Files.createTempDir();

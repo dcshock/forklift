@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class DeploymentWatchTest {
-    @Test
+    
     public void watch()
               throws IOException {
         final File dir = Files.createTempDir();
@@ -51,7 +51,7 @@ public class DeploymentWatchTest {
         }
     }
 
-    @Test
+    
     public void loadProperties()
       throws IOException {
         final File dir = Files.createTempDir();
@@ -89,7 +89,7 @@ public class DeploymentWatchTest {
         }
     }
 
-    @Test
+    
     public void propsWithComment()
       throws IOException {
         final File dir = Files.createTempDir();
@@ -128,7 +128,7 @@ public class DeploymentWatchTest {
         }
     }
 
-    @Test
+    
     public void badProps()
       throws IOException {
         final File dir = Files.createTempDir();

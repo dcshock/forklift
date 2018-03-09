@@ -15,7 +15,7 @@ import com.google.common.io.Files;
 import forklift.ForkliftTest;
 
 public class DeploymentWatchTest {
-    @Test
+    
     public void watch() 
       throws IOException {
         final File dir = Files.createTempDir();

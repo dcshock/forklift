@@ -12,7 +12,7 @@ import java.util.Map;
 
 public class MapMessageTests extends BaseIntegrationTest {
 
-    @Test
+    
     public void testSendMapValueMessage() throws ConnectorException, ProducerException, StartupException {
         Forklift forklift = serviceManager.newManagedForkliftInstance();
         int msgCount = 10;

@@ -37,7 +37,7 @@ public class BlockingRejectedExecutionHandlerTests {
         pool.awaitTermination(100, TimeUnit.MILLISECONDS);
     }
 
-    @Test
+    
     public void testRejectedExecutionTriggered() {
         final AtomicBoolean blockCondition = new AtomicBoolean(false);
         final AtomicBoolean finishCondition = new AtomicBoolean(false);

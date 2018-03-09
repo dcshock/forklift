@@ -22,7 +22,7 @@ public class SourceITest {
     /**
      * Test creating SourceI lists from annotated consumer classes
      */
-    @Test
+    
     public void testCreationFromNoSourceConsumer() {
         final List<SourceI> sources = SourceUtil.getSourcesAsList(NoSourceConsumer.class);
         final List<SourceI> expectedSources = Arrays.asList();
@@ -30,7 +30,7 @@ public class SourceITest {
         Assert.assertEquals(expectedSources, sources);
     }
 
-    @Test
+    
     public void testCreationFromSingleSourceConsumer() {
         final List<SourceI> sources = SourceUtil.getSourcesAsList(SingleSourceConsumer.class);
         final List<SourceI> expectedSources = Arrays.asList(new QueueSource("b"));
@@ -38,7 +38,7 @@ public class SourceITest {
         Assert.assertEquals(expectedSources, sources);
     }
 
-    @Test
+    
     public void testCreationFromRepeatedSourceConsumer() {
         final List<SourceI> sources = SourceUtil.getSourcesAsList(RepeatedSourceConsumer.class);
         final List<SourceI> expectedSources = Arrays.asList(new QueueSource("a"),
@@ -48,7 +48,7 @@ public class SourceITest {
     }
 
 
-    @Test
+    
     public void testCreationFromManualRepeatedSourceConsumer() {
         final List<SourceI> sources = SourceUtil.getSourcesAsList(ManualRepeatedSourceConsumer.class);
         final List<SourceI> expectedSources = Arrays.asList(new QueueSource("a"),
@@ -57,7 +57,7 @@ public class SourceITest {
         Assert.assertEquals(expectedSources, sources);
     }
 
-    @Test
+    
     public void testCreationFromMixedSourceConsumer() {
         final List<SourceI> sources = SourceUtil.getSourcesAsList(MixedSourceConsumer.class);
         final List<SourceI> expectedSources = Arrays.asList(new QueueSource("test-queue"),
@@ -66,7 +66,7 @@ public class SourceITest {
         Assert.assertEquals(expectedSources, sources);
     }
 
-    @Test
+    
     public void testCreationIgnoresNonSourceTypeAnnotations() {
         final List<SourceI> sources = SourceUtil.getSourcesAsList(SomeIrrelevantAnnotationSourceConsumer.class);
         final List<SourceI> expectedSources = Arrays.asList(new QueueSource("a"),
@@ -111,7 +111,7 @@ public class SourceITest {
     /**
      * Test case handling on SourceI
      */
-    @Test
+    
     public void testFunctionApplicationNormalCases() {
         final SourceI queueSource = new QueueSource("a");
         final SourceI topicSource = new TopicSource("b");
@@ -127,7 +127,7 @@ public class SourceITest {
             .get();
     }
 
-    @Test
+    
     public void testFunctionApplicationCaseOrder() {
         final SourceI source = new QueueSource("a");
 
@@ -143,7 +143,7 @@ public class SourceITest {
         Assert.assertEquals(resultOrderA, resultOrderB);
     }
 
-    @Test
+    
     public void testFunctionApplicationUnhandledNull() {
         final SourceI source = new QueueSource("a");
 
@@ -154,7 +154,7 @@ public class SourceITest {
         Assert.assertNull(result);
     }
 
-    @Test
+    
     public void testGetOrDefaultAfterUhandledFunctionApplicationGivesDefaultValue() {
         final SourceI source = new QueueSource("a");
         final String defaultValue = "default";
@@ -166,7 +166,7 @@ public class SourceITest {
         Assert.assertEquals(defaultValue, result);
     }
 
-    @Test(expected = RuntimeException.class)
+    
     public void testUnhandledFunctionApplicationGivesUnhandledException() {
         final SourceI source = new QueueSource("a");
 
@@ -175,7 +175,7 @@ public class SourceITest {
             .elseUnsupportedError();
     }
 
-    @Test
+    
     public void testHandledFunctionApplicationGivesNoUnhandledException() {
         final SourceI source = new QueueSource("a");
 
@@ -184,7 +184,7 @@ public class SourceITest {
             .elseUnsupportedError();
     }
 
-    @Test
+    
     public void testVoidFunctionApplicationNormalCases() {
         final AtomicReference<String> state = new AtomicReference<>("unset");
         final SourceI queueSource = new QueueSource("a");
@@ -203,7 +203,7 @@ public class SourceITest {
         Assert.assertEquals(state.get(), "topic");
     }
 
-    @Test
+    
     public void testVoidFunctionApplicationCaseOrder() {
         final AtomicReference<String> state = new AtomicReference<>("unset");
         final SourceI source = new QueueSource("a");
@@ -225,7 +225,7 @@ public class SourceITest {
 
     private void noop() {}
 
-    @Test
+    
     public void testVoidFunctionApplicationGivesNull() {
         final SourceI source = new QueueSource("a");
 
@@ -236,7 +236,7 @@ public class SourceITest {
         Assert.assertNull(o);
     }
 
-    @Test(expected = RuntimeException.class)
+    
     public void testUnhandledVoidFunctionApplicationGivesUnhandledException() {
         final SourceI source = new QueueSource("a");
 
@@ -247,7 +247,7 @@ public class SourceITest {
 
     class JustATestException extends Exception { }
 
-    @Test(expected = JustATestException.class)
+    
     public void testExceptionalFunctionApplicationThrowsCorrectException() throws JustATestException {
         final SourceI source = new QueueSource("a");
 

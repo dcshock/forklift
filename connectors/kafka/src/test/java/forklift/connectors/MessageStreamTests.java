@@ -25,7 +25,7 @@ public class MessageStreamTests {
         stream = new MessageStream();
     }
 
-    @Test
+    
     public void addAndGetNextMessageTest() throws InterruptedException {
         String topic = "topic1";
         stream.addTopic(topic);
@@ -36,7 +36,7 @@ public class MessageStreamTests {
         assertEquals(record, message.getConsumerRecord());
     }
 
-    @Test
+    
     public void nextMessageMultipleTopics() throws InterruptedException{
 
         String topic1 = "topic1";
@@ -53,7 +53,7 @@ public class MessageStreamTests {
         assertEquals(record2, message2.getConsumerRecord());
     }
 
-    @Test
+    
     public void nextMessageNullTest() throws InterruptedException {
         String topic = "topic1";
         stream.addTopic(topic);
@@ -61,7 +61,7 @@ public class MessageStreamTests {
         assertEquals(null, message);
     }
 
-    @Test
+    
     public void nextMessageOrderTest() throws InterruptedException {
         String topic = "topic1";
         ConsumerRecord[] records = new ConsumerRecord[100];
@@ -77,7 +77,7 @@ public class MessageStreamTests {
         }
     }
 
-    @Test
+    
     public void removeTopic() throws InterruptedException {
         String topic = "topic1";
         stream.addTopic(topic);

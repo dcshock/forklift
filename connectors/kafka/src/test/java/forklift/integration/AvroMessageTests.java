@@ -37,7 +37,7 @@ public class AvroMessageTests extends BaseIntegrationTest {
         serviceManager.start();
     }
 
-    @Test
+    
     public void testComplexAvroMessageWithProperty() throws ProducerException, ConnectorException, InterruptedException, StartupException {
         Forklift forklift = serviceManager.newManagedForkliftInstance("");
         int msgCount = 10;
@@ -69,7 +69,7 @@ public class AvroMessageTests extends BaseIntegrationTest {
         messageAsserts();
     }
 
-    @Test
+    
     public void testComplexAvroMessageWithoutProperty() throws ProducerException, ConnectorException, InterruptedException, StartupException {
         Forklift forklift = serviceManager.newManagedForkliftInstance("");
         int msgCount = 10;

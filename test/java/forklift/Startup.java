@@ -16,7 +16,7 @@ import forklift.exception.StartupException;
  *
  */
 public class Startup {
-    @Test
+    
     public void start()
       throws IOException, StartupException, InterruptedException {
         final Forklift forklift = new Forklift();

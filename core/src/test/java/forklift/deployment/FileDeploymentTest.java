@@ -16,13 +16,13 @@ import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 
 public class FileDeploymentTest {
-    @Test(expected = IOException.class)
+    
     public void testNullDeployment() throws IOException {
         new FileDeployment(null);
     }
 
     // Any kind of bad Jar file should only throw IOExcpetion otherwise we may bring down the system
-    @Test(expected = IOException.class)
+    
     public void testEmptyDeployment() throws IOException {
         File f = File.createTempFile("test", ".txt");
 
@@ -34,7 +34,7 @@ public class FileDeploymentTest {
         }
     }
 
-    @Test
+    
     public void testManifestOnlyDeploy() throws IOException {
         File f = File.createTempFile("test", ".jar");
 
@@ -58,7 +58,7 @@ public class FileDeploymentTest {
     // Now using a prebuilt test jar -- found in the forklift-test-consumer
     // make sure that we can deploy a jar that contains multiple classes that have some consumers
     // that consume queues and some consuming topics
-    @Test
+    
     public void testDeployJar() throws IOException {
         File f = ForkliftTest.testMultiTQJar();
         FileDeployment d = new FileDeployment(f);
@@ -72,7 +72,7 @@ public class FileDeploymentTest {
     // Now using a prebuilt test jarjar -- found in the forklift-test-consumer
     // make sure that we can deploy it that contains multiple classes that have some consumers
     // that consume queues and some consuming topics
-    @Test
+    
     public void testDeployJarJar() throws IOException {
         File f = ForkliftTest.testJarJar();
         FileDeployment d = new FileDeployment(f);

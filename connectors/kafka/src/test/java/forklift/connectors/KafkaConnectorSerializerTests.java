@@ -63,7 +63,7 @@ public class KafkaConnectorSerializerTests {
         return new String(result);
     }
 
-    @Test
+    
     public void testSampleStringSerializesCorrectly() {
         final byte[] sampleStringSerialized = connectorSerializer.serializeForSource(testSource, "hello");
         final byte[] sampleStringAvro = stripHeader(sampleStringSerialized);

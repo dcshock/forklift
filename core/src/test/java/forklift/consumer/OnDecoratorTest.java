@@ -37,7 +37,7 @@ public class OnDecoratorTest {
         when(forklift.getConnector()).thenReturn(connector);
     }
 
-    @Test
+    
     public void onProcessStepHappyPath() {
         TestConsumerHappy tc = new TestConsumerHappy();
         runTest(tc);
@@ -85,7 +85,7 @@ public class OnDecoratorTest {
         }
     }
 
-    @Test
+    
     public void onProcessStepInvalidPath() {
         TestConsumerInvalid tc = new TestConsumerInvalid();
         runTest(tc);
@@ -133,7 +133,7 @@ public class OnDecoratorTest {
         }
     }
 
-    @Test
+    
     public void onProcessStepErrorPath() {
         TestConsumerError tc = new TestConsumerError();
         runTest(tc);
@@ -181,7 +181,7 @@ public class OnDecoratorTest {
         }
     }
 
-    @Test
+    
     public void repeatOn() {
         TestConsumerMulti tc = new TestConsumerMulti();
         runTest(tc);

@@ -8,24 +8,24 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class RoleInputSourceTest {
-    @Test
+    
     public void testUndefinedRoles() {
         Assert.assertFalse(new RoleInputSource((String) null).isRoleDefined());
         Assert.assertFalse(new RoleInputSource("").isRoleDefined());
     }
 
-    @Test
+    
     public void testUndefinedRolesAreEqual() {
         Assert.assertEquals(new RoleInputSource((String) null),
                             new RoleInputSource(""));
     }
 
-    @Test
+    
     public void testIsLogicalSource() {
         Assert.assertTrue(new RoleInputSource("TestRole").isLogicalSource());
     }
 
-    @Test
+    
     public void testActionSourceIsTakenFromContext() {
         final LogicalSourceContext testContext = source -> {
             return source
@@ -39,7 +39,7 @@ public class RoleInputSourceTest {
                             roleInput.getActionSource(testContext));
     }
 
-    @Test
+    
     public void testEqualityCorrespondsToRoleEquality() {
         final String testRole = "test-role";
         final String otherRole = "other-role";
@@ -50,13 +50,13 @@ public class RoleInputSourceTest {
                                new RoleInputSource(otherRole));
     }
 
-    @Test
+    
     public void testRoleInputHasDefaultRoleWithNoGivenRole() {
         final RoleInputSource source = (RoleInputSource) SourceUtil.getSources(DefaultRoleConsumer.class, RoleInputSource.class).findFirst().get();
         Assert.assertEquals("DefaultRoleConsumer", source.getRole());
     }
 
-    @Test
+    
     public void testRoleInputHasGivenRole() {
         final RoleInputSource source = (RoleInputSource) SourceUtil.getSources(TestRoleConsumer.class, RoleInputSource.class).findFirst().get();
         Assert.assertEquals("test-role", source.getRole());

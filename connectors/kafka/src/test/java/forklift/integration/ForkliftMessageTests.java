@@ -37,7 +37,7 @@ public class ForkliftMessageTests extends BaseIntegrationTest {
         serviceManager.start();
     }
 
-    @Test
+    
     public void testForkliftMessageWithProperties()
                     throws ProducerException, ConnectorException, InterruptedException, StartupException {
         Forklift forklift = serviceManager.newManagedForkliftInstance();

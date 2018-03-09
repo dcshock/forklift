@@ -4,18 +4,18 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class GroupedTopicSourceTest {
-    @Test
+    
     public void testEmptyOrNullGroupIsUnspecified() {
         Assert.assertFalse(new GroupedTopicSource("test-topic", null).groupSpecified());
         Assert.assertFalse(new GroupedTopicSource("test-topic", "").groupSpecified());
     }
 
-    @Test
+    
     public void testNonEmptyGroupIsSpecified() {
         Assert.assertTrue(new GroupedTopicSource("test-topic", "test-group").groupSpecified());
     }
 
-    @Test
+    
     public void testGroupIsOverriden() {
         final String testGroup = "test-group";
         final GroupedTopicSource source = new GroupedTopicSource("test-topic", testGroup);
@@ -26,7 +26,7 @@ public class GroupedTopicSourceTest {
         Assert.assertEquals(newGroup, source.getGroup());
     }
 
-    @Test
+    
     public void testEqualsWorksNormally() {
         final String testTopic = "test-topic";
         final String testGroup = "test-group";
@@ -34,7 +34,7 @@ public class GroupedTopicSourceTest {
                             new GroupedTopicSource(testTopic, testGroup));
     }
 
-    @Test
+    
     public void testDifferentSourcesAreNotEqual() {
         final String testTopic = "test-topic";
         final String testGroup = "test-group";

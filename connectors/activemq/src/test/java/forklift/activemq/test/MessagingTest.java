@@ -94,7 +94,7 @@ public class MessagingTest {
         System.out.println(m.getId());
     }
 
-    @Test
+    
     public void test() throws JMSException, ConnectorException, ProducerException {
         int msgCount = 100;
         TestServiceManager.getForklift().getLifeCycle().register(this.getClass());

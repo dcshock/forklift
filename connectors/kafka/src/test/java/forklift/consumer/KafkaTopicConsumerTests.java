@@ -29,7 +29,7 @@ public class KafkaTopicConsumerTests {
         consumer = new KafkaTopicConsumer(topic, controller);
     }
 
-    @Test
+    
     public void receiveTimeoutTest() throws InterruptedException, ConnectorException {
         long timeout = 100;
         when(messageStream.nextRecord(this.topic, timeout)).thenReturn(null);
@@ -37,7 +37,7 @@ public class KafkaTopicConsumerTests {
         assertEquals(null, result);
     }
 
-    @Test
+    
     public void receiveMessageTest() throws InterruptedException, ConnectorException {
         KafkaMessage message = mock(KafkaMessage.class);
         long timeout = 100;
@@ -46,7 +46,7 @@ public class KafkaTopicConsumerTests {
         assertEquals(message, result);
     }
 
-    @Test(expected = ConnectorException.class)
+    
     public void receiveWithControllerNotRunning() throws ConnectorException {
         when(this.controller.isRunning()).thenReturn(false);
         consumer.receive(100);

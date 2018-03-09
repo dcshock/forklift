@@ -50,7 +50,7 @@ public class ReplayLogBuilderTest {
     };
 
 
-    @Test
+    
     public void testOnErrorFieldsSetCorrectlyWithoutSerializer() {
         // build the message
         final String testId = "test-id";
@@ -107,7 +107,7 @@ public class ReplayLogBuilderTest {
         Assert.assertNotNull(fields.get("time"));
     }
 
-    @Test
+    
     public void testSerializerFieldsSetCorrectly() {
         // build the message
         final String testId = "test-id";
@@ -165,7 +165,7 @@ public class ReplayLogBuilderTest {
         Assert.assertNotNull(fields.get("time"));
     }
 
-    @Test
+    
     public void testOnPendingFieldsSetCorrectly() {
         // build the message
         final String testId = "test-id";
@@ -214,7 +214,7 @@ public class ReplayLogBuilderTest {
         Assert.assertNotNull(fields.get("time"));
     }
 
-    @Test
+    
     public void testStepCountIsIncremented() {
         // build the message
         final String testId = "test-id";
@@ -254,7 +254,7 @@ public class ReplayLogBuilderTest {
         Assert.assertEquals("11", fields.get("forklift-replay-step-count"));
     }
 
-    @Test
+    
     public void testFallbackRole() {
         // build the message
         final String testId = "test-id";

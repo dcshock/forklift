@@ -12,7 +12,7 @@ import org.junit.Test;
 import forklift.ForkliftTest;
 
 public class DeploymentManagerTest {
-    @Test
+    
     public void deployJar() 
       throws MalformedURLException {
         DeploymentManager deploymentManager = new DeploymentManager();

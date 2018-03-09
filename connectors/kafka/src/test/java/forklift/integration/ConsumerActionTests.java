@@ -13,7 +13,7 @@ public class ConsumerActionTests extends BaseIntegrationTest {
     /**
      * Test subscribing to a topic, unsubscribing, then resubscribing to the topic.
      */
-    @Test
+    
     public void topicTurnoverTest() throws StartupException, ConnectorException, InterruptedException, ProducerException {
         Forklift forklift = serviceManager.newManagedForkliftInstance();
         ForkliftProducerI producer = forklift.getConnector().getQueueProducer("forklift-string-topic");

@@ -31,7 +31,7 @@ public class LifeCycleMonitorsTest {
     // calls run amuck. If any of the registrations happen while a call is taking
     // place, LifeCycleMonitors should throw an exception, which would blow up this
     // test.
-    @Test
+    
     public void test() throws InterruptedException {
         final LifeCycleMonitors lifeCycle = new LifeCycleMonitors();
         lifeCycle.register(TestAuditor.class);
@@ -108,7 +108,7 @@ public class LifeCycleMonitorsTest {
 
     // Register a listener that blows up during instantiation. Make sure it doesn't crash
     // the system.
-    @Test
+    
     public void badListener() {
         final LifeCycleMonitors lifeCycle = new LifeCycleMonitors();
         lifeCycle.register(BadAuditor.class);

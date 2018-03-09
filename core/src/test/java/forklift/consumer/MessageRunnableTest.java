@@ -53,7 +53,7 @@ public class MessageRunnableTest {
 
     // Given a message runner, make sure that the invalid is called when the OnValidate signature
     // is incorrect.
-    @Test
+    
     public void invalidOnValidate() {
         final BaseTestConsumer consumer = new BaseTestConsumer(forklift);
 
@@ -111,7 +111,7 @@ public class MessageRunnableTest {
 
     // Given a message runner, make sure that validating is called but processing is not
     // when a message doesn't validate with a boolean return of false.
-    @Test
+    
     public void invalidMessage() {
         final BaseTestConsumer consumer = new BaseTestConsumer(forklift);
 
@@ -174,7 +174,7 @@ public class MessageRunnableTest {
     }
 
     // For a message runner make sure that if boolean validation succeeds that processing is called.
-    @Test
+    
     public void validMessage() {
         final BaseTestConsumer consumer = new BaseTestConsumer(forklift);
 
@@ -236,7 +236,7 @@ public class MessageRunnableTest {
     }
 
     // For a message runner make sure that if an empty List of errors in validation does call processing and completes.
-    @Test
+    
     public void emptyListRet() {
         final BaseTestConsumer consumer = new BaseTestConsumer(forklift);
 
@@ -304,7 +304,7 @@ public class MessageRunnableTest {
     }
 
     // For a message runner make sure that if the List of errors contains a string that it does not process and errors out.
-    @Test
+    
     public void errorInRetList() {
         final BaseTestConsumer consumer = new BaseTestConsumer(forklift);
 
@@ -370,7 +370,7 @@ public class MessageRunnableTest {
 
     // For a message runner make sure that if null is returned for the list of errors from validate
     // that it calls processing.
-    @Test
+    
     public void invalidListNull() {
         final BaseTestConsumer consumer = new BaseTestConsumer(forklift);
 
@@ -433,7 +433,7 @@ public class MessageRunnableTest {
     }
 
     // What happens when validation throws an exception? Should throw error with reason of Exception.
-    @Test
+    
     public void validationException() {
         final BaseTestConsumer consumer = new BaseTestConsumer(forklift);
 
@@ -498,7 +498,7 @@ public class MessageRunnableTest {
     }
 
     // What happens when processing throws an exception? Should process with Error.
-    @Test
+    
     public void processException() {
         final BaseTestConsumer consumer = new BaseTestConsumer(forklift);
 

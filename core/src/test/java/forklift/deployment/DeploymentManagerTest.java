@@ -9,7 +9,7 @@ import java.io.File;
 import java.io.IOException;
 
 public class DeploymentManagerTest {
-    @Test
+    
     public void deployJar()
                     throws IOException {
         DeploymentManager deploymentManager = new DeploymentManager();

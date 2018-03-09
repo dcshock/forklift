@@ -41,29 +41,29 @@ public class ConsumerTest {
         when(forklift.getConnector()).thenReturn(connector);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    
     public void createBadConsumer() {
         new Consumer(BadConsumer.class, forklift, this.getClass().getClassLoader());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    
     public void createDoubleConsumer() {
         new Consumer(DoubleConsumer.class, forklift, this.getClass().getClassLoader());
     }
 
-    @Test
+    
     public void createQueueConsumer() {
         Consumer c = new Consumer(QueueConsumer.class, forklift, this.getClass().getClassLoader());
         assertTrue(c.getName().matches("abc:\\d+"));
     }
 
-    @Test
+    
     public void createTopicConsumer() {
         Consumer c = new Consumer(TopicConsumer.class, forklift, this.getClass().getClassLoader());
         assertTrue(c.getName().matches("xyz:\\d+"));
     }
 
-    @Test
+    
     public void inject() throws ConnectorException {
         Consumer test = new Consumer(ExampleConsumer.class, forklift, this.getClass().getClassLoader());
         ExampleConsumer ec = new ExampleConsumer();
@@ -84,7 +84,7 @@ public class ConsumerTest {
 
     // TODO put this back in with a real test.
     // The system should hand the bad json to the consumer, and let the consumer mark the message as invalid to avoid redelivery of a bad message.
-    // @Test(expected=RuntimeException.class)
+    // 
     public void injectBadJson() {
         Consumer test = new Consumer(ExampleJsonConsumer.class, null, this.getClass().getClassLoader());
         ExampleJsonConsumer ec = new ExampleJsonConsumer();
@@ -95,7 +95,7 @@ public class ConsumerTest {
         test.inject(msg, ec);
     }
 
-    @Test
+    
     public void injectEmptyJson() {
         Consumer test = new Consumer(ExampleJsonConsumer.class, forklift, this.getClass().getClassLoader());
         ExampleJsonConsumer ec = new ExampleJsonConsumer();
@@ -110,7 +110,7 @@ public class ConsumerTest {
         assertNull(ec.msg.url);
     }
 
-    @Test
+    
     public void injectJson() {
         Consumer test = new Consumer(ExampleJsonConsumer.class, forklift, this.getClass().getClassLoader());
         ExampleJsonConsumer ec = new ExampleJsonConsumer();
@@ -138,7 +138,7 @@ public class ConsumerTest {
      *
      * @throws Exception
      */
-    @Test
+    
     public void jsonConstructorInjection() throws Exception {
         ConsumerService service = new ConsumerService(ServiceBeanResolver.class);
         Consumer test = new Consumer(ConstructorJsonConsumer.class, forklift, this.getClass().getClassLoader());
@@ -164,7 +164,7 @@ public class ConsumerTest {
         assertEquals(null, ec.strval);
     }
 
-    @Test
+    
     public void testHeadersAndPropertiesWithConstructorInjection() throws IOException, InstantiationException, IllegalAccessException, InvocationTargetException {
 
         Consumer test = new Consumer(ConstructorJsonConsumer.class, forklift, this.getClass().getClassLoader());
@@ -190,7 +190,7 @@ public class ConsumerTest {
         assertEquals(ec.producer, "testing");
     }
 
-    @Test
+    
     public void testHeadersAndProperties() {
 
         Consumer test = new Consumer(ExampleJsonConsumer.class, forklift, this.getClass().getClassLoader());

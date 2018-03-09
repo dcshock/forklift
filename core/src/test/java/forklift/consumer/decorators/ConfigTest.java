@@ -48,7 +48,7 @@ public class ConfigTest {
         pm.deregister(file);
     }
 
-    @Test
+    
     public void testConfigInjection() {
         Consumer test = new Consumer(TestConsumer.class, forklift, this.getClass().getClassLoader());
         TestConsumer tc = new TestConsumer();

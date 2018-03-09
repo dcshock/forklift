@@ -14,7 +14,7 @@ import org.junit.Test;
 import java.util.Date;
 
 public class ActiveMQHeadersTest {
-    @Test
+    
     public void setAllHeaders() {
         Date now = new Date();
         ActiveMQMessage msg = new ActiveMQMessage();
@@ -51,7 +51,7 @@ public class ActiveMQHeadersTest {
         assertEquals("JSON", ActiveMQHeaders.getFunctions().get(Header.Type).get(msg));
     }
 
-    @Test
+    
     public void setNullHeaders() {
         ActiveMQMessage msg = new ActiveMQMessage();
         ActiveMQHeaders.getFunctions().get(Header.CorrelationId).set(msg, null);
@@ -87,7 +87,7 @@ public class ActiveMQHeadersTest {
         assertNull(ActiveMQHeaders.getFunctions().get(Header.Type).get(msg));
     }
 
-    @Test
+    
     public void setBadHeaders() {
         ActiveMQMessage msg = new ActiveMQMessage();
         ActiveMQHeaders.getFunctions().get(Header.CorrelationId).set(msg, 1.0);

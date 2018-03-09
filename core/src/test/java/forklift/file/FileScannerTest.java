@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.List;
 
 public class FileScannerTest {
-    @Test
+    
     public void scan()
       throws IOException, InterruptedException {
         final File tmpDir = Files.createTempDir();

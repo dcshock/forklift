@@ -20,7 +20,7 @@ import java.util.concurrent.Executors;
  */
 public class RebalanceTests extends BaseIntegrationTest {
 
-    @Test
+    
     public void testRebalanceUnderLoad() throws InterruptedException {
         ExecutorService executor = Executors.newFixedThreadPool(35);
         ForkliftServer
@@ -80,7 +80,7 @@ public class RebalanceTests extends BaseIntegrationTest {
 
     }
 
-    @Test
+    
     public void testMultipleConcurrentRebalancing() throws StartupException, InterruptedException, ConnectorException {
 
         ExecutorService executor = Executors.newFixedThreadPool(35);

@@ -16,7 +16,7 @@ import forklift.deployment.DeploymentWatch;
 
 @RunWith(JUnit4.class)
 public class ConsumerDeploymentEventsTest extends ForkliftTest {
-    @Test
+    
     public void consumerDeployEvent()
       throws IOException {
         final ConsumerDeploymentEvents events = Mockito.mock(ConsumerDeploymentEvents.class);

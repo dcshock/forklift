@@ -12,7 +12,7 @@ import java.util.Map;
 
 public class StringMessageTests extends BaseIntegrationTest {
 
-    @Test
+    
     public void testStringMessage() throws ProducerException, ConnectorException, InterruptedException, StartupException {
         Forklift forklift = serviceManager.newManagedForkliftInstance();
         int msgCount = 1000;
@@ -41,7 +41,7 @@ public class StringMessageTests extends BaseIntegrationTest {
         messageAsserts();
     }
 
-    @Test
+    
     public void testMultiThreadedStringMessage() throws ProducerException, ConnectorException, InterruptedException, StartupException {
         Forklift forklift = serviceManager.newManagedForkliftInstance();
         int msgCount = 10000;

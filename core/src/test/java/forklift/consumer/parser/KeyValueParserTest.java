@@ -11,13 +11,13 @@ import java.util.Map;
 
 @RunWith(JUnit4.class)
 public class KeyValueParserTest {
-    @Test
+    
     public void parseNull() {
         assertSame(0, KeyValueParser.parse(null).size());
         assertSame(0, KeyValueParser.parse("").size());
     }
 
-    @Test
+    
     public void parse() {
         String msg =
             "x=y\n" +
@@ -32,7 +32,7 @@ public class KeyValueParserTest {
         assertTrue(result.size() == 3);
     }
 
-    @Test
+    
     public void parse2() {
         String msg =
             "x=5\n" +
@@ -60,7 +60,7 @@ public class KeyValueParserTest {
         assertTrue(result.size() == 8);
     }
 
-    @Test
+    
     public void parse3() {
         String msg =
             "=";
@@ -69,7 +69,7 @@ public class KeyValueParserTest {
         assertTrue(result.size() == 0);
     }
 
-    @Test
+    
     public void parse4() {
         String msg =
             "=========";
@@ -78,7 +78,7 @@ public class KeyValueParserTest {
         assertTrue(result.size() == 0);
     }
 
-    @Test
+    
     public void parse5() {
         String msg =
             "===*****------^^^^^";
@@ -87,7 +87,7 @@ public class KeyValueParserTest {
         assertTrue(result.size() == 0);
     }
 
-    @Test
+    
     public void parse6() {
         String msg =
             "     =     ==";
@@ -96,7 +96,7 @@ public class KeyValueParserTest {
         assertTrue(result.size() == 0);
     }
 
-    @Test
+    
     public void parseNLCR() {
         String msg =
             "x=y\n\r" +

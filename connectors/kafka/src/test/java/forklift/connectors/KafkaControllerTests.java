@@ -53,7 +53,7 @@ public class KafkaControllerTests {
         this.controller.stop(500, TimeUnit.MILLISECONDS);
     }
 
-    @Test
+    
     public void isRunningTest() throws InterruptedException {
         this.controller.start();
         assertEquals(true, controller.isRunning());
@@ -61,7 +61,7 @@ public class KafkaControllerTests {
         assertEquals(false, controller.isRunning());
     }
 
-    @Test
+    
     public void firstSubscribeAndPollingTest() throws InterruptedException {
         ConsumerRecords records = mock(ConsumerRecords.class);
         when(kafkaConsumer.poll(anyLong())).thenReturn(records);

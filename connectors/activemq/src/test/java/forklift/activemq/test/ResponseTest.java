@@ -31,7 +31,7 @@ public class ResponseTest {
     private static final int maxTimeouts = 5;
     private int timeouts = 0;
 
-//    @Test
+//    
     public void testStringResp() throws Exception {
         final ForkliftConnectorI connector = TestServiceManager.getConnector();
 
@@ -67,7 +67,7 @@ public class ResponseTest {
         });
     }
 
-    @Test
+    
     public void testMapResp() throws Exception {
         final ForkliftConnectorI connector = TestServiceManager.getConnector();
 
@@ -109,7 +109,7 @@ public class ResponseTest {
         });
     }
 
-    @Test
+    
     public void testObjResp() throws Exception {
         final ForkliftConnectorI connector = TestServiceManager.getConnector();
 
