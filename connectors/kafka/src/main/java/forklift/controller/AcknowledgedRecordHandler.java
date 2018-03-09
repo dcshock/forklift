@@ -45,6 +45,9 @@ public class AcknowledgedRecordHandler {
             long commitOffset = record.offset() + 1;
             OffsetAndMetadata offsetAndMetadata = new OffsetAndMetadata(commitOffset, "Commit From Forklift Server");
             offsets.merge(topicPartition, offsetAndMetadata, this::greaterOffset);
+
+            System.out.println("Merging commit on partition: " + topicPartition + " offset: " + commitOffset);
+
             return true;
         } finally {
             lock.readLock().unlock();

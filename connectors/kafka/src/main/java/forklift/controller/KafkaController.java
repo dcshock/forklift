@@ -238,6 +238,7 @@ public class KafkaController {
                     flowControl.remove(partition);
                 }
 
+                System.out.println("Commiting on revoke: " + removedOffsets);
                 kafkaConsumer.commitSync(removedOffsets);
             } catch (InterruptedException e) {
                 log.debug("controlLoop partition rebalance interrupted", e);

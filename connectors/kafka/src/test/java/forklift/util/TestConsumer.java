@@ -154,6 +154,7 @@ public final class TestConsumer<K, V> implements Consumer<K, V> {
         offsets.entrySet().forEach(entry -> {
             final long offset = entry.getValue().offset();
 
+            //System.out.println("Committing: " + entry.getKey() + " " + offset);
             commitPositions.put(entry.getKey(), offset);
         });
     }
@@ -212,12 +213,16 @@ public final class TestConsumer<K, V> implements Consumer<K, V> {
         final Map<TopicPartition, List<ConsumerRecord<K, V>>> recordMap = assignment.stream()
             .flatMap(partition -> {
                     if (pausedPartitions.contains(partition)) { return Stream.empty(); }
-                    if (remainingRecordsInBatch.get() <= 0) { return Stream.empty(); }
 
                     final List<ConsumerRecord<K, V>> partitionRecords = recordsForPartition.get(partition);
                     final long fetchPosition = fetchPositions.computeIfAbsent(partition, part -> commitPositions.getOrDefault(part, 0L));
+
                     final long remainingRecordsInPartition = partitionRecords.size() - fetchPosition;
                     final long numFetchedRecords = Math.min(remainingRecordsInPartition, remainingRecordsInBatch.get());
+
+                    if (numFetchedRecords == 0) { return Stream.empty(); }
+
+                    System.out.println("Polling " + numFetchedRecords + " on partition " + partition + " from " + fetchPosition);
 
                     final List<ConsumerRecord<K, V>> fetchedRecords = partitionRecords.subList((int) fetchPosition, (int) (fetchPosition + numFetchedRecords));
 
@@ -227,6 +232,10 @@ public final class TestConsumer<K, V> implements Consumer<K, V> {
                     return Stream.of(new AbstractMap.SimpleEntry<TopicPartition, List<ConsumerRecord<K, V>>>(partition, fetchedRecords));
                 })
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        if (recordMap.size() > 0) {
+            System.out.println("TestConsumer poll returning: " + recordMap);
+        }
 
         return new ConsumerRecords<K, V>(recordMap);
     }
@@ -260,6 +269,7 @@ public final class TestConsumer<K, V> implements Consumer<K, V> {
     }
 
     private void performRebalance(Collection<TopicPartition> partitions) {
+        System.out.println("Revoking Partitions: " + partitions);
         listener.onPartitionsRevoked(partitions);
 
         partitions.forEach(partition -> {
@@ -267,6 +277,9 @@ public final class TestConsumer<K, V> implements Consumer<K, V> {
         });
         resume(partitions);
 
+        System.out.println("After revoking partitions, will reset to " + commitPositions);
+
+        System.out.println("Assigning Partitions: " + partitions);
         listener.onPartitionsAssigned(partitions);
     }
 }

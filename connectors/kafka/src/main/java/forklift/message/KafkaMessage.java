@@ -21,6 +21,8 @@ public class KafkaMessage extends ForkliftMessage {
         this.latestGeneration = latestGeneration;
         this.createdGenerationNumber = latestGeneration.generationNumber();
 
+        System.out.println("Created message: " + consumerRecord.value() + " with generation: " + createdGenerationNumber);
+
         createMessage();
     }
 
@@ -30,6 +32,7 @@ public class KafkaMessage extends ForkliftMessage {
 
     @Override
     public boolean acknowledge() throws ConnectorException {
+        System.out.println("Acking: " + consumerRecord.value() + " with generation: " + createdGenerationNumber + " against: " + latestGeneration.generationNumber());
         if (!latestGeneration.acceptsGeneration(createdGenerationNumber)) { return false; }
 
         try {
