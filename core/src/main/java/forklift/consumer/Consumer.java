@@ -343,8 +343,9 @@ public class Consumer {
             // Shutdown the pool, but let actively executing work finish.
             if (threadPool != null) {
                 log.info("Shutting down thread pool - active {}", threadPool.getActiveCount());
-                blockQueue.clear();
                 threadPool.shutdown();
+                blockQueue.clear();
+
                 threadPool.awaitTermination(10, TimeUnit.SECONDS);
             }
         } catch (ConnectorException e) {
