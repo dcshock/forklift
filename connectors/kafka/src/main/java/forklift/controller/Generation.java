@@ -1,4 +1,4 @@
-package forklift.message;
+package forklift.controller;
 
 /** Represents the abstract time during which a record belong to an unspecified dataset was acquired. */
 public class Generation {

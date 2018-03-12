@@ -9,12 +9,14 @@ import static org.mockito.Mockito.when;
 
 import forklift.Forklift;
 import forklift.connectors.ForkliftConnectorI;
+import forklift.connectors.ForkliftMessage;
 import forklift.consumer.Consumer;
 import forklift.consumer.ConsumerThread;
 import forklift.consumer.KafkaTopicConsumer;
 import forklift.decorators.Message;
 import forklift.decorators.MultiThreaded;
 import forklift.decorators.OnMessage;
+import forklift.message.KafkaMessage;
 import forklift.message.MessageStream;
 import forklift.schemas.UserRegistered;
 import forklift.source.decorators.Topic;
@@ -31,6 +33,7 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -43,6 +46,8 @@ import javax.inject.Inject;
 
 public class KafkaControllerRebalanceTests {
     private static final String TOPIC = "user.controller.test";
+    private static List<ConsumerRecord<?, ?>> processedRecords;
+
     private AtomicBoolean donePolling;
     private TestConsumer<String, GenericRecord> kafkaConsumer;
     private MessageStream messageStream;
@@ -57,6 +62,8 @@ public class KafkaControllerRebalanceTests {
     @Before
     public void setup() throws Exception {
         donePolling = new AtomicBoolean(false);
+        processedRecords = new ArrayList<>();
+
         kafkaConsumer = new TestConsumer<>(2, 2);
         messageStream = new MessageStream();
         controller = spy(new KafkaController(kafkaConsumer, messageStream, TOPIC));
@@ -145,21 +152,18 @@ public class KafkaControllerRebalanceTests {
         consumerThread.shutdown();
         controller.stop(10, TimeUnit.MILLISECONDS);
 
-        final ArgumentCaptor<ConsumerRecord<?, ?>> captor = ArgumentCaptor.forClass((Class) ConsumerRecord.class);
-        verify(controller, atLeast(0)).acknowledge(captor.capture());
-
-        final List<ConsumerRecord<?, ?>> ackedRecords = captor.getAllValues();
-        Assert.assertEquals(recordList.size(), ackedRecords.size());
-        Assert.assertEquals(recordList, ackedRecords);
+        // since the consumer has one thread, the messages should be processed in order
+        Assert.assertEquals(recordList.size(), processedRecords.size());
+        Assert.assertEquals(recordList, processedRecords);
     }
 
     @Topic("ignored")
     @MultiThreaded(1)
     public static class LoggingConsumer {
-        private String message;
+        private ForkliftMessage message;
 
         @Inject
-        public LoggingConsumer(@Message String message) {
+        public LoggingConsumer(@Message ForkliftMessage message) {
             this.message = message;
         }
 
@@ -169,7 +173,8 @@ public class KafkaControllerRebalanceTests {
                 Thread.sleep(100);
             } catch (InterruptedException e) {}
 
-            System.out.println("Processed message: " + message);
+            processedRecords.add(((KafkaMessage) message).getConsumerRecord());
+            System.out.println("Processed message: " + message.getMsg());
         }
     }
 }

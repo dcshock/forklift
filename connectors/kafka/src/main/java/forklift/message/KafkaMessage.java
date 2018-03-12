@@ -12,16 +12,14 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 public class KafkaMessage extends ForkliftMessage {
     private final KafkaController controller;
     private final ConsumerRecord<?, ?> consumerRecord;
-    private final Generation latestGeneration;
-    private final long createdGenerationNumber;
+    private final long generationNumber;
 
-    public KafkaMessage(KafkaController controller, ConsumerRecord<?, ?> consumerRecord, Generation latestGeneration) {
+    public KafkaMessage(KafkaController controller, ConsumerRecord<?, ?> consumerRecord, long generationNumber) {
         this.controller = controller;
         this.consumerRecord = consumerRecord;
-        this.latestGeneration = latestGeneration;
-        this.createdGenerationNumber = latestGeneration.generationNumber();
+        this.generationNumber = generationNumber;
 
-        System.out.println("Created message: " + consumerRecord.value() + " with generation: " + createdGenerationNumber);
+        System.out.println("Created message: " + consumerRecord.value() + " with generation: " + generationNumber);
 
         createMessage();
     }
@@ -32,11 +30,8 @@ public class KafkaMessage extends ForkliftMessage {
 
     @Override
     public boolean acknowledge() throws ConnectorException {
-        System.out.println("Acking: " + consumerRecord.value() + " with generation: " + createdGenerationNumber + " against: " + latestGeneration.generationNumber());
-        if (!latestGeneration.acceptsGeneration(createdGenerationNumber)) { return false; }
-
         try {
-            return controller.acknowledge(consumerRecord);
+            return controller.acknowledge(consumerRecord, generationNumber);
         } catch (InterruptedException e) {
             throw new ConnectorException("Error acknowledging message");
         }
