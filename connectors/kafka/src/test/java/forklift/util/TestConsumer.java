@@ -212,13 +212,14 @@ public final class TestConsumer<K, V> implements Consumer<K, V> {
         final Map<TopicPartition, List<ConsumerRecord<K, V>>> recordMap = assignment.stream()
             .flatMap(partition -> {
                     if (pausedPartitions.contains(partition)) { return Stream.empty(); }
-                    if (remainingRecordsInBatch.get() <= 0) { return Stream.empty(); }
 
                     final List<ConsumerRecord<K, V>> partitionRecords = recordsForPartition.get(partition);
                     final long fetchPosition = fetchPositions.computeIfAbsent(partition, part -> commitPositions.getOrDefault(part, 0L));
+
                     final long remainingRecordsInPartition = partitionRecords.size() - fetchPosition;
                     final long numFetchedRecords = Math.min(remainingRecordsInPartition, remainingRecordsInBatch.get());
 
+                    if (numFetchedRecords == 0) { return Stream.empty(); }
                     final List<ConsumerRecord<K, V>> fetchedRecords = partitionRecords.subList((int) fetchPosition, (int) (fetchPosition + numFetchedRecords));
 
                     fetchPositions.put(partition, fetchPosition + numFetchedRecords);

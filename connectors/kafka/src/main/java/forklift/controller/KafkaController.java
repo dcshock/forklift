@@ -1,7 +1,6 @@
 package forklift.controller;
 
 import forklift.message.KafkaMessage;
-import forklift.message.Generation;
 import forklift.message.MessageStream;
 import forklift.message.ReadableMessageStream;
 
@@ -81,11 +80,14 @@ public class KafkaController {
      * and the message should not be processed.
      *
      * @param record the record to acknowledge
+     * @param the generation number when the record was received
      * @return true if the record should be processed, else false
      * @throws InterruptedException if the thread is interrupted
      */
-    public boolean acknowledge(ConsumerRecord<?, ?> record) throws InterruptedException {
-        AtomicInteger flowCount = flowControl.get(new TopicPartition(record.topic(), record.partition()));
+    public boolean acknowledge(ConsumerRecord<?, ?> record, long generationNumber) throws InterruptedException {
+        final TopicPartition partition = new TopicPartition(record.topic(), record.partition());
+
+        final AtomicInteger flowCount = flowControl.get(partition);
         if (flowCount != null) {
             int counter = flowCount.decrementAndGet();
             if (counter == 0) {
@@ -94,8 +96,13 @@ public class KafkaController {
                 }
             }
         }
+
+        final Generation generation = generations.get(partition);
+
         log.debug("Acknowledge message with topic {} partition {} offset {}", record.topic(), record.partition(), record.offset());
-        return running && acknowledgmentHandler.acknowledgeRecord(record);
+        return running && acknowledgmentHandler.acknowledgeRecord(
+            record,
+            () -> generation.acceptsGeneration(generationNumber));
     }
 
     /**
@@ -222,7 +229,7 @@ public class KafkaController {
             final TopicPartition partition = new TopicPartition(record.topic(), record.partition());
             final Generation generation = generations.get(partition);
 
-            messages.get(partition).add(new KafkaMessage(this, record, generation));
+            messages.get(partition).add(new KafkaMessage(this, record, generation.generationNumber()));
         }
         return messages;
     }
@@ -232,9 +239,12 @@ public class KafkaController {
         public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
             log.debug("controlLoop partitions revoked");
             try {
-                Map<TopicPartition, OffsetAndMetadata> removedOffsets = acknowledgmentHandler.removePartitions(partitions);
                 for (TopicPartition partition : partitions) {
                     generations.get(partition).unassign();
+                }
+
+                Map<TopicPartition, OffsetAndMetadata> removedOffsets = acknowledgmentHandler.removePartitions(partitions);
+                for (TopicPartition partition : partitions) {
                     flowControl.remove(partition);
                 }
 
@@ -248,11 +258,14 @@ public class KafkaController {
         @Override
         public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
             log.debug("controlLoop partitions assigned");
-            acknowledgmentHandler.addPartitions(partitions);
+
             for (TopicPartition partition : partitions) {
                 final Generation generation = generations.computeIfAbsent(partition, ignored -> new Generation());
                 generation.assignNextGeneration();
+            }
 
+            acknowledgmentHandler.addPartitions(partitions);
+            for (TopicPartition partition : partitions) {
                 flowControl.merge(partition, new AtomicInteger(),
                                   (oldValue, newValue) -> oldValue == null ? newValue : oldValue);
             }

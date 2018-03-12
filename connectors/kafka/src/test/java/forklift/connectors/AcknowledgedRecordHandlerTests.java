@@ -10,6 +10,7 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  * Created by afrieze on 3/3/17.
@@ -17,16 +18,18 @@ import java.util.Map;
 public class AcknowledgedRecordHandlerTests {
 
     private AcknowledgedRecordHandler handler;
+    private Supplier<Boolean> predicate;
 
     @Before
     public void setup() {
         this.handler = new AcknowledgedRecordHandler();
+        this.predicate = () -> true;
     }
 
     @Test
     public void acknowledgeRecordFalseTest() throws InterruptedException{
         ConsumerRecord<?,?> record = generateRecord("topic1", 0, "value1", 0);
-        boolean acknowledged = this.handler.acknowledgeRecord(record);
+        boolean acknowledged = this.handler.acknowledgeRecord(record, predicate);
         assertEquals(false, acknowledged);
     }
 
@@ -37,7 +40,7 @@ public class AcknowledgedRecordHandlerTests {
         ConsumerRecord<?,?> record = generateRecord(topic1, partition, "value1", 0);
         List<TopicPartition> partitions = Arrays.asList(new TopicPartition(topic1, partition));
         this.handler.addPartitions(partitions);
-        boolean acknowledged = this.handler.acknowledgeRecord(record);
+        boolean acknowledged = this.handler.acknowledgeRecord(record, predicate);
         assertEquals(true, acknowledged);
     }
 
@@ -50,7 +53,7 @@ public class AcknowledgedRecordHandlerTests {
         TopicPartition topicPartition = new TopicPartition(topic1, partition);
         List<TopicPartition> partitions = Arrays.asList(topicPartition);
         this.handler.addPartitions(partitions);
-        boolean acknowledged = this.handler.acknowledgeRecord(record);
+        boolean acknowledged = this.handler.acknowledgeRecord(record, predicate);
         Map<TopicPartition, OffsetAndMetadata> offsets = this.handler.removePartitions(partitions);
         assertEquals(true, offsets.containsKey(topicPartition));
         assertEquals(offset+1, offsets.get(topicPartition).offset());
@@ -67,7 +70,22 @@ public class AcknowledgedRecordHandlerTests {
         List<TopicPartition> partitions = Arrays.asList(topicPartition);
         this.handler.addPartitions(partitions);
         Map<TopicPartition, OffsetAndMetadata> offsets = this.handler.removePartitions(partitions);
-        boolean acknowledged = this.handler.acknowledgeRecord(record);
+        boolean acknowledged = this.handler.acknowledgeRecord(record, predicate);
+        assertEquals(false, acknowledged);
+    }
+
+
+    @Test
+    public void falsePredicateFailsAckTest() throws Exception {
+        // set up for success
+        int partition = 0;
+        String topic1 = "topic1";
+        ConsumerRecord<?,?> record = generateRecord(topic1, partition, "value1", 0);
+        List<TopicPartition> partitions = Arrays.asList(new TopicPartition(topic1, partition));
+        this.handler.addPartitions(partitions);
+
+        // but have the predicate fail
+        boolean acknowledged = this.handler.acknowledgeRecord(record, () -> false);
         assertEquals(false, acknowledged);
     }
 
