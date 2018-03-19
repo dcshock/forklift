@@ -237,7 +237,7 @@ public class KafkaController {
     private class RebalanceListener implements ConsumerRebalanceListener {
         @Override
         public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
-            log.debug("controlLoop partitions revoked");
+            log.debug("controlLoop partitions revoked with generations {}", generations);
             try {
                 for (TopicPartition partition : partitions) {
                     generations.get(partition).unassign();
@@ -263,6 +263,8 @@ public class KafkaController {
                 final Generation generation = generations.computeIfAbsent(partition, ignored -> new Generation());
                 generation.assignNextGeneration();
             }
+
+            log.debug("controlLoop partitions assigned with generations {}", generations);
 
             acknowledgmentHandler.addPartitions(partitions);
             for (TopicPartition partition : partitions) {

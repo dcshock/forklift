@@ -8,8 +8,12 @@ import forklift.producers.KafkaForkliftProducer;
 
 import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class KafkaMessage extends ForkliftMessage {
+    private static final Logger log = LoggerFactory.getLogger(KafkaMessage.class);
+
     private final KafkaController controller;
     private final ConsumerRecord<?, ?> consumerRecord;
     private final long generationNumber;
@@ -29,7 +33,10 @@ public class KafkaMessage extends ForkliftMessage {
     @Override
     public boolean acknowledge() throws ConnectorException {
         try {
-            return controller.acknowledge(consumerRecord, generationNumber);
+            final boolean acknowledged = controller.acknowledge(consumerRecord, generationNumber);
+            log.debug("Acknoledgment for topic: {} partition: {} offset: {} generation: {} successful: {}",
+                      consumerRecord.topic(), consumerRecord.partition(), consumerRecord.offset(), generationNumber, acknowledged);
+            return acknowledged;
         } catch (InterruptedException e) {
             throw new ConnectorException("Error acknowledging message");
         }
