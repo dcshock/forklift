@@ -3,10 +3,11 @@ package forklift.controller;
 import forklift.message.KafkaMessage;
 import forklift.message.MessageStream;
 import forklift.message.ReadableMessageStream;
+
+import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.WakeupException;
@@ -40,14 +41,15 @@ public class KafkaController {
     private static final Logger log = LoggerFactory.getLogger(KafkaController.class);
     private volatile boolean running = false;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
-    private final KafkaConsumer<?, ?> kafkaConsumer;
+    private final Consumer<?, ?> kafkaConsumer;
     private final MessageStream messageStream;
     private final String topic;
     private AcknowledgedRecordHandler acknowledgmentHandler = new AcknowledgedRecordHandler();
+    private Map<TopicPartition, Generation> generations = new ConcurrentHashMap<>();
     private Map<TopicPartition, OffsetAndMetadata> failedOffset = null;
     private Map<TopicPartition, AtomicInteger> flowControl = new ConcurrentHashMap<>();
 
-    public KafkaController(KafkaConsumer<?, ?> kafkaConsumer, MessageStream messageStream, String topic) {
+    public KafkaController(Consumer<?, ?> kafkaConsumer, MessageStream messageStream, String topic) {
         this.kafkaConsumer = kafkaConsumer;
         this.messageStream = messageStream;
         messageStream.addTopic(topic);
@@ -78,11 +80,14 @@ public class KafkaController {
      * and the message should not be processed.
      *
      * @param record the record to acknowledge
+     * @param the generation number when the record was received
      * @return true if the record should be processed, else false
      * @throws InterruptedException if the thread is interrupted
      */
-    public boolean acknowledge(ConsumerRecord<?, ?> record) throws InterruptedException {
-        AtomicInteger flowCount = flowControl.get(new TopicPartition(record.topic(), record.partition()));
+    public boolean acknowledge(ConsumerRecord<?, ?> record, long generationNumber) throws InterruptedException {
+        final TopicPartition partition = new TopicPartition(record.topic(), record.partition());
+
+        final AtomicInteger flowCount = flowControl.get(partition);
         if (flowCount != null) {
             int counter = flowCount.decrementAndGet();
             if (counter == 0) {
@@ -91,8 +96,13 @@ public class KafkaController {
                 }
             }
         }
+
+        final Generation generation = generations.get(partition);
+
         log.debug("Acknowledge message with topic {} partition {} offset {}", record.topic(), record.partition(), record.offset());
-        return running && acknowledgmentHandler.acknowledgeRecord(record);
+        return running && acknowledgmentHandler.acknowledgeRecord(
+            record,
+            () -> generation.acceptsGeneration(generationNumber));
     }
 
     /**
@@ -216,8 +226,10 @@ public class KafkaController {
         Map<TopicPartition, List<KafkaMessage>> messages = new HashMap<>();
         records.partitions().forEach(tp -> messages.put(tp, new ArrayList<>()));
         for (ConsumerRecord<?, ?> record : records) {
-            TopicPartition partition = new TopicPartition(record.topic(), record.partition());
-            messages.get(partition).add(new KafkaMessage(this, record));
+            final TopicPartition partition = new TopicPartition(record.topic(), record.partition());
+            final Generation generation = generations.get(partition);
+
+            messages.get(partition).add(new KafkaMessage(this, record, generation.generationNumber()));
         }
         return messages;
     }
@@ -225,8 +237,12 @@ public class KafkaController {
     private class RebalanceListener implements ConsumerRebalanceListener {
         @Override
         public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
-            log.debug("controlLoop partitions revoked");
+            log.debug("controlLoop partitions revoked with generations {}", generations);
             try {
+                for (TopicPartition partition : partitions) {
+                    generations.get(partition).unassign();
+                }
+
                 Map<TopicPartition, OffsetAndMetadata> removedOffsets = acknowledgmentHandler.removePartitions(partitions);
                 for (TopicPartition partition : partitions) {
                     flowControl.remove(partition);
@@ -242,6 +258,14 @@ public class KafkaController {
         @Override
         public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
             log.debug("controlLoop partitions assigned");
+
+            for (TopicPartition partition : partitions) {
+                final Generation generation = generations.computeIfAbsent(partition, ignored -> new Generation());
+                generation.assignNextGeneration();
+            }
+
+            log.debug("controlLoop partitions assigned with generations {}", generations);
+
             acknowledgmentHandler.addPartitions(partitions);
             for (TopicPartition partition : partitions) {
                 flowControl.merge(partition, new AtomicInteger(),

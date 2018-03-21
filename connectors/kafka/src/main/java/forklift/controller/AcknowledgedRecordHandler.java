@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Supplier;
 
 /**
  * Maintains a batch of acknowledged records and provides management for adding and removing {@link org.apache.kafka.common.TopicPartition partitions}.
@@ -31,12 +32,20 @@ public class AcknowledgedRecordHandler {
      * blocking method and a short delay may occur should the available topic paritions be changing.
      *
      * @param record the record to acknowledge
+     * @param atomicCheck any check that needs to be performed atomicly with the acknowledgment
      * @return true if the record has been acknowledged and may be processed, else false
      * @throws InterruptedException if interrupted
      */
-    public boolean acknowledgeRecord(ConsumerRecord<?, ?> record) throws InterruptedException {
+    public boolean acknowledgeRecord(ConsumerRecord<?, ?> record, Supplier<Boolean> atomicCheck) throws InterruptedException {
         lock.readLock().lock();
         try {
+            if (atomicCheck != null) {
+                final Boolean checkResult = atomicCheck.get();
+                if (checkResult == null || !checkResult) {
+                    return false;
+                }
+            }
+
             TopicPartition topicPartition = new TopicPartition(record.topic(), record.partition());
             if (!assignment.contains(topicPartition)) {
                 return false;
