@@ -10,6 +10,9 @@ link:doc/forklift.adoc[Documentation]
 == Releases
 link:doc/prev_releases.adoc[Previous Releases]
 
+* *May 7th 2018* - v3.3
+** Add methods for the kafka connector so that kafka clients can be configured externally
+
 * *March 21st 2018* - v3.2
 ** Fix issues with the kafka connector that caused out-of-order message procesing under load, and duplicate message processing during rebalances.
 
