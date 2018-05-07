@@ -46,6 +46,9 @@ public class KafkaConnector implements ForkliftConnectorI {
     private ForkliftSerializer serializer;
     private Map<String, KafkaController> controllers = new HashMap<>();
 
+    private volatile Map<Object, Object> addedConsumerProperties;
+    private volatile Map<Object, Object> addedProducerProperties;
+
     /**
      * Constructs a new instance of the KafkaConnector
      *
@@ -58,6 +61,26 @@ public class KafkaConnector implements ForkliftConnectorI {
         this.schemaRegistries = schemaRegistries;
         this.groupId = groupId;
         this.serializer = new KafkaSerializer(this, newSerializer(), newDeserializer());
+    }
+
+    /**
+     * Set additional consumer properties to be used by the connector, added after the connector's
+     * default settings.
+     *
+     * @param addedProperties the additional consumer properties
+     */
+    public void setAddedConsumerProperties(final Map<Object, Object> addedProperties) {
+        this.addedConsumerProperties = addedProperties;
+    }
+
+    /**
+     * Set additional producer properties to be used by the connector, added after the connector's
+     * default settings.
+     *
+     * @param addedProperties the additional producer properties
+     */
+    public void setAddedProducerProperties(final Map<Object, Object> addedProperties) {
+        this.addedProducerProperties = addedProperties;
     }
 
     private KafkaAvroSerializer newSerializer() {
@@ -89,7 +112,7 @@ public class KafkaConnector implements ForkliftConnectorI {
         //We do nothing here.  Consumer and producer are created when needed
     }
 
-    private KafkaProducer createKafkaProducer() {
+    Properties getProducerProperties() {
         Properties producerProperties = new Properties();
         producerProperties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaHosts);
         producerProperties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
@@ -98,10 +121,18 @@ public class KafkaConnector implements ForkliftConnectorI {
                                io.confluent.kafka.serializers.KafkaAvroSerializer.class);
         producerProperties.put(KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistries);
 
-        return new KafkaProducer(producerProperties);
+        if (addedProducerProperties != null) {
+            producerProperties.putAll(addedProducerProperties);
+        }
+
+        return producerProperties;
     }
 
-    private KafkaController createController(String topicName) {
+    private KafkaProducer createKafkaProducer() {
+        return new KafkaProducer(getProducerProperties());
+    }
+
+    Properties getConsumerProperties() {
         Properties props = new Properties();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaHosts);
         props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
@@ -113,7 +144,15 @@ public class KafkaConnector implements ForkliftConnectorI {
         props.put(KafkaAvroDeserializerConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistries);
         props.put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, false);
 
-        final KafkaConsumer<?, ?> kafkaConsumer = new KafkaConsumer(props);
+        if (addedConsumerProperties != null) {
+            props.putAll(addedConsumerProperties);
+        }
+
+        return props;
+    }
+
+    private KafkaController createController(String topicName) {
+        final KafkaConsumer<?, ?> kafkaConsumer = new KafkaConsumer(getConsumerProperties());
         return new KafkaController(kafkaConsumer, new MessageStream(), topicName);
     }
 
