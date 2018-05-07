@@ -46,6 +46,9 @@ public class KafkaConnector implements ForkliftConnectorI {
     private ForkliftSerializer serializer;
     private Map<String, KafkaController> controllers = new HashMap<>();
 
+    private volatile Map<Object, Object> addedConsumerProperties;
+    private volatile Map<Object, Object> addedProducerProperties;
+
     /**
      * Constructs a new instance of the KafkaConnector
      *
@@ -58,6 +61,26 @@ public class KafkaConnector implements ForkliftConnectorI {
         this.schemaRegistries = schemaRegistries;
         this.groupId = groupId;
         this.serializer = new KafkaSerializer(this, newSerializer(), newDeserializer());
+    }
+
+    /**
+     * Set additional consumer properties to be used by the connector, added after the connector's
+     * default settings.
+     *
+     * @param addedProperties the additional consumer properties
+     */
+    public void setAddedConsumerProperties(final Map<Object, Object> addedProperties) {
+        this.addedConsumerProperties = addedProperties;
+    }
+
+    /**
+     * Set additional producer properties to be used by the connector, added after the connector's
+     * default settings.
+     *
+     * @param addedProperties the additional producer properties
+     */
+    public void setAddedProducerProperties(final Map<Object, Object> addedProperties) {
+        this.addedProducerProperties = addedProperties;
     }
 
     private KafkaAvroSerializer newSerializer() {
@@ -98,6 +121,10 @@ public class KafkaConnector implements ForkliftConnectorI {
                                io.confluent.kafka.serializers.KafkaAvroSerializer.class);
         producerProperties.put(KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistries);
 
+        if (addedProducerProperties != null) {
+            producerProperties.putAll(addedProducerProperties);
+        }
+
         return new KafkaProducer(producerProperties);
     }
 
@@ -112,6 +139,10 @@ public class KafkaConnector implements ForkliftConnectorI {
         props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 200);
         props.put(KafkaAvroDeserializerConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistries);
         props.put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, false);
+
+        if (addedConsumerProperties != null) {
+            props.putAll(addedConsumerProperties);
+        }
 
         final KafkaConsumer<?, ?> kafkaConsumer = new KafkaConsumer(props);
         return new KafkaController(kafkaConsumer, new MessageStream(), topicName);
