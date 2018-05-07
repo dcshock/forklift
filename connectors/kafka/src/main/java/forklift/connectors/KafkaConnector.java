@@ -112,7 +112,7 @@ public class KafkaConnector implements ForkliftConnectorI {
         //We do nothing here.  Consumer and producer are created when needed
     }
 
-    private KafkaProducer createKafkaProducer() {
+    Properties getProducerProperties() {
         Properties producerProperties = new Properties();
         producerProperties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaHosts);
         producerProperties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
@@ -125,10 +125,14 @@ public class KafkaConnector implements ForkliftConnectorI {
             producerProperties.putAll(addedProducerProperties);
         }
 
-        return new KafkaProducer(producerProperties);
+        return producerProperties;
     }
 
-    private KafkaController createController(String topicName) {
+    private KafkaProducer createKafkaProducer() {
+        return new KafkaProducer(getProducerProperties());
+    }
+
+    Properties getConsumerProperties() {
         Properties props = new Properties();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaHosts);
         props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
@@ -144,7 +148,11 @@ public class KafkaConnector implements ForkliftConnectorI {
             props.putAll(addedConsumerProperties);
         }
 
-        final KafkaConsumer<?, ?> kafkaConsumer = new KafkaConsumer(props);
+        return props;
+    }
+
+    private KafkaController createController(String topicName) {
+        final KafkaConsumer<?, ?> kafkaConsumer = new KafkaConsumer(getConsumerProperties());
         return new KafkaController(kafkaConsumer, new MessageStream(), topicName);
     }
 
