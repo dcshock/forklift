@@ -9,12 +9,6 @@ import forklift.consumer.parser.KeyValueParser;
 import forklift.decorators.Config;
 import forklift.decorators.Headers;
 import forklift.decorators.MultiThreaded;
-import forklift.decorators.On;
-import forklift.decorators.OnMessage;
-import forklift.decorators.OnValidate;
-import forklift.decorators.Ons;
-import forklift.decorators.Order;
-import forklift.decorators.Response;
 import forklift.message.Header;
 import forklift.producers.ForkliftProducerI;
 import forklift.properties.PropertiesManager;
@@ -24,7 +18,6 @@ import forklift.source.sources.GroupedTopicSource;
 import forklift.source.sources.QueueSource;
 import forklift.source.sources.RoleInputSource;
 import forklift.source.sources.TopicSource;
-import forklift.source.decorators.GroupedTopic;
 import forklift.source.decorators.Queue;
 import forklift.source.decorators.Topic;
 
@@ -48,7 +41,6 @@ import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -71,20 +63,15 @@ public class Consumer {
 
     private final ClassLoader classLoader;
     private final Forklift forklift;
-    private final Map<Class, Map<Class<?>, List<Field>>> injectFields;
+
     private final Class<?> msgHandler;
-    private final List<Method> onMessage;
-    private final List<Method> onValidate;
-    private final List<Method> onResponse;
-    private final Map<String, List<MessageRunnable>> orderQueue;
-    private final Map<ProcessStep, List<Method>> onProcessStep;
     private Constructor<?> constructor;
     private Annotation[][] constructorAnnotations;
     private String name;
     private SourceI source;
     private List<SourceI> roleSources = Collections.emptyList();
     private List<ConsumerService> services;
-    private Method orderMethod;
+    private final ConsumerAnnotationDetector annotations;
 
     // If a queue can process multiple messages at a time we
     // use a thread pool to manage how much cpu load the queue can
@@ -164,60 +151,9 @@ public class Consumer {
         }
 
         log = LoggerFactory.getLogger(Consumer.class);
-
-        // Look for all methods that need to be called when a
-        // message is received.
-        onMessage = new ArrayList<>();
-        onValidate = new ArrayList<>();
-        onResponse = new ArrayList<>();
-        onProcessStep = new HashMap<>();
-        Arrays.stream(ProcessStep.values()).forEach(step -> onProcessStep.put(step, new ArrayList<>()));
-        for (Method m : msgHandler.getDeclaredMethods()) {
-            if (m.isAnnotationPresent(OnMessage.class))
-                onMessage.add(m);
-            else if (m.isAnnotationPresent(OnValidate.class))
-                onValidate.add(m);
-            else if (m.isAnnotationPresent(Response.class)) {
-                if (!forklift.getConnector().supportsResponse())
-                    throw new RuntimeException("@Response is not supported by the current connector");
-
-                onResponse.add(m);
-            } else if (m.isAnnotationPresent(Order.class)) {
-                if (!forklift.getConnector().supportsOrder())
-                    throw new RuntimeException("@Order is not supported by the current connector");
-
-                orderMethod = m;
-            } else if (m.isAnnotationPresent(On.class) || m.isAnnotationPresent(Ons.class))
-                Arrays.stream(m.getAnnotationsByType(On.class))
-                      .map(on -> on.value())
-                      .distinct()
-                      .forEach(x -> onProcessStep.get(x).add(m));
-        }
-
-        if (orderMethod != null)
-            orderQueue = new HashMap<>();
-        else
-            orderQueue = null;
-
-        injectFields = new HashMap<>();
-        injectFields.put(Config.class, new HashMap<>());
-        injectFields.put(javax.inject.Inject.class, new HashMap<>());
-        injectFields.put(forklift.decorators.Message.class, new HashMap<>());
-        injectFields.put(forklift.decorators.Headers.class, new HashMap<>());
-        injectFields.put(forklift.decorators.Properties.class, new HashMap<>());
-        injectFields.put(forklift.decorators.Producer.class, new HashMap<>());
-        for (Field f : msgHandler.getDeclaredFields()) {
-            injectFields.keySet().forEach(type -> {
-                if (f.isAnnotationPresent(type)) {
-                    f.setAccessible(true);
-
-                    // Init the list
-                    if (injectFields.get(type).get(f.getType()) == null)
-                        injectFields.get(type).put(f.getType(), new ArrayList<>());
-                    injectFields.get(type).get(f.getType()).add(f);
-                }
-            });
-        }
+        this.annotations =
+            new ConsumerAnnotationDetector(msgHandler,
+                forklift.getConnector().supportsOrder(), forklift.getConnector().supportsResponse());
         configureConstructorInjection();
     }
 
@@ -260,6 +196,12 @@ public class Consumer {
     }
 
     public void messageLoop(ForkliftConsumerI consumer) {
+        Map<String, List<MessageRunnable>> orderQueue = annotations.getOrderQueue();
+        Method orderMethod = annotations.getOrderMethod();
+        List<Method> onMessage = annotations.getOnMessage();
+        List<Method> onValidate = annotations.getOnValidate();
+        List<Method> onResponse = annotations.getOnResponse();
+        Map<ProcessStep, List<Method>> onProcessStep = annotations.getOnProcessStep();
         try {
             running.set(true);
 
@@ -393,6 +335,7 @@ public class Consumer {
         // Keep any closable resources around so the injection utilizer can cleanup.
         final List<Closeable> closeMe = new ArrayList<>();
 
+        Map<Class, Map<Class<?>, List<Field>>> injectFields = annotations.getInjectFields();
         // Inject the forklift msg
         injectFields.keySet().stream().forEach(decorator -> {
             final Map<Class<?>, List<Field>> fields = injectFields.get(decorator);
@@ -434,6 +377,7 @@ public class Consumer {
     }
 
     private Object[] buildConstructorParameters(ForkliftMessage forkliftMessage, List<Closeable> closeables) throws IOException {
+        Map<Class, Map<Class<?>, List<Field>>> injectFields = annotations.getInjectFields();
         Object[] parameters = new Object[constructorAnnotations.length];
         int index = 0;
         for (Annotation[] parameterAnnotations : constructorAnnotations) {
