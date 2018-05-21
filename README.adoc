@@ -10,6 +10,9 @@ link:doc/forklift.adoc[Documentation]
 == Releases
 link:doc/prev_releases.adoc[Previous Releases]
 
+* *May 21st 2018* - v3.4
+** Fix simply documentation bug
+
 * *May 7th 2018* - v3.3
 ** Add methods for the kafka connector so that kafka clients can be configured externally
 
