@@ -232,7 +232,7 @@ a message's lifecycle. For more details, see the [plugins documentation](PLUGINS
 
 ## Quickstart Guide
 
-* Download the https://github.com/dcshock/forklift/releases/download[forklift-server-x.x.zip] release.
+* Download the https://github.com/dcshock/forklift/releases[forklift-server-x.x.zip] release.
 
 * unzip the download
 
