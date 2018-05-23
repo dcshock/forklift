@@ -61,15 +61,15 @@ public class MessageRunnable implements Runnable {
     public void run() {
         RunAsClassLoader.run(classLoader, () -> {
             // Always ack message to prevent deadlocks
-            boolean acknowledged = false;
+            boolean continueProcessing;
             try {
-                acknowledged = msg.acknowledge();
+                continueProcessing = msg.beforeProcessing();
             } catch (ConnectorException e) {
-                log.error("Error while acking message.", e);
-                acknowledged = false;
+                continueProcessing = false;
+                log.error("Error before processing message", e);
             }
 
-            if (!acknowledged) {
+            if (!continueProcessing) {
                 close();
                 return;
             }
@@ -155,6 +155,17 @@ public class MessageRunnable implements Runnable {
                     this.lifeCycle.call(ProcessStep.Complete, this);
                 }
             }
+
+            // acknowledge only after all the work has been said and done
+            try {
+                final boolean acknowledged = msg.acknowledge();
+                if (!acknowledged) {
+                    log.error("Failed to acknowledge message after processing");
+                }
+            } catch (Exception e) {
+                log.error("Error while acking message", e);
+            }
+
             // Always log all non-null errors
             if (this.warnOnly)
                 getErrors().stream().filter(e -> e != null).forEach(e -> log.warn(e));

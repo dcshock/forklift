@@ -31,7 +31,7 @@ public class KafkaMessage extends ForkliftMessage {
     }
 
     @Override
-    public boolean acknowledge() throws ConnectorException {
+    public boolean beforeProcessing() throws ConnectorException {
         try {
             final boolean acknowledged = controller.acknowledge(consumerRecord, generationNumber);
             log.debug("Acknoledgment for topic: {} partition: {} offset: {} generation: {} successful: {}",

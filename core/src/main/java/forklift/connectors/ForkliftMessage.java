@@ -24,7 +24,23 @@ public class ForkliftMessage {
         this.setMsg(msg);
     }
 
-    public boolean acknowledge() throws ConnectorException {
+
+    /**
+     * Callback after this message is processed.
+     *
+     * @return whether the message was successfully acknowledged.
+     */
+    public boolean acknowledge() {
+        return true;
+    }
+
+    /**
+     * Callback before this message is processed.
+     *
+     * @throws ConnectorException when there is an unexpected error
+     * @return whether to continue processing this message.
+     */
+    public boolean beforeProcessing() throws ConnectorException {
         return true;
     }
 
