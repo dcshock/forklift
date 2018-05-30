@@ -166,7 +166,14 @@ public class RoleInputMessage {
         }
 
         @Override
-        public boolean acknowledge() throws ConnectorException {
+        public boolean beforeProcessing() throws ConnectorException {
+            if (sourceMessage == null)
+                return true;
+            return sourceMessage.beforeProcessing();
+        }
+
+        @Override
+        public boolean acknowledge() {
             if (sourceMessage == null)
                 return true;
             return sourceMessage.acknowledge();

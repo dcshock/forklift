@@ -30,20 +30,20 @@ public class KafkaMessageTests {
     }
 
     @Test
-    public void acknowledgeFalseTest() throws ConnectorException, InterruptedException {
+    public void beforeProcessingFalseTest() throws ConnectorException, InterruptedException {
         when(controller.acknowledge(eq(record), any(Integer.class))).thenReturn(false);
 
-        boolean acknowledged = message.acknowledge();
+        boolean acknowledged = message.beforeProcessing();
 
         assertFalse(acknowledged);
         verify(controller).acknowledge(eq(record), any(Integer.class));
     }
 
     @Test
-    public void acknowledgeCallsControllerSuccess() throws ConnectorException, InterruptedException {
+    public void beforeProcessingCallsControllerSuccess() throws ConnectorException, InterruptedException {
         when(controller.acknowledge(eq(record), any(Integer.class))).thenReturn(true);
 
-        boolean acknowledged = message.acknowledge();
+        boolean acknowledged = message.beforeProcessing();
 
         assertTrue(acknowledged);
         verify(controller).acknowledge(eq(record), any(Integer.class));
