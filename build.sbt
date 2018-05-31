@@ -14,13 +14,6 @@ lazy val baseSettings = Seq(
     "Fuse" at "http://repo.fusesource.com/nexus/content/groups/public",
     "Confluent Maven Repo" at "http://packages.confluent.io/maven/"
   ),
-  publishTo := {
-    val nexus = "https://oss.sonatype.org/"
-    if (isSnapshot.value)
-      Some("snapshots" at nexus + "content/repositories/snapshots")
-    else
-      Some("releases"  at nexus + "service/local/staging/deploy/maven2")
-  },
   publishMavenStyle := true,
   credentials += Credentials(
     "Sonatype Nexus Repository Manager",
@@ -63,6 +56,10 @@ lazy val baseSettings = Seq(
       </developer>
     </developers>)
 )
+
+// publishTo needs to be inherited from the value of sonatypePublishTo set on the root
+// by 'sonatypeOpen' and similar commands
+publishTo in ThisBuild := sonatypePublishTo.value
 
 lazy val core = project in file("core") settings baseSettings
 lazy val replay = project.dependsOn(core) in file("plugins/replay") settings baseSettings
