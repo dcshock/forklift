@@ -5,5 +5,5 @@ echo Found branch $BRANCH
 if [ $BRANCH == 'master' ]
   then
     echo Publishing to Sonatype
-    sbt publishSigned sonatypeReleaseAll
+    sbt 'sonatypeOpen "Forklift Release via Travis"' publishSigned sonatypeRelease
 fi
