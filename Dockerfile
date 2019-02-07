@@ -1,4 +1,4 @@
-FROM gliderlabs/alpine:3.3
+FROM alpine:3.9
 MAINTAINER Matt Conroy <elduderino@mailinator.com>
 
 # Install java 8
