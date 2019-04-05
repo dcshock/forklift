@@ -30,14 +30,22 @@ public class ActiveMQConnector implements ForkliftConnectorI {
 
     private ActiveMQConnectionFactory factory;
     private ActiveMQConnection conn;
-    private String brokerUrl;
+    private final String brokerUrl;
+    private final String userName;
+    private final String password;
 
     public ActiveMQConnector() {
-
+        this(null);
     }
 
     public ActiveMQConnector(String brokerUrl) {
+        this(brokerUrl,  "", "");
+    }
+
+    public ActiveMQConnector(String brokerUrl, String userName, String password) {
         this.brokerUrl = brokerUrl;
+        this.userName = userName;
+        this.password = password;
     }
 
     @Override
@@ -46,7 +54,7 @@ public class ActiveMQConnector implements ForkliftConnectorI {
         if (brokerUrl == null)
             throw new ConnectorException("brokerUrl wasn't set");
 
-        factory = new ActiveMQConnectionFactory("", "", brokerUrl);
+        factory = new ActiveMQConnectionFactory(userName, password, brokerUrl);
     }
 
     @Override
