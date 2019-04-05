@@ -10,6 +10,9 @@ link:doc/forklift.adoc[Documentation]
 == Releases
 link:doc/prev_releases.adoc[Previous Releases]
 
+* *April 5th 2019* - v3.6
+** Add support for password-based authentication to the ActiveMQ connector.
+
 * *May 30th 2018* - v3.5
 ** Made ActiveMQ consumers acknowledge messages after they are processed so as to provide at-least-once processing and avoid dropping messages.
 
