@@ -12,6 +12,12 @@ public class ForkliftOpts {
     @Option(name="-url", required=true, usage="broker connection url")
     private String brokerUrl;
 
+    @Option(name="-username", depends = "-password", usage = "username for broker connection")
+    private String username;
+
+    @Option(name="-password", depends = "-username", usage = "password for broker connection")
+    private String password;
+
     @Option(name="-retryDir", usage="directory for persisted retry messages")
     private String retryDir;
 
@@ -63,6 +69,14 @@ public class ForkliftOpts {
 
     public String getBrokerUrl() {
         return brokerUrl;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
     }
 
     public void setBrokerUrl(String brokerUrl) {

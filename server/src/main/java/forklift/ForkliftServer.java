@@ -5,7 +5,6 @@ import consul.Consul;
 import forklift.connectors.ActiveMQConnector;
 import forklift.connectors.ForkliftConnectorI;
 import forklift.consumer.ConsumerDeploymentEvents;
-import forklift.decorators.*;
 import forklift.deployment.Deployment;
 import forklift.deployment.DeploymentManager;
 import forklift.deployment.DeploymentWatch;
@@ -327,6 +326,6 @@ public final class ForkliftServer {
             broker.start();
         }
         log.info("Connected to broker on " + brokerUrl);
-        return new ActiveMQConnector(brokerUrl);
+        return new ActiveMQConnector(brokerUrl, opts.getUsername(), opts.getPassword());
     }
 }
