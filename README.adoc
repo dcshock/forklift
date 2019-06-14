@@ -10,6 +10,9 @@ link:doc/forklift.adoc[Documentation]
 == Releases
 link:doc/prev_releases.adoc[Previous Releases]
 
+* *June 13th 2019* - v3.7
+** Add support for password-based authentication to forklift server.
+
 * *April 5th 2019* - v3.6
 ** Add support for password-based authentication to the ActiveMQ connector.
 
@@ -60,7 +63,7 @@ link:doc/prev_releases.adoc[Previous Releases]
 == Current Release Dependencies
 === SBT
 ----
-libraryDependencies += "com.github.dcshock" % "forklift-server" % "2.0"
+libraryDependencies += "com.github.dcshock" % "forklift-server" % "3.7"
 ----
 
 === Maven
