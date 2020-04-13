@@ -27,7 +27,7 @@ subprojects {
     version = '3.8-SNAPSHOT'
 
     java {
-        // withJavadocJar()
+        withJavadocJar()
         withSourcesJar()
     }
 
