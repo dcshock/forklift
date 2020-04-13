@@ -46,6 +46,38 @@ subprojects {
         publications {
             mavenJava(MavenPublication) {
                 from components.java
+                pom {
+                    url = 'https://github.com/dcshock/forklift</'
+                    licenses {
+                        license {
+                            name = 'BSD-style'
+                            url = 'http://www.opensource.org/licenses/bsd-license.php'
+                        }
+                    }
+                    scm {
+                        url = 'git@github.com:dcshock/forklift.git'
+                        connection = 'scm:git:git@github.com:dcshock/forklift.git'
+                    }
+                    developers {
+                        developer {
+                            id = 'dcshock'
+                            name = 'Matt Conroy'
+                            url = 'http://www.mattconroy.com'
+                        }
+                        developer {
+                            id = 'afrieze'
+                            name = 'Andrew Frieze'
+                        }
+                        developer {
+                            id = 'kuroshii'
+                            name = 'Bridger Howell'
+                        }
+                        developer {
+                            id = 'applitect'
+                            name = 'David Thompson'
+                        }
+                    }
+                }
             }
         }
     }
