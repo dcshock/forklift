@@ -1,5 +1,5 @@
 dependencies {
-    compile 'com.google.guava:guava:18.0',
+    api 'com.google.guava:guava:18.0',
             'com.fasterxml.jackson.core:jackson-databind:2.7.3',
             'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.7.3',
             'com.fasterxml.jackson.core:jackson-core:2.7.3',
@@ -7,5 +7,5 @@ dependencies {
             'org.reflections:reflections:0.9.10',
             'javax.inject:javax.inject:1'
 
-    testCompile 'org.mockito:mockito-all:1.9.5'
+    testImplementation 'org.mockito:mockito-all:1.9.5'
 }

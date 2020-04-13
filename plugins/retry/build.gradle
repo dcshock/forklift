@@ -1,9 +1,9 @@
 dependencies {
-    compile project(':core'),
+    implementation project(':forklift-core'),
             'com.fasterxml.jackson.core:jackson-databind:2.7.3',
             'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.7.3',
             'io.searchbox:jest:2.4.0'
 
 
-    testCompile 'org.mockito:mockito-core:1.9.5'
+    testImplementation 'org.mockito:mockito-core:1.9.5'
 }

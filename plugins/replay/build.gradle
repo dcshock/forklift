@@ -1,10 +1,7 @@
 dependencies {
-    compile project(':core'),
+    api project(':forklift-core'),
             'org.elasticsearch:elasticsearch:2.4.1',
-            'org.elasticsearch.client:rest:5.0.2',
-            'com.fasterxml.jackson.core:jackson-databind:2.7.3',
-            'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.7.3'
+            'org.elasticsearch.client:rest:5.0.2'
 
-
-    testCompile 'org.mockito:mockito-core:1.9.5'
+    testImplementation 'org.mockito:mockito-core:1.9.5'
 }

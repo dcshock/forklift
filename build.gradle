@@ -10,21 +10,43 @@
  *    - consumers: Examples written to show how you to build your own forklift ESB
  */
 
+
 allprojects {
     repositories {
         mavenCentral()
         maven {
-            url 'http://packages.confluent.io/maven'
+            url 'https://packages.confluent.io/maven'
         }
     }
 }
 
 subprojects {
     apply plugin: 'java-library'
+    apply plugin: 'maven-publish'
     group = 'com.github.dcshock'
-    version = '3.7'
+    version = '3.8-SNAPSHOT'
+
+    java {
+        // withJavadocJar()
+        withSourcesJar()
+    }
+
+    jar {
+        manifest {
+            attributes("Implementation-Title": "forklift",
+                       "Implementation-Version": version)
+        }
+    }
 
     dependencies {
         testImplementation 'junit:junit:4.12'
+    }
+
+    publishing {
+        publications {
+            mavenJava(MavenPublication) {
+                from components.java
+            }
+        }
     }
 }
