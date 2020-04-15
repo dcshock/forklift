@@ -10,12 +10,22 @@
  *    - consumers: Examples written to show how you to build your own forklift ESB
  */
 
+def repoUser = System.getenv('SONATYPE_USER') ?: ''
+def repoPassword = System.getenv('SONATYPE_PASS') ?: ''
 
 allprojects {
     repositories {
         mavenCentral()
         maven {
             url 'https://packages.confluent.io/maven'
+        }
+        maven {
+            name 'Sonatype OSS Snapshots'
+            url 'https://oss.sonatype.org/content/repositories/snapshots'
+            credentials {
+                username repoUser
+                password repoPassword
+            }
         }
     }
 }
