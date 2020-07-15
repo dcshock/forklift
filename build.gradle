@@ -10,10 +10,6 @@
  *    - consumers: Examples written to show how you to build your own forklift ESB
  */
 
-plugins {
-  id "com.bmuschko.nexus" version "2.3.1"
-}
-
 allprojects {
     repositories {
         mavenCentral()
@@ -26,20 +22,25 @@ allprojects {
 subprojects {
     apply plugin: 'java-library'
     apply plugin: 'maven-publish'
-    apply plugin: 'com.bmuschko.nexus'
+    apply plugin: 'signing'
     apply plugin: 'distribution'
     group = 'com.github.dcshock'
     version = '3.8-SNAPSHOT'
+
+    java {
+        withSourcesJar()
+        withJavadocJar()
+    }
+
+    dependencies {
+        testImplementation 'junit:junit:4.12'
+    }
 
     jar {
         manifest {
             attributes("Implementation-Title": "forklift",
                        "Implementation-Version": version)
         }
-    }
-
-    dependencies {
-        testImplementation 'junit:junit:4.12'
     }
 
     publishing {
@@ -89,5 +90,16 @@ subprojects {
                 }
             }
         }
+    }
+
+
+    signing {
+        def gpgPassword = System.getenv("GPG_PASS")
+        def gpgFile = System.getProperty("user.dir") + "/project/.gnupg/secring.gpg"
+        project.ext.set("signing.keyId", "F1ED27F3")
+        project.ext.set("signing.password", gpgPassword)
+        project.ext.set("signing.secretKeyRingFile", gpgFile)
+
+        sign publishing.publications.mavenJava
     }
 }
