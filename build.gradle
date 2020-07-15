@@ -10,8 +10,9 @@
  *    - consumers: Examples written to show how you to build your own forklift ESB
  */
 
-def repoUser = System.getenv('SONATYPE_USER') ?: ''
-def repoPassword = System.getenv('SONATYPE_PASS') ?: ''
+plugins {
+  id "com.bmuschko.nexus" version "2.3.1"
+}
 
 allprojects {
     repositories {
@@ -19,27 +20,16 @@ allprojects {
         maven {
             url 'https://packages.confluent.io/maven'
         }
-        maven {
-            name 'Sonatype OSS Snapshots'
-            url 'https://oss.sonatype.org/content/repositories/snapshots'
-            credentials {
-                username repoUser
-                password repoPassword
-            }
-        }
     }
-}
+ }
 
 subprojects {
     apply plugin: 'java-library'
     apply plugin: 'maven-publish'
+    apply plugin: 'com.bmuschko.nexus'
+    apply plugin: 'distribution'
     group = 'com.github.dcshock'
     version = '3.8-SNAPSHOT'
-
-    java {
-        withJavadocJar()
-        withSourcesJar()
-    }
 
     jar {
         manifest {
@@ -53,11 +43,20 @@ subprojects {
     }
 
     publishing {
+        repositories {
+            maven {
+                credentials {
+                    username = System.getenv("NEXUS_USER")
+                    password = System.getenv("NEXUS_PASS")
+                }
+            }
+        }
         publications {
             mavenJava(MavenPublication) {
+                version = project.hasProperty("artfactVersion") ? artifactVersion : version
                 from components.java
                 pom {
-                    url = 'https://github.com/dcshock/forklift</'
+                    url = 'https://github.com/dcshock/forklift'
                     licenses {
                         license {
                             name = 'BSD-style'
