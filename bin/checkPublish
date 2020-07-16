@@ -6,5 +6,5 @@ echo Found branch $BRANCH
 if [ $BRANCH == 'master' ]
   then
     echo Publishing to Sonatype
-    sbt 'sonatypeOpen "Forklift Release via Travis"' publishSigned sonatypeRelease
+    ./gradlew publishAllPublicationsToMavenRepository
 fi
