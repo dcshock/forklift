@@ -46,9 +46,15 @@ subprojects {
     publishing {
         repositories {
             maven {
+                URI releaseUrl = new URI("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
+                URI snapshotUrl = new URI("https://oss.sonatype.org/content/repositories/snapshots/")
+
+                afterEvaluate {
+                    url version.endsWith("SNAPSHOT") ? snapshotUrl : releaseUrl
+                }
                 credentials {
-                    username = System.getenv("NEXUS_USER")
-                    password = System.getenv("NEXUS_PASS")
+                    username = System.getenv("SONATYPE_USER")
+                    password = System.getenv("SONATYPE_PASS")
                 }
             }
         }
