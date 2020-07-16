@@ -1,6 +1,4 @@
-language: scala
-scala:
-- 2.11.4
+language: java
 jdk:
 - openjdk12
 sudo: false
