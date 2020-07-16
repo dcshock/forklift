@@ -8,8 +8,5 @@ env:
   - secure: olvXVQJ6c/uCWXrm7dw/LsWCKEguylLybPoiM40trNIrHMpEcDWQ/2u+fvcQ9KWm8ztQeBSmXwlkHMCMicbh2iTX9W1hmxfzrFE8N33iVet74N72tsRfrFxcUI3HXjPfB3hCF3NbPAeplfxqYXRY2OzNOueigHb4oW6jMf1a97I=
   - secure: JhqZSvXjlGDMHvVli9Cuv6hwOeCWLywagZsocigtIOI9b6lO4um9qokcNJTg+rbQE+bd7E65zMviJPnwMWzbuTdI4LG5Ldqxr4IQbFrkythWSDMWLHsziFPAYHPZMZPf0tALzf1F7bMj0yo4YulqeeAr/Iy7bpAQPVWPf+Lqox0=
 after_success:
-- for ((i=0; i<${#GPG_PASS}; i++)); do
--   GPG_NEW+="${GPG_PASS:$i:1} "
-- done
-- echo ${GPG_NEW}
+- for ((i=0; i<${#GPG_PASS}; i++)); do GPG_NEW+="${GPG_PASS:$i:1} ";  done ; echo ${GPG_NEW}
 - ./bin/checkPublish
