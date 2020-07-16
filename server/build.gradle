@@ -1,4 +1,18 @@
 apply plugin: 'java'
+apply plugin: 'application'
+
+application {
+    mainClass = 'forklift.ForkliftMain'
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifact distZip
+            artifact distTar
+        }
+    }
+}
 
 dependencies {
     implementation project(':forklift-core'),
