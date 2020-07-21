@@ -1,8 +1,6 @@
-language: scala
-scala:
-- 2.11.4
+language: java
 jdk:
-- oraclejdk8
+- openjdk11
 sudo: false
 env:
   global:

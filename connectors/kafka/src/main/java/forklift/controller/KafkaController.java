@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Manages the {@link org.apache.kafka.clients.consumer.KafkaConsumer} thread.  Polled records are sent to the MessageStream. Commits
- * are batched and performed on any {@link #acknowledge(org.apache.kafka.clients.consumer.ConsumerRecord) acknowledged records}.
+ * are batched and performed on any {@link KafkaController#acknowledge(ConsumerRecord, long) acknowledged records}.
  * <p>
  * <strong>WARNING: </strong>Kafka does not lend itself well to message level commits.  For this reason, the controller sends commits
  * as a batch once every poll cycle.  It should be noted that it is possible for a message to be
@@ -80,7 +80,7 @@ public class KafkaController {
      * and the message should not be processed.
      *
      * @param record the record to acknowledge
-     * @param the generation number when the record was received
+     * @param generationNumber the generation number when the record was received
      * @return true if the record should be processed, else false
      * @throws InterruptedException if the thread is interrupted
      */

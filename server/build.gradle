@@ -1,0 +1,34 @@
+apply plugin: 'java'
+apply plugin: 'application'
+
+application {
+    mainClass = 'forklift.ForkliftMain'
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifact distZip
+            artifact distTar
+        }
+    }
+}
+
+dependencies {
+    implementation project(':forklift-core'),
+            project(':forklift-replay'),
+            project(':forklift-retry'),
+            project(':forklift-stats'),
+            project(':forklift-activemq'),
+            project(':forklift-kafka'),
+            'com.github.dcshock:consul-rest-client:0.10',
+            'org.apache.activemq:activemq-broker:5.14.0',
+            'io.searchbox:jest:2.0.0',
+            'args4j:args4j:2.0.31',
+            'org.codehaus.janino:janino:2.6.1',
+            'ch.qos.logback.contrib:logback-json-core:0.1.2',
+            'ch.qos.logback.contrib:logback-json-classic:0.1.2',
+            'ch.qos.logback.contrib:logback-jackson:0.1.2'
+
+    testImplementation 'commons-io:commons-io:2.4'
+}

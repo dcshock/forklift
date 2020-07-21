@@ -76,7 +76,7 @@ public class AcknowledgedRecordHandler {
 
     /**
      * Adds additional partitions to be managed.  Only added partitions can be
-     * {@link #acknowledgeRecord(org.apache.kafka.clients.consumer.ConsumerRecord) acknowledged}
+     * {@link #acknowledgeRecord(ConsumerRecord, Supplier) acknowledged}
      *
      * @param addedPartitions the partitions to add
      */
