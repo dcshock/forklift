@@ -65,7 +65,7 @@ public class RoleInputMessageTests {
         final RoleInputMessage decodedMessage = RoleInputMessage.fromString("{)..v[");
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testJsonDecodingFailsWithNullString() {
         final RoleInputMessage decodedMessage = RoleInputMessage.fromString(null);
     }
