@@ -23,10 +23,11 @@ import forklift.source.sources.QueueSource;
 
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.node.Node;
-import org.elasticsearch.node.NodeBuilder;
+import org.elasticsearch.node.NodeValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -113,18 +114,18 @@ public class ReplayES {
         if (clientOnly) {
             node = null;
         } else {
-            node = NodeBuilder.nodeBuilder()
-                .client(clientOnly)
-                .settings(Settings.settingsBuilder().put("http.enabled", true))
-                .settings(Settings.settingsBuilder().put("http.cors.enabled", true))
-                .settings(Settings.settingsBuilder().put("http.cors.allow-origin", "*"))
-                .settings(Settings.settingsBuilder().put("path.home", "."))
-                .node();
-            node.start();
+            Settings settings = Settings.builder()
+                .put("http.enabled", true)
+                .put("http.cors.enabled", true)
+                .put("http.cors.allow-origin", "*")
+                .put("path.home", ".")
+                .build();
+                node = new Node(settings);
 
             try {
+                node.start();
                 Thread.sleep(10000L);
-            } catch (InterruptedException ignored) {
+            } catch (InterruptedException | NodeValidationException ignored) {
             }
         }
 
@@ -135,7 +136,9 @@ public class ReplayES {
             @Override
             public void run() {
                 if (node != null && !node.isClosed())
-                    node.close();
+                    try {
+                        node.close();
+                    } catch (IOException ignored) {}
             }
         });
 
