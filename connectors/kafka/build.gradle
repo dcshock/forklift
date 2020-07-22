@@ -3,7 +3,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath "com.commercehub.gradle.plugin:gradle-avro-plugin:0.19.1"
+        classpath "com.commercehub.gradle.plugin:gradle-avro-plugin:0.21.0"
     }
 }
 apply plugin: "com.commercehub.gradle.plugin.avro"
@@ -14,10 +14,10 @@ dependencies {
     api ('io.confluent:kafka-avro-serializer:3.3.3') { exclude group: 'org.slf4j', module: 'slf4j-log4j12' },
         'org.apache.avro:avro:1.9.2'
 
-    testImplementation 'commons-io:commons-io:2.4',
+    testImplementation 'commons-io:commons-io:2.7',
             'commons-net:commons-net:3.6',
             'org.glassfish.jaxb:jaxb-runtime:2.3.2',
-            'org.mockito:mockito-core:1.9.5',
+            'org.mockito:mockito-core:3.4.4',
             implementation('io.confluent:kafka-schema-registry:3.3.1') { exclude group: 'org.slf4j', module: 'slf4j-log4j12' },
             // Need the following two jackson libraries to handle NoClassDefFoundErrors when running the tests.
             // It appears that the confluentinc schema-registry still use Jackson 1.

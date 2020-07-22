@@ -31,21 +31,21 @@ public class KafkaMessageTests {
 
     @Test
     public void beforeProcessingFalseTest() throws ConnectorException, InterruptedException {
-        when(controller.acknowledge(eq(record), any(Integer.class))).thenReturn(false);
+        when(controller.acknowledge(eq(record), any(Long.class))).thenReturn(false);
 
         boolean acknowledged = message.beforeProcessing();
 
         assertFalse(acknowledged);
-        verify(controller).acknowledge(eq(record), any(Integer.class));
+        verify(controller).acknowledge(eq(record), any(Long.class));
     }
 
     @Test
     public void beforeProcessingCallsControllerSuccess() throws ConnectorException, InterruptedException {
-        when(controller.acknowledge(eq(record), any(Integer.class))).thenReturn(true);
+        when(controller.acknowledge(eq(record), any(Long.class))).thenReturn(true);
 
         boolean acknowledged = message.beforeProcessing();
 
         assertTrue(acknowledged);
-        verify(controller).acknowledge(eq(record), any(Integer.class));
+        verify(controller).acknowledge(eq(record), any(Long.class));
     }
 }
