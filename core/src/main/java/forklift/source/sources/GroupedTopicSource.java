@@ -1,7 +1,6 @@
 package forklift.source.sources;
 
 import forklift.source.ActionSource;
-import forklift.source.SourceI;
 import forklift.source.decorators.GroupedTopic;
 
 import java.util.Objects;

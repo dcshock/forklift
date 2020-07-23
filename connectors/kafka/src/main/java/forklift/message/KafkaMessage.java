@@ -4,9 +4,7 @@ import forklift.connectors.ConnectorException;
 import forklift.connectors.ForkliftMessage;
 import forklift.connectors.KafkaSerializer;
 import forklift.controller.KafkaController;
-import forklift.producers.KafkaForkliftProducer;
 
-import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

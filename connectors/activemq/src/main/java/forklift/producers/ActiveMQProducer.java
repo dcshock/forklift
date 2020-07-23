@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.jms.Destination;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
@@ -26,7 +25,6 @@ public class ActiveMQProducer implements ForkliftProducerI {
     private static final ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule())
                                                                  .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     private MessageProducer producer;
-    private Destination destination;
     private Map<Header, Object> headers;
     private Map<String, String> properties;
     private Session session;
@@ -122,7 +120,7 @@ public class ActiveMQProducer implements ForkliftProducerI {
     * @param message - ForkliftMessage
     * @return String - JMSCorrelationID
     **/
-    public String send(Map<Header, Object> headers, 
+    public String send(Map<Header, Object> headers,
                        Map<String, String> properties,
                        ForkliftMessage message) throws ProducerException {
         Message msg = prepAndValidate(message, headers, properties);

@@ -24,7 +24,6 @@ import forklift.source.sources.GroupedTopicSource;
 import forklift.source.sources.QueueSource;
 import forklift.source.sources.RoleInputSource;
 import forklift.source.sources.TopicSource;
-import forklift.source.decorators.GroupedTopic;
 import forklift.source.decorators.Queue;
 import forklift.source.decorators.Topic;
 
@@ -388,6 +387,7 @@ public class Consumer {
      *
      * @param msg      containing data
      * @param instance an instance of the msgHandler class.
+     * @return the list of ForkliftProducers to close
      */
     public List<Closeable> inject(ForkliftMessage msg, final Object instance) {
         // Keep any closable resources around so the injection utilizer can cleanup.
@@ -531,11 +531,7 @@ public class Consumer {
                 if (key.equals("")) {
                     key = mappedName;
                 }
-                if (properties == null) {
-                    log.warn("Attempt to inject field {} from properties, but properties is null", key);
-                } else {
-                    value = properties.get(key);
-                }
+                value = properties.get(key);
             }
         } else if (decorator.annotationType() == forklift.decorators.Producer.class) {
             if (mappedClass == ForkliftProducerI.class) {
@@ -566,6 +562,7 @@ public class Consumer {
      * passed in msg and any Services {@link #addServices(ConsumerService...) added} to this consumer.
      *
      * @param msg the message used for injection
+     * @return the created instance
      */
     public Object getMsgHandlerInstance(ForkliftMessage msg) {
         Object instance = null;

@@ -94,7 +94,7 @@ public class ActiveMQHeadersTest {
         ActiveMQHeaders.getFunctions().get(Header.DeliveryCount).set(msg, "abc");
         ActiveMQHeaders.getFunctions().get(Header.DeliveryMode).set(msg, "1");
         ActiveMQHeaders.getFunctions().get(Header.Expiration).set(msg, "never");
-        ActiveMQHeaders.getFunctions().get(Header.GroupId).set(msg, new Long(1));
+        ActiveMQHeaders.getFunctions().get(Header.GroupId).set(msg, Long.valueOf(1));
         ActiveMQHeaders.getFunctions().get(Header.GroupSeq).set(msg, "10");
         ActiveMQHeaders.getFunctions().get(Header.PreviousDestination).set(msg, new ActiveMQDestination() {
             @Override

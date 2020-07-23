@@ -18,7 +18,12 @@ public class ClassDeploymentTest {
 
     @Test(expected = NullPointerException.class)
     public void testNullDeployment() throws IOException {
-        new ClassDeployment(null);
+        new ClassDeployment((Class<?>) null);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testNullArrayDeployment() throws IOException {
+        new ClassDeployment((Class<?>[]) null);
     }
 
     @Test

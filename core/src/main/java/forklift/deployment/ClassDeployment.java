@@ -5,12 +5,9 @@ import forklift.decorators.Service;
 import forklift.source.SourceUtil;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterables;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Stream;
 
 /**
  *
@@ -77,12 +74,5 @@ public class ClassDeployment implements Deployment {
         result = 31 * result + services.hashCode();
         result = 31 * result + coreServices.hashCode();
         return result;
-    }
-
-    private boolean identicalSets(Set<?> set1, Set<?> set2){
-        if(set1.size() != set2.size()){
-            return false;
-        }
-        return set1.containsAll(set2);
     }
 }

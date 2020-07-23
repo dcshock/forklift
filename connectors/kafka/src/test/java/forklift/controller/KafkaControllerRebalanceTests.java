@@ -1,10 +1,8 @@
 package forklift.controller;
 
 import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import forklift.Forklift;
@@ -30,15 +28,12 @@ import org.apache.kafka.common.TopicPartition;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -96,10 +91,11 @@ public class KafkaControllerRebalanceTests {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void testRecordsAfterRebalance() throws Exception {
         final TopicPartition partition = new TopicPartition(TOPIC, 0);
-        final LinkedHashMap<String, GenericRecord> records = new LinkedHashMap<String, GenericRecord>() {{
+        @SuppressWarnings("serial")
+        final LinkedHashMap<String, GenericRecord> records = new LinkedHashMap<String, GenericRecord>() {
+        {
             put("Bobby", new GenericData.Record(UserRegistered.getClassSchema()) {{
                 put("firstName", "Bobby");
                 put("lastName", "Foo");

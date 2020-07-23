@@ -4,7 +4,6 @@ import forklift.decorators.Message;
 import forklift.decorators.MultiThreaded;
 import forklift.decorators.OnMessage;
 import forklift.decorators.OnValidate;
-import forklift.decorators.Order;
 import forklift.source.decorators.Queue;
 
 import javax.inject.Inject;

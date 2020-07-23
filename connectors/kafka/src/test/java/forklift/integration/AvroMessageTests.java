@@ -16,16 +16,11 @@ import forklift.source.decorators.Queue;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class AvroMessageTests extends BaseIntegrationTest {
-
-    private static final Logger log = LoggerFactory.getLogger(AvroMessageTests.class);
-
     @After
     public void after() {
         serviceManager.stop();

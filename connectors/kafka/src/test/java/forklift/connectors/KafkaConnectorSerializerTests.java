@@ -1,7 +1,6 @@
 package forklift.connectors;
 
 import forklift.Forklift;
-import forklift.connectors.ForkliftSerializer;
 import forklift.integration.server.TestServiceManager;
 import forklift.source.sources.TopicSource;
 
@@ -9,8 +8,6 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import java.nio.ByteBuffer;
 
 public class KafkaConnectorSerializerTests {
     private static TestServiceManager serviceManager;

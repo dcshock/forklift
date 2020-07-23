@@ -219,7 +219,7 @@ public class RebalanceTests extends BaseIntegrationTest {
                     long jitter = random.nextLong() % 50;
                     try {
                         sentMessageIds.add(producer1.send("String message"));
-                        Thread.currentThread().sleep(jitter);
+                        Thread.sleep(jitter);
                     } catch (Exception e) {
                     }
                 }
@@ -231,7 +231,7 @@ public class RebalanceTests extends BaseIntegrationTest {
                         final Map<String, String> m = new HashMap<>();
                         m.put("x", "producer key value send test");
                         sentMessageIds.add(producer2.send(m));
-                        Thread.currentThread().sleep(jitter);
+                        Thread.sleep(jitter);
                     } catch (Exception e) {
                     }
                 }
@@ -242,7 +242,7 @@ public class RebalanceTests extends BaseIntegrationTest {
                     try {
                         final TestMessage m = new TestMessage(new String("x=producer object send test"), 1);
                         sentMessageIds.add(producer3.send(m));
-                        Thread.currentThread().sleep(jitter);
+                        Thread.sleep(jitter);
                     } catch (Exception e) {
                     }
                 }
