@@ -21,14 +21,16 @@ dependencies {
             project(':forklift-stats'),
             project(':forklift-activemq'),
             project(':forklift-kafka'),
-            'com.github.dcshock:consul-rest-client:0.10',
-            'org.apache.activemq:activemq-broker:5.14.0',
-            'io.searchbox:jest:2.0.0',
-            'args4j:args4j:2.0.31',
-            'org.codehaus.janino:janino:2.6.1',
-            'ch.qos.logback.contrib:logback-json-core:0.1.2',
-            'ch.qos.logback.contrib:logback-json-classic:0.1.2',
-            'ch.qos.logback.contrib:logback-jackson:0.1.2'
+            'com.github.dcshock:consul-rest-client:1.3',
+            'org.apache.activemq:activemq-broker:5.16.0',
+            'org.apache.activemq:activemq-stomp:5.16.0',
+            'org.apache.activemq:activemq-kahadb-store:5.16.0',
+            'io.searchbox:jest:6.3.1',
+            'args4j:args4j:2.33',
+            'org.codehaus.janino:janino:3.1.2',
+            'ch.qos.logback.contrib:logback-json-core:0.1.5',
+            'ch.qos.logback.contrib:logback-json-classic:0.1.5',
+            'ch.qos.logback.contrib:logback-jackson:0.1.5'
 
     testImplementation 'commons-io:commons-io:2.4'
 }
