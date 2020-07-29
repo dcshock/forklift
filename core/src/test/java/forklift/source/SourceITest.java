@@ -245,7 +245,9 @@ public class SourceITest {
             .elseUnsupportedError();
     }
 
-    class JustATestException extends Exception { }
+    class JustATestException extends Exception {
+        private static final long serialVersionUID = 1L;
+    }
 
     @Test(expected = JustATestException.class)
     public void testExceptionalFunctionApplicationThrowsCorrectException() throws JustATestException {

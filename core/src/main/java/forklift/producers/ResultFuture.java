@@ -1,10 +1,6 @@
 package forklift.producers;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ResultFuture<T> extends CompletableFuture<T> {
     private String correlationId;

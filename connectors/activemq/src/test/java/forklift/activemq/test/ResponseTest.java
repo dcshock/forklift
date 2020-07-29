@@ -144,7 +144,7 @@ public class ResponseTest {
             try {
                 ResponseObj o = f.get();
                 Assert.assertEquals("Dude", o.getName());
-                Assert.assertEquals(new Integer(22), o.getAge());
+                Assert.assertEquals(Integer.valueOf(22), o.getAge());
             } catch (Exception e) {
                 Assert.fail(e.getMessage());
             }

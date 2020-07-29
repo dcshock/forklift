@@ -4,17 +4,14 @@ import forklift.connectors.ForkliftConnectorI;
 import forklift.connectors.ForkliftMessage;
 import forklift.connectors.ForkliftSerializer;
 import forklift.consumer.Consumer;
-import forklift.consumer.ProcessStep;
 import forklift.source.ActionSource;
 import forklift.source.SourceI;
 import forklift.source.sources.QueueSource;
 import forklift.source.sources.RoleInputSource;
 
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.mockito.stubbing.Answer;
 
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
@@ -78,6 +75,7 @@ public class RetryLogBuilderTest {
         }
     };
 
+    @SuppressWarnings({ "rawtypes", "unchecked", "serial" })
     @Test
     public void testFieldsSetCorrectlyWithoutSerializer() {
         // build the message
@@ -236,6 +234,7 @@ public class RetryLogBuilderTest {
         Assert.assertEquals("TestHandler", fields.get("role"));
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked", "serial" })
     @Test
     public void testRetriesExceeded() {
         // build the message

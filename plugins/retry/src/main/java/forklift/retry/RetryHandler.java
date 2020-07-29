@@ -9,7 +9,6 @@ import forklift.file.FileScanner;
 import forklift.source.sources.QueueSource;
 import forklift.source.sources.TopicSource;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -26,7 +25,6 @@ import java.util.function.Consumer;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Handles retries for consumers that have been annotated with Retry
@@ -85,11 +83,14 @@ public class RetryHandler {
         final Map<String, String> props = msg.getProperties();
 
         // Handle retries
-        Integer retryCount = Integer.parseInt(props.get("forklift-retry-count"));
-        if (retryCount == null)
-            retryCount = 1;
-        else
-            retryCount++;
+        Integer retryCount;
+        try {
+            retryCount = Integer.parseInt(props.get("forklift-retry-count"));
+        } catch (NumberFormatException e) {
+            retryCount = 0;
+        }
+
+        retryCount++;
         if (retryCount > retry.maxRetries()) {
             props.put("forklift-retry-max-retries-exceeded", "true");
             return;

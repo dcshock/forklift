@@ -19,7 +19,6 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Abstract class which provides support for some common integration testing scenarios.
@@ -61,7 +60,7 @@ public abstract class BaseIntegrationTest {
         assertTrue(sentMessageIds.size() > 0);
     }
 
-    
+
     @Queue("forklift-string-topic")
     public static class StringConsumer {
 
@@ -131,7 +130,7 @@ public abstract class BaseIntegrationTest {
 
         @forklift.decorators.Message
         private ForkliftMessage forkliftMessage;
-        
+
         @forklift.decorators.Message
         private Map<String, String> mapMessage;
 

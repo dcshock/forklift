@@ -23,6 +23,8 @@ public final class Executors {
 
     /**
      * Allows us to create daemon threads with meaningful names.
+     * @param name of the thread
+     * @return new ThreadFactory with named thread
      */
     private static ThreadFactory daemonThreadFactory(final String name) {
         return new ThreadFactory() {
@@ -37,7 +39,9 @@ public final class Executors {
     }
 
     /**
-     * A core thread pool factory method that returns a cached thread pool.
+     *  A core thread pool factory method that returns a cached thread pool.
+     * @param name of the thread to create
+     * @return a new executor containing the named thread
      */
     public static ExecutorService newCoreThreadPool(final String name) {
         final ThreadPoolExecutor pool = new ThreadPoolExecutor(

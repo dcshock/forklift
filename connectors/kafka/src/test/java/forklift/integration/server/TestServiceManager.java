@@ -5,7 +5,6 @@ import forklift.connectors.KafkaConnector;
 import forklift.exception.StartupException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.net.telnet.TelnetClient;
-import org.apache.kafka.common.errors.InterruptException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.File;

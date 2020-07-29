@@ -7,13 +7,8 @@ import forklift.exception.StartupException;
 import forklift.producers.ForkliftProducerI;
 import forklift.producers.ProducerException;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ObjectMessageTests extends BaseIntegrationTest {
-
-    private static final Logger log = LoggerFactory.getLogger(RebalanceTests.class);
-
     @Test
     public void testSendObjectMessage() throws ConnectorException, ProducerException, StartupException {
         Forklift forklift = serviceManager.newManagedForkliftInstance();

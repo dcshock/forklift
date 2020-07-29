@@ -17,6 +17,7 @@ import java.lang.annotation.Target;
 public @interface MultiThreaded {
     /**
      * The maximum number of threads to run. Defaults to 2.
+     * @return the maximum number of threads to run
      */
     int value() default 2;
 }

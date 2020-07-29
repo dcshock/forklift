@@ -2,11 +2,10 @@ package forklift;
 
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.OptionHandlerFilter;
 
 import java.io.File;
 import java.util.concurrent.TimeUnit;
-
-import static org.kohsuke.args4j.ExampleMode.ALL;
 
 /**
  * Created by afrieze on 11/4/16.
@@ -31,7 +30,7 @@ public class ForkliftMain {
             argParse.printUsage(System.err);
             System.err.println();
             // print option sample. This is useful some time
-            System.err.println("  Example: java SampleMain" + argParse.printExample(ALL));
+            System.err.println("  Example: java SampleMain" + argParse.printExample(OptionHandlerFilter.ALL));
 
             return;
         }

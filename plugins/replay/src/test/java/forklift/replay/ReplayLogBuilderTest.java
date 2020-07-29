@@ -11,10 +11,8 @@ import forklift.source.sources.QueueSource;
 import forklift.source.sources.RoleInputSource;
 
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.mockito.stubbing.Answer;
 
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
@@ -50,6 +48,7 @@ public class ReplayLogBuilderTest {
     };
 
 
+    @SuppressWarnings({ "serial", "unchecked", "rawtypes" })
     @Test
     public void testOnErrorFieldsSetCorrectlyWithoutSerializer() {
         // build the message
@@ -214,6 +213,7 @@ public class ReplayLogBuilderTest {
         Assert.assertNotNull(fields.get("time"));
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes", "serial" })
     @Test
     public void testStepCountIsIncremented() {
         // build the message

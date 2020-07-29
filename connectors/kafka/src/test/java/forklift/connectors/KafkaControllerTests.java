@@ -74,9 +74,4 @@ public class KafkaControllerTests {
         assertTrue(subscribeCaptor.getValue().contains(topic1));
         this.controller.stop(10, TimeUnit.MILLISECONDS);
     }
-
-    private ConsumerRecord<?, ?> generateRecord(String topic, int partition, String value, long offset) {
-        return new ConsumerRecord<Object, Object>(topic, partition, offset, null, value);
-    }
-
 }

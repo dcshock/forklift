@@ -10,13 +10,10 @@ import forklift.consumer.MessageRunnable;
 import forklift.consumer.ProcessStep;
 import forklift.decorators.BeanResolver;
 import forklift.decorators.LifeCycle;
-import forklift.decorators.Service;
 import forklift.producers.ForkliftProducerI;
 import forklift.producers.ProducerException;
-import forklift.source.ActionSource;
 import forklift.source.SourceI;
 import forklift.source.SourceUtil;
-import forklift.source.decorators.Topic;
 import forklift.source.sources.GroupedTopicSource;
 import forklift.source.sources.TopicSource;
 import forklift.source.sources.QueueSource;
@@ -28,10 +25,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * A plugin that writes replay log messages to elasticsearch, so that messages
@@ -61,6 +56,7 @@ public class ReplayES {
      *
      * @deprecated use {@link #ReplayES(boolean, String, ForkliftConnectorI)} instead
      */
+    @Deprecated
     public ReplayES(boolean clientOnly, String hostname, String clusterName, ForkliftConnectorI connector) {
         this(clientOnly, hostname, 9200, clusterName, connector);
     }
@@ -78,6 +74,7 @@ public class ReplayES {
      *
      * @deprecated use {@link #ReplayES(boolean, String, int, ForkliftConnectorI)} instead
      */
+    @Deprecated
     public ReplayES(boolean clientOnly, String hostname, int port, String clusterName, ForkliftConnectorI connector) {
         this(clientOnly, hostname, port, connector);
     }

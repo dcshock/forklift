@@ -204,7 +204,7 @@ public class MessageRunnable implements Runnable {
 
     /**
      * Set logging to warn only. This allows exceptions that would normally be logged as error to be warnings.
-     * @param b
+     * @param b true will set to warning, false will error
      */
     public void setWarnOnly(boolean b) {
         this.warnOnly = b;

@@ -1,7 +1,6 @@
 package forklift.connectors;
 
 import forklift.consumer.parser.KeyValueParser;
-import forklift.producers.KafkaForkliftProducer;
 import forklift.source.SourceI;
 import forklift.source.sources.GroupedTopicSource;
 import forklift.source.sources.RoleInputSource;
