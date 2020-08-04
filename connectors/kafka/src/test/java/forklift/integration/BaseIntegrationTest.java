@@ -1,7 +1,5 @@
 package forklift.integration;
 
-import static org.junit.Assert.assertTrue;
-
 import forklift.connectors.ForkliftMessage;
 import forklift.decorators.MultiThreaded;
 import forklift.decorators.OnMessage;
@@ -11,10 +9,12 @@ import forklift.producers.ForkliftProducerI;
 import forklift.schemas.AvroMessage;
 import forklift.source.decorators.Queue;
 
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Map;
 import java.util.Set;
@@ -41,12 +41,12 @@ public abstract class BaseIntegrationTest {
     protected final int maxTimeouts = 5;
     protected int timeouts = 0;
 
-    @After
+    @AfterAll
     public void after() {
         serviceManager.stop();
     }
 
-    @Before
+    @BeforeAll
     public void setup() {
         serviceManager = new TestServiceManager();
         serviceManager.start();

@@ -1,5 +1,6 @@
 package forklift.controller;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -25,9 +26,8 @@ import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.TopicPartition;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.ArrayList;
@@ -54,7 +54,7 @@ public class KafkaControllerRebalanceTests {
     private ForkliftConnectorI mockConnector;
     private Forklift forklift;
 
-    @Before
+    @BeforeAll
     public void setup() throws Exception {
         donePolling = new AtomicBoolean(false);
         processedRecords = new ArrayList<>();
@@ -149,8 +149,8 @@ public class KafkaControllerRebalanceTests {
         controller.stop(10, TimeUnit.MILLISECONDS);
 
         // since the consumer has one thread, the messages should be processed in order
-        Assert.assertEquals(recordList.size(), processedRecords.size());
-        Assert.assertEquals(recordList, processedRecords);
+        assertEquals(recordList.size(), processedRecords.size());
+        assertEquals(recordList, processedRecords);
     }
 
     @Topic("ignored")

@@ -1,9 +1,10 @@
 package forklift.consumer.injection;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -20,35 +21,39 @@ import forklift.message.Header;
 import forklift.source.decorators.Queue;
 import forklift.source.decorators.Topic;
 
-import org.junit.Before;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
 public class ConsumerTest {
 
     private Forklift forklift;
     private ForkliftConnectorI connector;
 
-    @Before
+    @BeforeAll
     public void setup() {
         forklift = mock(Forklift.class);
         connector = mock(ForkliftConnectorI.class);
         when(forklift.getConnector()).thenReturn(connector);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void createBadConsumer() {
-        new Consumer(BadConsumer.class, forklift, this.getClass().getClassLoader());
+        assertThrows(IllegalArgumentException.class, () ->  {
+            new Consumer(BadConsumer.class, forklift, this.getClass().getClassLoader());
+        });
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void createDoubleConsumer() {
-        new Consumer(DoubleConsumer.class, forklift, this.getClass().getClassLoader());
+        assertThrows(IllegalArgumentException.class, () -> {
+            new Consumer(DoubleConsumer.class, forklift, this.getClass().getClassLoader());
+        });
     }
 
     @Test

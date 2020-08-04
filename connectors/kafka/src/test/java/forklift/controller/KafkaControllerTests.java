@@ -1,7 +1,7 @@
 package forklift.controller;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
@@ -15,9 +15,9 @@ import forklift.message.MessageStream;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
@@ -43,13 +43,13 @@ public class KafkaControllerTests {
     @Captor
     private ArgumentCaptor<Collection<String>> subscribeCaptor;
 
-    @Before
+    @BeforeAll
     public void setup() {
         MockitoAnnotations.initMocks(this);
         this.controller = new KafkaController(kafkaConsumer, messageStream, topic1);
     }
 
-    @After
+    @AfterAll
     public void teardown() throws InterruptedException {
         this.controller.stop(500, TimeUnit.MILLISECONDS);
     }
@@ -72,7 +72,7 @@ public class KafkaControllerTests {
         //verify that the control loop is polling repeatedly.  Normally there would be a delay but
         //the kafkaConsumer has been mocked to return immediatly on poll
         verify(kafkaConsumer, timeout(200).atLeast(5))
-            .poll(eq(KafkaController.POLL_TIMEOUT));
+            .poll(eq(KafkaController.POLL_TIMEOUT.getSeconds()));
         assertEquals(1, subscribeCaptor.getValue().size());
         assertTrue(subscribeCaptor.getValue().contains(topic1));
         this.controller.stop(10, TimeUnit.MILLISECONDS);

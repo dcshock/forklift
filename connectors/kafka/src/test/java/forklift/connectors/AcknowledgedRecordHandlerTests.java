@@ -1,12 +1,14 @@
 package forklift.connectors;
 
-import static org.junit.Assert.assertEquals;
 import forklift.controller.AcknowledgedRecordHandler;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +22,7 @@ public class AcknowledgedRecordHandlerTests {
     private AcknowledgedRecordHandler handler;
     private Supplier<Boolean> predicate;
 
-    @Before
+    @BeforeAll
     public void setup() {
         this.handler = new AcknowledgedRecordHandler();
         this.predicate = () -> true;

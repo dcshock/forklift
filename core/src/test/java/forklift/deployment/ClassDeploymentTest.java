@@ -7,23 +7,33 @@ import forklift.deployment.deploymentClasses.TestQueue1;
 import forklift.deployment.deploymentClasses.TestQueue2;
 import forklift.deployment.deploymentClasses.TestService1;
 import forklift.deployment.deploymentClasses.TestTopic1;
-import org.junit.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
 
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
 
 public class ClassDeploymentTest {
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testNullDeployment() throws IOException {
-        new ClassDeployment((Class<?>) null);
+        assertThrows(NullPointerException.class, () -> {
+            new ClassDeployment((Class<?>) null);
+        });
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testNullArrayDeployment() throws IOException {
+        assertThrows(NullPointerException.class, () -> {
         new ClassDeployment((Class<?>[]) null);
+        });
     }
 
     @Test

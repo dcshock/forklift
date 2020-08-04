@@ -1,14 +1,15 @@
 package forklift.file;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import com.google.common.io.Files;
-import org.junit.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+
+import org.junit.jupiter.api.Test;
 
 public class FileScannerTest {
     @Test
@@ -30,7 +31,7 @@ public class FileScannerTest {
             if (result.equals(new FileScanResult(FileStatus.Added, file1.getName())))
                 add = true;
         }
-        assertTrue("File was not added", add);
+        assertTrue(add, "File was not added");
 
         boolean unchanged = false;
         results = fileScan.scan();
@@ -39,7 +40,7 @@ public class FileScannerTest {
             if (result.equals(new FileScanResult(FileStatus.Unchanged, file1.getName())))
                 unchanged = true;
         }
-        assertTrue("File was not unchanged", unchanged);
+        assertTrue(unchanged, "File was not unchanged");
 
         assertTrue(file1.setLastModified(System.currentTimeMillis() + 10000));
         results = fileScan.scan();
@@ -49,7 +50,7 @@ public class FileScannerTest {
             if (result.equals(new FileScanResult(FileStatus.Modified, file1.getName())))
                 modified = true;
         }
-        assertTrue("File was not modified", modified);
+        assertTrue(modified, "File was not modified");
 
         final File file2 = File.createTempFile("test", "test", tmpDir);
 
@@ -65,8 +66,8 @@ public class FileScannerTest {
             else if (result.equals(new FileScanResult(FileStatus.Unchanged, file1.getName())))
                 unchangedFile = true;
         }
-        assertTrue("File 2 was not detected", newFile);
-        assertTrue("File 1 was not reported", unchangedFile);
+        assertTrue(newFile, "File 2 was not detected");
+        assertTrue(unchangedFile, "File 1 was not reported");
 
         file1.delete();
         results = fileScan.scan();
@@ -76,6 +77,6 @@ public class FileScannerTest {
             if (result.equals(new FileScanResult(FileStatus.Removed, file1.getName())))
                 removed = true;
         }
-        assertTrue("File was not removed", removed);
+        assertTrue(removed, "File was not removed");
     }
 }

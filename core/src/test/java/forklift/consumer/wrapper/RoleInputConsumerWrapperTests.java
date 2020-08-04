@@ -5,10 +5,13 @@ import forklift.connectors.ForkliftMessage;
 import forklift.consumer.ForkliftConsumerI;
 import forklift.message.Header;
 
-import org.junit.Assert;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Collections;
+
+import org.junit.jupiter.api.Test;
 
 public class RoleInputConsumerWrapperTests {
     @Test
@@ -33,20 +36,22 @@ public class RoleInputConsumerWrapperTests {
         final ForkliftConsumerI consumerWrapper = new RoleInputConsumerWrapper(testConsumer);
         final ForkliftMessage extractedMessage = consumerWrapper.receive(1000);
 
-        Assert.assertEquals("test-id", extractedMessage.getId());
-        Assert.assertEquals("test-message", extractedMessage.getMsg());
-        Assert.assertEquals(Collections.singletonMap("forklift-retry-count", "2"), extractedMessage.getProperties());
-        Assert.assertEquals(Collections.singletonMap(Header.Priority, 6), extractedMessage.getHeaders());
+        assertEquals("test-id", extractedMessage.getId());
+        assertEquals("test-message", extractedMessage.getMsg());
+        assertEquals(Collections.singletonMap("forklift-retry-count", "2"), extractedMessage.getProperties());
+        assertEquals(Collections.singletonMap(Header.Priority, 6), extractedMessage.getHeaders());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testInvalidJsonMessage() throws ConnectorException {
-        final String sourceJson = "{[hi";
-        final ForkliftMessage sourceMessage = new ForkliftMessage(sourceJson);
-        final ForkliftConsumerI testConsumer = new ConstantMessageConsumer(sourceMessage);
-        final ForkliftConsumerI consumerWrapper = new RoleInputConsumerWrapper(testConsumer);
+        assertThrows(IllegalArgumentException.class, () -> {
+            final String sourceJson = "{[hi";
+            final ForkliftMessage sourceMessage = new ForkliftMessage(sourceJson);
+            final ForkliftConsumerI testConsumer = new ConstantMessageConsumer(sourceMessage);
+            final ForkliftConsumerI consumerWrapper = new RoleInputConsumerWrapper(testConsumer);
 
-        final ForkliftMessage extractedMessage = consumerWrapper.receive(1000);
+           consumerWrapper.receive(1000);
+        });
     }
 
     @Test
@@ -55,7 +60,7 @@ public class RoleInputConsumerWrapperTests {
         final ForkliftConsumerI consumerWrapper = new RoleInputConsumerWrapper(testConsumer);
 
         final ForkliftMessage extractedMessage = consumerWrapper.receive(1000);
-        Assert.assertNull(extractedMessage);
+        assertNull(extractedMessage);
     }
 
     private static class ConstantMessageConsumer implements ForkliftConsumerI {

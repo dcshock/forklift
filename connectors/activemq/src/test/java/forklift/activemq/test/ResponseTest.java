@@ -7,23 +7,26 @@ import forklift.producers.ForkliftSyncProducer;
 import forklift.producers.ForkliftSyncProducerI;
 import forklift.source.decorators.Queue;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
 
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
 public class ResponseTest {
-    @Before
+    @BeforeAll
     public void before() {
         TestServiceManager.start();
     }
 
-    @After
+    @AfterAll
     public void after() {
         TestServiceManager.stop();
     }
@@ -58,11 +61,11 @@ public class ResponseTest {
 
         // Verify that each future has been completed and has a valid data item.
         futures.forEach((f) -> {
-            Assert.assertTrue(f.isDone());
+            assertTrue(f.isDone());
             try {
-                Assert.assertEquals("test", f.get());
+                assertEquals("test", f.get());
             } catch (Exception e) {
-                Assert.fail(e.getMessage());
+                fail(e.getMessage());
             }
         });
     }
@@ -98,13 +101,13 @@ public class ResponseTest {
 
         // Verify that each future has been completed and has a valid data item.
         futures.forEach((f) -> {
-            Assert.assertTrue(f.isDone());
+            assertTrue(f.isDone());
             try {
                 Map<String, String> map = f.get();
-                Assert.assertTrue(map.containsKey("x"));
-                Assert.assertEquals("x", map.get("x"));
+                assertTrue(map.containsKey("x"));
+                assertEquals("x", map.get("x"));
             } catch (Exception e) {
-                Assert.fail(e.getMessage());
+                fail(e.getMessage());
             }
         });
     }
@@ -140,13 +143,13 @@ public class ResponseTest {
 
         // Verify that each future has been completed and has a valid data item.
         futures.forEach((f) -> {
-            Assert.assertTrue(f.isDone());
+            assertTrue(f.isDone());
             try {
                 ResponseObj o = f.get();
-                Assert.assertEquals("Dude", o.getName());
-                Assert.assertEquals(Integer.valueOf(22), o.getAge());
+                assertEquals("Dude", o.getName());
+                assertEquals(Integer.valueOf(22), o.getAge());
             } catch (Exception e) {
-                Assert.fail(e.getMessage());
+                fail(e.getMessage());
             }
         });
     }

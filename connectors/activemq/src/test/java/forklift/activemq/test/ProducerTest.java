@@ -9,16 +9,17 @@ import forklift.producers.ForkliftProducerI;
 import forklift.producers.ProducerException;
 import forklift.source.decorators.Queue;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.JMSException;
+
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 @Queue("q2")
 public class ProducerTest {
@@ -35,7 +36,7 @@ public class ProducerTest {
     @forklift.decorators.Producer(queue="q2")
     private ForkliftProducerI injectedProducer;
 
-    @Before
+    @BeforeAll
     public void before() {
         TestServiceManager.start();
         called.set(0);
@@ -46,7 +47,7 @@ public class ProducerTest {
         isPropOverwritten = true;
     }
 
-    @After
+    @AfterAll
     public void after() {
         TestServiceManager.stop();
     }
@@ -92,13 +93,13 @@ public class ProducerTest {
         // Shutdown the consumer after all the messages have been processed.
         c.setOutOfMessages((listener) -> {
             listener.shutdown();
-            Assert.assertTrue("called was not == " + msgCount, called.get() == msgCount);
+            assertTrue(called.get() == msgCount, "called was not == " + msgCount);
         });
 
         // Start the consumer.
         c.listen();
 
-        Assert.assertTrue(called.get() > 0);
+        assertTrue(called.get() > 0);
     }
 
     @Test
@@ -114,13 +115,13 @@ public class ProducerTest {
         // Shutdown the consumer after all the messages have been processed.
         c.setOutOfMessages((listener) -> {
             listener.shutdown();
-            Assert.assertTrue("called was not == " + msgCount, called.get() == msgCount);
+            assertTrue(called.get() == msgCount, "called was not == " + msgCount);
         });
 
         // Start the consumer.
         c.listen();
 
-        Assert.assertTrue(called.get() > 0);
+        assertTrue(called.get() > 0);
     }
 
     @Test
@@ -137,13 +138,13 @@ public class ProducerTest {
         // Shutdown the consumer after all the messages have been processed.
         c.setOutOfMessages((listener) -> {
             listener.shutdown();
-            Assert.assertTrue("called was not == " + msgCount, called.get() == msgCount);
+            assertTrue(called.get() == msgCount, "called was not == " + msgCount);
         });
 
         // Start the consumer.
         c.listen();
 
-        Assert.assertTrue(called.get() > 0);
+        assertTrue(called.get() > 0);
     }
 
     @Test
@@ -168,15 +169,15 @@ public class ProducerTest {
         // Shutdown the consumer after all the messages have been processed.
         c.setOutOfMessages((listener) -> {
             listener.shutdown();
-            Assert.assertTrue(ordered);
-            Assert.assertTrue("called was not == " + msgCount, called.get() == msgCount);
-            Assert.assertTrue("injectedProducer is null", isInjectNull == false);
+            assertTrue(ordered);
+            assertTrue(called.get() == msgCount, "called was not == " + msgCount);
+            assertTrue(isInjectNull == false, "injectedProducer is null");
         });
 
         // Start the consumer.
         c.listen();
 
-        Assert.assertTrue(called.get() > 0);
+        assertTrue(called.get() > 0);
     }
 
     @Test
@@ -212,17 +213,17 @@ public class ProducerTest {
         // Shutdown the consumer after all the messages have been processed.
         c.setOutOfMessages((listener) -> {
             listener.shutdown();
-            Assert.assertTrue(ordered);
-            Assert.assertTrue("called was not == " + msgCount, called.get() == msgCount);
-            Assert.assertTrue("Message properties were overwritten", !isPropOverwritten);
-            Assert.assertTrue("Message properties were not set", isPropsSet);
-            Assert.assertTrue("Message headers were not set", isHeadersSet);
+            assertTrue(ordered);
+            assertTrue(called.get() == msgCount, "called was not == " + msgCount);
+            assertTrue(!isPropOverwritten, "Message properties were overwritten");
+            assertTrue(isPropsSet, "Message properties were not set");
+            assertTrue(isHeadersSet, "Message headers were not set");
         });
 
         // Start the consumer.
         c.listen();
 
-        Assert.assertTrue(called.get() > 0);
+        assertTrue(called.get() > 0);
     }
 
     public class TestMessage {

@@ -1,6 +1,5 @@
 package forklift.consumer;
 
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -12,8 +11,10 @@ import forklift.decorators.OnMessage;
 import forklift.decorators.OnValidate;
 import forklift.source.decorators.Queue;
 
-import org.junit.Before;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +34,7 @@ public class MessageRunnableTest {
     private Forklift forklift;
     private ForkliftConnectorI connector;
 
-    @Before
+    @BeforeAll
     public void setup() {
         LifeCycleMonitors lifeCycle = new LifeCycleMonitors();
         forklift = mock(Forklift.class);

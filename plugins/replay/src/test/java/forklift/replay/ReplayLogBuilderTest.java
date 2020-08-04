@@ -10,9 +10,12 @@ import forklift.source.SourceI;
 import forklift.source.sources.QueueSource;
 import forklift.source.sources.RoleInputSource;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
@@ -88,22 +91,22 @@ public class ReplayLogBuilderTest {
         final ReplayLogBuilder logBuilder = new ReplayLogBuilder(msg, consumer, errors, connector, replay, ProcessStep.Error);
         final Map<String, String> fields = logBuilder.getFields();
 
-        Assert.assertEquals("Error", fields.get("step"));
-        Assert.assertEquals("1", fields.get("forklift-replay-step-count"));
-        Assert.assertEquals(testError, fields.get("errors"));
-        Assert.assertEquals(testRole, fields.get("role"));
+        assertEquals("Error", fields.get("step"));
+        assertEquals("1", fields.get("forklift-replay-step-count"));
+        assertEquals(testError, fields.get("errors"));
+        assertEquals(testRole, fields.get("role"));
 
-        Assert.assertEquals("queue", fields.get("destination-type"));
-        Assert.assertEquals(destinationName, fields.get("destination-name"));
-        Assert.assertEquals("raw-string", fields.get("destination-message-format"));
-        Assert.assertEquals(testText, fields.get("text"));
+        assertEquals("queue", fields.get("destination-type"));
+        assertEquals(destinationName, fields.get("destination-name"));
+        assertEquals("raw-string", fields.get("destination-message-format"));
+        assertEquals(testText, fields.get("text"));
 
-        Assert.assertEquals("5", fields.get("random-property"));
+        assertEquals("5", fields.get("random-property"));
 
-        Assert.assertNotNull(fields.get("forklift-replay-version"));
-        Assert.assertNotNull(fields.get("source-description"));
-        Assert.assertNotNull(fields.get("destination-connector"));
-        Assert.assertNotNull(fields.get("time"));
+        assertNotNull(fields.get("forklift-replay-version"));
+        assertNotNull(fields.get("source-description"));
+        assertNotNull(fields.get("destination-connector"));
+        assertNotNull(fields.get("time"));
     }
 
     @Test
@@ -148,20 +151,20 @@ public class ReplayLogBuilderTest {
         final ReplayLogBuilder logBuilder = new ReplayLogBuilder(msg, consumer, errors, connector, replay, ProcessStep.Error);
         final Map<String, String> fields = logBuilder.getFields();
 
-        Assert.assertEquals("Error", fields.get("step"));
-        Assert.assertEquals(testError, fields.get("errors"));
-        Assert.assertEquals(testRole, fields.get("role"));
+        assertEquals("Error", fields.get("step"));
+        assertEquals(testError, fields.get("errors"));
+        assertEquals(testRole, fields.get("role"));
 
-        Assert.assertEquals("queue", fields.get("destination-type"));
-        Assert.assertEquals(destinationName, fields.get("destination-name"));
-        Assert.assertEquals("base64-bytes", fields.get("destination-message-format"));
-        Assert.assertEquals(encodedBytes, fields.get("destination-message"));
-        Assert.assertEquals(testText, fields.get("text"));
+        assertEquals("queue", fields.get("destination-type"));
+        assertEquals(destinationName, fields.get("destination-name"));
+        assertEquals("base64-bytes", fields.get("destination-message-format"));
+        assertEquals(encodedBytes, fields.get("destination-message"));
+        assertEquals(testText, fields.get("text"));
 
-        Assert.assertNotNull(fields.get("forklift-replay-version"));
-        Assert.assertNotNull(fields.get("source-description"));
-        Assert.assertNotNull(fields.get("destination-connector"));
-        Assert.assertNotNull(fields.get("time"));
+        assertNotNull(fields.get("forklift-replay-version"));
+        assertNotNull(fields.get("source-description"));
+        assertNotNull(fields.get("destination-connector"));
+        assertNotNull(fields.get("time"));
     }
 
     @Test
@@ -198,19 +201,19 @@ public class ReplayLogBuilderTest {
         final ReplayLogBuilder logBuilder = new ReplayLogBuilder(msg, consumer, errors, connector, replay, ProcessStep.Pending);
         final Map<String, String> fields = logBuilder.getFields();
 
-        Assert.assertEquals("Pending", fields.get("step"));
-        Assert.assertNull(fields.get("errors"));
-        Assert.assertEquals(testRole, fields.get("role"));
+        assertEquals("Pending", fields.get("step"));
+        assertNull(fields.get("errors"));
+        assertEquals(testRole, fields.get("role"));
 
-        Assert.assertEquals("queue", fields.get("destination-type"));
-        Assert.assertEquals(destinationName, fields.get("destination-name"));
-        Assert.assertEquals("raw-string", fields.get("destination-message-format"));
-        Assert.assertEquals(testText, fields.get("text"));
+        assertEquals("queue", fields.get("destination-type"));
+        assertEquals(destinationName, fields.get("destination-name"));
+        assertEquals("raw-string", fields.get("destination-message-format"));
+        assertEquals(testText, fields.get("text"));
 
-        Assert.assertNotNull(fields.get("forklift-replay-version"));
-        Assert.assertNotNull(fields.get("source-description"));
-        Assert.assertNotNull(fields.get("destination-connector"));
-        Assert.assertNotNull(fields.get("time"));
+        assertNotNull(fields.get("forklift-replay-version"));
+        assertNotNull(fields.get("source-description"));
+        assertNotNull(fields.get("destination-connector"));
+        assertNotNull(fields.get("time"));
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes", "serial" })
@@ -251,7 +254,7 @@ public class ReplayLogBuilderTest {
         final ReplayLogBuilder logBuilder = new ReplayLogBuilder(msg, consumer, errors, connector, replay, ProcessStep.Error);
         final Map<String, String> fields = logBuilder.getFields();
 
-        Assert.assertEquals("11", fields.get("forklift-replay-step-count"));
+        assertEquals("11", fields.get("forklift-replay-step-count"));
     }
 
     @Test
@@ -288,11 +291,11 @@ public class ReplayLogBuilderTest {
         // run the log builder
         ReplayLogBuilder logBuilder = new ReplayLogBuilder(msg, consumer, errors, connector, replay, ProcessStep.Error);
         Map<String, String> fields = logBuilder.getFields();
-        Assert.assertEquals("replay-role", fields.get("role"));
+        assertEquals("replay-role", fields.get("role"));
 
         logBuilder = new ReplayLogBuilder(msg, consumer, errors, connector, noRoleReplay, ProcessStep.Error);
         fields = logBuilder.getFields();
-        Assert.assertEquals("TestHandler", fields.get("role"));
+        assertEquals("TestHandler", fields.get("role"));
     }
 
     private static class TestHandler {}

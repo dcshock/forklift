@@ -13,20 +13,20 @@ import forklift.schemas.StateCode;
 import forklift.schemas.UserRegistered;
 import forklift.source.decorators.Queue;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import java.util.HashMap;
 import java.util.Map;
 
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
 public class AvroMessageTests extends BaseIntegrationTest {
-    @After
+    @AfterAll
     public void after() {
         serviceManager.stop();
     }
 
-    @Before
+    @BeforeAll
     public void setup() {
         serviceManager = new TestServiceManager();
         serviceManager.start();

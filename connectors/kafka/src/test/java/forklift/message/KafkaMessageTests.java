@@ -1,7 +1,7 @@
 package forklift.message;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
@@ -12,8 +12,8 @@ import forklift.connectors.ConnectorException;
 import forklift.controller.KafkaController;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 public class KafkaMessageTests {
 
@@ -21,7 +21,7 @@ public class KafkaMessageTests {
     private KafkaMessage message;
     private ConsumerRecord<?, ?> record;
 
-    @Before
+    @BeforeAll
     public void setup() {
         controller = mock(KafkaController.class);
         record = new ConsumerRecord<>("testTopic", 0, 1L, "key", "value");

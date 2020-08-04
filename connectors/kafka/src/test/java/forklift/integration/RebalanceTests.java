@@ -5,7 +5,6 @@ import forklift.connectors.ConnectorException;
 import forklift.consumer.Consumer;
 import forklift.exception.StartupException;
 import forklift.producers.ForkliftProducerI;
-import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,6 +13,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests which focus on causing partitions to be rebalanced.
