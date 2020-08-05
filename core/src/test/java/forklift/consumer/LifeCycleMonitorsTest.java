@@ -1,5 +1,6 @@
 package forklift.consumer;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -9,7 +10,6 @@ import forklift.consumer.lifecycle.BadAuditor;
 import forklift.consumer.lifecycle.TestAuditor;
 import forklift.consumer.lifecycle.TestAuditor2;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -120,6 +120,6 @@ public class LifeCycleMonitorsTest {
         log.debug("The following generates an exception. This is expected.");
         // Now the validate listener should log out an error but should stop processing from happening.
         lifeCycle.call(ProcessStep.Validating, new MessageRunnable(consumer, new ForkliftMessage("1"), null, null, null, null, null, null, Collections.emptyList()));
-        Assertions.assertTrue(true, "Make sure the exception was eaten and just logged.");
+        assertTrue(true, "Make sure the exception was eaten and just logged.");
     }
 }

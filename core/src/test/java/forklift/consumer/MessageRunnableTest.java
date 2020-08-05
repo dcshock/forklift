@@ -31,11 +31,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class MessageRunnableTest {
     private static Logger log = LoggerFactory.getLogger(MessageRunnableTest.class);
 
-    private Forklift forklift;
-    private ForkliftConnectorI connector;
+    private static Forklift forklift;
+    private static ForkliftConnectorI connector;
 
     @BeforeAll
-    public void setup() {
+    public static void setup() {
         LifeCycleMonitors lifeCycle = new LifeCycleMonitors();
         forklift = mock(Forklift.class);
         connector = mock(ForkliftConnectorI.class);

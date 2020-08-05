@@ -11,6 +11,7 @@ import forklift.source.decorators.Queue;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,21 +38,25 @@ public abstract class BaseIntegrationTest {
     protected static final Logger log = LoggerFactory.getLogger(BaseIntegrationTest.class);
     protected static Set<String> sentMessageIds = ConcurrentHashMap.newKeySet();
     protected static Set<String> consumedMessageIds = ConcurrentHashMap.newKeySet();
-    protected TestServiceManager serviceManager;
+    protected static TestServiceManager serviceManager;
     protected final int maxTimeouts = 5;
     protected int timeouts = 0;
 
     @AfterAll
-    public void after() {
+    public static void after() {
         serviceManager.stop();
     }
 
-    @BeforeAll
-    public void setup() {
-        serviceManager = new TestServiceManager();
-        serviceManager.start();
+    @BeforeEach
+    public void setupMaps() {
         sentMessageIds = ConcurrentHashMap.newKeySet();
         consumedMessageIds = ConcurrentHashMap.newKeySet();
+    }
+
+    @BeforeAll
+    public static void setup() {
+        serviceManager = new TestServiceManager();
+        serviceManager.start();
     }
 
     protected void messageAsserts(){

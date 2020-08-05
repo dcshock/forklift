@@ -26,7 +26,7 @@ import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.TopicPartition;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -54,7 +54,7 @@ public class KafkaControllerRebalanceTests {
     private ForkliftConnectorI mockConnector;
     private Forklift forklift;
 
-    @BeforeAll
+    @BeforeEach
     public void setup() throws Exception {
         donePolling = new AtomicBoolean(false);
         processedRecords = new ArrayList<>();

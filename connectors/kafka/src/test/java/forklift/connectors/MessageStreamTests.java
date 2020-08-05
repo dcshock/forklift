@@ -8,7 +8,7 @@ import forklift.message.KafkaMessage;
 import forklift.message.MessageStream;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.TopicPartition;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -21,7 +21,7 @@ public class MessageStreamTests {
     private KafkaController controller;
     private MessageStream stream;
 
-    @BeforeAll
+    @BeforeEach
     public void setup() {
         stream = new MessageStream();
     }

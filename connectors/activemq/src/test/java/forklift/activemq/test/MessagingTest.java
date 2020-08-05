@@ -45,12 +45,12 @@ public class MessagingTest {
     private Map<String, String> keyvalMsg;
 
     @BeforeAll
-    public void before() {
+    public static void before() {
         TestServiceManager.start();
     }
 
     @AfterAll
-    public void after() {
+    public static void after() {
         TestServiceManager.stop();
     }
 

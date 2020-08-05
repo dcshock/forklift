@@ -11,17 +11,17 @@ import java.io.File;
 import java.net.URL;
 
 public class ForkliftTest {
-    protected Forklift forklift;
+    protected static Forklift forklift;
 
     @BeforeAll
-    public void start()
+    public static void start()
       throws StartupException {
         forklift = new Forklift();
         forklift.start(Mockito.mock(ForkliftConnectorI.class));
     }
 
     @AfterAll
-    public void stop() {
+    public static void stop() {
       forklift.shutdown();
     }
 

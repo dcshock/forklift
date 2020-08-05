@@ -28,11 +28,11 @@ public class ConfigTest {
 
     private static File file;
     private static PropertiesManager pm;
-    private Forklift forklift;
-    private ForkliftConnectorI connector;
+    private static Forklift forklift;
+    private static ForkliftConnectorI connector;
 
     @BeforeAll
-    public void setUp() {
+    public static void setUp() {
         file = new File(Thread.currentThread().getContextClassLoader().getResource(CONF + ".properties").getPath());
         pm = new PropertiesManager();
         pm.register(file);
@@ -44,7 +44,7 @@ public class ConfigTest {
     }
 
     @AfterAll
-    public void tearDown() {
+    public static void tearDown() {
         pm.deregister(file);
     }
 

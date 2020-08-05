@@ -15,8 +15,8 @@ import forklift.message.MessageStream;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -43,13 +43,13 @@ public class KafkaControllerTests {
     @Captor
     private ArgumentCaptor<Collection<String>> subscribeCaptor;
 
-    @BeforeAll
+    @BeforeEach
     public void setup() {
         MockitoAnnotations.initMocks(this);
         this.controller = new KafkaController(kafkaConsumer, messageStream, topic1);
     }
 
-    @AfterAll
+    @AfterEach
     public void teardown() throws InterruptedException {
         this.controller.stop(500, TimeUnit.MILLISECONDS);
     }

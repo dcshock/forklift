@@ -17,8 +17,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.JMSException;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 @Queue("q2")
@@ -36,7 +36,7 @@ public class ProducerTest {
     @forklift.decorators.Producer(queue="q2")
     private ForkliftProducerI injectedProducer;
 
-    @BeforeAll
+    @BeforeEach
     public void before() {
         TestServiceManager.start();
         called.set(0);
@@ -47,7 +47,7 @@ public class ProducerTest {
         isPropOverwritten = true;
     }
 
-    @AfterAll
+    @AfterEach
     public void after() {
         TestServiceManager.stop();
     }

@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import forklift.connectors.ConnectorException;
@@ -21,7 +21,7 @@ public class KafkaTopicConsumerTests {
     private MessageStream messageStream;
     private KafkaTopicConsumer consumer;
 
-    @BeforeAll
+    @BeforeEach
     public void setup() {
         this.topic = "testTopic";
         this.controller = mock(KafkaController.class);

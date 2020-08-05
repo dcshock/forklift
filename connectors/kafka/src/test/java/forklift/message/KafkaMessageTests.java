@@ -12,16 +12,16 @@ import forklift.connectors.ConnectorException;
 import forklift.controller.KafkaController;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class KafkaMessageTests {
 
-    private KafkaController controller;
-    private KafkaMessage message;
-    private ConsumerRecord<?, ?> record;
+    private static KafkaController controller;
+    private static KafkaMessage message;
+    private static ConsumerRecord<?, ?> record;
 
-    @BeforeAll
+    @BeforeEach
     public void setup() {
         controller = mock(KafkaController.class);
         record = new ConsumerRecord<>("testTopic", 0, 1L, "key", "value");

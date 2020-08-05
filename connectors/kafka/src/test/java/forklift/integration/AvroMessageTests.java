@@ -6,7 +6,6 @@ import forklift.connectors.ForkliftMessage;
 import forklift.consumer.Consumer;
 import forklift.decorators.OnMessage;
 import forklift.exception.StartupException;
-import forklift.integration.server.TestServiceManager;
 import forklift.producers.ForkliftProducerI;
 import forklift.producers.ProducerException;
 import forklift.schemas.StateCode;
@@ -16,22 +15,9 @@ import forklift.source.decorators.Queue;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 public class AvroMessageTests extends BaseIntegrationTest {
-    @AfterAll
-    public void after() {
-        serviceManager.stop();
-    }
-
-    @BeforeAll
-    public void setup() {
-        serviceManager = new TestServiceManager();
-        serviceManager.start();
-    }
-
     @Test
     public void testComplexAvroMessageWithProperty() throws ProducerException, ConnectorException, InterruptedException, StartupException {
         Forklift forklift = serviceManager.newManagedForkliftInstance("");

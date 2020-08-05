@@ -22,12 +22,12 @@ import org.junit.jupiter.api.Test;
 
 public class ResponseTest {
     @BeforeAll
-    public void before() {
+    public static void before() {
         TestServiceManager.start();
     }
 
     @AfterAll
-    public void after() {
+    public static void after() {
         TestServiceManager.stop();
     }
 

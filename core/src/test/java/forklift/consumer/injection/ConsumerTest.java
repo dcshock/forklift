@@ -32,11 +32,11 @@ import org.junit.jupiter.api.Test;
 
 public class ConsumerTest {
 
-    private Forklift forklift;
-    private ForkliftConnectorI connector;
+    private static Forklift forklift;
+    private static ForkliftConnectorI connector;
 
     @BeforeAll
-    public void setup() {
+    public static void setup() {
         forklift = mock(Forklift.class);
         connector = mock(ForkliftConnectorI.class);
         when(forklift.getConnector()).thenReturn(connector);

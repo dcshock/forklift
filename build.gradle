@@ -41,6 +41,8 @@ subprojects {
 
     test {
         useJUnitPlatform()
+        reports.html.enabled = false
+        // ignoreFailures true
         testLogging {
             events "passed", "skipped", "failed"
         }
@@ -119,3 +121,19 @@ subprojects {
         sign publishing.publications.mavenJava
     }
 }
+
+// Setup the test report to put together into one report for all subprojects.
+task testReport(type: TestReport) {
+    destinationDir = file("$buildDir/reports/allTests")
+    // Include the results from the `test` task in all subprojects
+    reportOn getTasksByName("test", true)
+}
+
+rootProject.getTasksByName('test', true).each {
+    it.finalizedBy(testReport) 
+}
+
+clean {
+    delete "$buildDir"
+}
+

@@ -1,5 +1,8 @@
 package forklift.consumer;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -18,17 +21,16 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 public class OnDecoratorTest {
 
-    private Forklift forklift;
-    private ForkliftConnectorI connector;
+    private static Forklift forklift;
+    private static ForkliftConnectorI connector;
 
     @BeforeAll
-    public void setup() {
+    public static void setup() {
         LifeCycleMonitors lifeCycle = new LifeCycleMonitors();
         forklift = mock(Forklift.class);
         connector = mock(ForkliftConnectorI.class);
@@ -41,7 +43,7 @@ public class OnDecoratorTest {
         TestConsumerHappy tc = new TestConsumerHappy();
         runTest(tc);
         ProcessStep[] expected = {ProcessStep.Validating, ProcessStep.Processing, ProcessStep.Complete};
-        Assertions.assertArrayEquals(expected, tc.path.toArray());
+        assertArrayEquals(expected, tc.path.toArray());
     }
 
     @Queue("1")
@@ -89,7 +91,7 @@ public class OnDecoratorTest {
         TestConsumerInvalid tc = new TestConsumerInvalid();
         runTest(tc);
         ProcessStep[] expected = {ProcessStep.Validating, ProcessStep.Invalid};
-        Assertions.assertArrayEquals(expected, tc.path.toArray());
+        assertArrayEquals(expected, tc.path.toArray());
     }
 
     @Queue("1")
@@ -137,7 +139,7 @@ public class OnDecoratorTest {
         TestConsumerError tc = new TestConsumerError();
         runTest(tc);
         ProcessStep[] expected = {ProcessStep.Validating, ProcessStep.Processing, ProcessStep.Error};
-        Assertions.assertArrayEquals(expected, tc.path.toArray());
+        assertArrayEquals(expected, tc.path.toArray());
     }
 
     @Queue("1")
@@ -184,7 +186,7 @@ public class OnDecoratorTest {
     public void repeatOn() {
         TestConsumerMulti tc = new TestConsumerMulti();
         runTest(tc);
-        Assertions.assertEquals(3, tc.callCount);
+        assertEquals(3, tc.callCount);
     }
 
     @Queue("1")
@@ -229,7 +231,7 @@ public class OnDecoratorTest {
             field.setAccessible(true);
             return field.get(object);
         } catch (Exception e) {
-            Assertions.fail(e.toString());
+            fail(e.toString());
             return null;
         }
     }

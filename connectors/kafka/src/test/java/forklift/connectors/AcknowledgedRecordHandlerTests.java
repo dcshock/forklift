@@ -4,7 +4,7 @@ import forklift.controller.AcknowledgedRecordHandler;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -22,7 +22,7 @@ public class AcknowledgedRecordHandlerTests {
     private AcknowledgedRecordHandler handler;
     private Supplier<Boolean> predicate;
 
-    @BeforeAll
+    @BeforeEach
     public void setup() {
         this.handler = new AcknowledgedRecordHandler();
         this.predicate = () -> true;
