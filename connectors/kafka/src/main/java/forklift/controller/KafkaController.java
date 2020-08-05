@@ -14,6 +14,7 @@ import org.apache.kafka.common.errors.WakeupException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -39,6 +40,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class KafkaController {
 
     private static final Logger log = LoggerFactory.getLogger(KafkaController.class);
+    static final Duration POLL_TIMEOUT = Duration.ofMillis(100);
+
     private volatile boolean running = false;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final Consumer<?, ?> kafkaConsumer;
@@ -197,10 +200,10 @@ public class KafkaController {
                 //wait for flowControl to notify us, resume after a short pause to allow for heartbeats
                 this.wait(100);
                 //Heartbeat is sent on poll. This call should not return records.
-                return kafkaConsumer.poll(0);
+                return kafkaConsumer.poll(Duration.ZERO);
             }
         } else {
-            return kafkaConsumer.poll(100);
+            return kafkaConsumer.poll(POLL_TIMEOUT);
         }
     }
 
