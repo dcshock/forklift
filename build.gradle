@@ -9,7 +9,6 @@
  *    - server: A java executable runnable container similar to Tomcat that can run consumers
  *    - consumers: Examples written to show how you to build your own forklift ESB
  */
-
 allprojects {
     repositories {
         mavenCentral()
@@ -133,7 +132,7 @@ rootProject.getTasksByName('test', true).each {
     it.finalizedBy(testReport) 
 }
 
-clean {
-    delete "$buildDir"
+task cleanTestDir (type: Delete) {
+    file("$buildDir").deleteDir()
 }
 
