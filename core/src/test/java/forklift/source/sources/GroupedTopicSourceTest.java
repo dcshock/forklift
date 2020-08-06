@@ -45,9 +45,9 @@ public class GroupedTopicSourceTest {
         final String otherTopic = "other-topic";
 
         assertNotEquals(new GroupedTopicSource(testTopic, testGroup),
-                               new GroupedTopicSource(otherTopic, testGroup));
+                new GroupedTopicSource(otherTopic, testGroup));
 
         assertNotEquals(new GroupedTopicSource(testTopic, testGroup),
-                               new TopicSource(testTopic));
+                new TopicSource(testTopic));
     }
 }

@@ -210,7 +210,7 @@ public class RoleInputMessageTests {
         final Map<Header, Object> testHeaders = Collections.singletonMap(Header.Priority, 6);
 
         assertEquals(new RoleInputMessage(testRole, testId, testMessage, testProperties, testHeaders),
-                            new RoleInputMessage(testRole, testId, testMessage, testProperties, testHeaders));
+                new RoleInputMessage(testRole, testId, testMessage, testProperties, testHeaders));
     }
 
     @Test
@@ -222,7 +222,7 @@ public class RoleInputMessageTests {
         final Map<Header, Object> testHeaders = Collections.singletonMap(Header.Priority, 6);
 
         assertNotEquals(new RoleInputMessage(testRole, testId, testMessage, testProperties, testHeaders),
-                               new RoleInputMessage("other-role", testId, testMessage, testProperties, testHeaders));
+                new RoleInputMessage("other-role", testId, testMessage, testProperties, testHeaders));
     }
 
     private static class TestAcknowledgmentMessage extends ForkliftMessage{

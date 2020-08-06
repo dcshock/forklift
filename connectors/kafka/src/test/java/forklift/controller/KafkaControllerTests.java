@@ -72,7 +72,7 @@ public class KafkaControllerTests {
         //verify that the control loop is polling repeatedly.  Normally there would be a delay but
         //the kafkaConsumer has been mocked to return immediatly on poll
         verify(kafkaConsumer, timeout(200).atLeast(5))
-            .poll(eq(KafkaController.POLL_TIMEOUT.getSeconds()));
+            .poll(eq(KafkaController.POLL_TIMEOUT));
         assertEquals(1, subscribeCaptor.getValue().size());
         assertTrue(subscribeCaptor.getValue().contains(topic1));
         this.controller.stop(10, TimeUnit.MILLISECONDS);

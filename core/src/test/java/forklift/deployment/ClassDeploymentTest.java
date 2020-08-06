@@ -32,7 +32,7 @@ public class ClassDeploymentTest {
     @Test
     public void testNullArrayDeployment() throws IOException {
         assertThrows(NullPointerException.class, () -> {
-        new ClassDeployment((Class<?>[]) null);
+            new ClassDeployment((Class<?>[]) null);
         });
     }
 

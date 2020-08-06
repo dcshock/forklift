@@ -20,8 +20,7 @@ public class RoleInputSourceTest {
 
     @Test
     public void testUndefinedRolesAreEqual() {
-        assertEquals(new RoleInputSource((String) null),
-                            new RoleInputSource(""));
+        assertEquals(new RoleInputSource((String) null), new RoleInputSource(""));
     }
 
     @Test
@@ -39,8 +38,7 @@ public class RoleInputSourceTest {
 
         final RoleInputSource roleInput = new RoleInputSource("TestRole");
 
-        assertEquals(new QueueSource("action-role-TestRole"),
-                            roleInput.getActionSource(testContext));
+        assertEquals(new QueueSource("action-role-TestRole"), roleInput.getActionSource(testContext));
     }
 
     @Test

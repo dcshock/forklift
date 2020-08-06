@@ -50,7 +50,7 @@ public class RoleInputConsumerWrapperTests {
             final ForkliftConsumerI testConsumer = new ConstantMessageConsumer(sourceMessage);
             final ForkliftConsumerI consumerWrapper = new RoleInputConsumerWrapper(testConsumer);
 
-           consumerWrapper.receive(1000);
+            consumerWrapper.receive(1000);
         });
     }
 
