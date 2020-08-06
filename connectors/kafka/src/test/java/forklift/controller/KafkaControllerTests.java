@@ -1,7 +1,7 @@
 package forklift.controller;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
@@ -15,9 +15,9 @@ import forklift.message.MessageStream;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
@@ -43,13 +43,13 @@ public class KafkaControllerTests {
     @Captor
     private ArgumentCaptor<Collection<String>> subscribeCaptor;
 
-    @Before
+    @BeforeEach
     public void setup() {
         MockitoAnnotations.initMocks(this);
         this.controller = new KafkaController(kafkaConsumer, messageStream, topic1);
     }
 
-    @After
+    @AfterEach
     public void teardown() throws InterruptedException {
         this.controller.stop(500, TimeUnit.MILLISECONDS);
     }

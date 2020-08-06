@@ -6,9 +6,10 @@ import forklift.consumer.Consumer;
 import forklift.exception.StartupException;
 import forklift.producers.ForkliftProducerI;
 import forklift.producers.ProducerException;
-import org.junit.Test;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.junit.jupiter.api.Test;
 
 public class MapMessageTests extends BaseIntegrationTest {
 

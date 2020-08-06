@@ -1,6 +1,6 @@
 package forklift.connectors;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import forklift.controller.KafkaController;
@@ -8,8 +8,9 @@ import forklift.message.KafkaMessage;
 import forklift.message.MessageStream;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.TopicPartition;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,7 +21,7 @@ public class MessageStreamTests {
     private KafkaController controller;
     private MessageStream stream;
 
-    @Before
+    @BeforeEach
     public void setup() {
         stream = new MessageStream();
     }

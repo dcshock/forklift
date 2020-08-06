@@ -4,17 +4,18 @@ import forklift.Forklift;
 import forklift.integration.server.TestServiceManager;
 import forklift.source.sources.TopicSource;
 
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 public class KafkaConnectorSerializerTests {
     private static TestServiceManager serviceManager;
     private static ForkliftSerializer connectorSerializer;
     private static final TopicSource testSource = new TopicSource("test-string-topic");
 
-    @BeforeClass
+    @BeforeAll
     public static void setup() throws Exception {
         serviceManager = new TestServiceManager();
         serviceManager.start();
@@ -23,7 +24,7 @@ public class KafkaConnectorSerializerTests {
         connectorSerializer = forklift.getConnector().getDefaultSerializer();
     }
 
-    @AfterClass
+    @AfterAll
     public static void teardown() {
         serviceManager.stop();
     }
@@ -42,10 +43,9 @@ public class KafkaConnectorSerializerTests {
     }
 
     private void assertBytesEqual(byte[] expected, byte[] actual) {
-        Assert.assertArrayEquals(
-            "Expected bytes '" + hexString(expected) +
-            "', found bytes '" + hexString(actual) + "'",
-            expected, actual);
+        assertArrayEquals(
+            expected, actual, "Expected bytes '" + hexString(expected) +
+            "', found bytes '" + hexString(actual) + "'");
     }
 
     private static final char[] hexChar = "0123456789ABCDEF".toCharArray();

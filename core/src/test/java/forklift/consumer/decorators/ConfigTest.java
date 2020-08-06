@@ -2,8 +2,8 @@
 
 package forklift.consumer.decorators;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -16,23 +16,23 @@ import forklift.decorators.Config;
 import forklift.properties.PropertiesManager;
 import forklift.source.decorators.Queue;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import java.io.File;
 import java.util.Properties;
+
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 public class ConfigTest {
     private static final String CONF = "configTestProperties";
 
     private static File file;
     private static PropertiesManager pm;
-    private Forklift forklift;
-    private ForkliftConnectorI connector;
-    
-    @Before
-    public void setUp() {
+    private static Forklift forklift;
+    private static ForkliftConnectorI connector;
+
+    @BeforeAll
+    public static void setUp() {
         file = new File(Thread.currentThread().getContextClassLoader().getResource(CONF + ".properties").getPath());
         pm = new PropertiesManager();
         pm.register(file);
@@ -43,8 +43,8 @@ public class ConfigTest {
         when(forklift.getConnector()).thenReturn(connector);
     }
 
-    @After
-    public void tearDown() {
+    @AfterAll
+    public static void tearDown() {
         pm.deregister(file);
     }
 

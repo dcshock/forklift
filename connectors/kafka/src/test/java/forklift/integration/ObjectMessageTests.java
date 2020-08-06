@@ -1,12 +1,13 @@
 package forklift.integration;
 
+import org.junit.jupiter.api.Test;
+
 import forklift.Forklift;
 import forklift.connectors.ConnectorException;
 import forklift.consumer.Consumer;
 import forklift.exception.StartupException;
 import forklift.producers.ForkliftProducerI;
 import forklift.producers.ProducerException;
-import org.junit.Test;
 
 public class ObjectMessageTests extends BaseIntegrationTest {
     @Test

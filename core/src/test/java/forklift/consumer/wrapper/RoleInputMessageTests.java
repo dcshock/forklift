@@ -4,11 +4,17 @@ import forklift.connectors.ConnectorException;
 import forklift.connectors.ForkliftMessage;
 import forklift.message.Header;
 
-import org.junit.Assert;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Collections;
 import java.util.Map;
+
+import org.junit.jupiter.api.Test;
 
 public class RoleInputMessageTests {
     @Test
@@ -20,16 +26,16 @@ public class RoleInputMessageTests {
                                                               Collections.singletonMap(Header.Priority, 6));
         final String jsonEncodedMessage = message.toString();
 
-        Assert.assertTrue("JSON encoded message should contain correct role field",
-                          jsonEncodedMessage.contains("\"role\":\"test-role\""));
-        Assert.assertTrue("JSON encoded message should contain correct id field",
-                          jsonEncodedMessage.contains("\"id\":\"test-id\""));
-        Assert.assertTrue("JSON encoded message should contain correct msg field",
-                          jsonEncodedMessage.contains("\"msg\":\"test-message\""));
-        Assert.assertTrue("JSON encoded message should contain correct properties field",
-                          jsonEncodedMessage.contains("\"properties\":{\"forklift-retry-count\":\"2\"}"));
-        Assert.assertTrue("JSON encoded message should contain correct headers field",
-                          jsonEncodedMessage.contains("\"headers\":{\"Priority\":6}"));
+        assertTrue(jsonEncodedMessage.contains("\"role\":\"test-role\""),
+                "JSON encoded message should contain correct role field");
+        assertTrue(jsonEncodedMessage.contains("\"id\":\"test-id\""),
+                "JSON encoded message should contain correct id field");
+        assertTrue(jsonEncodedMessage.contains("\"msg\":\"test-message\""),
+                "JSON encoded message should contain correct msg field");
+        assertTrue(jsonEncodedMessage.contains("\"properties\":{\"forklift-retry-count\":\"2\"}"),
+                "JSON encoded message should contain correct properties field");
+        assertTrue(jsonEncodedMessage.contains("\"headers\":{\"Priority\":6}"),
+                "JSON encoded message should contain correct headers field");
 
         final String expectedJson = "{" +
             "\"role\":\"test-role\"," +
@@ -39,7 +45,7 @@ public class RoleInputMessageTests {
             "\"headers\":{\"Priority\":6}" +
             "}";
 
-        Assert.assertEquals(expectedJson, jsonEncodedMessage);
+        assertEquals(expectedJson, jsonEncodedMessage);
     }
 
     @Test
@@ -53,21 +59,25 @@ public class RoleInputMessageTests {
             "}";
         final RoleInputMessage decodedMessage = RoleInputMessage.fromString(inputJson);
 
-        Assert.assertEquals("test-role", decodedMessage.getRole());
-        Assert.assertEquals("test-id", decodedMessage.getId());
-        Assert.assertEquals("test-message", decodedMessage.getMsg());
-        Assert.assertEquals(Collections.singletonMap("forklift-retry-count", "2"), decodedMessage.getProperties());
-        Assert.assertEquals(Collections.singletonMap(Header.Priority, 6), decodedMessage.getHeaders());
+        assertEquals("test-role", decodedMessage.getRole());
+        assertEquals("test-id", decodedMessage.getId());
+        assertEquals("test-message", decodedMessage.getMsg());
+        assertEquals(Collections.singletonMap("forklift-retry-count", "2"), decodedMessage.getProperties());
+        assertEquals(Collections.singletonMap(Header.Priority, 6), decodedMessage.getHeaders());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testJsonDecodingFailsWithInvalidJson() {
-        final RoleInputMessage decodedMessage = RoleInputMessage.fromString("{)..v[");
+        assertThrows(IllegalArgumentException.class, () -> {
+            final RoleInputMessage decodedMessage = RoleInputMessage.fromString("{)..v[");
+        });
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testJsonDecodingFailsWithNullString() {
-        final RoleInputMessage decodedMessage = RoleInputMessage.fromString(null);
+        assertThrows(IllegalArgumentException.class, () -> {
+            final RoleInputMessage decodedMessage = RoleInputMessage.fromString(null);
+        });
     }
 
     @Test
@@ -83,10 +93,10 @@ public class RoleInputMessageTests {
                                                                   testHeaders);
 
         final ForkliftMessage resultingMessage = roleMessage.toForkliftMessage(null);
-        Assert.assertEquals(testId, resultingMessage.getId());
-        Assert.assertEquals(testMessage, resultingMessage.getMsg());
-        Assert.assertEquals(testProperties, resultingMessage.getProperties());
-        Assert.assertEquals(testHeaders, resultingMessage.getHeaders());
+        assertEquals(testId, resultingMessage.getId());
+        assertEquals(testMessage, resultingMessage.getMsg());
+        assertEquals(testProperties, resultingMessage.getProperties());
+        assertEquals(testHeaders, resultingMessage.getHeaders());
     }
 
     @Test
@@ -98,10 +108,10 @@ public class RoleInputMessageTests {
                                                                   null);
         final ForkliftMessage resultingMessage = roleMessage.toForkliftMessage(null);
 
-        Assert.assertNull(resultingMessage.getId());
-        Assert.assertNull(resultingMessage.getMsg());
-        Assert.assertEquals(Collections.emptyMap(), resultingMessage.getProperties());
-        Assert.assertEquals(Collections.emptyMap(), resultingMessage.getHeaders());
+        assertNull(resultingMessage.getId());
+        assertNull(resultingMessage.getMsg());
+        assertEquals(Collections.emptyMap(), resultingMessage.getProperties());
+        assertEquals(Collections.emptyMap(), resultingMessage.getHeaders());
     }
 
     @Test
@@ -120,11 +130,11 @@ public class RoleInputMessageTests {
 
         final RoleInputMessage roleMessage = RoleInputMessage.fromForkliftMessage(testRole, sourceMessage);
 
-        Assert.assertEquals(testRole, roleMessage.getRole());
-        Assert.assertEquals(testId, roleMessage.getId());
-        Assert.assertEquals(testMessage, roleMessage.getMsg());
-        Assert.assertEquals(testProperties, roleMessage.getProperties());
-        Assert.assertEquals(testHeaders, roleMessage.getHeaders());
+        assertEquals(testRole, roleMessage.getRole());
+        assertEquals(testId, roleMessage.getId());
+        assertEquals(testMessage, roleMessage.getMsg());
+        assertEquals(testProperties, roleMessage.getProperties());
+        assertEquals(testHeaders, roleMessage.getHeaders());
     }
 
     @Test
@@ -137,7 +147,7 @@ public class RoleInputMessageTests {
             "\"headers\":{\"Priority\":6}" +
             "}";
 
-        Assert.assertEquals(inputJson, RoleInputMessage.fromString(inputJson).toString());
+        assertEquals(inputJson, RoleInputMessage.fromString(inputJson).toString());
     }
 
     @Test
@@ -147,7 +157,7 @@ public class RoleInputMessageTests {
                                                               "test-message",
                                                               Collections.singletonMap("forklift-retry-count", "2"),
                                                               Collections.singletonMap(Header.Priority, 6));
-        Assert.assertEquals(message, RoleInputMessage.fromString(message.toString()));
+        assertEquals(message, RoleInputMessage.fromString(message.toString()));
     }
 
     @Test
@@ -161,10 +171,10 @@ public class RoleInputMessageTests {
         final RoleInputMessage roleMessage = RoleInputMessage.fromForkliftMessage("test-role", sourceMessage);
         final ForkliftMessage outMessage = roleMessage.toForkliftMessage(sourceMessage);
 
-        Assert.assertEquals(sourceMessage.getId(), outMessage.getId());
-        Assert.assertEquals(sourceMessage.getMsg(), outMessage.getMsg());
-        Assert.assertEquals(sourceMessage.getProperties(), outMessage.getProperties());
-        Assert.assertEquals(sourceMessage.getHeaders(), outMessage.getHeaders());
+        assertEquals(sourceMessage.getId(), outMessage.getId());
+        assertEquals(sourceMessage.getMsg(), outMessage.getMsg());
+        assertEquals(sourceMessage.getProperties(), outMessage.getProperties());
+        assertEquals(sourceMessage.getHeaders(), outMessage.getHeaders());
     }
 
     @Test
@@ -173,7 +183,7 @@ public class RoleInputMessageTests {
         final RoleInputMessage roleMessage = RoleInputMessage.fromString(inputJson);
         final ForkliftMessage resultMessage = roleMessage.toForkliftMessage(null);
 
-        Assert.assertTrue(resultMessage.acknowledge());
+        assertTrue(resultMessage.acknowledge());
     }
 
     @Test
@@ -182,13 +192,13 @@ public class RoleInputMessageTests {
 
         final TestAcknowledgmentMessage ackMessage = new TestAcknowledgmentMessage();
         ackMessage.setMsg(inputJson);
-        Assert.assertFalse(ackMessage.acknowledged);
+        assertFalse(ackMessage.acknowledged);
 
         final RoleInputMessage roleMessage = RoleInputMessage.fromString(inputJson);
         final ForkliftMessage resultMessage = roleMessage.toForkliftMessage(ackMessage);
 
         resultMessage.acknowledge();
-        Assert.assertTrue(ackMessage.acknowledged);
+        assertTrue(ackMessage.acknowledged);
     }
 
     @Test
@@ -199,8 +209,8 @@ public class RoleInputMessageTests {
         final Map<String, String> testProperties = Collections.singletonMap("forklift-retry-count", "2");
         final Map<Header, Object> testHeaders = Collections.singletonMap(Header.Priority, 6);
 
-        Assert.assertEquals(new RoleInputMessage(testRole, testId, testMessage, testProperties, testHeaders),
-                            new RoleInputMessage(testRole, testId, testMessage, testProperties, testHeaders));
+        assertEquals(new RoleInputMessage(testRole, testId, testMessage, testProperties, testHeaders),
+                new RoleInputMessage(testRole, testId, testMessage, testProperties, testHeaders));
     }
 
     @Test
@@ -211,8 +221,8 @@ public class RoleInputMessageTests {
         final Map<String, String> testProperties = Collections.singletonMap("forklift-retry-count", "2");
         final Map<Header, Object> testHeaders = Collections.singletonMap(Header.Priority, 6);
 
-        Assert.assertNotEquals(new RoleInputMessage(testRole, testId, testMessage, testProperties, testHeaders),
-                               new RoleInputMessage("other-role", testId, testMessage, testProperties, testHeaders));
+        assertNotEquals(new RoleInputMessage(testRole, testId, testMessage, testProperties, testHeaders),
+                new RoleInputMessage("other-role", testId, testMessage, testProperties, testHeaders));
     }
 
     private static class TestAcknowledgmentMessage extends ForkliftMessage{

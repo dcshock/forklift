@@ -12,10 +12,11 @@ import forklift.producers.ForkliftProducerI;
 import forklift.producers.ProducerException;
 import forklift.source.decorators.Queue;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Collections;
 import java.util.List;
@@ -43,13 +44,13 @@ public class MessagingTest {
     @forklift.decorators.Message
     private Map<String, String> keyvalMsg;
 
-    @Before
-    public void before() {
+    @BeforeAll
+    public static void before() {
         TestServiceManager.start();
     }
 
-    @After
-    public void after() {
+    @AfterAll
+    public static void after() {
         TestServiceManager.stop();
     }
 
@@ -102,13 +103,13 @@ public class MessagingTest {
         // Shutdown the consumer after all the messages have been processed.
         c.setOutOfMessages((listener) -> {
             listener.shutdown();
-            Assert.assertTrue(ordered);
-            Assert.assertTrue("called was not == " + msgCount + "  --  " + called.get(), called.get() == msgCount);
+            assertTrue(ordered);
+            assertTrue(called.get() == msgCount, "called was not == " + msgCount + "  --  " + called.get());
         });
 
         // Start the consumer.
         c.listen();
 
-        Assert.assertTrue(called.get() > 0);
+        assertTrue(called.get() > 0);
     }
 }

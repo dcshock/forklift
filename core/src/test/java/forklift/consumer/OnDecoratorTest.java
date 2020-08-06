@@ -1,6 +1,8 @@
 package forklift.consumer;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -12,10 +14,6 @@ import forklift.decorators.OnMessage;
 import forklift.decorators.OnValidate;
 import forklift.source.decorators.Queue;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -23,13 +21,16 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
 public class OnDecoratorTest {
 
-    private Forklift forklift;
-    private ForkliftConnectorI connector;
+    private static Forklift forklift;
+    private static ForkliftConnectorI connector;
 
-    @Before
-    public void setup() {
+    @BeforeAll
+    public static void setup() {
         LifeCycleMonitors lifeCycle = new LifeCycleMonitors();
         forklift = mock(Forklift.class);
         connector = mock(ForkliftConnectorI.class);
@@ -42,7 +43,7 @@ public class OnDecoratorTest {
         TestConsumerHappy tc = new TestConsumerHappy();
         runTest(tc);
         ProcessStep[] expected = {ProcessStep.Validating, ProcessStep.Processing, ProcessStep.Complete};
-        Assert.assertArrayEquals(expected, tc.path.toArray());
+        assertArrayEquals(expected, tc.path.toArray());
     }
 
     @Queue("1")
@@ -90,7 +91,7 @@ public class OnDecoratorTest {
         TestConsumerInvalid tc = new TestConsumerInvalid();
         runTest(tc);
         ProcessStep[] expected = {ProcessStep.Validating, ProcessStep.Invalid};
-        Assert.assertArrayEquals(expected, tc.path.toArray());
+        assertArrayEquals(expected, tc.path.toArray());
     }
 
     @Queue("1")
@@ -138,7 +139,7 @@ public class OnDecoratorTest {
         TestConsumerError tc = new TestConsumerError();
         runTest(tc);
         ProcessStep[] expected = {ProcessStep.Validating, ProcessStep.Processing, ProcessStep.Error};
-        Assert.assertArrayEquals(expected, tc.path.toArray());
+        assertArrayEquals(expected, tc.path.toArray());
     }
 
     @Queue("1")
@@ -185,7 +186,7 @@ public class OnDecoratorTest {
     public void repeatOn() {
         TestConsumerMulti tc = new TestConsumerMulti();
         runTest(tc);
-        Assert.assertEquals(3, tc.callCount);
+        assertEquals(3, tc.callCount);
     }
 
     @Queue("1")

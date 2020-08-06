@@ -9,7 +9,6 @@
  *    - server: A java executable runnable container similar to Tomcat that can run consumers
  *    - consumers: Examples written to show how you to build your own forklift ESB
  */
-
 allprojects {
     repositories {
         mavenCentral()
@@ -36,7 +35,16 @@ subprojects {
     }
 
     dependencies {
-        testImplementation 'junit:junit:4.12'
+        testImplementation 'org.junit.jupiter:junit-jupiter:5.6.2'
+    }
+
+    test {
+        useJUnitPlatform()
+        reports.html.enabled = false
+        // ignoreFailures true
+        testLogging {
+            events "passed", "skipped", "failed"
+        }
     }
 
     jar {
@@ -112,3 +120,19 @@ subprojects {
         sign publishing.publications.mavenJava
     }
 }
+
+// Setup the test report to put together into one report for all subprojects.
+task testReport(type: TestReport) {
+    destinationDir = file("$buildDir/reports/allTests")
+    // Include the results from the `test` task in all subprojects
+    reportOn getTasksByName("test", true)
+}
+
+rootProject.getTasksByName('test', true).each {
+    it.finalizedBy(testReport) 
+}
+
+task cleanTestDir (type: Delete) {
+    file("$buildDir").deleteDir()
+}
+

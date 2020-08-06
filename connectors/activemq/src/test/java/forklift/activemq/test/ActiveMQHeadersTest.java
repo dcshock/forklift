@@ -1,7 +1,7 @@
 package forklift.activemq.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import forklift.consumer.ProcessStep;
 import forklift.message.ActiveMQHeaders;
@@ -9,7 +9,7 @@ import forklift.message.Header;
 
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 
