@@ -6,6 +6,7 @@ import org.apache.kafka.common.Node;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.ConsumerGroupMetadata;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
@@ -14,6 +15,7 @@ import org.apache.kafka.clients.consumer.OffsetAndTimestamp;
 import org.apache.kafka.clients.consumer.OffsetCommitCallback;
 import org.apache.kafka.clients.consumer.internals.NoOpConsumerRebalanceListener;
 
+import java.time.Duration;
 import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.Collections;
@@ -66,6 +68,9 @@ public final class TestConsumer<K, V> implements Consumer<K, V> {
     @Override public void subscribe(Collection<String> topics) {
         subscribe(topics, null);
     }
+    @Override public void subscribe(java.util.regex.Pattern pattern) {
+        subscribe(pattern, null);
+    }
     @Override public void subscribe(java.util.regex.Pattern pattern, ConsumerRebalanceListener listener) {
         final Collection<String> matchingTopics = partitionsForTopic.keySet().stream()
             .filter(topic -> pattern.matcher(topic).matches())
@@ -115,6 +120,9 @@ public final class TestConsumer<K, V> implements Consumer<K, V> {
     @Override public void seek(TopicPartition partition, long offset) {
         fetchPositions.put(partition, offset);
     }
+    @Override public void seek(TopicPartition partition, OffsetAndMetadata offsetAndMetadata) {
+        fetchPositions.put(partition, offsetAndMetadata.offset());
+    }
     @Override public void seekToBeginning(Collection<TopicPartition> partitions) {
         partitions.forEach(partition -> seek(partition, 0));
     }
@@ -128,17 +136,29 @@ public final class TestConsumer<K, V> implements Consumer<K, V> {
         return partitions.stream()
             .collect(Collectors.toMap(Function.identity(), partition -> 0L));
     }
+    @Override public Map<TopicPartition, Long> beginningOffsets(Collection<TopicPartition> partitions, Duration timeout) {
+        return beginningOffsets(partitions);
+    }
     @Override public Map<TopicPartition, Long> endOffsets(Collection<TopicPartition> partitions) {
         return partitions.stream()
             .collect(Collectors.toMap(Function.identity(), partition -> Long.valueOf(recordsForPartition.get(partition).size())));
+    }
+    @Override public Map<TopicPartition, Long> endOffsets(Collection<TopicPartition> partitions, Duration timeout) {
+        return endOffsets(partitions);
     }
     @Override public Map<TopicPartition, OffsetAndTimestamp> offsetsForTimes(Map<TopicPartition, Long> timestampsToSearch) {
         return timestampsToSearch.entrySet().stream()
             .collect(Collectors.toMap(Map.Entry::getKey, entry -> new OffsetAndTimestamp(0L, entry.getValue())));
     }
+    @Override public Map<TopicPartition, OffsetAndTimestamp> offsetsForTimes(Map<TopicPartition, Long> timestampsToSearch, Duration timeout) {
+        return offsetsForTimes(timestampsToSearch);
+    }
 
     @Override public long position(TopicPartition partition) {
         return fetchPositions.getOrDefault(partition, 0L);
+    }
+    @Override public long position(TopicPartition partition, Duration timeout) {
+        return position(partition);
     }
 
     /*
@@ -147,7 +167,9 @@ public final class TestConsumer<K, V> implements Consumer<K, V> {
       -----
     */
     @Override public void commitSync() { commitAsync(); }
+    @Override public void commitSync(Duration timeout) { commitAsync(); }
     @Override public void commitSync(Map<TopicPartition, OffsetAndMetadata> offsets) { commitAsync(offsets, null); }
+    @Override public void commitSync(Map<TopicPartition, OffsetAndMetadata> offsets, Duration timeout) { commitAsync(offsets, null); }
     @Override public void commitAsync() { commitAsync(fetchPositionsAndMetadata(), null); }
     @Override public void commitAsync(OffsetCommitCallback callback) { commitAsync(fetchPositionsAndMetadata(), callback); }
     @Override public void commitAsync(Map<TopicPartition, OffsetAndMetadata> offsets, OffsetCommitCallback callback) {
@@ -160,6 +182,18 @@ public final class TestConsumer<K, V> implements Consumer<K, V> {
 
     @Override public OffsetAndMetadata committed(TopicPartition partition) {
         return new OffsetAndMetadata(commitPositions.get(partition));
+    }
+    @Override public OffsetAndMetadata committed(TopicPartition partition, Duration timeout) {
+        return committed(partition);
+    }
+
+    @Override public Map<TopicPartition, OffsetAndMetadata> committed(Set<TopicPartition> partitions) {
+        return partitions.stream()
+            .collect(Collectors.toMap(partition -> partition,
+                                      partition -> committed(partition)));
+    }
+    @Override public Map<TopicPartition, OffsetAndMetadata> committed(Set<TopicPartition> partitions, Duration timeout) {
+        return committed(partitions);
     }
 
     private Map<TopicPartition, OffsetAndMetadata> fetchPositionsAndMetadata() {
@@ -174,11 +208,17 @@ public final class TestConsumer<K, V> implements Consumer<K, V> {
     */
     @Override public void close() {}
     @Override public void close(long timeout, java.util.concurrent.TimeUnit unit) {}
+    @Override public void close(Duration duration) {}
     @Override public void wakeup() {}
     @Override public Map<MetricName, ? extends Metric> metrics() { return Collections.emptyMap(); }
+    @Override public ConsumerGroupMetadata groupMetadata() { return new ConsumerGroupMetadata("mock-group-metadata"); }
     @Override public List<PartitionInfo> partitionsFor(String topic) {
         return listTopics().get(topic);
     }
+    @Override public List<PartitionInfo> partitionsFor(String topic, Duration timeout) {
+        return partitionsFor(topic);
+    }
+
     @Override public Map<String, List<PartitionInfo>> listTopics() {
         return partitionsForTopic.entrySet().stream()
             .collect(Collectors.toMap(Map.Entry::getKey, entry -> {
@@ -186,6 +226,9 @@ public final class TestConsumer<K, V> implements Consumer<K, V> {
                      .map(TestConsumer::toDefaultPartitionInfo)
                      .collect(Collectors.toList());
              }));
+    }
+    @Override public Map<String, List<PartitionInfo>> listTopics(Duration timeout) {
+        return listTopics();
     }
 
     private static PartitionInfo toDefaultPartitionInfo(TopicPartition partition) {
@@ -202,11 +245,11 @@ public final class TestConsumer<K, V> implements Consumer<K, V> {
       Poll functionality
       ----
     */
-    public ConsumerRecords<K, V> poll(long timeout) {
+    @Override public ConsumerRecords<K, V> poll(long timeoutMs) {
         final Runnable action = beforePollActions.poll();
         if (action != null) { action.run(); }
 
-        if (timeout == 0) { return new ConsumerRecords<>(Collections.emptyMap()); }
+        if (timeoutMs == 0) { return new ConsumerRecords<>(Collections.emptyMap()); }
 
         final AtomicLong remainingRecordsInBatch = new AtomicLong(maxPollRecords);
         final Map<TopicPartition, List<ConsumerRecord<K, V>>> recordMap = assignment.stream()
@@ -230,6 +273,9 @@ public final class TestConsumer<K, V> implements Consumer<K, V> {
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
         return new ConsumerRecords<K, V>(recordMap);
+    }
+    @Override public ConsumerRecords<K, V> poll(Duration timeout) {
+        return poll(timeout.toMillis());
     }
 
     /*

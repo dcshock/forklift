@@ -1,9 +1,10 @@
-package forklift.connectors;
+package forklift.controller;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyLong;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
@@ -66,10 +67,12 @@ public class KafkaControllerTests {
         ConsumerRecords records = mock(ConsumerRecords.class);
         when(kafkaConsumer.poll(anyLong())).thenReturn(records);
         this.controller.start();
-        verify(kafkaConsumer, timeout(200).times(1)).subscribe(subscribeCaptor.capture(), any());
+        verify(kafkaConsumer, timeout(200).times(1))
+            .subscribe(subscribeCaptor.capture(), any());
         //verify that the control loop is polling repeatedly.  Normally there would be a delay but
         //the kafkaConsumer has been mocked to return immediatly on poll
-        verify(kafkaConsumer, timeout(200).atLeast(5)).poll((anyLong()));
+        verify(kafkaConsumer, timeout(200).atLeast(5))
+            .poll(eq(KafkaController.POLL_TIMEOUT));
         assertEquals(1, subscribeCaptor.getValue().size());
         assertTrue(subscribeCaptor.getValue().contains(topic1));
         this.controller.stop(10, TimeUnit.MILLISECONDS);
