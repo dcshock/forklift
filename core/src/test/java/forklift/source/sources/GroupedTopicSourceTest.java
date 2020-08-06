@@ -35,7 +35,7 @@ public class GroupedTopicSourceTest {
         final String testTopic = "test-topic";
         final String testGroup = "test-group";
         assertEquals(new GroupedTopicSource(testTopic, testGroup),
-                            new GroupedTopicSource(testTopic, testGroup));
+                new GroupedTopicSource(testTopic, testGroup));
     }
 
     @Test
