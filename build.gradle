@@ -117,6 +117,7 @@ subprojects {
         project.ext.set("signing.password", gpgPassword)
         project.ext.set("signing.secretKeyRingFile", gpgFile)
 
+        required { gpgPassword != null }
         sign publishing.publications.mavenJava
     }
 }
@@ -129,7 +130,7 @@ task testReport(type: TestReport) {
 }
 
 rootProject.getTasksByName('test', true).each {
-    it.finalizedBy(testReport) 
+    it.finalizedBy(testReport)
 }
 
 task cleanTestDir (type: Delete) {
