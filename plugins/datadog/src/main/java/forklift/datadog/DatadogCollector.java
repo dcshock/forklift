@@ -1,17 +1,19 @@
 package forklift.datadog;
 
+import java.time.Duration;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import forklift.consumer.MessageRunnable;
 import forklift.consumer.ProcessStep;
 import forklift.decorators.LifeCycle;
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Clock;
 import io.micrometer.core.instrument.Tag;
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import io.micrometer.core.lang.Nullable;
+import io.micrometer.datadog.DatadogConfig;
+import io.micrometer.datadog.DatadogMeterRegistry;
 
 /**
  * A plug-in that allows tracking portions of the forklift lifecycle directly in Datadog.
@@ -22,97 +24,85 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
  *
  * Include tags: consumer-name, lifecycle, environment, host
  *
- * Need to be able to turn on and off certain lifecycle events with flags
- * Need to be able to pass in credentials via the environment
+ * TODO: Need to be able to turn on and off certain lifecycle events with flags
  *
  */
-public class DatadogCollector {
-    MeterRegistry registry;
+public class DatadogCollector extends SimpleCollector {
+    private Logger log = LoggerFactory.getLogger(DatadogCollector.class);
 
-    private Map<String, Map<String, Counter>> counters = new HashMap<>();
-    private List<Tag> stdTags;
+    public DatadogCollector(String apiKey, String applicationKey, String environment, String host) {
+        if (apiKey == null || apiKey.length() == 0)
+            throw new IllegalArgumentException("Datadog API key cannot be null");
 
-    public DatadogCollector() {
-        registry =new SimpleMeterRegistry();
+        DatadogConfig config = new DatadogConfig() {
+            @Override
+            public Duration step() {
+                return Duration.ofSeconds(10);
+            }
+            @Override
+            public String get(String k) {
+                return null;
+            }
+            @Override
+            public String apiKey() {
+                return apiKey;
+            }
+            @Override
+            @Nullable
+            public String applicationKey() {
+                return applicationKey;
+            }
+        };
+        registry = new DatadogMeterRegistry(config, Clock.SYSTEM);
         stdTags = new ArrayList<>();
-        stdTags.add(Tag.of("env", "production"));
-        stdTags.add(Tag.of("host", "localhost"));
+        if (environment != null && environment.length() > 0)
+            stdTags.add(Tag.of("env", environment));
+        if (host != null && host.length() > 0)
+            stdTags.add(Tag.of("host", host));
+        log.info("DatadogCollector created");
     }
+
+    // Annotations can not be inherited at the method level. Requires
+    // the lifecycle injection to exist at the instantiated class level
+    // Stupid as this is the same exact methods as the super class
 
     @LifeCycle(value=ProcessStep.Pending)
     public void pending(MessageRunnable mr) {
-        increment(getQueueName(mr.getConsumer().getName()), "pending");
+        increment(getConsumerName(mr.getConsumer().getName()), "pending");
     }
 
     @LifeCycle(value=ProcessStep.Validating)
     public void validating(MessageRunnable mr) {
-        increment(getQueueName(mr.getConsumer().getName()), "validating");
+        increment(getConsumerName(mr.getConsumer().getName()), "validating");
     }
 
     @LifeCycle(value=ProcessStep.Invalid)
     public void invalid(MessageRunnable mr) {
-        increment(getQueueName(mr.getConsumer().getName()), "invalid");
+        increment(getConsumerName(mr.getConsumer().getName()), "invalid");
     }
 
     @LifeCycle(value=ProcessStep.Processing)
     public void processing(MessageRunnable mr) {
-        increment(getQueueName(mr.getConsumer().getName()), "processing");
+        increment(getConsumerName(mr.getConsumer().getName()), "processing");
     }
 
     @LifeCycle(value=ProcessStep.Complete)
     public void complete(MessageRunnable mr) {
-        increment(getQueueName(mr.getConsumer().getName()), "complete");
+        increment(getConsumerName(mr.getConsumer().getName()), "complete");
     }
 
     @LifeCycle(value=ProcessStep.Error)
     public void error(MessageRunnable mr) {
-        increment(getQueueName(mr.getConsumer().getName()), "error");
+        increment(getConsumerName(mr.getConsumer().getName()), "error");
     }
 
     @LifeCycle(value=ProcessStep.Retrying)
     public void retry(MessageRunnable mr) {
-        increment(getQueueName(mr.getConsumer().getName()), "retry");
+        increment(getConsumerName(mr.getConsumer().getName()), "retry");
     }
 
-    /**
-     * Increment from a map of counters the micrometer counter.
-     * @param queue - The name of the queue, topic, stream, etc.
-     * @param lifecycle - The lifecycle step in forklift
-     * @return - the current counter value for that queue/lifecycle
-     */
-    protected double increment(String queue, String lifecycle) {
-        if (queue == null || queue.length() == 0)
-            return 0.0;
-        if (lifecycle == null || lifecycle.length() == 0)
-            return 0.0;
-
-        Map<String, Counter> queueCounters = counters.get(queue);
-        if (queueCounters == null) {
-            queueCounters = new HashMap<>();
-            counters.put(queue, queueCounters);
-        }
-        Counter counter = queueCounters.get(lifecycle);
-        if (counter == null) {
-            counter = Counter.builder("trace.forklift.count").tags(stdTags).
-                    tags("queue", queue, "lifecycle", lifecycle).register(registry);
-            queueCounters.put(lifecycle, counter);
-        }
-        counter.increment();
-        return counter.count();
-    }
-
-    /**
-     * Given a queue name which includes the id, strip off the id.
-     * @param consumerName as defined by a MessageRunner
-     * @return just the consumer-name
-     */
-    protected static String getQueueName(String consumerName) {
-        String cn = consumerName;
-        if (cn == null)
-            return "";
-        int lio = consumerName.lastIndexOf(':');
-        if (lio > -1)
-            cn = consumerName.substring(0, lio);
-        return cn;
+    @LifeCycle(value=ProcessStep.MaxRetriesExceeded)
+    public void maxRetries(MessageRunnable mr) {
+        increment(getConsumerName(mr.getConsumer().getName()), "max-retries");
     }
 }
