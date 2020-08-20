@@ -57,8 +57,8 @@ public class ForkliftOpts {
     @Option(name="-datadogApplicationKey", usage="Datadog application key if you for tracking at the app level")
     private String datadogApplicationKey;
 
-    @Option(name="-config", usage="Config file for forklift server settings")
-    private String configFileLocation;
+    @Option(name="-configurationFile", usage="Config file for forklift server settings")
+    private String configurationFile;
 
 
     public String getConsumerDir() {
@@ -97,10 +97,6 @@ public class ForkliftOpts {
         return retryESHost;
     }
 
-    public void setRetryESHost(String retryESHost) {
-        this.retryESHost = retryESHost;
-    }
-
     public int getRetryESPort() {
         return retryESPort;
     }
@@ -137,7 +133,7 @@ public class ForkliftOpts {
         return datadogApplicationKey;
     }
 
-    public String getConfigFileLocation() {
-        return configFileLocation;
+    public String getConfigurationFile() {
+        return configurationFile;
     }
 }

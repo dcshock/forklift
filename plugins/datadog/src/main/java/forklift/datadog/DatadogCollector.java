@@ -24,10 +24,10 @@ import io.micrometer.datadog.DatadogMeterRegistry;
  *
  * Include tags: consumer-name, lifecycle, environment, host
  *
- * TODO: Need to be able to turn on and off certain lifecycle events with flags
- *
  */
 public class DatadogCollector extends SimpleCollector {
+    private static final String DATADOG_LIFECYCLE_COUNTER = "datadog.lifecycle.counter";
+    private static final String DATADOG_LIFECYCLE_TIMER = "datadog.lifecycle.timer";
     private Logger log = LoggerFactory.getLogger(DatadogCollector.class);
 
     public DatadogCollector(String apiKey, String applicationKey, String environment, String host) {
@@ -68,41 +68,44 @@ public class DatadogCollector extends SimpleCollector {
 
     @LifeCycle(value=ProcessStep.Pending)
     public void pending(MessageRunnable mr) {
-        increment(getConsumerName(mr.getConsumer().getName()), "pending");
+        increment(getConsumerName(mr.getConsumer().getName()), "pending", DATADOG_LIFECYCLE_COUNTER);
     }
 
     @LifeCycle(value=ProcessStep.Validating)
     public void validating(MessageRunnable mr) {
-        increment(getConsumerName(mr.getConsumer().getName()), "validating");
+        increment(getConsumerName(mr.getConsumer().getName()), "validating", DATADOG_LIFECYCLE_COUNTER);
     }
 
     @LifeCycle(value=ProcessStep.Invalid)
     public void invalid(MessageRunnable mr) {
-        increment(getConsumerName(mr.getConsumer().getName()), "invalid");
+        increment(getConsumerName(mr.getConsumer().getName()), "invalid", DATADOG_LIFECYCLE_COUNTER);
     }
 
     @LifeCycle(value=ProcessStep.Processing)
     public void processing(MessageRunnable mr) {
-        increment(getConsumerName(mr.getConsumer().getName()), "processing");
+        increment(getConsumerName(mr.getConsumer().getName()), "processing", DATADOG_LIFECYCLE_COUNTER);
+        timerStart(getConsumerName(mr.getConsumer().getName()), "processing", DATADOG_LIFECYCLE_TIMER);
     }
 
     @LifeCycle(value=ProcessStep.Complete)
     public void complete(MessageRunnable mr) {
-        increment(getConsumerName(mr.getConsumer().getName()), "complete");
+        increment(getConsumerName(mr.getConsumer().getName()), "complete", DATADOG_LIFECYCLE_COUNTER);
+        timerStop(getConsumerName(mr.getConsumer().getName()), "processing", DATADOG_LIFECYCLE_TIMER);
     }
 
     @LifeCycle(value=ProcessStep.Error)
     public void error(MessageRunnable mr) {
-        increment(getConsumerName(mr.getConsumer().getName()), "error");
+        increment(getConsumerName(mr.getConsumer().getName()), "error", DATADOG_LIFECYCLE_COUNTER);
+        timerStop(getConsumerName(mr.getConsumer().getName()), "processing", DATADOG_LIFECYCLE_TIMER);
     }
 
     @LifeCycle(value=ProcessStep.Retrying)
     public void retry(MessageRunnable mr) {
-        increment(getConsumerName(mr.getConsumer().getName()), "retry");
+        increment(getConsumerName(mr.getConsumer().getName()), "retry", DATADOG_LIFECYCLE_COUNTER);
     }
 
     @LifeCycle(value=ProcessStep.MaxRetriesExceeded)
     public void maxRetries(MessageRunnable mr) {
-        increment(getConsumerName(mr.getConsumer().getName()), "max-retries");
+        increment(getConsumerName(mr.getConsumer().getName()), "max-retries", DATADOG_LIFECYCLE_COUNTER);
     }
 }

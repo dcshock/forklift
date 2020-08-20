@@ -60,6 +60,7 @@ public final class ForkliftServer {
 
     public ForkliftServer(ForkliftOpts options) {
         this.opts = options;
+        ForkliftPropFile.addPropertiesFromFile(options.getConfigurationFile());
     }
 
     private DatadogCollector datadogCollector;
@@ -282,9 +283,13 @@ public final class ForkliftServer {
 
         String apiKey = opts.getDatadogApiKey();
         if (apiKey == null)
+            apiKey = System.getProperty("datadog.api.key");
+        if (apiKey == null)
             return null;
 
         String applicationKey = opts.getDatadogApplicationKey();
+        if (applicationKey == null)
+            applicationKey = System.getProperty("datadog.application.key");
 
         // Look for the environment the best we can
         String environment = System.getProperty("app.environment");

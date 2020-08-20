@@ -13,6 +13,7 @@ import forklift.decorators.LifeCycle;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
 /**
@@ -25,12 +26,12 @@ public class SimpleCollector {
     MeterRegistry registry;
 
     private Logger log = LoggerFactory.getLogger(SimpleCollector.class);
-    private Map<String, Map<String, Counter>> counters = new HashMap<>();
+    private Map<String, Map<String, Timer.Sample>> timers = new HashMap<>();
     protected List<Tag> stdTags;
 
     public SimpleCollector() {
         registry = new SimpleMeterRegistry();
-        log.info("DatadogCollector created");
+        log.info("SimpleCollector created");
     }
 
     @LifeCycle(value=ProcessStep.Pending)
@@ -77,6 +78,20 @@ public class SimpleCollector {
      * Increment from a map of counters the micrometer counter.
      * @param consumerName - The name of the queue, topic, stream, etc.
      * @param lifecycle - The lifecycle step in forklift
+     * @param propValue - The property value if set can turn off a counter
+     * @return - the current counter value for that queue/lifecycle
+     */
+    protected double increment(String consumerName, String lifecycle, String propValue) {
+        if (isTurnedOff(consumerName, lifecycle, propValue))
+            return 0.0;
+
+        return increment(consumerName, lifecycle);
+    }
+
+    /**
+     * Increment from a map of counters the micrometer counter.
+     * @param consumerName - The name of the queue, topic, stream, etc.
+     * @param lifecycle - The lifecycle step in forklift
      * @return - the current counter value for that queue/lifecycle
      */
     protected double increment(String consumerName, String lifecycle) {
@@ -85,19 +100,92 @@ public class SimpleCollector {
         if (lifecycle == null || lifecycle.length() == 0)
             return 0.0;
 
-        Map<String, Counter> queueCounters = counters.get(consumerName);
-        if (queueCounters == null) {
-            queueCounters = new HashMap<>();
-            counters.put(consumerName, queueCounters);
-        }
-        Counter counter = queueCounters.get(lifecycle);
-        if (counter == null) {
-            counter = Counter.builder("trace.forklift.count").tags(stdTags).
+        // Micrometer counters handle creating non-existing or returning existing if
+        // it already exists.
+        Counter counter = Counter.builder("trace.forklift.count").tags(stdTags).
                     tags("consumer-name", consumerName, "lifecycle", lifecycle).register(registry);
-            queueCounters.put(lifecycle, counter);
-        }
         counter.increment();
         return counter.count();
+    }
+
+    /**
+     * Use a micrometer sampler to start recording the time it takes to run until stopped.
+     * @param consumerName - The name of the queue, topic, stream, etc.
+     * @param lifecycle - The lifecycle step in forklift
+     * @param propValue - The property value if set can turn off a timer
+     * @return the timer sampler created for this consumerName
+     */
+    protected Timer.Sample timerStart(String consumerName, String lifecycle, String propValue) {
+        if (isTurnedOff(consumerName, lifecycle, propValue))
+            return null;
+
+        return timerStart(consumerName, lifecycle);
+    }
+
+    protected Timer.Sample timerStart(String consumerName, String lifecycle) {
+        if (consumerName == null || consumerName.length() == 0)
+            return null;
+        if (lifecycle == null || lifecycle.length() == 0)
+            return null;
+
+        Map<String, Timer.Sample> queueTimers = timers.get(consumerName);
+        if (queueTimers == null) {
+            queueTimers = new HashMap<>();
+            timers.put(consumerName, queueTimers);
+        }
+        // In order to make this thread-safe, we need to add the thread id.
+        // Since the lifecycle in forklift is guaranteed to run on a single thread
+        // then we can guarantee that start and stop will live on the same
+        // thread, thus the same thread id.
+        String threadLifecycle = lifecycle + Thread.currentThread().getId();
+        Timer.Sample sampler = queueTimers.get(threadLifecycle);
+        if (sampler == null) {
+            sampler = Timer.start(registry);
+            queueTimers.put(threadLifecycle, sampler);
+        }
+        return sampler;
+    }
+
+    /**
+     * Create a micrometer timer and record the time it took from when the sampler started until
+     * this method is called to stop it.
+     * @param consumerName - The name of the queue, topic, stream, etc.
+     * @param lifecycle - The lifecycle step in forklift
+     * @param propValue - The property value if set can turn off a timer
+     * @return the number of times the timer has been called
+     */
+    protected double timerStop(String consumerName, String lifecycle, String propValue) {
+        if (isTurnedOff(consumerName, lifecycle, propValue))
+            return 0.0;
+
+        return timerStop(consumerName, lifecycle);
+    }
+
+    protected double timerStop(String consumerName, String lifecycle) {
+        if (consumerName == null || consumerName.length() == 0)
+            return 0.0;
+        if (lifecycle == null || lifecycle.length() == 0)
+            return 0.0;
+
+        Map<String, Timer.Sample> queueSamplers = timers.get(consumerName);
+        if (queueSamplers == null) {
+            // timer never started
+            return 0.0;
+        }
+        // In order to make this thread-safe, we need to add the thread id.
+        String threadLifecycle = lifecycle + Thread.currentThread().getId();
+        Timer.Sample sampler = queueSamplers.get(threadLifecycle);
+        if (sampler == null) {
+            // timer never started
+            return 0.0;
+        }
+        Timer timer = Timer.builder("trace.forklift.timer").tags(stdTags).
+                tags("consumer-name", consumerName, "lifecycle", lifecycle).register(registry);
+        sampler.stop(timer);
+        // Cleanup the stopped timer.
+        queueSamplers.remove(threadLifecycle);
+
+        return timer.count();
     }
 
     /**
@@ -105,7 +193,7 @@ public class SimpleCollector {
      * @param consumerName as defined by a MessageRunner
      * @return just the consumer-name
      */
-    protected static String getConsumerName(String consumerName) {
+    static String getConsumerName(String consumerName) {
         String cn = consumerName;
         if (cn == null)
             return "";
@@ -115,4 +203,16 @@ public class SimpleCollector {
         return cn;
     }
 
+    boolean isTurnedOff(String consumerName, String lifecycle, String propValue) {
+        String lifecycleProp = System.getProperty(propValue + "." + lifecycle);
+        String consumerProp = System.getProperty(propValue + "." + lifecycle + "." + consumerName );
+
+        if (consumerProp != null && !Boolean.parseBoolean(consumerProp))
+            return true;
+
+        if (consumerProp == null && lifecycleProp != null && !Boolean.parseBoolean(lifecycleProp))
+            return true;
+
+        return false;
+    }
 }
