@@ -17,7 +17,7 @@ import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
 /**
- * A simple micrometer meter incrementor for counting lifecycle events.
+ * A simple micrometer incrementor and timer for lifecycle events.
  *
  * @author David Thompson
  *
@@ -122,7 +122,7 @@ public class SimpleCollector {
         return timerStart(consumerName, lifecycle);
     }
 
-    protected Timer.Sample timerStart(String consumerName, String lifecycle) {
+    Timer.Sample timerStart(String consumerName, String lifecycle) {
         if (consumerName == null || consumerName.length() == 0)
             return null;
         if (lifecycle == null || lifecycle.length() == 0)
@@ -161,7 +161,7 @@ public class SimpleCollector {
         return timerStop(consumerName, lifecycle);
     }
 
-    protected double timerStop(String consumerName, String lifecycle) {
+    double timerStop(String consumerName, String lifecycle) {
         if (consumerName == null || consumerName.length() == 0)
             return 0.0;
         if (lifecycle == null || lifecycle.length() == 0)
@@ -189,6 +189,27 @@ public class SimpleCollector {
     }
 
     /**
+     * Looking at system properties that have been set, determine if the lifecycle
+     * metering should be turned off.
+     * @param consumerName - The name of the queue, topic, stream, etc.
+     * @param lifecycle - The lifecycle step in forklift
+     * @param propValue - The property value if set can turn off a timer
+     * @return true if it should not be metered
+     */
+    boolean isTurnedOff(String consumerName, String lifecycle, String propValue) {
+        String lifecycleProp = System.getProperty(propValue + "." + lifecycle);
+        String consumerProp = System.getProperty(propValue + "." + lifecycle + "." + consumerName );
+
+        if (consumerProp != null && !Boolean.parseBoolean(consumerProp))
+            return true;
+
+        if (consumerProp == null && lifecycleProp != null && !Boolean.parseBoolean(lifecycleProp))
+            return true;
+
+        return false;
+    }
+
+    /**
      * Given a consumer name which includes the id, strip off the id.
      * @param consumerName as defined by a MessageRunner
      * @return just the consumer-name
@@ -201,18 +222,5 @@ public class SimpleCollector {
         if (lio > -1)
             cn = consumerName.substring(0, lio);
         return cn;
-    }
-
-    boolean isTurnedOff(String consumerName, String lifecycle, String propValue) {
-        String lifecycleProp = System.getProperty(propValue + "." + lifecycle);
-        String consumerProp = System.getProperty(propValue + "." + lifecycle + "." + consumerName );
-
-        if (consumerProp != null && !Boolean.parseBoolean(consumerProp))
-            return true;
-
-        if (consumerProp == null && lifecycleProp != null && !Boolean.parseBoolean(lifecycleProp))
-            return true;
-
-        return false;
     }
 }

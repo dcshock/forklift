@@ -20,7 +20,7 @@ import io.micrometer.datadog.DatadogMeterRegistry;
  *
  * @author David Thompson
  *
- * Create a datadog metric named trace.forklift.count
+ * Create datadog metrics named trace.forklift.count trace.forklift.timer
  *
  * Include tags: consumer-name, lifecycle, environment, host
  *
