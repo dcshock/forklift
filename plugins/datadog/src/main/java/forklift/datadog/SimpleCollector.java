@@ -26,7 +26,7 @@ public class SimpleCollector {
     MeterRegistry registry;
 
     private Logger log = LoggerFactory.getLogger(SimpleCollector.class);
-    private Map<String, Map<String, Timer.Sample>> timers = new HashMap<>();
+    private Map<String, Timer.Sample> timers = new HashMap<>();
     protected List<Tag> stdTags;
 
     public SimpleCollector() {
@@ -112,11 +112,11 @@ public class SimpleCollector {
      * Use a micrometer sampler to start recording the time it takes to run until stopped.
      * @param consumerName - The name of the queue, topic, stream, etc.
      * @param lifecycle - The lifecycle step in forklift
-     * @param propValue - The property value if set can turn off a timer
+     * @param propertyPrefix - The prefix to the property value used with consumerName and lifecycle turn off a timer
      * @return the timer sampler created for this consumerName
      */
-    protected Timer.Sample timerStart(String consumerName, String lifecycle, String propValue) {
-        if (isTurnedOff(consumerName, lifecycle, propValue))
+    protected Timer.Sample timerStart(String consumerName, String lifecycle, String propertyPrefix) {
+        if (isTurnedOff(consumerName, lifecycle, propertyPrefix))
             return null;
 
         return timerStart(consumerName, lifecycle);
@@ -128,22 +128,15 @@ public class SimpleCollector {
         if (lifecycle == null || lifecycle.length() == 0)
             return null;
 
-        Map<String, Timer.Sample> queueTimers = timers.get(consumerName);
-        if (queueTimers == null) {
-            queueTimers = new HashMap<>();
-            timers.put(consumerName, queueTimers);
-        }
         // In order to make this thread-safe, we need to add the thread id.
         // Since the lifecycle in forklift is guaranteed to run on a single thread
         // then we can guarantee that start and stop will live on the same
         // thread, thus the same thread id.
+
         String threadLifecycle = lifecycle + Thread.currentThread().getId();
-        Timer.Sample sampler = queueTimers.get(threadLifecycle);
-        if (sampler == null) {
-            sampler = Timer.start(registry);
-            queueTimers.put(threadLifecycle, sampler);
-        }
-        return sampler;
+        String compositeKey = consumerName + threadLifecycle;
+
+        return timers.computeIfAbsent(compositeKey, k -> Timer.start(registry));
     }
 
     /**
@@ -151,11 +144,11 @@ public class SimpleCollector {
      * this method is called to stop it.
      * @param consumerName - The name of the queue, topic, stream, etc.
      * @param lifecycle - The lifecycle step in forklift
-     * @param propValue - The property value if set can turn off a timer
+     * @param propertyPrefix - The prefix to the property value used with consumerName and lifecycle turn off a timer
      * @return the number of times the timer has been called
      */
-    protected double timerStop(String consumerName, String lifecycle, String propValue) {
-        if (isTurnedOff(consumerName, lifecycle, propValue))
+    protected double timerStop(String consumerName, String lifecycle, String propertyPrefix) {
+        if (isTurnedOff(consumerName, lifecycle, propertyPrefix))
             return 0.0;
 
         return timerStop(consumerName, lifecycle);
@@ -167,14 +160,11 @@ public class SimpleCollector {
         if (lifecycle == null || lifecycle.length() == 0)
             return 0.0;
 
-        Map<String, Timer.Sample> queueSamplers = timers.get(consumerName);
-        if (queueSamplers == null) {
-            // timer never started
-            return 0.0;
-        }
         // In order to make this thread-safe, we need to add the thread id.
         String threadLifecycle = lifecycle + Thread.currentThread().getId();
-        Timer.Sample sampler = queueSamplers.get(threadLifecycle);
+        String compositeKey = consumerName + threadLifecycle;
+
+        Timer.Sample sampler = timers.get(compositeKey);
         if (sampler == null) {
             // timer never started
             return 0.0;
@@ -183,7 +173,7 @@ public class SimpleCollector {
                 tags("consumer-name", consumerName, "lifecycle", lifecycle).register(registry);
         sampler.stop(timer);
         // Cleanup the stopped timer.
-        queueSamplers.remove(threadLifecycle);
+        timers.remove(compositeKey);
 
         return timer.count();
     }
@@ -193,12 +183,12 @@ public class SimpleCollector {
      * metering should be turned off.
      * @param consumerName - The name of the queue, topic, stream, etc.
      * @param lifecycle - The lifecycle step in forklift
-     * @param propValue - The property value if set can turn off a timer
+     * @param propertyPrefix - The prefix to the property value used with consumerName and lifecycle turn off a timer
      * @return true if it should not be metered
      */
-    boolean isTurnedOff(String consumerName, String lifecycle, String propValue) {
-        String lifecycleProp = System.getProperty(propValue + "." + lifecycle);
-        String consumerProp = System.getProperty(propValue + "." + lifecycle + "." + consumerName );
+    boolean isTurnedOff(String consumerName, String lifecycle, String propertyPrefix) {
+        String lifecycleProp = System.getProperty(propertyPrefix + "." + lifecycle);
+        String consumerProp = System.getProperty(propertyPrefix + "." + lifecycle + "." + consumerName );
 
         if (consumerProp != null && !Boolean.parseBoolean(consumerProp))
             return true;
