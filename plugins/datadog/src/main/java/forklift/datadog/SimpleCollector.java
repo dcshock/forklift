@@ -78,11 +78,11 @@ public class SimpleCollector {
      * Increment from a map of counters the micrometer counter.
      * @param consumerName - The name of the queue, topic, stream, etc.
      * @param lifecycle - The lifecycle step in forklift
-     * @param propValue - The property value if set can turn off a counter
+     * @param propertyPrefix - The property value if set can turn off a counter
      * @return - the current counter value for that queue/lifecycle
      */
-    protected double increment(String consumerName, String lifecycle, String propValue) {
-        if (isTurnedOff(consumerName, lifecycle, propValue))
+    protected double increment(String consumerName, String lifecycle, String propertyPrefix) {
+        if (isTurnedOff(consumerName, lifecycle, propertyPrefix))
             return 0.0;
 
         return increment(consumerName, lifecycle);
