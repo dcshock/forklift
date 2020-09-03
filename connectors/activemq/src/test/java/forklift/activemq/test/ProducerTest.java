@@ -103,6 +103,34 @@ public class ProducerTest {
     }
 
     @Test
+    public void testSendNonStringPropsMessage() throws ProducerException, ConnectorException {
+        int msgCount = 10;
+        ForkliftProducerI producer = TestServiceManager.getConnector().getQueueProducer("q2");
+        for (int i = 0; i < msgCount; i++) {
+            String msg = new String("sending all the text, producer test");
+            // We should really fix the producer to allow us to send properties as a Map<String, Object>
+            // But this hack should allow it to still work with type-saftey ignored.
+            Map props = new HashMap();
+            props.put("test", Long.valueOf(12345));
+            props.put("test2", "string");
+            props.put("test3", Double.valueOf(333.33d));
+            producer.send(props, new ForkliftMessage(msg));
+        }
+
+        final Consumer c = new Consumer(getClass(), TestServiceManager.getForklift());
+        // Shutdown the consumer after all the messages have been processed.
+        c.setOutOfMessages((listener) -> {
+            listener.shutdown();
+            assertTrue(called.get() == msgCount, "called was not == " + msgCount);
+        });
+
+        // Start the consumer.
+        c.listen();
+
+        assertTrue(called.get() > 0);
+    }
+
+    @Test
     public void testSendObjectMessage() throws JMSException, ConnectorException, ProducerException {
         int msgCount = 10;
         ForkliftProducerI producer = TestServiceManager.getConnector().getQueueProducer("q2");
