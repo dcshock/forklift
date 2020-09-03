@@ -1,0 +1,6 @@
+dependencies {
+    api project(':forklift-core'),
+    'io.micrometer:micrometer-registry-datadog:latest.release'
+
+    testImplementation 'org.mockito:mockito-core:3.4.4'
+}

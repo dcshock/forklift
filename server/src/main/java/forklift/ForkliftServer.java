@@ -5,6 +5,7 @@ import consul.Consul;
 import forklift.connectors.ActiveMQConnector;
 import forklift.connectors.ForkliftConnectorI;
 import forklift.consumer.ConsumerDeploymentEvents;
+import forklift.datadog.DatadogCollector;
 import forklift.deployment.Deployment;
 import forklift.deployment.DeploymentManager;
 import forklift.deployment.DeploymentWatch;
@@ -59,8 +60,10 @@ public final class ForkliftServer {
 
     public ForkliftServer(ForkliftOpts options) {
         this.opts = options;
+        ForkliftPropFile.addPropertiesFromFile(options.getConfigurationFile());
     }
 
+    private DatadogCollector datadogCollector;
     private ReplayES replayES;
     private ConsumerDeploymentEvents deploymentEvents;
     private DeploymentManager classDeployments = new DeploymentManager();
@@ -145,6 +148,7 @@ public final class ForkliftServer {
             propsWatch = setupPropertyWatch(deploymentEvents);
             this.replayES = setupESReplayHandling(forklift);
             RetryES retryES = setupESRetryHandling(forklift);
+            this.datadogCollector = setupDatadog(forklift);
             if (setupLifeCycleMonitors(replayES, retryES, forklift)) {
                 try {
                     runEventLoop(propsWatch, consumerWatch);
@@ -232,6 +236,10 @@ public final class ForkliftServer {
     private boolean setupLifeCycleMonitors(ReplayES replayES, RetryES retryES, Forklift forklift) {
         forklift.getLifeCycle().register(StatsCollector.class);
         boolean setup = true;
+        // Setup Datadog messaging
+        if (this.datadogCollector != null) {
+            forklift.getLifeCycle().register(this.datadogCollector);
+        }
         // Setup retry handling.
         if (retryES != null) {
             forklift.getLifeCycle().register(retryES);
@@ -268,6 +276,35 @@ public final class ForkliftServer {
         if (opts.getRetryESHost() != null)
             retryES = new RetryES(forklift, opts.isRetryESSsl(), opts.getRetryESHost(), opts.getRetryESPort(), opts.isRunRetries());
         return retryES;
+    }
+
+    // Setup start for Datadog plugin here.
+    private DatadogCollector setupDatadog(Forklift forklift) {
+
+        String apiKey = opts.getDatadogApiKey();
+        if (apiKey == null)
+            apiKey = System.getProperty("datadog.api.key");
+        if (apiKey == null)
+            return null;
+
+        String applicationKey = opts.getDatadogApplicationKey();
+        if (applicationKey == null)
+            applicationKey = System.getProperty("datadog.application.key");
+
+        // Look for the environment the best we can
+        String environment = System.getProperty("app.environment");
+        if (environment == null)
+            environment = System.getProperty("environment");
+        if (environment == null)
+            environment = System.getenv("ENVIRONMENT");
+
+        String host = System.getProperty("app.hostname");
+        if (host == null)
+            host = System.getProperty("hostname");
+        if (host == null)
+            host = System.getenv("HOSTNAME");
+        DatadogCollector ddc = new DatadogCollector(apiKey, applicationKey, environment, host);
+        return ddc;
     }
 
     private DeploymentWatch setupConsumerWatch(ConsumerDeploymentEvents deploymentEvents) {

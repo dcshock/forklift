@@ -19,6 +19,7 @@ dependencies {
             project(':forklift-replay'),
             project(':forklift-retry'),
             project(':forklift-stats'),
+            project(':forklift-datadog'),
             project(':forklift-activemq'),
             project(':forklift-kafka'),
             'com.github.dcshock:consul-rest-client:1.3',

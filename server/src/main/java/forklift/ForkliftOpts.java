@@ -51,20 +51,22 @@ public class ForkliftOpts {
     @Option(name="-consulHost", usage="consul host name")
     private String consulHost = "localhost";
 
+    @Option(name="-datadogApiKey", usage="Datadog API key if you want the lifecycle reported to datadog")
+    private String datadogApiKey;
+
+    @Option(name="-datadogApplicationKey", usage="Datadog application key if you for tracking at the app level")
+    private String datadogApplicationKey;
+
+    @Option(name="-configurationFile", usage="Config file for forklift server settings")
+    private String configurationFile;
+
+
     public String getConsumerDir() {
         return consumerDir;
     }
 
-    public void setConsumerDir(String consumerDir) {
-        this.consumerDir = consumerDir;
-    }
-
     public String getPropsDir() {
         return propsDir;
-    }
-
-    public void setPropsDir(String propsDir) {
-        this.propsDir = propsDir;
     }
 
     public String getBrokerUrl() {
@@ -79,95 +81,59 @@ public class ForkliftOpts {
         return password;
     }
 
-    public void setBrokerUrl(String brokerUrl) {
-        this.brokerUrl = brokerUrl;
-    }
-
     public String getRetryDir() {
         return retryDir;
-    }
-
-    public void setRetryDir(String retryDir) {
-        this.retryDir = retryDir;
     }
 
     public String getReplayDir() {
         return replayDir;
     }
 
-    public void setReplayDir(String replayDir) {
-        this.replayDir = replayDir;
-    }
-
     public String getConsulHost() {
         return consulHost;
-    }
-
-    public void setConsulHost(String consulHost) {
-        this.consulHost = consulHost;
     }
 
     public String getRetryESHost() {
         return retryESHost;
     }
 
-    public void setRetryESHost(String retryESHost) {
-        this.retryESHost = retryESHost;
-    }
-
     public int getRetryESPort() {
         return retryESPort;
-    }
-
-    public void setRetryESPort(int retryESPort) {
-        this.retryESPort = retryESPort;
     }
 
     public boolean isRetryESSsl() {
         return retryESSsl;
     }
 
-    public void setRetryESSsl(boolean retryESSsl) {
-        this.retryESSsl = retryESSsl;
-    }
-
     public String getReplayESHost() {
         return replayESHost;
-    }
-
-    public void setReplayESHost(String replayESHost) {
-        this.replayESHost = replayESHost;
     }
 
     public int getReplayESPort() {
         return replayESPort;
     }
 
-    public void setReplayESPort(int replayESPort) {
-        this.replayESPort = replayESPort;
-    }
-
     public boolean isReplayESSsl() {
         return replayESSsl;
-    }
-
-    public void setReplayESSsl(boolean replayESSsl) {
-        this.replayESSsl = replayESSsl;
     }
 
     public boolean isReplayESServer() {
         return replayESServer;
     }
 
-    public void setReplayESServer(boolean replayESServer) {
-        this.replayESServer = replayESServer;
-    }
-
-    public void setRunRetries(boolean runRetries) {
-        this.runRetries = runRetries;
-    }
-
     public boolean isRunRetries() {
         return runRetries;
+    }
+
+    public String getDatadogApiKey() {
+        return datadogApiKey;
+    }
+
+    public String getDatadogApplicationKey() {
+        return datadogApplicationKey;
+    }
+
+    public String getConfigurationFile() {
+        return configurationFile;
     }
 }

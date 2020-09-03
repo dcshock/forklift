@@ -15,6 +15,7 @@ include 'forklift-kafka'
 include 'forklift-replay'
 include 'forklift-retry'
 include 'forklift-stats'
+include 'forklift-datadog'
 include 'forklift-server'
 
 project(':forklift-core').projectDir = new File(rootDir, 'core')
@@ -23,4 +24,5 @@ project(':forklift-kafka').projectDir = new File(rootDir, 'connectors/kafka')
 project(':forklift-replay').projectDir = new File(rootDir, 'plugins/replay')
 project(':forklift-retry').projectDir = new File(rootDir, 'plugins/retry')
 project(':forklift-stats').projectDir = new File(rootDir, 'plugins/stats')
+project(':forklift-datadog').projectDir = new File(rootDir, 'plugins/datadog')
 project(':forklift-server').projectDir = new File(rootDir, 'server')
