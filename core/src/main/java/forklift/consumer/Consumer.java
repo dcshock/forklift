@@ -61,6 +61,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.inject.Inject;
+import javax.inject.Named;
 
 public class Consumer {
     static ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule())
@@ -401,7 +402,9 @@ public class Consumer {
                 fields.get(clazz).forEach(field -> {
                     log.trace("Inject target> Field: ({})  Decorator: ({})", field, decorator);
                     try {
-                        Object value = getInjectableValue(field.getAnnotation(decorator), field.getName(), clazz, msg);
+                        String fieldName = Optional.ofNullable(field.getAnnotation(Named.class))
+                                .map(a -> a.value()).orElse(field.getName());
+                        Object value = getInjectableValue(field.getAnnotation(decorator), fieldName, clazz, msg);
                         if (value instanceof ForkliftProducerI) {
                             closeMe.add((ForkliftProducerI)value);
                         }
@@ -445,7 +448,8 @@ public class Consumer {
                 }
             }
             Parameter p = constructor.getParameters()[index];
-            Object value = getInjectableValue(injectable, null, p.getType(), forkliftMessage);
+            String name = Optional.ofNullable(p.getAnnotation(Named.class)).map(a -> a.value()).orElse(null);
+            Object value = getInjectableValue(injectable, name, p.getType(), forkliftMessage);
             parameters[index] = value;
             if (value != null && value instanceof ForkliftProducerI) {
                 closeables.add((ForkliftProducerI)value);
@@ -463,7 +467,7 @@ public class Consumer {
                 // Try to resolve the class from any available BeanResolvers.
                 for (ConsumerService s : this.services) {
                     try {
-                        final Object o = s.resolve(mappedClass, null);
+                        final Object o = s.resolve(mappedClass, mappedName);
                         if (o != null) {
                             value = o;
                             break;

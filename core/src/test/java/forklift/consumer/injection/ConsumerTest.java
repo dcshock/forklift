@@ -2,7 +2,9 @@ package forklift.consumer.injection;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
@@ -27,6 +29,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -41,6 +47,7 @@ public class ConsumerTest {
         connector = mock(ForkliftConnectorI.class);
         when(forklift.getConnector()).thenReturn(connector);
     }
+
 
     @Test
     public void createBadConsumer() {
@@ -197,7 +204,6 @@ public class ConsumerTest {
 
     @Test
     public void testHeadersAndProperties() {
-
         Consumer test = new Consumer(ExampleJsonConsumer.class, forklift, this.getClass().getClassLoader());
         ExampleJsonConsumer ec = new ExampleJsonConsumer();
         ForkliftMessage msg = new ForkliftMessage();
@@ -222,6 +228,49 @@ public class ConsumerTest {
         assertEquals("blah", ec.strval);
         assertEquals(ec.cid, "abcd");
         assertEquals(ec.producer, "testing");
+    }
+
+    // For the next two tests, we are testing named dependency injection.
+    // It is using the ServiceNamedBeanResolver for testing. The @Named
+    // annotations should line up with the maps keys to make sure they
+    // got the right objects injected.
+    //
+    // This test checks the named injection when using the explicit inject
+    // method.
+    @Test
+    public void testNamedInjection() throws Exception {
+        ConsumerService service = new ConsumerService(ServiceNamedBeanResolver.class);
+        Consumer test = new Consumer(NamedConsumer.class, forklift, this.getClass().getClassLoader());
+        test.setServices(Arrays.asList(service));
+        NamedConsumer ec = new NamedConsumer();
+        ForkliftMessage msg = new ForkliftMessage();
+        msg.setId("1");
+        msg.setMsg("{}");
+
+        test.inject(msg, ec);
+        assertNotNull(ec.p1);
+        assertNotNull(ec.p2);
+        assertSame(ec.p1, ServiceNamedBeanResolver.map.get("Person1"));
+        assertSame(ec.p2, ServiceNamedBeanResolver.map.get("Person2"));
+        assertNotSame(ec.p1, ec.p2);
+    }
+
+    // This test checks the named injection when injecting via the constructor.
+    @Test
+    public void testNamedConstructorInjection() throws Exception {
+        ConsumerService service = new ConsumerService(ServiceNamedBeanResolver.class);
+        Consumer test = new Consumer(NamedConstructorConsumer.class, forklift, this.getClass().getClassLoader());
+        test.setServices(Arrays.asList(service));
+        ForkliftMessage msg = new ForkliftMessage();
+        msg.setId("1");
+        msg.setMsg("{}");
+
+        NamedConstructorConsumer ec = (NamedConstructorConsumer)test.getMsgHandlerInstance(msg);
+        assertNotNull(ec.p1);
+        assertNotNull(ec.p2);
+        assertSame(ec.p1, ServiceNamedBeanResolver.map.get("Person3"));
+        assertSame(ec.p2, ServiceNamedBeanResolver.map.get("Person4"));
+        assertNotSame(ec.p1, ec.p2);
     }
 
     // Class doesn't have queue or topic should throw IllegalArgException
@@ -287,6 +336,36 @@ public class ConsumerTest {
 
         @Message
         ExpectedMsg msg;
+    }
+
+    @Queue("named")
+    public class NamedConsumer {
+        @Inject
+        @Named("Person1")
+        Person p1;
+
+        @Inject
+        @Named("Person2")
+        Person p2;
+
+        @Message
+        String str;
+    }
+
+    @Queue("namedC")
+    public class NamedConstructorConsumer {
+        Person p1;
+        Person p2;
+
+        @Inject
+        public NamedConstructorConsumer(@Named("Person3") Person p1,
+                @Named("Person4") Person p2) {
+            this.p1 = p1;
+            this.p2 = p2;
+        }
+
+        @Message
+        String str;
     }
 
     public static class ExpectedMsg {
