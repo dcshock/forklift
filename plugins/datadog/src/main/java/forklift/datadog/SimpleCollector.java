@@ -75,10 +75,10 @@ public class SimpleCollector {
     }
 
     /**
-     * Increment from a map of counters the micrometer counter.
+     * Increment a counter specific to the consumerName and lifecycle.
      * @param consumerName - The name of the queue, topic, stream, etc.
      * @param lifecycle - The lifecycle step in forklift
-     * @param propertyPrefix - The property value if set can turn off a counter
+     * @param propertyPrefix - The prefix to the property value used with consumerName and lifecycle will turn off a counter
      * @return - the current counter value for that queue/lifecycle
      */
     protected double increment(String consumerName, String lifecycle, String propertyPrefix) {
@@ -89,7 +89,7 @@ public class SimpleCollector {
     }
 
     /**
-     * Increment from a map of counters the micrometer counter.
+     * Increment a counter specific to the consumerName and lifecycle.
      * @param consumerName - The name of the queue, topic, stream, etc.
      * @param lifecycle - The lifecycle step in forklift
      * @return - the current counter value for that queue/lifecycle
@@ -112,7 +112,7 @@ public class SimpleCollector {
      * Use a micrometer sampler to start recording the time it takes to run until stopped.
      * @param consumerName - The name of the queue, topic, stream, etc.
      * @param lifecycle - The lifecycle step in forklift
-     * @param propertyPrefix - The prefix to the property value used with consumerName and lifecycle turn off a timer
+     * @param propertyPrefix - The prefix to the property value used with consumerName and lifecycle will turn off a timer
      * @return the timer sampler created for this consumerName
      */
     protected Timer.Sample timerStart(String consumerName, String lifecycle, String propertyPrefix) {
@@ -144,7 +144,7 @@ public class SimpleCollector {
      * this method is called to stop it.
      * @param consumerName - The name of the queue, topic, stream, etc.
      * @param lifecycle - The lifecycle step in forklift
-     * @param propertyPrefix - The prefix to the property value used with consumerName and lifecycle turn off a timer
+     * @param propertyPrefix - The prefix to the property value used with consumerName and lifecycle will turn off a timer
      * @return the number of times the timer has been called
      */
     protected double timerStop(String consumerName, String lifecycle, String propertyPrefix) {
@@ -183,7 +183,7 @@ public class SimpleCollector {
      * metering should be turned off.
      * @param consumerName - The name of the queue, topic, stream, etc.
      * @param lifecycle - The lifecycle step in forklift
-     * @param propertyPrefix - The prefix to the property value used with consumerName and lifecycle turn off a timer
+     * @param propertyPrefix - The prefix to the property value used with consumerName and lifecycle
      * @return true if it should not be metered
      */
     boolean isTurnedOff(String consumerName, String lifecycle, String propertyPrefix) {
