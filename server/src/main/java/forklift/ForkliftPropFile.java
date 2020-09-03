@@ -60,9 +60,7 @@ public class ForkliftPropFile {
         Properties p = new Properties();
         URL url = findConfigFileURLFromSystemProperties(ForkliftServer.class.getClassLoader(), forkliftConfigFile);
         if (url != null) {
-            try (BufferedReader in = new BufferedReader(new InputStreamReader(
-                    url.openStream()))) {
-
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()))) {
                 p.load(in);
                 p.stringPropertyNames().forEach((String name) -> {
                     String value = p.getProperty(name);
