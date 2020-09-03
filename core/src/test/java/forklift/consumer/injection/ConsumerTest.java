@@ -31,7 +31,6 @@ import java.util.Map;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Singleton;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
