@@ -229,13 +229,10 @@ public class ConsumerTest {
         assertEquals(ec.producer, "testing");
     }
 
-    // For the next two tests, we are testing named dependency injection.
-    // It is using the ServiceNamedBeanResolver for testing. The @Named
-    // annotations should line up with the maps keys to make sure they
-    // got the right objects injected.
-    //
-    // This test checks the named injection when using the explicit inject
-    // method.
+    // Testing Named dependency injection using ServiceNamedBeanResolver. The @Named
+    // annotations should line up with the maps keys to make sure they got the right
+    // objects injected. This test checks the named injection when using the explicit
+    // inject method.
     @Test
     public void testNamedInjection() throws Exception {
         ConsumerService service = new ConsumerService(ServiceNamedBeanResolver.class);
@@ -254,7 +251,10 @@ public class ConsumerTest {
         assertNotSame(ec.p1, ec.p2);
     }
 
-    // This test checks the named injection when injecting via the constructor.
+    // Testing Named dependency injection using ServiceNamedBeanResolver. The @Named
+    // annotations should line up with the maps keys to make sure they got the right
+    // objects injected. This test checks the named injection when injecting via the
+    // constructor.
     @Test
     public void testNamedConstructorInjection() throws Exception {
         ConsumerService service = new ConsumerService(ServiceNamedBeanResolver.class);

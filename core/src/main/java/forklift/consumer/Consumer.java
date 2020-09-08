@@ -403,7 +403,7 @@ public class Consumer {
                     log.trace("Inject target> Field: ({})  Decorator: ({})", field, decorator);
                     try {
                         String fieldName = Optional.ofNullable(field.getAnnotation(Named.class))
-                                .map(a -> a.value()).orElse(field.getName());
+                                .map(a -> a.value()).orElseGet(() -> field.getName());
                         Object value = getInjectableValue(field.getAnnotation(decorator), fieldName, clazz, msg);
                         if (value instanceof ForkliftProducerI) {
                             closeMe.add((ForkliftProducerI)value);
