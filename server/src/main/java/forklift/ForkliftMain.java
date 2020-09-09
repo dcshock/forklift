@@ -25,12 +25,12 @@ public class ForkliftMain {
             // you'll get this exception. this will report
             // an error message.
             System.err.println(e.getMessage());
-            System.err.println("java SampleMain [options...] arguments...");
+            System.err.println("forklift-server [options...] arguments...");
             // print the list of available options
             argParse.printUsage(System.err);
             System.err.println();
             // print option sample. This is useful some time
-            System.err.println("  Example: java SampleMain" + argParse.printExample(OptionHandlerFilter.ALL));
+            System.err.println("  Example: forklift-server" + argParse.printExample(OptionHandlerFilter.ALL));
 
             return;
         }
