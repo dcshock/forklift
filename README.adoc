@@ -10,10 +10,13 @@ link:doc/forklift.adoc[Documentation]
 == Releases
 link:doc/prev_releases.adoc[Previous Releases]
 
-* *July xxxx 2020* - 3.8
+* *September xxxx 2020* - 3.8
 ** Converted build system from sbt to gradle.
 ** Upgraded to Java 11, now requires Java 11 Runtime to execute.
-** 
+** Upgraded all dependent libraries to current versions.
+** Upgraded to Junit 5.
+** Added a Datadog plug-in allowing the message life-cycle to be monitored.
+** Added the ability for injected beans to be resolved by name not just type.
 
 * *June 13th 2019* - v3.7
 ** Add support for password-based authentication to forklift server.
@@ -66,6 +69,13 @@ link:doc/prev_releases.adoc[Previous Releases]
 ** Core no longer depends on the JMS spec libraries
 
 == Current Release Dependencies
+=== Gradle
+----
+dependencies {
+    api 'com.github.dcshock:forklift:3.7'
+}
+----
+
 === SBT
 ----
 libraryDependencies += "com.github.dcshock" % "forklift-server" % "3.7"
@@ -76,7 +86,7 @@ libraryDependencies += "com.github.dcshock" % "forklift-server" % "3.7"
 <dependency>
     <groupId>com.github.dcshock</groupId>
     <artifactId>forklift-server</artifactId>
-    <version>1.0</version>
+    <version>3.7</version>
 </dependency>
 ----
 
@@ -100,15 +110,15 @@ A boot script that will start forklift based on several environment variables.
 #!/bin/sh
 # startup forklift
 
-forklift-server 
- -consulHost $NODE_IP 
- -url consul.activemq-broker 
- -monitor1 /usr/local/forklift/consumers 
- -monitor2 /config 
- -retryESHost $FORKLIFT_ES_HOST 
- -retryESPort $FORKLIFT_ES_PORT 
- -replayESHost $FORKLIFT_ES_HOST 
- -replayESPort $FORKLIFT_ES_PORT 
+forklift-server
+ -consulHost $NODE_IP
+ -url consul.activemq-broker
+ -monitor1 /usr/local/forklift/consumers
+ -monitor2 /config
+ -retryESHost $FORKLIFT_ES_HOST
+ -retryESPort $FORKLIFT_ES_PORT
+ -replayESHost $FORKLIFT_ES_HOST
+ -replayESPort $FORKLIFT_ES_PORT
  $FORKLIFT_RETRIES
 ----
 
@@ -135,5 +145,8 @@ A broker agnostic implementation of retries. Uses elastic search for storage.
 Forklift-Replay::
 A broker agnostic implementation of message replay logging. Uses elastic search for storage.
 Kibana makes a great tool to view Forklift replay logs.
+
+Forklift-Datadog::
+A plugin for monitoring the lifecycle events within Datadog metrics.
 
 See the link:doc/PLUGINS.md[plugins documentation] for more information on how to install and use plugins.

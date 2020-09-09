@@ -6,7 +6,7 @@ public class ForkliftOpts {
     @Option(name="-monitor1", required=true, usage="consumer deployment directory")
     private String consumerDir;
 
-    @Option(name="-monitor2", usage="consumer deployment directory")
+    @Option(name="-monitor2", usage="properties deployment directory")
     private String propsDir;
 
     @Option(name="-url", required=true, usage="broker connection url")
