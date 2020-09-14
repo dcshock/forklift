@@ -1,16 +1,18 @@
 package forklift.consumer;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import forklift.connectors.ConnectorException;
 import forklift.connectors.ForkliftMessage;
 import forklift.controller.KafkaController;
 import forklift.message.MessageStream;
 import forklift.message.KafkaMessage;
-import org.junit.Before;
-import org.junit.Test;
 
 public class KafkaTopicConsumerTests {
 
@@ -19,7 +21,7 @@ public class KafkaTopicConsumerTests {
     private MessageStream messageStream;
     private KafkaTopicConsumer consumer;
 
-    @Before
+    @BeforeEach
     public void setup() {
         this.topic = "testTopic";
         this.controller = mock(KafkaController.class);
@@ -46,9 +48,11 @@ public class KafkaTopicConsumerTests {
         assertEquals(message, result);
     }
 
-    @Test(expected = ConnectorException.class)
+    @Test
     public void receiveWithControllerNotRunning() throws ConnectorException {
         when(this.controller.isRunning()).thenReturn(false);
-        consumer.receive(100);
+        assertThrows(ConnectorException.class, () -> {
+            consumer.receive(100);
+        });
     }
 }

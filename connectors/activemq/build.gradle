@@ -1,0 +1,8 @@
+dependencies {
+    api project(':forklift-core'),
+            'org.apache.activemq:activemq-client:5.15.12',
+            'org.apache.geronimo.specs:geronimo-jms_1.1_spec:1.1.1'
+
+    testImplementation 'commons-io:commons-io:2.7',
+            'org.apache.activemq:activemq-all:5.15.12'
+}

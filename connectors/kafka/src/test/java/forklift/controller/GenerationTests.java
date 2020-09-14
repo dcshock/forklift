@@ -1,7 +1,9 @@
 package forklift.controller;
 
-import org.junit.Assert;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.jupiter.api.Test;
 
 public class GenerationTests {
     @Test
@@ -10,7 +12,7 @@ public class GenerationTests {
         generation.assignNextGeneration();
 
         final long currentGeneration = generation.generationNumber();
-        Assert.assertTrue(generation.acceptsGeneration(currentGeneration));
+        assertTrue(generation.acceptsGeneration(currentGeneration));
     }
 
     @Test
@@ -20,13 +22,13 @@ public class GenerationTests {
         generation.unassign();
 
         final long currentGeneration = generation.generationNumber();
-        Assert.assertFalse(generation.acceptsGeneration(currentGeneration));
+        assertFalse(generation.acceptsGeneration(currentGeneration));
 
         // check that the number taken from the unassigned generation is still rejected later
         generation.assignNextGeneration();
         generation.unassign();
 
-        Assert.assertFalse(generation.acceptsGeneration(currentGeneration));
+        assertFalse(generation.acceptsGeneration(currentGeneration));
     }
 
     @Test
@@ -38,6 +40,6 @@ public class GenerationTests {
         generation.unassign();
         generation.assignNextGeneration();
 
-        Assert.assertFalse(generation.acceptsGeneration(currentGeneration));
+        assertFalse(generation.acceptsGeneration(currentGeneration));
     }
 }

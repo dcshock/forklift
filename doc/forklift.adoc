@@ -1,6 +1,6 @@
 = Forklift
 Matt Conroy<dcshock@gmail.com>, @David Thompson <dthompsn1@gmail.com>
-v1.0, 2015-02-14
+v3.8, 2020-09-08
 :library: Asciidoctor
 :imagesdir: images
 :homepage: https://github.com/dcshock/forklift
@@ -84,6 +84,12 @@ business process modeling, no developed flow tools. It is built for developers
 who can read/write code to implement redundant, retry capable, provable,
 testable, queued, message processing.
 
+== Quickstart
+
+If you don't want to read through the rest of this documentation, and instead want
+to start seeing Forklift in action, you can use the link:quickstart.adoc[quickstart guide]
+to start up the server and run it on your local box to start processing messages.
+
 == What Forklift Provides
 
 === Quick Deployment
@@ -103,16 +109,16 @@ Example:
 ----
 @Queue("example")
 public class MyConsumer {
-	@OnValidate
-	public List<String> validate() {
-		// code
-		return errors;
-	}
+  @OnValidate
+  public List<String> validate() {
+    // code
+    return errors;
+  }
 
-	@OnMessage
-	public void handler() {
-		// code
-	}
+  @OnMessage
+  public void handler() {
+    // code
+  }
 }
 ----
 
@@ -163,7 +169,7 @@ message life-cycle auditing. Plug-ins are available that intercept the life-cycl
 able to replay messages or allow for retrying a message in the event that a message
 errors during processing.
 
-==== Broker Consumer Related Configuration
+=== Broker Consumer Related Configuration
 The purpose of a consumer is to process messages off of queues or topics from the
 broker. To make this easier, Forklift provides easy configuration of the consumer
 by annotating the consumer Java class with annotations:
@@ -208,7 +214,58 @@ the message properties into the map.
 a few specific properties but dont need the entire object, use this.
 If you don't provide a name, it will infer from the field name.
 
-@Inject - TBD
+=== Dependency Injection
+Forklift has been built to allow the use of dependency injection. Whether embedded
+into a Spring project or using Guice, you can inject your instantiated objects into
+the consumer. This does require a little setup but should be pretty straight forward
+for those familiar with dependency injection. Once configured, the @Inject annotation
+can be added to the consumer constructor or placed on fields within the consumer. For
+example:
+----
+@Queue("example")
+public class MyConsumer {
+    @Inject
+    @Named("myClass")
+    MyInstantiatedClass myClass;
+
+    @OnValidate
+    public List<String> validate() {
+        // code
+        return errors;
+    }
+
+    @OnMessage
+    public void handler() {
+        myClass.myMethod();
+        // code
+    }
+}
+----
+In order for the DI to work properly, it does require that the Spring BeanResolver
+or Guice BeanResolver are registered with Forklift, specifically a Consumer's services.
+When starting up new consumers within a project like DropWizard using Guice, you'd need
+something like:
+----
+import com.google.inject.Injector;
+import forklift.Forklift;
+import forklift.consumer.Consumer;
+import forklift.consumer.ConsumerService;
+import forklift.consumer.ConsumerThread;
+
+public class ForkliftStartupService {
+
+    @Inject
+    public ForkliftStartupService(Forklift forklift, Injector injector) {
+        // Configure a service to do dependency injection.
+        final ConsumerService forkliftInjector = new ConsumerService(new ForkliftInjector(injector));
+        final Consumer consumer = new Consumer(MyConsumer.class, forklift);
+        consumer.addServices(forkliftInjector);
+        final ConsumerThread thread = new ConsumerThread(consumer);
+        thread.start();
+    }
+}
+----
+
 
 === Standardized Exception/Error Handling
 In helping the developer organize their code and inject code into the life-cycle,
@@ -225,304 +282,7 @@ will automatically route the life-cycle to the Error state. This event can
 then be hooked to show the errors. For more information on logging and
 auditing see information about some of the plug-ins that have been built.
 
-=== Plugins
-
-Forklift plugins allow for additional actions to be performed at various stages in
-a message's lifecycle. For more details, see the [plugins documentation](PLUGINS.md).
-
-## Quickstart Guide
-
-* Download the https://github.com/dcshock/forklift/releases[forklift-server-x.x.zip] release.
-
-* unzip the download
-
-* Using a command line, `cd` into the unzipped directory
-
-* Create a directory named `forklift` in your home directory.
-[source,bash]
-----
-$ mkdir ~/forklift
-----
-
-* Create a sub-directory named deploy.
-
-[source,bash]
-----
-$ mkdir ~/forklift/deploy
-----
-
-* Start Forklift
-
-Within the forklift-server-x.x directory run the following command:
-
-[source,bash]
-----
-$ bin/forklift-server -monitor1 ~/forklift/deploy -url embedded
-----
-
-At this point, you should see a lot of log output from Forklift showing that it
-is running, but it really isn't doing anything other than waiting for you to start
-deploying consumers to it.
-
-### Write Your First Consumer
-
-This guide will lead you through writing a quick consumer. Provided are build scripts
-for both Maven and Sbt. Please choose the method that you are most comfortable using.
-You can also do this directly within and IDE such as Eclipse, but this will be left
-up to the developer as their own exercise.
-
-#### Maven Setup of Your Project
-The Maven build file for your first consumer, if you're into that kind of thing.
-
-.pom.xml
-[source,xml]
-----
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>forklift.consumer</groupId>
-  <artifactId>MyExampleConsumer</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
-  <name>My Example Consumer</name>
-  <description>An example Forklift consumer.</description>
-  <repositories>
-    <repository>
-        <id>oss-sonatype</id>
-        <name>oss-sonatype</name>
-        <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-        <snapshots>
-            <enabled>true</enabled>
-        </snapshots>
-    </repository>
-</repositories>
-  <dependencies>
-    <dependency>
-      <groupId>com.github.dcshock</groupId>
-      <artifactId>forklift</artifactId>
-      <version>[0.5,)</version>
-    </dependency>
-  </dependencies>
-</project>
-----
-
-#### Sbt Setup of Your Project
-
-The Sbt build file for your first consumer, if you're into that kind of thing.
-
-.build.sbt
-[source,sbt]
-----
-import com.github.dcshock.SbtBinks._
-
-organization := "forklift.consumer"
-
-name := "MyExampleConsumer"
-
-version := "0.1"
-
-libraryDependencies ++= Seq(
-  "com.github.dcshock" % "forklift" % "[0.5,)" % "provided"
-  )
-
-resolvers ++= Seq(
-  "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
-)
-
-// Inform sbt-eclipse to not add Scala nature
-EclipseKeys.projectFlavor := EclipseProjectFlavor.Java
-
-// Remove scala dependency for pure Java libraries
-autoScalaLibrary := false
-
-// Remove the scala version from the generated/published artifact
-crossPaths := false
-
-// With this enabled, compiled jars are easier to debug in other projects
-// variable names are visible.
-javacOptions in compile ++= Seq("-source", "1.8", "-g:lines,vars,source", "-deprecation")
-
-javacOptions in doc += "-Xdoclint:none"
-
-addCommandAlias("dist", ";compile;binks")
-
-binksSettings
-----
-
-For sbt, you will also be required to add these lines to your project/plugins.sbt
-
-.plugins.sbt
-[source,sbt]
-----
-addSbtPlugin("com.github.dcshock" % "sbt-binks" % "0.1")
-
-addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "3.0.0")
-----
-
-#### Source Code for First Example Consumer
-
-The first example, is very simple and should be easily understood by most developers.
-It listens to the "test" queue and then logs out the message it receives.
-
-The source code is as follows:
-
-.MyExampleConsumer.java
-[source,java]
-----
-package forklift.consumer;
-
-import forklift.decorators.Message;
-import forklift.decorators.OnMessage;
-import forklift.decorators.Queue;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Map;
-
-@Queue("test") // <1>
-public class MyExampleConsumer {
-    Logger log = LoggerFactory.getLogger(MyExampleConsumer.class);
-
-    @Message // <2>
-    public Map<String, String> msg;
-
-    @OnMessage // <3>
-    public void processMyMessage() {
-        log.info("My message was: {}", msg);
-    }
-}
-----
-<1> Tells the consumer to listen to /queue/test for messages
-<2> Injects the message into the msg property.
-<3> Tells Forklift to run this method when a message is received.
-
-### Build Your Consumer
-
-.Maven
-[source,bash]
-----
-$ mvn package
-----
-
-Now your jar will be available in the target directory named `MyExampleConsumer-0.0.1-SNAPSHOT.jar`
-
-.Sbt
-[source,bash]
-----
-$ sbt package
-----
-
-Now your jar will be available in the target directory named `myexampleconsumer-0.1.jar`
-
-### Deploy Your Consumer
-
-With your jar now existing, it is quite easy to deploy your jar into the running
-Forklift instance. Just copy your jar file into ~/forklift/deploy and you should
-see log messages showing that the consumer is ready to consume messages on
-/queue/test. It may take a second or two since the deployment scanner is on a
-timer thread. See the following output from the logger:
-
-.Log output
-[source,log4j]
-----
-{"timestamp":"2015-06-15T17:18:32.439Z","level":"INFO","thread":"run-main-0","logger":"org.reflections.Reflections","message":"Reflections took 54 ms to scan 1 urls, producing 1 keys and 1 values ","context":"default"}
-{"timestamp":"2015-06-15T17:18:32.444Z","level":"INFO","thread":"run-main-0","logger":"forklift.consumer.ConsumerDeploymentEvents","message":"Deploying: Deployment [queues=[class forklift.consumer.MyExampleConsumer], topics=[], cl=forklift.classloader.ChildFirstClassLoader@5cbdc534, deployedFile=/Users/dthompson/forklift/deploy/myexampleconsumer-0.1.jar, reflections=org.reflections.Reflections@4e6016c]","context":"default"}
-{"timestamp":"2015-06-15T17:18:32.458Z","level":"INFO","thread":"consumer-deployment-events-1","logger":"consumer-thread-test:1","message":"starting consumer","context":"default"}
-----
-
-### Send a Message to Your Queue
-
-In this Quickstart guide, Forklift is using an embedded version of ActiveMQ, so there
-isn't a built-in way to send messages to a queue or topic. Most languages have API libraries
-that allow the developer to send messages to a broker. Below is a list of several of
-the APIs available.
-
-* stomp.py - A Python library for sending messages to ActiveMQ that has the stomp
-protocol enabled. Works okay for Json objects, but for K/V pairs needs modifications
-since its not possible to send newline characters.
-* stomp-client - For node.js, this client library can help easily send messages to
-to ActiveMQ. Our example will show how to use this library.
-* Net::STOMP::Client - Perl library for working with communicating with the Stomp
-protocol. Contributed by a developer at CERN, this API is quite robust.
-* Forklift Producer - A little more heavy-weight API for Java, but uses the
-same ActiveMQ connector that Forklift uses. It is based on JMS not the Stomp protocol.
-More information can be found outside the Quickstart guide.
-
-#### Using Node.js to Send Messages
-
-* Install node.js. For a quick reference, please see http://howtonode.org/how-to-install-nodejs[this howto].
-
-* Install npm (node package manager). Using the same method for installing node.js, you should be able to install
-npm as well.
-
-* Create a directory where you can write a small node application and cd into that directory.
-
-* Install the node stomp-client module. `npm install stomp-client`
-
-* Modify frames.js. There is a small issue that needs to be corrected in the stomp-client
-that needs fixed in order to let our node application work.
-
-Within the following file, modify the code
-
-.node_modules/stomp-client/lib/frame.js
-[source,javascript]
-----
-if (this.body.length > 0) {
-----
-
-to
-
-.frame.js
-[source,javascript]
-----
-if (this.body.length > 0 && !this.headers.hasOwnProperty("suppress-content-length")) {
-----
-
-Once you've completed the modification, create the node program below:
-
-.sendmessage.js
-[source,javascript]
-----
-var Stomp = require('stomp-client');
-var dest = process.argv[2];
-var client = new Stomp('localhost', 61613, null, null);
-
-client.on('error', function(e) {
-  console.log(e);
-});
-
-client.connect(function(sessionId) {
-  var msg = process.argv[3];
-  client.publish(dest, msg, {"suppress-content-length":"true", "persistent":"true"});
-  client.disconnect();
-});
-----
-
-#### Sending messages with sendmsg
-
-From command line, run the node program which you just created.
-
-[source,bash]
-----
-$ node sendmessage.js /queue/test $'who=Batman\ntype=Bat signal\n'
-----
-
-Notice the `$'` syntax. That syntax allows you to send newlines within your message.
-At this point, you should be able to look at the log output of Forklift and you
-should see your message logged out. For example:
-
-[source,log4j]
-----
-{"timestamp":"2015-06-15T17:54:36.747Z","level":"INFO","thread":"consumer-deployment-events-1","logger":"forklift.consumer.MyExampleConsumer","message":"My message was: {type=Bat signal, who=Batman}","context":"default"}
-----
-
-### Conclusion
-
-You can now go and start playing with your example consumer to make it have different
-behavior and sending different types of messages. Try adding an `@OnValidate` method
-to make sure you have a valid message or change the `@Message` property type to an
-object and send Json messages instead of k/v pairs.
-
-## Consumer Development
+=== Consumer Development
 
 *TBD*
 
@@ -534,36 +294,61 @@ Example:
 
 [source,java]
 ----
-	@On(ProcessStep.Error)
-	@On(ProcessStep.Invalid)
-	public void sendEmail() {
-		emailer.send(maintainer, "oops!");
-	}
+  @On(ProcessStep.Error)
+  @On(ProcessStep.Invalid)
+  public void sendEmail() {
+    emailer.send(maintainer, "oops!");
+  }
 
-	@On(ProcessStep.Complete)
-	public void nextStep() {
-		messageQueue.send("step2", msg);
-	}
+  @On(ProcessStep.Complete)
+  public void nextStep() {
+    messageQueue.send("step2", msg);
+  }
 ----
 
-## Server
+== Plugins
 
-*TBD*
+Forklift plugins allow for additional actions to be performed at various stages in
+a message's lifecycle. For more details, see the link:PLUGINS.md[plugins documentation].
 
-## Connectors
+== Server
 
-### ActiveMQ JMS Connector
+Forklift can be used as a library embedded within an application such as a SpringBoot app or
+DropWizard app. Just include the library and you can start lighting up Producers and Consumers. In
+fact a large number of projects we are aware of, just use Forklift to make it easier to Produce
+JMS messages.
+
+But if you aren't inclined to embed it within your own app and instead want to just run
+a set of producers and consumers within a container, Forklift provides a server that can
+run at a command-line or within a docker container. The server acts similarly to a Tomcat
+server where Consumers can be deployed into it's deploy directory as packaged jars. Configuration
+property files can also be deployed for configuration values to be picked up by consumer jars.
+Take a look at the link:quickstart.adoc[Quickstart Guide] where we show how server can be used
+at the command line.
+
+=== Command line arguments and Configuration
+
+Forklift server offers a --help to see the different command line arguments that can be
+passed in. Another feature that was added in 3.8 was the ability to pass in some configuration
+via a Forklift server configuration file. It is also possible to change the logging configuration
+on the command line since Forklift uses logback as its logging solution.
+
+See link:args-and-config.adoc[Command line arguments and Configuration Examples] for more info.
+
+== Connectors
+
+=== ActiveMQ JMS Connector
 A very popular broker in the world of Java Messaging Services (JMS) is
 Apache's ActiveMQ. Forklift has been used very successfully with ActiveMQ
 as its primary broker. Forklift provides an out of the box connector for
 immediate use with ActiveMQ (located in connectors/ActiveMQ).
 
-### Others
-Currently we have not written any other connectors, but it would be quite
-easy to implement other connectors for other brokers such as ActiveMQ using
-AMQP or perhaps RabbitMQ. We will extend this section as other connectors
-become available.
+=== Kafka Connector
 
-## Plugins
+ *TBD*
 
-*TBD*
+=== Others
+It would be quite easy to implement other connectors for other brokers
+such as ActiveMQ using AMQP or perhaps RabbitMQ. We will extend this
+section as other connectors become available.
+

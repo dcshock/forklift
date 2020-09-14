@@ -12,75 +12,78 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ConsumerService {
-	private static final Logger log = LoggerFactory.getLogger(ConsumerService.class);
+    private static final Logger log = LoggerFactory.getLogger(ConsumerService.class);
 
-	private Class<?> clazz;
-	private Object instance;
-	private List<Method> beanResolvers = new ArrayList<>();
-	private List<Method> onDeploy = new ArrayList<>();
-	private List<Method> onUndeploy = new ArrayList<>();
+    private Class<?> clazz;
+    private Object instance;
+    private List<Method> beanResolvers = new ArrayList<>();
+    private List<Method> onDeploy = new ArrayList<>();
+    private List<Method> onUndeploy = new ArrayList<>();
 
-	public ConsumerService(Class<?> clazz) 
-	  throws Exception {
-		this(clazz, clazz.newInstance());
-	}
+    public ConsumerService(Class<?> clazz)
+      throws Exception {
+        this(clazz, clazz.newInstance());
+    }
 
-	public ConsumerService(Object instance) {
-		this(instance.getClass(), instance);
-	}
+    public ConsumerService(Object instance) {
+        this(instance.getClass(), instance);
+    }
 
-	public ConsumerService(Class<?> clazz, Object instance) {
-		this.clazz = clazz;
-		this.instance = instance;
+    public ConsumerService(Class<?> clazz, Object instance) {
+        this.clazz = clazz;
+        this.instance = instance;
 
-		try {
-			for (Method m : clazz.getDeclaredMethods()) {
+        try {
+            for (Method m : clazz.getDeclaredMethods()) {
                 if (m.isAnnotationPresent(BeanResolver.class))
                     beanResolvers.add(m);
                 else if (m.isAnnotationPresent(OnDeploy.class))
-                	onDeploy.add(m);
+                    onDeploy.add(m);
                 else if (m.isAnnotationPresent(OnUndeploy.class))
-                	onUndeploy.add(m);
+                    onUndeploy.add(m);
             }
-		} catch (Exception e) {
-			log.error("Unable to init consumer service", e);
-		}
-	}
+        } catch (Exception e) {
+            log.error("Unable to init consumer service", e);
+        }
+    }
 
-	/**
-	 * Resolve a class to an object using any available bean resolvers.
-	 * @param  c    class type
-	 * @param  name name of the field.
-	 * @return      [description]
-	 */
-	public Object resolve(Class c, String name)
-	  throws Exception {
-		// Attempt to resolve the class via name and type.
-		for (Method m : beanResolvers) {
-			final Object o = m.invoke(instance, c, name);
+    /**
+     * Resolve a class to an object using any available bean resolvers.
+     * @param  c    class type
+     * @param  name name of the field.
+     * @return bean if found, null if not
+     * @throws Exception method exceptions
+     */
+    public Object resolve(Class c, String name)
+      throws Exception {
+        // Attempt to resolve the class via name and type.
+        for (Method m : beanResolvers) {
+            final Object o = m.invoke(instance, c, name);
 
-			if (o != null)
-				return o;
-		}
+            if (o != null)
+                return o;
+        }
 
-		return null;
-	}
+        return null;
+    }
 
-	/**
-	 * Invoke all onDeploy annotated methods.
-	 */
-	public void onDeploy()
-	  throws Exception {
-		for (Method m : onDeploy)
-			m.invoke(instance);
-	}
+    /**
+     * Invoke all onDeploy annotated methods.
+     * @throws Exception method exceptions
+     */
+    public void onDeploy()
+      throws Exception {
+        for (Method m : onDeploy)
+            m.invoke(instance);
+    }
 
-	/**
-	 * Invoke all onUndeploy annotated methods.
-	 */
-	public void onUndeploy()
-	  throws Exception {
-		for (Method m : onUndeploy)
-			m.invoke(instance);
-	}
+    /**
+     * Invoke all onUndeploy annotated methods.
+     * @throws Exception method exceptions
+     */
+    public void onUndeploy()
+      throws Exception {
+        for (Method m : onUndeploy)
+            m.invoke(instance);
+    }
 }

@@ -1,7 +1,5 @@
 package forklift.integration;
 
-import static org.junit.Assert.assertTrue;
-
 import forklift.connectors.ForkliftMessage;
 import forklift.decorators.MultiThreaded;
 import forklift.decorators.OnMessage;
@@ -11,15 +9,17 @@ import forklift.producers.ForkliftProducerI;
 import forklift.schemas.AvroMessage;
 import forklift.source.decorators.Queue;
 
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Abstract class which provides support for some common integration testing scenarios.
@@ -38,21 +38,25 @@ public abstract class BaseIntegrationTest {
     protected static final Logger log = LoggerFactory.getLogger(BaseIntegrationTest.class);
     protected static Set<String> sentMessageIds = ConcurrentHashMap.newKeySet();
     protected static Set<String> consumedMessageIds = ConcurrentHashMap.newKeySet();
-    protected TestServiceManager serviceManager;
+    protected static TestServiceManager serviceManager;
     protected final int maxTimeouts = 5;
     protected int timeouts = 0;
 
-    @After
-    public void after() {
+    @AfterAll
+    public static void after() {
         serviceManager.stop();
     }
 
-    @Before
-    public void setup() {
-        serviceManager = new TestServiceManager();
-        serviceManager.start();
+    @BeforeEach
+    public void setupMaps() {
         sentMessageIds = ConcurrentHashMap.newKeySet();
         consumedMessageIds = ConcurrentHashMap.newKeySet();
+    }
+
+    @BeforeAll
+    public static void setup() {
+        serviceManager = new TestServiceManager();
+        serviceManager.start();
     }
 
     protected void messageAsserts(){
@@ -61,7 +65,7 @@ public abstract class BaseIntegrationTest {
         assertTrue(sentMessageIds.size() > 0);
     }
 
-    
+
     @Queue("forklift-string-topic")
     public static class StringConsumer {
 
@@ -131,7 +135,7 @@ public abstract class BaseIntegrationTest {
 
         @forklift.decorators.Message
         private ForkliftMessage forkliftMessage;
-        
+
         @forklift.decorators.Message
         private Map<String, String> mapMessage;
 

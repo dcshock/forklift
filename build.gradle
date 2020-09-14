@@ -1,0 +1,139 @@
+/*
+ * Forklift - An enterprise service bus that supports building and deploying
+ * microservice consumer and producers quickly and easily by annotating code.
+ *
+ * Composed of several sub-projects:
+ *    - core: the core forklift code
+ *    - connectors: ActiveMQ and Kafka connectors for producing and consuming on the different brokers
+ *    - plugins: Different handlers that can be used to extend the forklift core
+ *    - server: A java executable runnable container similar to Tomcat that can run consumers
+ *    - consumers: Examples written to show how you to build your own forklift ESB
+ */
+allprojects {
+    repositories {
+        mavenCentral()
+        maven {
+            url 'https://packages.confluent.io/maven'
+        }
+        maven {
+            url "https://jitpack.io"
+        }
+    }
+}
+
+subprojects {
+    apply plugin: 'java-library'
+    apply plugin: 'maven-publish'
+    apply plugin: 'signing'
+    apply plugin: 'distribution'
+    group = 'com.github.dcshock'
+    version = '3.8-SNAPSHOT'
+
+    java {
+        withSourcesJar()
+        withJavadocJar()
+    }
+
+    dependencies {
+        testImplementation 'org.junit.jupiter:junit-jupiter:5.6.2'
+    }
+
+    test {
+        useJUnitPlatform()
+        reports.html.enabled = false
+        // ignoreFailures true
+        testLogging {
+            events "passed", "skipped", "failed"
+        }
+    }
+
+    jar {
+        manifest {
+            attributes("Implementation-Title": "forklift",
+                       "Implementation-Version": version)
+        }
+    }
+
+    publishing {
+        repositories {
+            maven {
+                URI releaseUrl = new URI("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
+                URI snapshotUrl = new URI("https://oss.sonatype.org/content/repositories/snapshots/")
+
+                afterEvaluate {
+                    url version.endsWith("SNAPSHOT") ? snapshotUrl : releaseUrl
+                }
+                credentials {
+                    username = System.getenv("SONATYPE_USER")
+                    password = System.getenv("SONATYPE_PASS")
+                }
+            }
+        }
+        publications {
+            mavenJava(MavenPublication) {
+                version = project.hasProperty("artfactVersion") ? artifactVersion : version
+                from components.java
+                pom {
+                    url = 'https://github.com/dcshock/forklift'
+                    licenses {
+                        license {
+                            name = 'BSD-style'
+                            url = 'http://www.opensource.org/licenses/bsd-license.php'
+                        }
+                    }
+                    scm {
+                        url = 'git@github.com:dcshock/forklift.git'
+                        connection = 'scm:git:git@github.com:dcshock/forklift.git'
+                    }
+                    developers {
+                        developer {
+                            id = 'dcshock'
+                            name = 'Matt Conroy'
+                            url = 'http://www.mattconroy.com'
+                        }
+                        developer {
+                            id = 'afrieze'
+                            name = 'Andrew Frieze'
+                        }
+                        developer {
+                            id = 'kuroshii'
+                            name = 'Bridger Howell'
+                        }
+                        developer {
+                            id = 'applitect'
+                            name = 'David Thompson'
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+    signing {
+        def gpgPassword = System.getenv("GPG_PASS")
+        def gpgFile = System.getProperty("user.dir") + "/project/.gnupg/secring.gpg"
+        project.ext.set("signing.keyId", "F1ED27F3")
+        project.ext.set("signing.password", gpgPassword)
+        project.ext.set("signing.secretKeyRingFile", gpgFile)
+
+        required { gpgPassword != null }
+        sign publishing.publications.mavenJava
+    }
+}
+
+// Setup the test report to put together into one report for all subprojects.
+task testReport(type: TestReport) {
+    destinationDir = file("$buildDir/reports/allTests")
+    // Include the results from the `test` task in all subprojects
+    reportOn getTasksByName("test", true)
+}
+
+rootProject.getTasksByName('test', true).each {
+    it.finalizedBy(testReport)
+}
+
+task cleanTestDir (type: Delete) {
+    file("$buildDir").deleteDir()
+}
+

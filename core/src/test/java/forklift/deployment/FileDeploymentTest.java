@@ -1,12 +1,11 @@
 package forklift.deployment;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 import forklift.ForkliftTest;
 
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -15,19 +14,25 @@ import java.util.jar.Attributes;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 
+import org.junit.jupiter.api.Test;
+
 public class FileDeploymentTest {
-    @Test(expected = IOException.class)
+    @Test
     public void testNullDeployment() throws IOException {
-        new FileDeployment(null);
+        assertThrows(IOException.class, () -> {
+            new FileDeployment(null);
+        });
     }
 
     // Any kind of bad Jar file should only throw IOExcpetion otherwise we may bring down the system
-    @Test(expected = IOException.class)
+    @Test
     public void testEmptyDeployment() throws IOException {
         File f = File.createTempFile("test", ".txt");
 
         try {
-            new FileDeployment(f);
+            assertThrows(IOException.class, () -> {
+                new FileDeployment(f);
+            });
         } finally {
             // Don't leave test files around
             f.delete();

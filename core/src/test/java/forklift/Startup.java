@@ -3,9 +3,11 @@ package forklift;
 import forklift.connectors.ForkliftConnectorI;
 import forklift.exception.StartupException;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 
@@ -25,12 +27,12 @@ public class Startup {
         int count = 20;
         while (!forklift.isRunning() && count-- > 0)
             Thread.sleep(250);
-        Assert.assertTrue(forklift.isRunning());
+        assertTrue(forklift.isRunning());
 
         forklift.shutdown();
         count = 20;
         while (forklift.isRunning() && count-- > 0)
             Thread.sleep(250);
-        Assert.assertFalse(forklift.isRunning());
+        assertFalse(forklift.isRunning());
     }
 }

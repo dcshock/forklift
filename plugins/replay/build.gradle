@@ -1,0 +1,7 @@
+dependencies {
+    api project(':forklift-core'),
+            'org.elasticsearch:elasticsearch:6.4.3',
+            'org.elasticsearch.client:elasticsearch-rest-client:6.4.3'
+
+    testImplementation 'org.mockito:mockito-core:3.4.4'
+}

@@ -13,6 +13,9 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.PARAMETER})
 public @interface Properties {
-    /** Which property to load from the properties */
+    /**
+     * Which property to load from the properties
+     * @return the property value
+     */
     String value() default "";
 }

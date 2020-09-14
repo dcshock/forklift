@@ -21,13 +21,14 @@ import java.lang.annotation.Target;
 public @interface GroupedTopic {
     /**
      * The name of the topic being watched.
+     * @return the name of the topic being watched
      */
     String name();
 
     /**
      * The name of the consumer group reading this topic.
-     *
      * If empty, some consumer group name should be generated.
+     * @return the name of the consumer group
      */
     String group() default "";
 }

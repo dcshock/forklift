@@ -1,31 +1,24 @@
 package forklift.activemq.test;
 
 import forklift.connectors.ConnectorException;
-import forklift.connectors.ForkliftConnectorI;
 import forklift.connectors.ForkliftMessage;
 import forklift.consumer.Consumer;
-import forklift.consumer.LifeCycleMonitors;
 import forklift.consumer.MessageRunnable;
 import forklift.consumer.ProcessStep;
 import forklift.decorators.LifeCycle;
 import forklift.decorators.OnMessage;
 import forklift.decorators.OnValidate;
-import forklift.decorators.Producer;
-import forklift.message.Header;
 import forklift.producers.ForkliftProducerI;
 import forklift.producers.ProducerException;
 import forklift.source.decorators.Queue;
 
-import org.apache.activemq.command.ActiveMQTextMessage;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.Ignore;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -41,7 +34,7 @@ public class MessagingTest {
     @forklift.decorators.Message
     private ForkliftMessage m;
 
-    // This is null right now and is just being used to ensure the code at least tries to hit the injection code for props. 
+    // This is null right now and is just being used to ensure the code at least tries to hit the injection code for props.
     @forklift.decorators.Config("none")
     private Properties props;
 
@@ -51,13 +44,13 @@ public class MessagingTest {
     @forklift.decorators.Message
     private Map<String, String> keyvalMsg;
 
-    @Before
-    public void before() {
+    @BeforeAll
+    public static void before() {
         TestServiceManager.start();
     }
 
-    @After
-    public void after() {
+    @AfterAll
+    public static void after() {
         TestServiceManager.stop();
     }
 
@@ -110,13 +103,13 @@ public class MessagingTest {
         // Shutdown the consumer after all the messages have been processed.
         c.setOutOfMessages((listener) -> {
             listener.shutdown();
-            Assert.assertTrue(ordered);
-            Assert.assertTrue("called was not == " + msgCount + "  --  " + called.get(), called.get() == msgCount);
+            assertTrue(ordered);
+            assertTrue(called.get() == msgCount, "called was not == " + msgCount + "  --  " + called.get());
         });
 
         // Start the consumer.
         c.listen();
 
-        Assert.assertTrue(called.get() > 0);
+        assertTrue(called.get() > 0);
     }
 }

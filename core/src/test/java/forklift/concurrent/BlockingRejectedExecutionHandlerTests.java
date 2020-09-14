@@ -1,12 +1,13 @@
 package forklift.concurrent;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.times;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.util.concurrent.ArrayBlockingQueue;
@@ -23,7 +24,7 @@ public class BlockingRejectedExecutionHandlerTests {
     private BlockingQueue<Runnable> queue;
     private RejectedExecutionHandler handler;
 
-    @Before
+    @BeforeEach
     public void setup() {
         this.queue = new ArrayBlockingQueue<>(1);
         this.pool = new ThreadPoolExecutor(1, 1, 10, TimeUnit.MILLISECONDS, this.queue);
@@ -31,7 +32,7 @@ public class BlockingRejectedExecutionHandlerTests {
         this.pool.setRejectedExecutionHandler(handler);
     }
 
-    @After
+    @AfterEach
     public void shutdown() throws Exception {
         pool.shutdownNow();
         pool.awaitTermination(100, TimeUnit.MILLISECONDS);
@@ -62,7 +63,7 @@ public class BlockingRejectedExecutionHandlerTests {
                 finishCondition.wait(100);
             } catch (InterruptedException ignored) {}
         }
-        Assert.assertFalse(finishCondition.get());
+        assertFalse(finishCondition.get());
         Mockito.verify(handler, times(1)).rejectedExecution(any(), any());
 
         // unblock the queued threads
@@ -77,7 +78,7 @@ public class BlockingRejectedExecutionHandlerTests {
                 finishCondition.wait(100);
             } catch (InterruptedException ignored) {}
         }
-        Assert.assertTrue(finishCondition.get());
+        assertTrue(finishCondition.get());
         Mockito.verify(handler, times(1)).rejectedExecution(any(), any());
     }
 

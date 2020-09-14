@@ -5,7 +5,6 @@ import forklift.connectors.ConnectorException;
 import forklift.consumer.Consumer;
 import forklift.exception.StartupException;
 import forklift.producers.ForkliftProducerI;
-import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,6 +13,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests which focus on causing partitions to be rebalanced.
@@ -219,7 +220,7 @@ public class RebalanceTests extends BaseIntegrationTest {
                     long jitter = random.nextLong() % 50;
                     try {
                         sentMessageIds.add(producer1.send("String message"));
-                        Thread.currentThread().sleep(jitter);
+                        Thread.sleep(jitter);
                     } catch (Exception e) {
                     }
                 }
@@ -231,7 +232,7 @@ public class RebalanceTests extends BaseIntegrationTest {
                         final Map<String, String> m = new HashMap<>();
                         m.put("x", "producer key value send test");
                         sentMessageIds.add(producer2.send(m));
-                        Thread.currentThread().sleep(jitter);
+                        Thread.sleep(jitter);
                     } catch (Exception e) {
                     }
                 }
@@ -242,7 +243,7 @@ public class RebalanceTests extends BaseIntegrationTest {
                     try {
                         final TestMessage m = new TestMessage(new String("x=producer object send test"), 1);
                         sentMessageIds.add(producer3.send(m));
-                        Thread.currentThread().sleep(jitter);
+                        Thread.sleep(jitter);
                     } catch (Exception e) {
                     }
                 }

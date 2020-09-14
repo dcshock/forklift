@@ -1,28 +1,31 @@
 package forklift.source.sources;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.jupiter.api.Test;
+
 import forklift.source.LogicalSourceContext;
 import forklift.source.SourceUtil;
 import forklift.source.decorators.RoleInput;
 
-import org.junit.Assert;
-import org.junit.Test;
-
 public class RoleInputSourceTest {
     @Test
     public void testUndefinedRoles() {
-        Assert.assertFalse(new RoleInputSource((String) null).isRoleDefined());
-        Assert.assertFalse(new RoleInputSource("").isRoleDefined());
+        assertFalse(new RoleInputSource((String) null).isRoleDefined());
+        assertFalse(new RoleInputSource("").isRoleDefined());
     }
 
     @Test
     public void testUndefinedRolesAreEqual() {
-        Assert.assertEquals(new RoleInputSource((String) null),
-                            new RoleInputSource(""));
+        assertEquals(new RoleInputSource((String) null), new RoleInputSource(""));
     }
 
     @Test
     public void testIsLogicalSource() {
-        Assert.assertTrue(new RoleInputSource("TestRole").isLogicalSource());
+        assertTrue(new RoleInputSource("TestRole").isLogicalSource());
     }
 
     @Test
@@ -35,8 +38,7 @@ public class RoleInputSourceTest {
 
         final RoleInputSource roleInput = new RoleInputSource("TestRole");
 
-        Assert.assertEquals(new QueueSource("action-role-TestRole"),
-                            roleInput.getActionSource(testContext));
+        assertEquals(new QueueSource("action-role-TestRole"), roleInput.getActionSource(testContext));
     }
 
     @Test
@@ -44,22 +46,22 @@ public class RoleInputSourceTest {
         final String testRole = "test-role";
         final String otherRole = "other-role";
 
-        Assert.assertEquals(new RoleInputSource(testRole),
+        assertEquals(new RoleInputSource(testRole),
                             new RoleInputSource(testRole));
-        Assert.assertNotEquals(new RoleInputSource(testRole),
+        assertNotEquals(new RoleInputSource(testRole),
                                new RoleInputSource(otherRole));
     }
 
     @Test
     public void testRoleInputHasDefaultRoleWithNoGivenRole() {
         final RoleInputSource source = (RoleInputSource) SourceUtil.getSources(DefaultRoleConsumer.class, RoleInputSource.class).findFirst().get();
-        Assert.assertEquals("DefaultRoleConsumer", source.getRole());
+        assertEquals("DefaultRoleConsumer", source.getRole());
     }
 
     @Test
     public void testRoleInputHasGivenRole() {
         final RoleInputSource source = (RoleInputSource) SourceUtil.getSources(TestRoleConsumer.class, RoleInputSource.class).findFirst().get();
-        Assert.assertEquals("test-role", source.getRole());
+        assertEquals("test-role", source.getRole());
     }
 
     @RoleInput

@@ -8,8 +8,8 @@ package forklift.source;
  * {@link LogicalSourceContext context}. Currently, the connector serves as the
  * context for mapping a source.
  *
- * <p>A source that depends on <it>what</it> is being received rather than
- * <it>how</it> it is being received is a good candidate for something that makes
+ * <p>A source that depends on <i>what</i> is being received rather than
+ * <i>how</i> it is being received is a good candidate for something that makes
  * sense as a {@code LogicalSource}.
  */
 public abstract class LogicalSource extends SourceI {

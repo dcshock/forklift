@@ -1,7 +1,7 @@
 package forklift.activemq.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import forklift.consumer.ProcessStep;
 import forklift.message.ActiveMQHeaders;
@@ -9,7 +9,7 @@ import forklift.message.Header;
 
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 
@@ -94,7 +94,7 @@ public class ActiveMQHeadersTest {
         ActiveMQHeaders.getFunctions().get(Header.DeliveryCount).set(msg, "abc");
         ActiveMQHeaders.getFunctions().get(Header.DeliveryMode).set(msg, "1");
         ActiveMQHeaders.getFunctions().get(Header.Expiration).set(msg, "never");
-        ActiveMQHeaders.getFunctions().get(Header.GroupId).set(msg, new Long(1));
+        ActiveMQHeaders.getFunctions().get(Header.GroupId).set(msg, Long.valueOf(1));
         ActiveMQHeaders.getFunctions().get(Header.GroupSeq).set(msg, "10");
         ActiveMQHeaders.getFunctions().get(Header.PreviousDestination).set(msg, new ActiveMQDestination() {
             @Override

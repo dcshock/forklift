@@ -24,7 +24,6 @@ import forklift.source.sources.GroupedTopicSource;
 import forklift.source.sources.QueueSource;
 import forklift.source.sources.RoleInputSource;
 import forklift.source.sources.TopicSource;
-import forklift.source.decorators.GroupedTopic;
 import forklift.source.decorators.Queue;
 import forklift.source.decorators.Topic;
 
@@ -62,6 +61,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.inject.Inject;
+import javax.inject.Named;
 
 public class Consumer {
     static ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule())
@@ -388,6 +388,7 @@ public class Consumer {
      *
      * @param msg      containing data
      * @param instance an instance of the msgHandler class.
+     * @return the list of ForkliftProducers to close
      */
     public List<Closeable> inject(ForkliftMessage msg, final Object instance) {
         // Keep any closable resources around so the injection utilizer can cleanup.
@@ -401,7 +402,9 @@ public class Consumer {
                 fields.get(clazz).forEach(field -> {
                     log.trace("Inject target> Field: ({})  Decorator: ({})", field, decorator);
                     try {
-                        Object value = getInjectableValue(field.getAnnotation(decorator), field.getName(), clazz, msg);
+                        String fieldName = Optional.ofNullable(field.getAnnotation(Named.class))
+                                .map(a -> a.value()).orElseGet(() -> field.getName());
+                        Object value = getInjectableValue(field.getAnnotation(decorator), fieldName, clazz, msg);
                         if (value instanceof ForkliftProducerI) {
                             closeMe.add((ForkliftProducerI)value);
                         }
@@ -445,7 +448,8 @@ public class Consumer {
                 }
             }
             Parameter p = constructor.getParameters()[index];
-            Object value = getInjectableValue(injectable, null, p.getType(), forkliftMessage);
+            String name = Optional.ofNullable(p.getAnnotation(Named.class)).map(a -> a.value()).orElse(null);
+            Object value = getInjectableValue(injectable, name, p.getType(), forkliftMessage);
             parameters[index] = value;
             if (value != null && value instanceof ForkliftProducerI) {
                 closeables.add((ForkliftProducerI)value);
@@ -463,7 +467,7 @@ public class Consumer {
                 // Try to resolve the class from any available BeanResolvers.
                 for (ConsumerService s : this.services) {
                     try {
-                        final Object o = s.resolve(mappedClass, null);
+                        final Object o = s.resolve(mappedClass, mappedName);
                         if (o != null) {
                             value = o;
                             break;
@@ -531,11 +535,7 @@ public class Consumer {
                 if (key.equals("")) {
                     key = mappedName;
                 }
-                if (properties == null) {
-                    log.warn("Attempt to inject field {} from properties, but properties is null", key);
-                } else {
-                    value = properties.get(key);
-                }
+                value = properties.get(key);
             }
         } else if (decorator.annotationType() == forklift.decorators.Producer.class) {
             if (mappedClass == ForkliftProducerI.class) {
@@ -566,6 +566,7 @@ public class Consumer {
      * passed in msg and any Services {@link #addServices(ConsumerService...) added} to this consumer.
      *
      * @param msg the message used for injection
+     * @return the created instance
      */
     public Object getMsgHandlerInstance(ForkliftMessage msg) {
         Object instance = null;

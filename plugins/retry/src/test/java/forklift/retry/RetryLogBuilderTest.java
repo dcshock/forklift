@@ -4,17 +4,17 @@ import forklift.connectors.ForkliftConnectorI;
 import forklift.connectors.ForkliftMessage;
 import forklift.connectors.ForkliftSerializer;
 import forklift.consumer.Consumer;
-import forklift.consumer.ProcessStep;
 import forklift.source.ActionSource;
 import forklift.source.SourceI;
 import forklift.source.sources.QueueSource;
 import forklift.source.sources.RoleInputSource;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.mockito.stubbing.Answer;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
@@ -78,6 +78,7 @@ public class RetryLogBuilderTest {
         }
     };
 
+    @SuppressWarnings({ "rawtypes", "unchecked", "serial" })
     @Test
     public void testFieldsSetCorrectlyWithoutSerializer() {
         // build the message
@@ -117,23 +118,23 @@ public class RetryLogBuilderTest {
         final RetryLogBuilder logBuilder = new RetryLogBuilder(msg, consumer, errors, connector, retry);
         final Map<String, String> fields = logBuilder.getFields();
 
-        Assert.assertEquals(testRole, fields.get("role"));
-        Assert.assertEquals("Error", fields.get("step"));
+        assertEquals(testRole, fields.get("role"));
+        assertEquals("Error", fields.get("step"));
 
-        Assert.assertEquals("queue", fields.get("destination-type"));
-        Assert.assertEquals(destinationName, fields.get("destination-name"));
-        Assert.assertEquals("raw-string", fields.get("destination-message-format"));
-        Assert.assertEquals(testText, fields.get("text"));
+        assertEquals("queue", fields.get("destination-type"));
+        assertEquals(destinationName, fields.get("destination-name"));
+        assertEquals("raw-string", fields.get("destination-message-format"));
+        assertEquals(testText, fields.get("text"));
 
-        Assert.assertEquals("5", fields.get("random-property"));
+        assertEquals("5", fields.get("random-property"));
 
-        Assert.assertEquals("1", fields.get("forklift-retry-count"));
-        Assert.assertEquals("" + maxRetries, fields.get("forklift-retry-max-retries"));
+        assertEquals("1", fields.get("forklift-retry-count"));
+        assertEquals("" + maxRetries, fields.get("forklift-retry-max-retries"));
 
-        Assert.assertNotNull(fields.get("forklift-retry-version"));
-        Assert.assertNotNull(fields.get("source-description"));
-        Assert.assertNotNull(fields.get("destination-connector"));
-        Assert.assertNotNull(fields.get("time"));
+        assertNotNull(fields.get("forklift-retry-version"));
+        assertNotNull(fields.get("source-description"));
+        assertNotNull(fields.get("destination-connector"));
+        assertNotNull(fields.get("time"));
     }
 
     @Test
@@ -179,20 +180,20 @@ public class RetryLogBuilderTest {
         final RetryLogBuilder logBuilder = new RetryLogBuilder(msg, consumer, errors, connector, retry);
         final Map<String, String> fields = logBuilder.getFields();
 
-        Assert.assertEquals("Error", fields.get("step"));
-        Assert.assertEquals(testError, fields.get("errors"));
-        Assert.assertEquals(testRole, fields.get("role"));
+        assertEquals("Error", fields.get("step"));
+        assertEquals(testError, fields.get("errors"));
+        assertEquals(testRole, fields.get("role"));
 
-        Assert.assertEquals("queue", fields.get("destination-type"));
-        Assert.assertEquals(destinationName, fields.get("destination-name"));
-        Assert.assertEquals("base64-bytes", fields.get("destination-message-format"));
-        Assert.assertEquals(encodedBytes, fields.get("destination-message"));
-        Assert.assertEquals(testText, fields.get("text"));
+        assertEquals("queue", fields.get("destination-type"));
+        assertEquals(destinationName, fields.get("destination-name"));
+        assertEquals("base64-bytes", fields.get("destination-message-format"));
+        assertEquals(encodedBytes, fields.get("destination-message"));
+        assertEquals(testText, fields.get("text"));
 
-        Assert.assertNotNull(fields.get("forklift-retry-version"));
-        Assert.assertNotNull(fields.get("source-description"));
-        Assert.assertNotNull(fields.get("destination-connector"));
-        Assert.assertNotNull(fields.get("time"));
+        assertNotNull(fields.get("forklift-retry-version"));
+        assertNotNull(fields.get("source-description"));
+        assertNotNull(fields.get("destination-connector"));
+        assertNotNull(fields.get("time"));
     }
 
     @Test
@@ -229,13 +230,14 @@ public class RetryLogBuilderTest {
         // run the log builder
         RetryLogBuilder logBuilder = new RetryLogBuilder(msg, consumer, errors, connector, retry);
         Map<String, String> fields = logBuilder.getFields();
-        Assert.assertEquals("retry-role", fields.get("role"));
+        assertEquals("retry-role", fields.get("role"));
 
         logBuilder = new RetryLogBuilder(msg, consumer, errors, connector, noRoleRetry);
         fields = logBuilder.getFields();
-        Assert.assertEquals("TestHandler", fields.get("role"));
+        assertEquals("TestHandler", fields.get("role"));
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked", "serial" })
     @Test
     public void testRetriesExceeded() {
         // build the message
@@ -274,9 +276,9 @@ public class RetryLogBuilderTest {
         // run the log builder
         final RetryLogBuilder logBuilder = new RetryLogBuilder(msg, consumer, errors, connector, retry);
         final Map<String, String> fields = logBuilder.getFields();
-        Assert.assertNull(fields);
+        assertNull(fields);
 
-        Assert.assertEquals("true", msg.getProperties().get("forklift-retry-max-retries-exceeded"));
+        assertEquals("true", msg.getProperties().get("forklift-retry-max-retries-exceeded"));
     }
 
     private static class TestHandler {}

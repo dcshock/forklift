@@ -16,6 +16,9 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
 public @interface RequireSystem {
-    /** The system classes that define a required system service  */
+    /**
+     * The system classes that define a required system service
+     * @return the array of required system classes.
+     */
     String[] value() default "";
 }

@@ -5,7 +5,6 @@ import forklift.classloader.CoreClassLoaders;
 import forklift.classloader.RunAsClassLoader;
 import forklift.concurrent.Executors;
 import forklift.deployment.Deployment;
-import forklift.deployment.FileDeployment;
 import forklift.deployment.DeploymentEvents;
 import forklift.source.SourceI;
 import forklift.source.SourceUtil;
@@ -13,7 +12,6 @@ import forklift.source.SourceUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -46,7 +44,7 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
         final List<ConsumerThread> threads = new ArrayList<>();
         final List<ConsumerService> services = new ArrayList<>();
 
-        // Start services by instantiating them. 
+        // Start services by instantiating them.
         RunAsClassLoader.run(deployment.getClassLoader(), () -> {
             deployment.getServices().forEach(s -> {
                 try {
@@ -74,7 +72,7 @@ public class ConsumerDeploymentEvents implements DeploymentEvents {
 
                 final ConsumerThread thread = new ConsumerThread(consumer);
                 threads.add(thread);
-                executor.submit(thread);    
+                executor.submit(thread);
             });
         });
 

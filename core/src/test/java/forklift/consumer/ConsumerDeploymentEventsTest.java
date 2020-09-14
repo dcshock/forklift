@@ -5,15 +5,13 @@ import forklift.deployment.FileDeployment;
 import forklift.deployment.DeploymentWatch;
 
 import com.google.common.io.Files;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.io.File;
 import java.io.IOException;
 
-@RunWith(JUnit4.class)
 public class ConsumerDeploymentEventsTest extends ForkliftTest {
     @Test
     public void consumerDeployEvent()

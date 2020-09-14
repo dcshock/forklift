@@ -1,13 +1,15 @@
 package forklift.source;
 
+import forklift.consumer.injection.ConsumerTest.ExpectedMsg;
 import forklift.source.decorators.Queue;
 import forklift.source.decorators.Queues;
 import forklift.source.decorators.Topic;
 import forklift.source.sources.QueueSource;
 import forklift.source.sources.TopicSource;
 
-import org.junit.Assert;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Repeatable;
@@ -18,6 +20,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.junit.jupiter.api.Test;
+
 public class SourceITest {
     /**
      * Test creating SourceI lists from annotated consumer classes
@@ -27,7 +31,7 @@ public class SourceITest {
         final List<SourceI> sources = SourceUtil.getSourcesAsList(NoSourceConsumer.class);
         final List<SourceI> expectedSources = Arrays.asList();
 
-        Assert.assertEquals(expectedSources, sources);
+        assertEquals(expectedSources, sources);
     }
 
     @Test
@@ -35,7 +39,7 @@ public class SourceITest {
         final List<SourceI> sources = SourceUtil.getSourcesAsList(SingleSourceConsumer.class);
         final List<SourceI> expectedSources = Arrays.asList(new QueueSource("b"));
 
-        Assert.assertEquals(expectedSources, sources);
+        assertEquals(expectedSources, sources);
     }
 
     @Test
@@ -44,7 +48,7 @@ public class SourceITest {
         final List<SourceI> expectedSources = Arrays.asList(new QueueSource("a"),
                                                             new QueueSource("b"));
 
-        Assert.assertEquals(expectedSources, sources);
+        assertEquals(expectedSources, sources);
     }
 
 
@@ -54,7 +58,7 @@ public class SourceITest {
         final List<SourceI> expectedSources = Arrays.asList(new QueueSource("a"),
                                                             new QueueSource("b"));
 
-        Assert.assertEquals(expectedSources, sources);
+        assertEquals(expectedSources, sources);
     }
 
     @Test
@@ -63,7 +67,7 @@ public class SourceITest {
         final List<SourceI> expectedSources = Arrays.asList(new QueueSource("test-queue"),
                                                             new TopicSource("test-topic"));
 
-        Assert.assertEquals(expectedSources, sources);
+        assertEquals(expectedSources, sources);
     }
 
     @Test
@@ -72,7 +76,7 @@ public class SourceITest {
         final List<SourceI> expectedSources = Arrays.asList(new QueueSource("a"),
                                                             new TopicSource("b"));
 
-        Assert.assertEquals(expectedSources, sources);
+        assertEquals(expectedSources, sources);
     }
 
     class NoSourceConsumer {}
@@ -116,8 +120,8 @@ public class SourceITest {
         final SourceI queueSource = new QueueSource("a");
         final SourceI topicSource = new TopicSource("b");
 
-        Assert.assertEquals("queue-a", simpleSourceOp(queueSource));
-        Assert.assertEquals("topic-b", simpleSourceOp(topicSource));
+        assertEquals("queue-a", simpleSourceOp(queueSource));
+        assertEquals("topic-b", simpleSourceOp(topicSource));
     }
 
     private String simpleSourceOp(SourceI source) {
@@ -140,7 +144,7 @@ public class SourceITest {
             .apply(QueueSource.class, queue -> "queue")
             .get();
 
-        Assert.assertEquals(resultOrderA, resultOrderB);
+        assertEquals(resultOrderA, resultOrderB);
     }
 
     @Test
@@ -151,7 +155,7 @@ public class SourceITest {
             .apply(TopicSource.class, topic -> "topic")
             .get();
 
-        Assert.assertNull(result);
+        assertNull(result);
     }
 
     @Test
@@ -163,16 +167,18 @@ public class SourceITest {
             .apply(TopicSource.class, topic -> "topic")
             .getOrDefault(defaultValue);
 
-        Assert.assertEquals(defaultValue, result);
+        assertEquals(defaultValue, result);
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void testUnhandledFunctionApplicationGivesUnhandledException() {
         final SourceI source = new QueueSource("a");
 
-        final String result = source
-            .apply(TopicSource.class, topic -> "topic")
-            .elseUnsupportedError();
+        assertThrows(RuntimeException.class, () -> {
+            final String result = source
+                    .apply(TopicSource.class, topic -> "topic")
+                    .elseUnsupportedError();
+        });
     }
 
     @Test
@@ -193,14 +199,14 @@ public class SourceITest {
         queueSource
             .accept(QueueSource.class, queue -> state.set("queue"))
             .accept(TopicSource.class, topic -> state.set("topic"));
-        Assert.assertEquals(state.get(), "queue");
+        assertEquals(state.get(), "queue");
 
         state.set("unset");
 
         topicSource
             .accept(QueueSource.class, queue -> state.set("queue"))
             .accept(TopicSource.class, topic -> state.set("topic"));
-        Assert.assertEquals(state.get(), "topic");
+        assertEquals(state.get(), "topic");
     }
 
     @Test
@@ -220,7 +226,7 @@ public class SourceITest {
             .accept(QueueSource.class, queue -> state.set("queue"));
         final String stateOrderB = state.get();
 
-        Assert.assertEquals(stateOrderA, stateOrderB);
+        assertEquals(stateOrderA, stateOrderB);
     }
 
     private void noop() {}
@@ -233,26 +239,31 @@ public class SourceITest {
             .accept(QueueSource.class, queue -> noop())
             .get();
 
-        Assert.assertNull(o);
+        assertNull(o);
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void testUnhandledVoidFunctionApplicationGivesUnhandledException() {
         final SourceI source = new QueueSource("a");
 
-        source
-            .accept(TopicSource.class, topic -> noop())
-            .elseUnsupportedError();
+        assertThrows(RuntimeException.class, () -> {
+            source.accept(TopicSource.class, topic -> noop())
+                .elseUnsupportedError();
+        });
     }
 
-    class JustATestException extends Exception { }
+    class JustATestException extends Exception {
+        private static final long serialVersionUID = 1L;
+    }
 
-    @Test(expected = JustATestException.class)
+    @Test
     public void testExceptionalFunctionApplicationThrowsCorrectException() throws JustATestException {
         final SourceI source = new QueueSource("a");
 
-        source.apply(QueueSource.class, queue -> {
-            throw new JustATestException();
+        assertThrows(JustATestException.class, () -> {
+            source.apply(QueueSource.class, queue -> {
+                throw new JustATestException();
+            });
         });
     }
 }

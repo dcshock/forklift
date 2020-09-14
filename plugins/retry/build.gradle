@@ -1,0 +1,9 @@
+dependencies {
+    implementation project(':forklift-core'),
+            'com.fasterxml.jackson.core:jackson-databind:2.11.1',
+            'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.11.1',
+            'io.searchbox:jest:6.3.1'
+
+
+    testImplementation 'org.mockito:mockito-core:3.4.4'
+}

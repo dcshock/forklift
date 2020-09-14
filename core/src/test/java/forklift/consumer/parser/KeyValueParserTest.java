@@ -1,15 +1,12 @@
 package forklift.consumer.parser;
 
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Map;
 
-@RunWith(JUnit4.class)
+import org.junit.jupiter.api.Test;
+
 public class KeyValueParserTest {
     @Test
     public void parseNull() {

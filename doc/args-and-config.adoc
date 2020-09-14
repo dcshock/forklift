@@ -1,0 +1,73 @@
+= Forklift Server Command line arguments and Configuration files
+@David Thompson <dthompsn1@gmail.com>
+v3.8, 2020-09-08
+:library: Asciidoctor
+:imagesdir: images
+:homepage: https://github.com/dcshock/forklift
+
+:toc: macro
+toc::[]
+
+== Command line argments
+
+[%header]
+|===
+| Argument | Example | Explanation
+| -configurationFile | ~/forklift/conf.properties |  Config file for forklift server settings (see the Example conf.properties below)
+| -consulHost | consul.github.com | consul host name (default: localhost), _embedded_ can be used to start up consul locally within the server. forklift-server will contact the consul server and collect all consul hostnames to build a failover connection setup.
+| -datadogApiKey | 13495fjkmigtw | Datadog API key if you want the lifecycle reported to Datadog. If parameter not set, the Datadog plugin is ignored. This can be configured in the forklift properties file.
+| -datadogApplicationKey | 9876351dnfjknd | Datadog application key if you for tracking at the app level. This can be configured in the forklift properties file.
+| -monitor1 | ~/forklift/deploy | consumer deployment directory. This is where consumer jars should be placed to start.
+| -monitor2 | ~/forklift/props | properties deployment directory This allows for setting properties values that consumers can use. Standard java properties files should be deployed in this directory.
+| -password | password@1 | password for ActiveMQ broker connection
+| -replayDir | ~/forklift/replay | directory where to store the replay logs. See the ReplayLogger plug-in.
+| -replayESHost | es.github.com | elastic search host name for replay storage
+| -replayESPort | 9200  | elastic search port number for replay storage (default: 9200)
+| -replayESServer | true | start an embedded elastic search server (default: false)
+| -replayESSsl | true | connect to elastic search via ssl (https://) (default: false)
+| -retryDir | ~/forklift/retry | directory for persisted retry messages. Works well for testing or single node instances. In a dynamic environment would require a static file store.
+| -retryESHost | es.github.com | elastic search host name for retry storage. Works better for a dynamic environment not requiring a retryDir.
+| -retryESPort | 9200 | elastic search port number for retry storage (default: 9200)
+| -retryESSsl | true | connect to elastic search via ssl (https://) (default: false)
+| -runRetries | true | run retries on this instance (default: false). If using elastic search to store retries you are not guaranteed exclusivity of messages. This allows for one forklift-server to act as a master to run retries.
+| -url | activemq.github.com | broker connection url
+| -username | username | username for ActiveMQ broker connection
+|===
+
+==== Adding a configuration file at startup
+
+[source,bash]
+----
+$ bin/forklift-server -monitor1 ~/forklift/deploy -url embedded --configurationFile conf.properties
+----
+
+*Example conf.properties file*
+
+----
+# An example prooperties file for some forklift props
+
+# Properties for datadog keys
+datadog.api.key:e4335ba2030485b6f650ceac0bbd9531
+datadog.application.key:1fde0db4129959d62bdd705f8f5943eee2c84ee1
+
+# Tags applied within Datadog counters
+app.environment:prod
+hostname:localhost
+
+# Properties for turning on an off lifecycle datadog counts
+datadog.lifecycle.counter.pending:false
+datadog.lifecycle.counter.pending.testQueue:true
+datadog.lifecycle.counter.retry:false
+
+# Only the processing lifecycle is timed. But you can
+# turn it off and on for all or per queue
+datadog.lifecycle.timer.processing:false
+datadog.lifecycle.timer.processing.testQueue:true
+----
+
+==== Example of changing the logging configuration and starting forklift server
+
+[source,bash]
+----
+$ JAVA_OPTS="-Dlogback.configurationFile=file:./logback.xml" bin/forklift-server -monitor1 ~/forklift/deploy -url embedded
+----

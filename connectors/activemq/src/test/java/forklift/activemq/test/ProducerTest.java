@@ -1,41 +1,25 @@
 package forklift.activemq.test;
 
 import forklift.connectors.ConnectorException;
-import forklift.connectors.ForkliftConnectorI;
 import forklift.connectors.ForkliftMessage;
 import forklift.consumer.Consumer;
-import forklift.consumer.LifeCycleMonitors;
-import forklift.consumer.MessageRunnable;
-import forklift.consumer.ProcessStep;
-import forklift.decorators.LifeCycle;
 import forklift.decorators.OnMessage;
-import forklift.decorators.OnValidate;
-import forklift.decorators.Producer;
 import forklift.message.Header;
 import forklift.producers.ForkliftProducerI;
 import forklift.producers.ProducerException;
 import forklift.source.decorators.Queue;
-import forklift.source.decorators.Topic;
 
-import org.apache.activemq.command.ActiveMQTextMessage;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.Ignore;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.JMSException;
-import javax.jms.MessageProducer;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 @Queue("q2")
 public class ProducerTest {
@@ -52,7 +36,7 @@ public class ProducerTest {
     @forklift.decorators.Producer(queue="q2")
     private ForkliftProducerI injectedProducer;
 
-    @Before
+    @BeforeEach
     public void before() {
         TestServiceManager.start();
         called.set(0);
@@ -63,7 +47,7 @@ public class ProducerTest {
         isPropOverwritten = true;
     }
 
-    @After
+    @AfterEach
     public void after() {
         TestServiceManager.stop();
     }
@@ -109,38 +93,66 @@ public class ProducerTest {
         // Shutdown the consumer after all the messages have been processed.
         c.setOutOfMessages((listener) -> {
             listener.shutdown();
-            Assert.assertTrue("called was not == " + msgCount, called.get() == msgCount);
+            assertTrue(called.get() == msgCount, "called was not == " + msgCount);
         });
 
         // Start the consumer.
         c.listen();
 
-        Assert.assertTrue(called.get() > 0);
+        assertTrue(called.get() > 0);
     }
 
-    @Test 
-    public void testSendObjectMessage() throws JMSException, ConnectorException, ProducerException {
+    @Test
+    public void testSendNonStringPropsMessage() throws ProducerException, ConnectorException {
         int msgCount = 10;
         ForkliftProducerI producer = TestServiceManager.getConnector().getQueueProducer("q2");
         for (int i = 0; i < msgCount; i++) {
-            final TestMessage m = new TestMessage(new String("x=producer object send test"), i);  
-            producer.send(m);
+            String msg = new String("sending all the text, producer test");
+            // We should really fix the producer to allow us to send properties as a Map<String, Object>
+            // But this hack should allow it to still work with type-saftey ignored.
+            Map props = new HashMap();
+            props.put("test", Long.valueOf(12345));
+            props.put("test2", "string");
+            props.put("test3", Double.valueOf(333.33d));
+            producer.send(props, new ForkliftMessage(msg));
         }
-        
+
         final Consumer c = new Consumer(getClass(), TestServiceManager.getForklift());
         // Shutdown the consumer after all the messages have been processed.
         c.setOutOfMessages((listener) -> {
             listener.shutdown();
-            Assert.assertTrue("called was not == " + msgCount, called.get() == msgCount);
+            assertTrue(called.get() == msgCount, "called was not == " + msgCount);
         });
 
         // Start the consumer.
         c.listen();
 
-        Assert.assertTrue(called.get() > 0);
+        assertTrue(called.get() > 0);
     }
 
-    @Test 
+    @Test
+    public void testSendObjectMessage() throws JMSException, ConnectorException, ProducerException {
+        int msgCount = 10;
+        ForkliftProducerI producer = TestServiceManager.getConnector().getQueueProducer("q2");
+        for (int i = 0; i < msgCount; i++) {
+            final TestMessage m = new TestMessage(new String("x=producer object send test"), i);
+            producer.send(m);
+        }
+
+        final Consumer c = new Consumer(getClass(), TestServiceManager.getForklift());
+        // Shutdown the consumer after all the messages have been processed.
+        c.setOutOfMessages((listener) -> {
+            listener.shutdown();
+            assertTrue(called.get() == msgCount, "called was not == " + msgCount);
+        });
+
+        // Start the consumer.
+        c.listen();
+
+        assertTrue(called.get() > 0);
+    }
+
+    @Test
     public void testSendKeyValueMessage() throws JMSException, ConnectorException, ProducerException {
         int msgCount = 10;
         ForkliftProducerI producer = TestServiceManager.getConnector().getQueueProducer("q2");
@@ -149,18 +161,18 @@ public class ProducerTest {
             m.put("x", "producer key value send test");
             producer.send(m);
         }
-        
+
         final Consumer c = new Consumer(getClass(), TestServiceManager.getForklift());
         // Shutdown the consumer after all the messages have been processed.
         c.setOutOfMessages((listener) -> {
             listener.shutdown();
-            Assert.assertTrue("called was not == " + msgCount, called.get() == msgCount);
+            assertTrue(called.get() == msgCount, "called was not == " + msgCount);
         });
 
         // Start the consumer.
         c.listen();
 
-        Assert.assertTrue(called.get() > 0);
+        assertTrue(called.get() > 0);
     }
 
     @Test
@@ -177,23 +189,23 @@ public class ProducerTest {
             headers.put(Header.Type, "SeriousBusiness");
             Map<String, String> props = new HashMap<>();
             props.put("Foo", "bar");
-            props.put("Eye", "" + i);     
+            props.put("Eye", "" + i);
             producer.send(headers, props, m);
         }
-        
+
         final Consumer c = new Consumer(getClass(), TestServiceManager.getForklift());
         // Shutdown the consumer after all the messages have been processed.
         c.setOutOfMessages((listener) -> {
             listener.shutdown();
-            Assert.assertTrue(ordered);
-            Assert.assertTrue("called was not == " + msgCount, called.get() == msgCount);
-            Assert.assertTrue("injectedProducer is null", isInjectNull == false);
+            assertTrue(ordered);
+            assertTrue(called.get() == msgCount, "called was not == " + msgCount);
+            assertTrue(isInjectNull == false, "injectedProducer is null");
         });
 
         // Start the consumer.
         c.listen();
 
-        Assert.assertTrue(called.get() > 0);
+        assertTrue(called.get() > 0);
     }
 
     @Test
@@ -205,11 +217,11 @@ public class ProducerTest {
     public void testPresets() throws JMSException, ConnectorException, ProducerException {
         int msgCount = 10;
         ForkliftProducerI producer = TestServiceManager.getConnector().getQueueProducer("q2");
-        
+
         Map<Header, Object> headers = new HashMap<>();
         headers.put(Header.Type, "presetHeaderAction");
         producer.setHeaders(headers);
-        
+
         Map<String, String> props = new HashMap<>();
         props.put("Foo", "Bar");
         producer.setProperties(props);
@@ -224,22 +236,22 @@ public class ProducerTest {
             }
             producer.send(m);
         }
-        
+
         final Consumer c = new Consumer(getClass(), TestServiceManager.getForklift());
         // Shutdown the consumer after all the messages have been processed.
         c.setOutOfMessages((listener) -> {
             listener.shutdown();
-            Assert.assertTrue(ordered);
-            Assert.assertTrue("called was not == " + msgCount, called.get() == msgCount);
-            Assert.assertTrue("Message properties were overwritten", !isPropOverwritten);
-            Assert.assertTrue("Message properties were not set", isPropsSet);
-            Assert.assertTrue("Message headers were not set", isHeadersSet);
+            assertTrue(ordered);
+            assertTrue(called.get() == msgCount, "called was not == " + msgCount);
+            assertTrue(!isPropOverwritten, "Message properties were overwritten");
+            assertTrue(isPropsSet, "Message properties were not set");
+            assertTrue(isHeadersSet, "Message headers were not set");
         });
 
         // Start the consumer.
         c.listen();
 
-        Assert.assertTrue(called.get() > 0);
+        assertTrue(called.get() > 0);
     }
 
     public class TestMessage {

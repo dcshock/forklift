@@ -1,8 +1,5 @@
 package forklift.source;
 
-import forklift.source.SourceType;
-import forklift.source.SourceTypeContainer;
-
 import org.reflections.scanners.AbstractScanner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

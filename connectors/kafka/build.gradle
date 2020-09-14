@@ -1,0 +1,33 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath "com.commercehub.gradle.plugin:gradle-avro-plugin:0.21.0"
+    }
+}
+apply plugin: "com.commercehub.gradle.plugin.avro"
+
+dependencies {
+    api project(':forklift-core'),
+    api ('org.apache.kafka:kafka-clients:2.5.0') { exclude group: 'org.slf4j', module: 'slf4j-log4j12' },
+    api ('io.confluent:kafka-avro-serializer:5.5.0') { exclude group: 'org.slf4j', module: 'slf4j-log4j12' },
+        'org.apache.avro:avro:1.9.2'
+
+    testImplementation 'commons-io:commons-io:2.7',
+            'commons-net:commons-net:3.6',
+            'org.glassfish.jaxb:jaxb-runtime:2.3.2',
+            'org.mockito:mockito-core:3.4.4',
+            implementation('io.confluent:kafka-schema-registry:5.5.0') { exclude group: 'org.slf4j', module: 'slf4j-log4j12' },
+            // Need the following two jackson libraries to handle NoClassDefFoundErrors when running the tests.
+            // It appears that the confluentinc schema-registry still use Jackson 1.
+            'org.codehaus.jackson:jackson-core-asl:1.9.13',
+            'org.codehaus.jackson:jackson-mapper-asl:1.9.13',
+            implementation('org.apache.kafka:kafka_2.12:2.5.0') { exclude group: 'org.slf4j', module: 'slf4j-log4j12' },
+            implementation('org.apache.zookeeper:zookeeper:3.6.1') { exclude group: 'org.slf4j', module: 'slf4j-log4j12' },
+            'org.apache.avro:avro:1.9.2',
+            //Added as it looks like the schema registry has a hard coded dependency on a log4j class that the bridge does not help with
+            'log4j:log4j:1.2.14',
+            // required by zookeeper
+            'io.dropwizard.metrics:metrics-core:3.2.5'
+}

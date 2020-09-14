@@ -2,10 +2,12 @@ package forklift.connectors;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Properties;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,8 +27,8 @@ public final class KafkaConnectorTests {
         connector.setAddedConsumerProperties(addedProperties);
 
         final Properties props = connector.getConsumerProperties();
-        Assert.assertEquals("bar", props.get("foo"));
-        Assert.assertEquals("override", props.get(ConsumerConfig.GROUP_ID_CONFIG));
+        assertEquals("bar", props.get("foo"));
+        assertEquals("override", props.get(ConsumerConfig.GROUP_ID_CONFIG));
     }
 
     @Test
@@ -38,7 +40,7 @@ public final class KafkaConnectorTests {
         connector.setAddedProducerProperties(addedProperties);
 
         final Properties props = connector.getProducerProperties();
-        Assert.assertEquals("bar", props.get("foo"));
-        Assert.assertEquals("override", props.get(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG));
+        assertEquals("bar", props.get("foo"));
+        assertEquals("override", props.get(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG));
     }
 }

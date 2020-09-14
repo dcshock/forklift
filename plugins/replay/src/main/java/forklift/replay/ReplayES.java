@@ -10,27 +10,23 @@ import forklift.consumer.MessageRunnable;
 import forklift.consumer.ProcessStep;
 import forklift.decorators.BeanResolver;
 import forklift.decorators.LifeCycle;
-import forklift.decorators.Service;
 import forklift.producers.ForkliftProducerI;
 import forklift.producers.ProducerException;
-import forklift.source.ActionSource;
 import forklift.source.SourceI;
 import forklift.source.SourceUtil;
-import forklift.source.decorators.Topic;
 import forklift.source.sources.GroupedTopicSource;
 import forklift.source.sources.TopicSource;
 import forklift.source.sources.QueueSource;
 
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.node.Node;
-import org.elasticsearch.node.NodeBuilder;
+import org.elasticsearch.node.NodeValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * A plugin that writes replay log messages to elasticsearch, so that messages
@@ -60,6 +56,7 @@ public class ReplayES {
      *
      * @deprecated use {@link #ReplayES(boolean, String, ForkliftConnectorI)} instead
      */
+    @Deprecated
     public ReplayES(boolean clientOnly, String hostname, String clusterName, ForkliftConnectorI connector) {
         this(clientOnly, hostname, 9200, clusterName, connector);
     }
@@ -77,6 +74,7 @@ public class ReplayES {
      *
      * @deprecated use {@link #ReplayES(boolean, String, int, ForkliftConnectorI)} instead
      */
+    @Deprecated
     public ReplayES(boolean clientOnly, String hostname, int port, String clusterName, ForkliftConnectorI connector) {
         this(clientOnly, hostname, port, connector);
     }
@@ -113,18 +111,18 @@ public class ReplayES {
         if (clientOnly) {
             node = null;
         } else {
-            node = NodeBuilder.nodeBuilder()
-                .client(clientOnly)
-                .settings(Settings.settingsBuilder().put("http.enabled", true))
-                .settings(Settings.settingsBuilder().put("http.cors.enabled", true))
-                .settings(Settings.settingsBuilder().put("http.cors.allow-origin", "*"))
-                .settings(Settings.settingsBuilder().put("path.home", "."))
-                .node();
-            node.start();
+            Settings settings = Settings.builder()
+                .put("http.enabled", true)
+                .put("http.cors.enabled", true)
+                .put("http.cors.allow-origin", "*")
+                .put("path.home", ".")
+                .build();
+                node = new Node(settings);
 
             try {
+                node.start();
                 Thread.sleep(10000L);
-            } catch (InterruptedException ignored) {
+            } catch (InterruptedException | NodeValidationException ignored) {
             }
         }
 
@@ -135,7 +133,9 @@ public class ReplayES {
             @Override
             public void run() {
                 if (node != null && !node.isClosed())
-                    node.close();
+                    try {
+                        node.close();
+                    } catch (IOException ignored) {}
             }
         });
 

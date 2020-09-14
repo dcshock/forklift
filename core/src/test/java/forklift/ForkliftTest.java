@@ -3,25 +3,25 @@ package forklift;
 import forklift.connectors.ForkliftConnectorI;
 import forklift.exception.StartupException;
 
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.mockito.Mockito;
 
 import java.io.File;
 import java.net.URL;
 
 public class ForkliftTest {
-    protected Forklift forklift;
+    protected static Forklift forklift;
 
-    @Before
-    public void start()
+    @BeforeAll
+    public static void start()
       throws StartupException {
         forklift = new Forklift();
         forklift.start(Mockito.mock(ForkliftConnectorI.class));
     }
 
-    @After
-    public void stop() {
+    @AfterAll
+    public static void stop() {
       forklift.shutdown();
     }
 
