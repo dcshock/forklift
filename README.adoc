@@ -10,7 +10,7 @@ link:doc/forklift.adoc[Documentation]
 == Releases
 link:doc/prev_releases.adoc[Previous Releases]
 
-* *September xxxx 2020* - 3.8
+* *September 14 2020* - 3.8
 ** Converted build system from sbt to gradle.
 ** Upgraded to Java 11, now requires Java 11 Runtime to execute.
 ** Upgraded all dependent libraries to current versions.
