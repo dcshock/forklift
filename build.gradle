@@ -27,7 +27,7 @@ subprojects {
     apply plugin: 'signing'
     apply plugin: 'distribution'
     group = 'com.github.dcshock'
-    version = '3.8-SNAPSHOT'
+    version = '3.8'
 
     java {
         withSourcesJar()
