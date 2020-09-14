@@ -6,5 +6,5 @@ echo Found branch $BRANCH
 if [ "$BRANCH" == "master" ]
   then
     echo Publishing to Sonatype
-    ./gradlew publishAllPublicationsToMavenRepository
+    ./gradlew publish
 fi
