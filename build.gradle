@@ -75,6 +75,8 @@ subprojects {
                 from components.java
                 pom {
                     url = 'https://github.com/dcshock/forklift'
+                    name = project.name
+                    description = project.name
                     licenses {
                         license {
                             name = 'BSD-style'
